@@ -1471,6 +1471,10 @@
         "highlight_peak_price": {
           "name": "Piekprijsperiodes markeren",
           "description": "Voeg een halfdoorzichtige rode overlay toe om de piekprijsperiodes in de grafiek te markeren. Dit maakt het gemakkelijk om visueel de tijden te identificeren wanneer energie het duurst is."
+        },
+        "language": {
+          "name": "Taal",
+          "description": "Taal van de labels die in de YAML worden geschreven. Standaard: de systeemtaal (Instellingen → Systeem → Algemeen). Statussen vertaalt de frontend sowieso voor iedereen die kijkt."
         }
       }
     },

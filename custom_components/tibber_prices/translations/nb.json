@@ -1471,6 +1471,10 @@
         "highlight_peak_price": {
           "name": "Fremhev høyeste prisperioder",
           "description": "Legg til et halvgjennomsiktig rødt overlegg for å fremheve de høyeste prisperiodene i diagrammet. Dette gjør det enkelt å visuelt identifisere tidene når energi er dyrest."
+        },
+        "language": {
+          "name": "Språk",
+          "description": "Språket for etikettene som skrives inn i YAML. Standard: systemspråket (Innstillinger → System → Generelt). Tilstander oversettes uansett av frontend for hver som ser på."
         }
       }
     },

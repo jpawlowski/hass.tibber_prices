@@ -1471,6 +1471,10 @@
         "highlight_peak_price": {
           "name": "Spitzenpreis-Zeiträume hervorheben",
           "description": "Füge eine halbtransparente rote Überlagerung hinzu, um die Spitzenpreis-Zeiträume im Diagramm hervorzuheben. Dies erleichtert die visuelle Identifizierung der Zeiten, in denen Energie am teuersten ist."
+        },
+        "language": {
+          "name": "Sprache",
+          "description": "Sprache der Beschriftungen, die ins YAML geschrieben werden. Standard: die Systemsprache (Einstellungen → System → Allgemein). Zustände übersetzt das Frontend ohnehin für alle, die das Dashboard ansehen."
         }
       }
     },

@@ -238,7 +238,7 @@ Returns data points like:
 - **Automatic Color-Coded Series**: Separate series for each price level (VERY_CHEAP, CHEAP, NORMAL, EXPENSIVE, VERY_EXPENSIVE) or rating (LOW, NORMAL, HIGH)
 - **Dynamic Y-Axis Scaling**: Rolling window modes automatically use `chart_metadata` sensor for optimal Y-axis bounds
 - **Best Price Period Highlights**: Optional vertical bands showing detected best price periods
-- **Translated Labels**: Automatically uses your Home Assistant language setting
+- **Translated Labels**: Uses your Home Assistant system language, or the one you pick with `language` (de, en, nb, nl, sv)
 - **Clean Gap Visualization**: Proper NULL insertion for missing data segments
 
 **Quick Example:**
@@ -341,7 +341,7 @@ When `highlight_best_price: true`:
 - **Config Template Card** is only required for rolling window modes (enables dynamic Y-axis)
 - Fixed day views (`today`, `tomorrow`, `yesterday`) work with ApexCharts Card alone
 - Generated YAML is a starting point - customize colors, styling, features as needed
-- All labels are automatically translated to your Home Assistant language
+- All labels are translated to your Home Assistant system language, or to `language` if you set it
 
 Use the response in Lovelace dashboards by copying the generated YAML.
 

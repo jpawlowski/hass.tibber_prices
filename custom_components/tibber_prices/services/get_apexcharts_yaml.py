@@ -34,6 +34,9 @@ from custom_components.tibber_prices.const import (
     PRICE_RATING_HIGH,
     PRICE_RATING_LOW,
     PRICE_RATING_NORMAL,
+    TRANSLATION_LANGUAGES,
+    async_load_standard_translations,
+    async_load_translations,
     get_display_unit_string,
     get_translation,
 )
@@ -45,12 +48,23 @@ from .formatters import get_level_translation
 from .helpers import resolve_service_target
 
 if TYPE_CHECKING:
-    from homeassistant.core import ServiceCall
+    from collections.abc import Mapping
+
+    from homeassistant.core import HomeAssistant, ServiceCall
+
+    from .helpers import ServiceTarget
 
 # Service constants
 APEXCHARTS_YAML_SERVICE_NAME: Final = "get_apexcharts_yaml"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
+
+# Custom cards the generated YAML can use (resource URL fragment), with their HACS repository
+CUSTOM_CARDS: Final = {
+    "apexcharts-card": "https://my.home-assistant.io/redirect/hacs_repository/?owner=RomRider&repository=apexcharts-card",
+    "config-template-card": "https://my.home-assistant.io/redirect/hacs_repository/?owner=iantrich&repository=config-template-card",
+    "tabdeck-card": "https://my.home-assistant.io/redirect/hacs_repository/?owner=tempus2016&repository=tabdeck-card",
+}
 
 # Service schema
 APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
@@ -63,6 +77,7 @@ APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("price_source", default="total"): vol.In(["total", "energy", "tax"]),
         vol.Optional("highlight_best_price", default=True): cv.boolean,
         vol.Optional("highlight_peak_price", default=False): cv.boolean,
+        vol.Optional("language"): vol.In(TRANSLATION_LANGUAGES),
     }
 )
 
@@ -168,7 +183,7 @@ def _build_entity_map(
     return entity_map
 
 
-def _check_custom_cards_installed(hass: Any) -> dict[str, bool]:
+def check_custom_cards_installed(hass: Any) -> dict[str, bool]:
     """
     Check if required custom cards are installed via HACS/Lovelace resources.
 
@@ -179,7 +194,7 @@ def _check_custom_cards_installed(hass: Any) -> dict[str, bool]:
         Dictionary with card names as keys and installation status as bool values
 
     """
-    installed_cards = {"apexcharts-card": False, "config-template-card": False}
+    installed_cards = dict.fromkeys(CUSTOM_CARDS, False)
 
     # Access Lovelace resources via the new API (2026.2+)
     lovelace_data = hass.data.get("lovelace")
@@ -191,10 +206,9 @@ def _check_custom_cards_installed(hass: Any) -> dict[str, bool]:
                 # Can't use await here, so we check the internal storage
                 for resource in resources.data.values():
                     url = resource.get("url", "") if isinstance(resource, dict) else ""
-                    if "apexcharts-card" in url:
-                        installed_cards["apexcharts-card"] = True
-                    if "config-template-card" in url:
-                        installed_cards["config-template-card"] = True
+                    for card in CUSTOM_CARDS:
+                        if card in url:
+                            installed_cards[card] = True
         except AttributeError, TypeError:
             # Fallback: can't determine, assume not installed
             pass
@@ -251,7 +265,7 @@ def _get_missing_cards_notification(language: str, missing_cards: list[str]) -> 
     return {"title": title, "message": message}
 
 
-async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: C901
+async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:
     """
     Return YAML snippet for ApexCharts card.
 
@@ -273,26 +287,76 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
         ServiceValidationError: If entry_id is missing or invalid
 
     """
-    hass = call.hass
-    entry_id_input: str = call.data.get(ATTR_ENTRY_ID, "")
-    view_device_id: str = call.data.get("view_id", "")
+    return await async_build_apexcharts_card(call.hass, call.data)
 
-    day = call.data.get("day")  # Can be None (rolling window mode)
-    level_type = call.data.get("level_type", "rating_level")
-    resolution = call.data.get("resolution", "interval")
-    price_source = call.data.get("price_source", "total")
-    highlight_best_price = call.data.get("highlight_best_price", True)
-    highlight_peak_price = call.data.get("highlight_peak_price", False)
 
-    # Get user's language from hass config
-    user_language = hass.config.language or "en"
+async def _async_notify_issues(hass: HomeAssistant, entry_id: str, language: str, *, metadata_warning: bool) -> None:
+    """Tell the user what the chart lacks: the Chart Metadata sensor, custom cards to install."""
+    if metadata_warning:
+        texts = _get_sensor_disabled_notification(language)
+        await hass.services.async_call(
+            "persistent_notification",
+            "create",
+            {
+                "message": texts["message"],
+                "title": texts["title"],
+                "notification_id": f"tibber_prices_chart_metadata_{entry_id}",
+            },
+        )
+    # Which custom cards are installed: checked whatever the sensor's state
+    installed = check_custom_cards_installed(hass)
+    missing = [
+        f"[{card}]({CUSTOM_CARDS[card]})" for card in ("apexcharts-card", "config-template-card") if not installed[card]
+    ]
+    if missing:
+        texts = _get_missing_cards_notification(language, missing)
+        await hass.services.async_call(
+            "persistent_notification",
+            "create",
+            {
+                "message": texts["message"],
+                "title": texts["title"],
+                "notification_id": f"tibber_prices_missing_cards_{entry_id}",
+            },
+        )
+
+
+async def async_build_apexcharts_card(  # noqa: C901
+    hass: HomeAssistant, data: Mapping[str, Any], *, notify: bool = True, target: ServiceTarget | None = None
+) -> dict[str, Any]:
+    """
+    Build the ApexCharts card for already validated service data.
+
+    Shared by get_apexcharts_yaml and get_dashboard_yaml, which places one card per chart tab.
+    `notify=False` skips this action's own notifications (a disabled Chart Metadata sensor,
+    missing custom cards): get_dashboard_yaml builds many charts and reports what's missing
+    once, in its own notification. `target` is the home already resolved from the data (one
+    lookup for all of get_dashboard_yaml's charts).
+    """
+    entry_id_input: str = data.get(ATTR_ENTRY_ID, "")
+    view_device_id: str = data.get("view_id", "")
+
+    day = data.get("day")  # Can be None (rolling window mode)
+    level_type = data.get("level_type", "rating_level")
+    resolution = data.get("resolution", "interval")
+    price_source = data.get("price_source", "total")
+    highlight_best_price = data.get("highlight_best_price", True)
+    highlight_peak_price = data.get("highlight_peak_price", False)
+
+    # Labels in the requested language, else the system language (not the viewer's profile language)
+    user_language = data.get("language") or hass.config.language or "en"
+    await async_load_translations(hass, user_language)
+    await async_load_standard_translations(hass, user_language)
 
     # Get coordinator to access price data (for currency) and config entry for display settings
-    target = resolve_service_target(hass, entry_id_input, view_device_id)
+    if target is None:
+        target = resolve_service_target(hass, entry_id_input, view_device_id)
     config_entry = target.entry
     coordinator = target.coordinator
     subentry_id: str | None = target.subentry.subentry_id if target.subentry else None
     entry_id: str = config_entry.entry_id
+    # The card's data comes from get_chartdata in the browser: it must ask the same view
+    view_param = f"view_id: '{view_device_id}', " if view_device_id else ""
 
     # A generated card references its data by entity ID. A headless view has no price
     # entities to reference, so there is nothing this action could emit for it - point
@@ -370,7 +434,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"domain: 'tibber_prices', "
             f"service: 'get_chartdata', "
             f"return_response: true, "
-            f"service_data: {{ entry_id: '{entry_id}', {day_param}"
+            f"service_data: {{ entry_id: '{entry_id}', {view_param}{day_param}"
             f"period_filter: 'best_price', resolution: '{resolution}', "
             f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, price_source: '{price_source}' }} }}); "
             f"const originalData = response.response.data; "
@@ -414,7 +478,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
             f"domain: 'tibber_prices', "
             f"service: 'get_chartdata', "
             f"return_response: true, "
-            f"service_data: {{ entry_id: '{entry_id}', {day_param}"
+            f"service_data: {{ entry_id: '{entry_id}', {view_param}{day_param}"
             f"period_filter: 'peak_price', resolution: '{resolution}', "
             f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, price_source: '{price_source}' }} }}); "
             f"const originalData = response.response.data; "
@@ -476,7 +540,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"domain: 'tibber_prices', "
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
-                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, resolution: '{resolution}', "
+                f"service_data: {{ entry_id: '{entry_id}', {view_param}{day_param}{filter_param}, resolution: '{resolution}', "
                 f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
                 f"price_source: '{price_source}', connect_segments: true }} }}); "
                 f"return response.response.data;"
@@ -489,7 +553,7 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 f"domain: 'tibber_prices', "
                 f"service: 'get_chartdata', "
                 f"return_response: true, "
-                f"service_data: {{ entry_id: '{entry_id}', {day_param}{filter_param}, resolution: '{resolution}', "
+                f"service_data: {{ entry_id: '{entry_id}', {view_param}{day_param}{filter_param}, resolution: '{resolution}', "
                 f"output_format: 'array_of_arrays', insert_nulls: 'segments', subunit_currency: {subunit_param}, "
                 f"price_source: '{price_source}', connect_segments: true }} }}); "
                 f"return response.response.data;"
@@ -878,44 +942,9 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                     },
                 }
 
-                # Create separate notifications for different issues
-                if metadata_warning:
-                    # Notification 1: Chart Metadata Sensor disabled
-                    notification_texts = _get_sensor_disabled_notification(user_language)
-                    await hass.services.async_call(
-                        "persistent_notification",
-                        "create",
-                        {
-                            "message": notification_texts["message"],
-                            "title": notification_texts["title"],
-                            "notification_id": f"tibber_prices_chart_metadata_{entry_id}",
-                        },
-                    )
-
-                # Check which custom cards are installed (always check, independent of sensor state)
-                installed_cards = _check_custom_cards_installed(hass)
-                missing_cards = [
-                    "[apexcharts-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=RomRider&repository=apexcharts-card)"
-                    if not installed_cards["apexcharts-card"]
-                    else None,
-                    "[config-template-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=iantrich&repository=config-template-card)"
-                    if not installed_cards["config-template-card"]
-                    else None,
-                ]
-                missing_cards = [card for card in missing_cards if card]  # Filter out None
-
-                if missing_cards:
-                    # Notification 2: Missing Custom Cards
-                    notification_texts = _get_missing_cards_notification(user_language, missing_cards)
-                    await hass.services.async_call(
-                        "persistent_notification",
-                        "create",
-                        {
-                            "message": notification_texts["message"],
-                            "title": notification_texts["title"],
-                            "notification_id": f"tibber_prices_missing_cards_{entry_id}",
-                        },
-                    )
+                # This action's own notifications (get_dashboard_yaml reports once for all its charts)
+                if notify:
+                    await _async_notify_issues(hass, entry_id, user_language, metadata_warning=bool(metadata_warning))
 
                 return result_dict
             # Rolling window modes (day is None or rolling_window): Dynamic offset
@@ -1048,44 +1077,9 @@ async def handle_apexcharts_yaml(call: ServiceCall) -> dict[str, Any]:  # noqa: 
                 },
             }
 
-            # Create separate notifications for different issues
-            if metadata_warning:
-                # Notification 1: Chart Metadata Sensor disabled
-                notification_texts = _get_sensor_disabled_notification(user_language)
-                await hass.services.async_call(
-                    "persistent_notification",
-                    "create",
-                    {
-                        "message": notification_texts["message"],
-                        "title": notification_texts["title"],
-                        "notification_id": f"tibber_prices_chart_metadata_{entry_id}",
-                    },
-                )
-
-            # Check which custom cards are installed (always check, independent of sensor state)
-            installed_cards = _check_custom_cards_installed(hass)
-            missing_cards = [
-                "[apexcharts-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=RomRider&repository=apexcharts-card)"
-                if not installed_cards["apexcharts-card"]
-                else None,
-                "[config-template-card](https://my.home-assistant.io/redirect/hacs_repository/?owner=iantrich&repository=config-template-card)"
-                if not installed_cards["config-template-card"]
-                else None,
-            ]
-            missing_cards = [card for card in missing_cards if card]  # Filter out None
-
-            if missing_cards:
-                # Notification 2: Missing Custom Cards
-                notification_texts = _get_missing_cards_notification(user_language, missing_cards)
-                await hass.services.async_call(
-                    "persistent_notification",
-                    "create",
-                    {
-                        "message": notification_texts["message"],
-                        "title": notification_texts["title"],
-                        "notification_id": f"tibber_prices_missing_cards_{entry_id}",
-                    },
-                )
+            # This action's own notifications (get_dashboard_yaml reports once for all its charts)
+            if notify:
+                await _async_notify_issues(hass, entry_id, user_language, metadata_warning=bool(metadata_warning))
 
             return result_dict
 

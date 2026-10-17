@@ -1471,6 +1471,10 @@
         "highlight_peak_price": {
           "name": "Markera högsta prisperioder",
           "description": "Lägg till ett halvtransparent rött överlag för att markera de högsta prisperioderna i diagrammet. Detta gör det enkelt att visuellt identifiera tiderna när energi är som dyrast."
+        },
+        "language": {
+          "name": "Språk",
+          "description": "Språk för etiketterna som skrivs in i YAML. Standard: systemspråket (Inställningar → System → Allmänt). Tillstånd översätts ändå av frontend för var och en som tittar."
         }
       }
     },

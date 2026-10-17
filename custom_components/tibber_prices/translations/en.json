@@ -1471,6 +1471,10 @@
         "highlight_peak_price": {
           "name": "Highlight Peak Price Periods",
           "description": "Add a semi-transparent red overlay to highlight the peak price periods on the chart. This makes it easy to visually identify times when energy is most expensive."
+        },
+        "language": {
+          "name": "Language",
+          "description": "Language of the labels written into the YAML. Default: the system language (Settings → System → General). States are translated by the frontend for each viewer anyway."
         }
       }
     },

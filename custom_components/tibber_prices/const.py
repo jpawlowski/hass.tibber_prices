@@ -719,6 +719,9 @@ CUSTOM_TRANSLATIONS_DIR = Path(__file__).parent / "custom_translations"
 TRANSLATIONS_DIR = Path(__file__).parent / "translations"
 
 # Cache for translations to avoid repeated file reads
+# Languages with translation files; actions that write labels into YAML accept these
+TRANSLATION_LANGUAGES = ("de", "en", "nb", "nl", "sv")
+
 _TRANSLATIONS_CACHE: dict[str, dict] = {}
 
 # Cache for standard translations (config flow, home_types, etc.)
