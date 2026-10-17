@@ -14,7 +14,7 @@ _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
 # Maximum number of intervals to cache
-# 1 days @ 15min resolution = 10 * 96 = 960 intervals
+# 10 days @ 15min resolution = 10 * 96 = 960 intervals
 MAX_CACHE_SIZE = 960
 
 

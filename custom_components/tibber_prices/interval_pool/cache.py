@@ -9,6 +9,8 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
+    from zoneinfo import ZoneInfo
+
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,8 +46,11 @@ class TibberPricesIntervalPoolFetchGroupCache:
         """Initialize empty fetch group cache with optional TimeService."""
         self._fetch_groups: list[dict[str, Any]] = []
         self._time_service = time_service
+        # The home's time zone: its days are what the coordinator fetches (day-before-yesterday
+        # 00:00 in the home's time), which may differ from Home Assistant's
+        self._home_timezone: ZoneInfo | None = None
 
-        # Protected range cache (invalidated daily)
+        # Protected range cache (invalidated daily, or when the clock or time zone changes)
         self._protected_range_cache: tuple[str, str] | None = None
         self._protected_range_cache_date: str | None = None
 
@@ -58,6 +63,16 @@ class TibberPricesIntervalPoolFetchGroupCache:
         keep serving the range computed for the previous one.
         """
         self._time_service = time_service
+        self._drop_protected_range()
+
+    def set_home_timezone(self, home_timezone: ZoneInfo | None) -> None:
+        """Count the protected days in the home's time zone, like the window the coordinator fetches."""
+        if home_timezone != self._home_timezone:
+            self._home_timezone = home_timezone
+            self._drop_protected_range()
+
+    def _drop_protected_range(self) -> None:
+        """Forget the cached protected range: the clock or time zone it was computed for changed."""
         self._protected_range_cache = None
         self._protected_range_cache_date = None
 
@@ -125,6 +140,10 @@ class TibberPricesIntervalPoolFetchGroupCache:
         """
         # Use TimeService if available (Time Machine support), else real time
         now = self._time_service.now() if self._time_service else dt_util.now()
+        # In the home's time zone: its midnights, and the same UTC offset as the intervals'
+        # startsAt (compared as strings below)
+        if self._home_timezone is not None:
+            now = now.astimezone(self._home_timezone)
         today_date_str = now.date().isoformat()
 
         # Check cache validity (invalidate daily)

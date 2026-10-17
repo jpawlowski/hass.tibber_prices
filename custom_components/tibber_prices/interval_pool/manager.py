@@ -134,6 +134,15 @@ class TibberPricesIntervalPool:
         # Structure: {"2026-10-25T02:00:00": [{"startsAt": "...+01:00", ...}], ...}
         self._dst_extras: dict[str, list[dict[str, Any]]] = {}
 
+        # The home's time zone (its name), kept with the pool: after a restart the protected
+        # range counts the home's days before the first fetch already
+        self._home_timezone: str | None = None
+
+    def set_home_timezone(self, name: str | None) -> None:
+        """Count the protected days in the home's time zone (None: Home Assistant's)."""
+        self._home_timezone = name
+        self._cache.set_home_timezone(ZoneInfo(name) if name else None)
+
     def set_time_service(self, time_service: TibberPricesTimeService | None) -> None:
         """
         Replace the TimeService this pool works against.
@@ -390,6 +399,8 @@ class TibberPricesIntervalPool:
 
         # Calculate range in home's timezone
         tz = ZoneInfo(tz_str) if tz_str else None
+        # Protected from GC: the same days as fetched here, counted in the home's time zone
+        self.set_home_timezone(tz_str)
         now = self._time_service.now() if self._time_service else dt_util.now()
         now_local = now.astimezone(tz) if tz else now
 
@@ -1066,6 +1077,7 @@ class TibberPricesIntervalPool:
             # DST fall-back extras: CET duplicates of fall-back 02:xx intervals.
             # Only non-empty on/after fall-back nights; typically {} all year.
             "dst_extras": self._dst_extras,
+            "home_timezone": self._home_timezone,
         }
 
     @classmethod
@@ -1131,5 +1143,8 @@ class TibberPricesIntervalPool:
         # Restore DST fall-back extras (CET duplicates of fall-back 02:xx intervals).
         # Typically empty ({}) except in the days following a fall-back night.
         manager._dst_extras = data.get("dst_extras", {})
+        # Before the first fetch, so GC on the restored pool protects the home's days
+        if data.get("home_timezone"):
+            manager.set_home_timezone(data["home_timezone"])
 
         return manager
