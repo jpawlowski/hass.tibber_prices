@@ -5,16 +5,7 @@ from __future__ import annotations
 import bisect
 from typing import TYPE_CHECKING
 
-from custom_components.tibber_prices.const import (
-    CONF_VOLATILITY_THRESHOLD_HIGH,
-    CONF_VOLATILITY_THRESHOLD_MODERATE,
-    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-    DEFAULT_VOLATILITY_THRESHOLD_HIGH,
-    DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
-    DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
-    get_display_precision,
-    get_display_unit_factor,
-)
+from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, get_rolling_hour_window
 from custom_components.tibber_prices.sensor.attributes import add_volatility_type_attributes, get_prices_for_volatility
@@ -23,6 +14,7 @@ from custom_components.tibber_prices.utils.price import (
     calculate_iqr_stats,
     calculate_percentile_rank,
     calculate_volatility_with_cv,
+    get_volatility_thresholds,
 )
 
 from .base import TibberPricesBaseCalculator
@@ -69,18 +61,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         if not self.has_data():
             return None
 
-        # Get volatility thresholds from config
-        thresholds = {
-            "threshold_moderate": self.config.get(
-                CONF_VOLATILITY_THRESHOLD_MODERATE,
-                DEFAULT_VOLATILITY_THRESHOLD_MODERATE,
-            ),
-            "threshold_high": self.config.get(CONF_VOLATILITY_THRESHOLD_HIGH, DEFAULT_VOLATILITY_THRESHOLD_HIGH),
-            "threshold_very_high": self.config.get(
-                CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
-                DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH,
-            ),
-        }
+        thresholds = get_volatility_thresholds(self.config)
 
         # Get prices based on volatility type
         prices_to_analyze = get_prices_for_volatility(

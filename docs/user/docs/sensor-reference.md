@@ -266,7 +266,7 @@ explanations of each sensor's purpose, attributes, and automation examples.
 | Entity ID suffix | 🇬🇧 English | 🇩🇪 Deutsch | 🇳🇴 Norsk | 🇳🇱 Nederlands | 🇸🇪 Svenska | Default |
 |---|---|---|---|---|---|---|
 | <span id="ref-in_falling_price_phase" class="entity-anchor" data-refs="sensors-price-phases#binary-phase-sensors"></span>`in_falling_price_phase` | In Falling Price Phase | In fallender Preisphase | I fallende prisfase | In Dalende Prijsfase | I fallande prisfas | ✅ |
-| <span id="ref-in_flat_price_phase" class="entity-anchor" data-refs="sensors-price-phases#binary-phase-sensors"></span>`in_flat_price_phase` | In Flat Price Phase | In flacher Preisphase | I flat prisfase | In Vlakke Prijsfase | I flat prisfas | ✅ |
+| <span id="ref-in_flat_price_phase" class="entity-anchor" data-refs="sensors-price-phases#binary-phase-sensors"></span>`in_flat_price_phase` | In Flat Price Phase | In flacher Preisphase | I flat prisfase | In Vlakke Prijsfase | I platt prisfas | ✅ |
 | <span id="ref-in_rising_price_phase" class="entity-anchor" data-refs="sensors-price-phases#binary-phase-sensors"></span>`in_rising_price_phase` | In Rising Price Phase | In steigender Preisphase | I stigende prisfase | In Stijgende Prijsfase | I stigande prisfas | ✅ |
 ## Number Entities (Configuration Overrides)
 

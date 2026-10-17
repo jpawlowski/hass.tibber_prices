@@ -2,23 +2,41 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
+from weakref import WeakKeyDictionary
 
 from custom_components.tibber_prices.const import (
     CHEAP_PRICE_LEVELS,
+    CONF_AVERAGE_SENSOR_DISPLAY,
+    DEFAULT_AVERAGE_SENSOR_DISPLAY,
     EXPENSIVE_PRICE_LEVELS,
     PRICE_LEVEL_MAPPING,
     PRICE_RATING_MAPPING,
+    format_price_unit_base,
+    format_price_unit_subunit,
     get_display_precision,
     get_display_unit_factor,
 )
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, get_rolling_hour_window
 from custom_components.tibber_prices.sensor.definitions import ROLLING_HOUR_SENSOR_WINDOWS
-from custom_components.tibber_prices.sensor.helpers import aggregate_average_data
+from custom_components.tibber_prices.sensor.helpers import aggregate_average_data, aggregate_level_data
 from custom_components.tibber_prices.utils.average import clock_hour_bounds, clock_hour_key
-from custom_components.tibber_prices.utils.price import find_level_run_times, find_price_data_for_interval
+from custom_components.tibber_prices.utils.day_outlook import (
+    DAY_PART_HOURS,
+    TibberPricesOutlookBlock,
+    build_day_outlook,
+    build_day_part_outlook,
+    build_hour_outlook,
+    known_starts,
+)
+from custom_components.tibber_prices.utils.price import (
+    calculate_volatility_with_cv,
+    find_level_run_times,
+    find_price_data_for_interval,
+    get_volatility_thresholds,
+)
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator
@@ -27,6 +45,11 @@ if TYPE_CHECKING:
 
 from .helpers import add_alternate_average_attribute
 from .metadata import get_current_interval_data
+
+QUARTER = timedelta(minutes=15)
+# The quarter-hour series starts this long before today's midnight: where a night that is still
+# running began (22:00), so its details can show it whole
+OUTLOOK_QUARTERS_BEFORE_MIDNIGHT = timedelta(hours=24 - DAY_PART_HOURS["night"][0])
 
 
 def _get_interval_data_for_attributes(
@@ -166,6 +189,226 @@ def _add_clock_hour_attributes(
     attributes["clock_hour_price_median"] = median
 
 
+# The last outlook built per coordinator, with what it was built from: the attributes are
+# read on every state write of the current price sensor, while their inputs change only with
+# new data, new options or the next quarter hour
+_OUTLOOK_CACHE: WeakKeyDictionary[Any, tuple[tuple, dict[str, Any]]] = WeakKeyDictionary()
+
+
+def _add_outlook_attributes(
+    attributes: dict,
+    coordinator: TibberPricesDataUpdateCoordinator,
+    *,
+    time: TibberPricesTimeService,
+    config_entry: TibberPricesConfigEntry,
+) -> None:
+    """Add the price outlook (see _build_outlook_attributes), built again only when its inputs change."""
+    data = coordinator.data or {}
+    # The objects themselves, compared by identity (never by content: they're large): new data
+    # and new options are new objects, and a list replaced inside the data (a debug action)
+    # counts as new too. Then the quarter hour, by value
+    objects = (data, data.get("priceInfo"), data.get("pricePeriods"), config_entry.options)
+    now = time.get_current_interval_start()
+    cached = _OUTLOOK_CACHE.get(coordinator)
+    if cached is not None:
+        (cached_objects, cached_now), outlook = cached
+        if cached_now == now and all(a is b for a, b in zip(cached_objects, objects, strict=True)):
+            attributes.update(outlook)
+            return
+    outlook = _build_outlook_attributes(coordinator, time=time, config_entry=config_entry)
+    _OUTLOOK_CACHE[coordinator] = ((objects, now), outlook)
+    attributes.update(outlook)
+
+
+def _build_outlook_attributes(
+    coordinator: TibberPricesDataUpdateCoordinator,
+    *,
+    time: TibberPricesTimeService,
+    config_entry: TibberPricesConfigEntry,
+) -> dict[str, Any]:
+    """
+    Return the price outlook shaped like a weather forecast: clock hours and parts of the day.
+
+    `outlook_hours` runs from one hour back to the end of the known prices, `outlook_day_parts` from the part
+    of the day running now (morning, day, evening, night) as far as prices are known,
+    `outlook_days` covers today and tomorrow (once complete) with their volatility, when the
+    day's lowest and highest price occur, and the day's reference price (median or mean, as
+    set for the average sensors).
+    Each entry has its span, average, lowest and highest price (display unit) and the
+    aggregated level.
+    """
+    # From the day before yesterday: the strips reach back into yesterday, and the night that
+    # began the day before yesterday at 22:00 is shown whole (the coordinator keeps that day)
+    all_prices = get_intervals_for_day_offsets(coordinator.data, [-2, -1, 0, 1])
+    now = time.get_current_interval_start()
+
+    factor = get_display_unit_factor(config_entry)
+    precision = get_display_precision(config_entry)
+    options = config_entry.options
+    # Same thresholds as the volatility sensors, so a day here never disagrees with them
+    volatility_thresholds = get_volatility_thresholds(options)
+
+    # The day's reference price follows the average sensors' setting (median or mean), so a
+    # dashboard's "above or below the day" matches the ⌀ Price Today sensor
+    reference = options.get(CONF_AVERAGE_SENSOR_DISPLAY, DEFAULT_AVERAGE_SENSOR_DISPLAY)
+
+    def reference_of(mean: float | None, median: float | None) -> float | None:
+        return median if reference == "median" else mean
+
+    def day_entry(block: TibberPricesOutlookBlock) -> dict[str, Any]:
+        item = entry(block)
+        priced = [interval for interval in block.intervals if "total" in interval]
+        volatility, _ = calculate_volatility_with_cv([float(i["total"]) for i in priced], **volatility_thresholds)
+        # When the day's lowest and highest price occur (first quarter hour on a tie)
+        lowest = min(priced, key=lambda interval: float(interval["total"]))
+        highest = max(priced, key=lambda interval: float(interval["total"]))
+        return {
+            "date": block.start.date().isoformat(),
+            **item,
+            "price_min_at": _interval_start_iso(lowest, time),
+            "price_max_at": _interval_start_iso(highest, time),
+            "price_reference": reference_of(item["price_mean"], item["price_median"]),
+            "reference": reference,
+            "volatility": volatility.lower(),
+        }
+
+    def entry(block: TibberPricesOutlookBlock) -> dict[str, Any]:
+        """Return a block's entry."""
+        mean, median = aggregate_average_data(block.intervals, config_entry)
+        prices = [float(interval["total"]) for interval in block.intervals if "total" in interval]
+        item: dict[str, Any] = {"start": block.start.isoformat(), "end": block.end.isoformat()}
+        if block.part:
+            item["part"] = block.part
+            item["complete"] = block.complete
+        item["price_mean"] = mean
+        # Markers in cards always use the median: it shows where prices lean within the spread
+        item["price_median"] = median
+        # The spread inside the block, like low and high of a weather forecast day
+        item["price_min"] = round(min(prices) * factor, precision) if prices else None
+        item["price_max"] = round(max(prices) * factor, precision) if prices else None
+        item["level"] = aggregate_level_data(block.intervals)
+        return item
+
+    attributes: dict[str, Any] = {}
+    # Both units, so a card can show base or subunit currency whatever the sensors use
+    currency = (coordinator.data or {}).get("currency")
+    attributes["outlook_units"] = {
+        "display": "subunit" if factor > 1 else "base",
+        "base": format_price_unit_base(currency),
+        "subunit": format_price_unit_subunit(currency),
+    }
+    # When each part of the day begins and ends, so cards needn't hard-code it
+    attributes["outlook_day_part_hours"] = DAY_PART_HOURS
+    # The priced intervals in order, worked out once for the days, the parts and the quarters
+    known = known_starts(all_prices, time.get_interval_time)
+    hour_blocks = build_hour_outlook(all_prices, now, time.get_interval_time)
+    attributes["outlook_hours"] = [entry(b) for b in hour_blocks]
+    days = build_day_outlook(all_prices, now, time.get_interval_time, known=known)
+    attributes["outlook_days"] = [day_entry(b) for b in days]
+    # The parts of the day cover what the hours do: cards scroll both back as far
+    part_blocks = build_day_part_outlook(
+        all_prices, now, time.get_interval_time, since=hour_blocks[0].start if hour_blocks else None, known=known
+    )
+    attributes["outlook_day_parts"] = [entry(b) for b in part_blocks]
+    # Yesterday's averages: after midnight the hour strip still shows the last hour of yesterday,
+    # and its dashed line is yesterday's (the part of the day strip starts with a night that
+    # began yesterday, too)
+    yesterday = (now - timedelta(days=1)).date()
+    mean, median = aggregate_average_data(get_intervals_for_day_offsets(coordinator.data, [-1]), config_entry)
+    attributes["outlook_yesterday"] = (
+        {
+            "date": yesterday.isoformat(),
+            "price_mean": mean,
+            "price_median": median,
+            "price_reference": reference_of(mean, median),
+        }
+        if mean is not None
+        else None
+    )
+    # Every quarter hour from where the strips begin (at the latest the start of last night), for
+    # zooming into an hour, a part of the day or a day: compact (start, then one price and level
+    # per quarter hour, None where unknown), so it costs little next to the other attributes
+    # (The first part of the day may begin before the first hour: a night from 22:00)
+    starts = [blocks[0].start.astimezone(UTC) for blocks in (hour_blocks, part_blocks) if blocks]
+    since = min(starts) if starts else None
+    attributes["outlook_quarters"] = _quarter_series(known, now, time, factor, precision, since=since)
+    # The best and peak price periods that ended before today, as far back as the strips reach:
+    # the period sensors list only today's and tomorrow's, so cards can mark yesterday's too
+    attributes["outlook_past_periods"] = _past_periods(coordinator.data, time, since=since)
+    return attributes
+
+
+def _quarter_series(
+    sorted_known: tuple[list[tuple[datetime, dict[str, Any]]], datetime] | None,
+    now: datetime,
+    time: TibberPricesTimeService,
+    factor: float,
+    precision: int,
+    *,
+    since: datetime | None = None,
+) -> dict[str, Any] | None:
+    """
+    Return the quarter-hour prices from `since` on, at the latest from 22:00 last night.
+
+    `since` is where the strips begin (they reach back into yesterday), so each hour and part
+    of the day they show can be zoomed into.
+
+    {"start": ISO time, "minutes": 15, "prices": [...], "levels": [...]}; position i is
+    start + i * 15 minutes (counted in real time, so clock changes need no special case).
+    `sorted_known` is known_starts() of the prices: sorted in UTC like the parts of the day (the
+    repeated hour when clocks go back would collide in local time).
+    """
+    night = time.start_of_local_day(now) - OUTLOOK_QUARTERS_BEFORE_MIDNIGHT
+    since = min(since, night) if since is not None else night
+    known = [(start, interval) for start, interval in (sorted_known[0] if sorted_known else []) if start >= since]
+    if not known:
+        return None
+    first = known[0][0]
+    count = int((known[-1][0] - first) / QUARTER) + 1
+    prices: list[float | None] = [None] * count
+    levels: list[str | None] = [None] * count
+    for start, interval in known:
+        position, rest = divmod(start - first, QUARTER)
+        if rest:
+            continue  # Not on the quarter-hour grid (never for Tibber's prices)
+        prices[position] = round(float(interval["total"]) * factor, precision)
+        level = interval.get("level")
+        levels[position] = level.lower() if isinstance(level, str) else None
+    return {"start": first.astimezone(now.tzinfo).isoformat(), "minutes": 15, "prices": prices, "levels": levels}
+
+
+def _past_periods(
+    coordinator_data: dict | None, time: TibberPricesTimeService, *, since: datetime | None
+) -> dict[str, list[dict[str, str]]]:
+    """
+    Return the best and peak price periods that ended before today and after `since`.
+
+    {"best_price": [{"start": ISO, "end": ISO}, ...], "peak_price": [...]}: just their times,
+    for marking them in the strips (the period sensors carry the details of today's and
+    tomorrow's).
+    """
+    today_start = time.start_of_local_day(time.now())
+    all_periods = (coordinator_data or {}).get("pricePeriods") or {}
+    result: dict[str, list[dict[str, str]]] = {}
+    for kind in ("best_price", "peak_price"):
+        periods = all_periods.get(kind) or {}
+        result[kind] = [
+            {"start": period["start"].isoformat(), "end": period["end"].isoformat()}
+            for period in periods.get("periods", [])
+            if isinstance(period.get("start"), datetime)
+            and isinstance(period.get("end"), datetime)
+            and period["end"] < today_start
+            and (since is None or period["end"] > since)
+        ]
+    return result
+
+
+def _interval_start_iso(interval: dict, time: TibberPricesTimeService) -> str | None:
+    """Start of an interval as ISO string (local time), or None if unknown."""
+    start = time.get_interval_time(interval)
+    return start.isoformat() if start else None
+
+
 def _add_energy_tax_attributes(
     attributes: dict,
     interval_data: dict | None,
@@ -248,6 +491,9 @@ def add_current_interval_price_attributes(
 
         # Add energy_price and tax attributes from raw API data
         _add_energy_tax_attributes(attributes, interval_data, config_entry=config_entry)
+
+        if key == "current_interval_price":
+            _add_outlook_attributes(attributes, coordinator, time=time, config_entry=config_entry)
     elif key in ["current_hour_average_price", "next_hour_average_price"]:
         # For hour-based price sensors, get level from cached_data
         level = cached_data.get("rolling_hour_level")

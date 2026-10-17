@@ -160,6 +160,14 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "window_end",
             "clock_hour_start",
             "clock_hour_end",
+            "outlook_hours",  # Current price: forecast-style lists, derivable from price data
+            "outlook_day_parts",
+            "outlook_days",
+            "outlook_units",
+            "outlook_day_part_hours",
+            "outlook_quarters",
+            "outlook_past_periods",
+            "outlook_yesterday",
             # Relaxation Details
             "relaxation_level",
             "relaxation_threshold_original_%",
@@ -347,6 +355,15 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "next_price_trend_change_in",
         ):
             self._trend_calculator.clear_calculation_cache()
+
+        # The current price carries the outlook for dashboard cards: its windows move with the
+        # quarter hour (and its energy/tax parts belong to the interval), so it's written each
+        # quarter even when the price itself repeats
+        if self.entity_description.key == "current_interval_price":
+            # (No call-avoidance value to keep: this path always writes, so native_value is worked
+            # out once, by the write itself)
+            self.async_write_ha_state()
+            return
 
         # Call-avoidance: Skip expensive async_write_ha_state() when value unchanged.
         # This runs 4x/hour for ~45 entities. Many (enum levels, ratings, trends) stay

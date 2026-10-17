@@ -9,9 +9,14 @@ import statistics
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
 from custom_components.tibber_prices.const import (
+    CONF_VOLATILITY_THRESHOLD_HIGH,
+    CONF_VOLATILITY_THRESHOLD_MODERATE,
+    CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
     DEFAULT_PRICE_LEVEL_GAP_TOLERANCE,
     DEFAULT_PRICE_RATING_GAP_TOLERANCE,
     DEFAULT_PRICE_RATING_HYSTERESIS,
@@ -92,6 +97,15 @@ def calculate_coefficient_of_variation(prices: list[float]) -> float | None:
     std_dev = statistics.stdev(prices)
     # Use abs(mean) for negative prices (Norway/Germany electricity markets)
     return (std_dev / abs(mean)) * 100
+
+
+def get_volatility_thresholds(options: Mapping[str, Any]) -> dict[str, float]:
+    """Return the configured volatility thresholds as keyword arguments for calculate_volatility_with_cv."""
+    return {
+        "threshold_moderate": options.get(CONF_VOLATILITY_THRESHOLD_MODERATE, DEFAULT_VOLATILITY_THRESHOLD_MODERATE),
+        "threshold_high": options.get(CONF_VOLATILITY_THRESHOLD_HIGH, DEFAULT_VOLATILITY_THRESHOLD_HIGH),
+        "threshold_very_high": options.get(CONF_VOLATILITY_THRESHOLD_VERY_HIGH, DEFAULT_VOLATILITY_THRESHOLD_VERY_HIGH),
+    }
 
 
 def calculate_volatility_with_cv(
