@@ -112,6 +112,25 @@ const DETAIL_LEGEND_ORDER = [
 // with one card per section usually only one of them shows the legend
 const ATTACHED_CARDS = new Set();
 
+// The part of a card's window that scrolls (below its header; see _showDialog)
+const dialogScroll = (dialog) => dialog.querySelector(".dialog-scroll");
+
+// Whether the last input was the keyboard rather than a tap or a click. The cards move the focus
+// themselves (into a window, to its close button, back to what opened it), and Safari and Chrome
+// show the focus ring on focus set from a script even after a tap: the cards show it only to
+// keyboard users (see `data-keyboard` in the style)
+let keyboardInput = false;
+const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
+window.addEventListener(
+  "keydown",
+  (event) => {
+    // Not a lone modifier, nor a shortcut with one (Cmd+Tab, Ctrl+C): those don't move the focus
+    if (!MODIFIER_KEYS.has(event.key) && !event.metaKey && !event.ctrlKey && !event.altKey) keyboardInput = true;
+  },
+  true
+);
+window.addEventListener("pointerdown", () => (keyboardInput = false), true);
+
 // The legend button of the section on screen (compact) or of the card
 const OWN_LEGEND_BUTTON = ".panel:not(.inactive) .legend-button, ha-card:not(.compact) .legend-button";
 
@@ -2417,6 +2436,12 @@ function languageStrings(table) {
 // prices and marks sit on one line across a strip, whatever a column contains
 const STYLE = `
   :host { display: block; height: 100%; }
+  /* Focus rings for the keyboard only (see keyboardInput): after a tap or a click, focus the
+     card set itself (the window's close button, the column a window was opened from) stays
+     without one. The cards' rings draw --focus-ring; the browser's own ring goes too */
+  :host { --focus-ring: none; }
+  :host([data-keyboard]) { --focus-ring: 2px solid var(--primary-color, #03a9f4); }
+  :host(:not([data-keyboard])) :focus-visible { outline: none; }
   /* Lines drawn on the level colors: those colors don't change with the theme, and only a near
      black stands out on all five (contrast 4.5 to 10; white, light grey and the primary blue
      reach 1.1 to 3.8). The "now" line keeps its blue as a core between two such edges */
@@ -2476,22 +2501,24 @@ const STYLE = `
     ha-card.interactive.column-details:hover:has(.col[data-detail]:hover, .day-row[data-day]:hover)::before { opacity: 0; }
   }
   ha-card.column-details .col[data-detail]:focus-visible,
-  ha-card.column-details .day-row[data-day]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  ha-card.column-details .day-row[data-day]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   ha-card.interactive:active:not(:has(button:active)):not(.column-details:has(.col:active, .day-row[data-day]:active))::before {
     background: var(--ha-ripple-pressed-color, var(--ha-ripple-color, var(--state-icon-color, #44739e)));
     opacity: var(--ha-ripple-pressed-opacity, 0.12); }
-  ha-card:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
+  ha-card:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   /* Scrolling sideways clips the top too: 9 px of room above the columns, given back by the
-     margin, so a badge on a column's corner isn't cut off and nothing moves */
-  .strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(var(--col-min), 1fr); gap: 4px;
-           overflow-x: auto; scrollbar-width: none; padding-top: 9px; margin-top: -9px; }
+     margin, so a badge on a column's corner isn't cut off and nothing moves. Above that room,
+     the day row: a band of the strip, not of its columns, where the day names run across the
+     columns (see .day), clear of a column's tint, hover and focus ring */
+  .strip { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(var(--col-min), 1fr); gap: 4px;
+           overflow-x: auto; scrollbar-width: none; padding-top: calc(9px + var(--row-day, var(--day-h)) + 4px); margin-top: -9px; }
   .strip::-webkit-scrollbar { display: none; }
   /* Places to snap to: where the strip rests (letting go near it, it settles there, as in other
      apps), and both ends, so an end close to that place stays reachable rather than snapping
      back; in between, scrolling stays free */
   .strip { scroll-snap-type: x proximity; }
   /* The price steps to the neighbouring hours, while one is hovered */
-  .strip.hours, .zoom { position: relative; }
+  .zoom { position: relative; }
   .steps { position: absolute; top: 0; left: 0; z-index: 2; overflow: visible; pointer-events: none;
            opacity: 0; transition: opacity 0.2s ease-out; }
   .steps.shown { opacity: 1; }
@@ -2511,9 +2538,14 @@ const STYLE = `
   .steps .same { color: var(--secondary-text-color); }
   /* Meanwhile the chips step back, so the percentages don't collide with them */
   .strip.hours.steps-on .chip { opacity: 0.15; }
-  .col.home, .col:first-child { scroll-snap-align: start; }
-  .col:last-child { scroll-snap-align: end; }
+  .col.home, .col:first-of-type { scroll-snap-align: start; }
+  .col:last-of-type { scroll-snap-align: end; }
   .strip.hours { --col-min: 40px; }
+  /* Touch: hours a finger's width (44 px, Apple's minimum target; Material asks 48). Wider cards
+     set wider columns below anyway */
+  @media (any-pointer: coarse) {
+    .strip.hours { --col-min: 44px; }
+  }
   /* Four parts of the day at a time, a whole day's round: the one before now, now, and two to
      come; scrolling shows more */
   .strip.parts { --col-min: 60px; grid-auto-columns: max(var(--col-min), calc((100% - 12px) / 4)); }
@@ -2533,21 +2565,25 @@ const STYLE = `
   .strip.more-left.more-right {
     mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent); }
   /* Page buttons where a strip goes on: for mouse and keyboard, and as a visible cue to swipe.
-     Centered on the graph row: padding 8 + day 12 + name 16 + 2 gaps of 4 = 44 above it,
+     Centered on the graph row: day row 12 + 4, padding 8, name 16 + gap 4 = 44 above it,
      --below under it */
   .scroll { position: absolute; top: calc(var(--above) + (100% - var(--above) - var(--below)) / 2); width: 32px; height: 32px; margin-top: -16px; padding: 0; border: 0;
             border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer;
             color: var(--primary-text-color); background: var(--ha-card-background, var(--card-background-color, #fff));
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); z-index: 1; }
   .scroll svg { width: 20px; height: 20px; fill: currentColor; }
+  /* Touch: a 44 px target around the 32 px button (a bigger button would hide a column) */
+  @media (any-pointer: coarse) {
+    .scroll::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+  }
   .scroll.back { left: 0; }
   .scroll.forward { right: 0; }
   .strip-wrap.more-left .scroll.back, .strip-wrap.more-right .scroll.forward { display: inline-flex; }
   .no-scroll-back .scroll.back, .no-scroll-forward .scroll.forward { display: none !important; }
-  .scroll:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
+  .scroll:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .strip-wrap + .strip-wrap { margin-top: calc(16px - 8px * var(--squeeze, 0)); }
   .col { position: relative; display: grid; row-gap: 4px;
-         grid-template-rows: var(--row-day, var(--day-h)) var(--name-h) var(--graph) var(--value-h) var(--row-range, var(--label-h))
+         grid-template-rows: var(--name-h) var(--graph) var(--value-h) var(--row-range, var(--label-h))
                              var(--row-extreme, var(--label-h)) var(--row-mark, 3px);
          justify-items: center; padding: var(--pad) 0; border-radius: 12px; }
   .col.current { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12); }
@@ -2563,22 +2599,24 @@ const STYLE = `
   .col.past .tick, .partial .tick { border-right-color: color-mix(in srgb, var(--primary-text-color) var(--pale-marks), var(--fade-bg)); }
   .col.past .tick-line, .partial .tick-line { background: color-mix(in srgb, var(--on-level-color) var(--pale-marks), var(--fade-bg)); }
   .col.past .bar, .col.past .span, .zcol.past .zbar { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05); }
-  .col.past > .day.ongoing { opacity: 1; }
   /* Where the next day begins: a line in the gap before its first column, and its name set
      like a calendar's month, from the line onwards across the columns. It also explains why
      the dashed reference line jumps there: from here on it's the next day's. The line fades out
      at both ends, so the lines of two strips one above the other don't meet hard */
-  .col.new-day::before { content: ""; position: absolute; top: 0; bottom: 0; left: -2.5px; width: 1px; opacity: 0.35;
+  .col.new-day::before { content: ""; position: absolute; top: calc(-4px - var(--row-day, var(--day-h))); bottom: 0; left: -2.5px; width: 1px; opacity: 0.35;
                          color: var(--secondary-text-color);
                          background: linear-gradient(to bottom, transparent, currentColor 32px,
                                                      currentColor calc(100% - 32px), transparent); }
-  .col.day-start .day { justify-self: start; width: 0; overflow: visible; padding-left: 6px; font-size: var(--ha-font-size-s, 12px);
-                      font-weight: var(--ha-font-weight-bold, 600); color: var(--primary-text-color); }
-  /* Moved along while its divider is scrolled out on the left (see _stickDayNames): above the
-     columns it passes */
-  .col.day-start > .day { position: relative; z-index: 2; }
   .day, .name, .range { white-space: nowrap; color: var(--secondary-text-color); }
-  .day { height: var(--day-h); line-height: var(--day-h); font-size: var(--ha-font-size-xs, 10px); }
+  /* A day's name (or how far a part of the day is known) in the strip's day row, over its column:
+     placed in the column's grid area, it takes no room in the strip. Moved along while its
+     divider is scrolled out on the left (see _stickDayNames), above the columns it passes */
+  .day { position: absolute; z-index: 2; grid-row: 1; top: calc(-1 * var(--row-day, var(--day-h)));
+         height: var(--day-h); line-height: var(--day-h); font-size: var(--ha-font-size-xs, 10px); pointer-events: none; }
+  .day:not(.start) { left: 50%; translate: -50% 0; }
+  .day.past { opacity: 0.45; }
+  .day.start { left: 0; padding-left: 6px; font-size: var(--ha-font-size-s, 12px); font-weight: var(--ha-font-weight-bold, 600);
+               color: var(--primary-text-color); }
   .name { height: var(--name-h); line-height: var(--name-h); font-size: var(--ha-font-size-s, 12px); }
   .current .name { color: var(--primary-text-color); font-weight: var(--ha-font-weight-bold, 600); }
   .chip { font-size: var(--ha-font-size-xs, 10px); font-weight: var(--ha-font-weight-bold, 600); line-height: 16px;
@@ -2623,15 +2661,15 @@ const STYLE = `
   .ref { position: absolute; z-index: -1; left: -2px; right: -2px; height: 0; margin-bottom: -0.75px; pointer-events: none;
          border-top: 1.5px dashed var(--secondary-text-color); opacity: 0.8; }
   /* The outer columns stay inside the strip, or it would count as scrolling */
-  .col:first-child .ref { left: 0; }
-  .col:last-child .ref { right: 0; }
+  .col:first-of-type .ref { left: 0; }
+  .col:last-of-type .ref { right: 0; }
   .value { font-size: var(--ha-font-size-m, 14px); font-weight: var(--ha-font-weight-medium, 500); line-height: var(--value-h);
            color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   .range { height: var(--label-h); line-height: var(--label-h); font-size: 11px; font-variant-numeric: tabular-nums; }
   /* Hours, and parts of the day in the compact layout, have no min–max row (the span shows them;
      screen readers still get them), so both strips line up exactly */
   .hours .col, .compact .parts .col {
-    grid-template-rows: var(--row-day, var(--day-h)) var(--name-h) var(--graph) var(--value-h)
+    grid-template-rows: var(--name-h) var(--graph) var(--value-h)
                         var(--row-extreme, var(--label-h)) var(--row-mark, 3px);
   }
   .hours .range, .compact .parts .range { display: none; }
@@ -2653,8 +2691,11 @@ const STYLE = `
   .period-badge.best { --badge: var(--success-color, #43a047); }
   .period-badge.peak { --badge: var(--error-color, #db4437); }
   /* Centered on the top right corner of the highlighted column, like a badge on an app icon:
-     out of the flow, it takes no room */
+     out of the flow, it takes no room. In a strip, its top on the column's top instead (above it
+     is the day row, where the day's name runs across the columns) and 3 px further out, so its
+     ring stays clear of the hour's name ("Now") in a 40 px column */
   .col > .period-badge, .zcol > .period-badge { position: absolute; top: -9px; right: -9px; z-index: 1; }
+  .col > .period-badge { top: 0; right: -12px; }
   .dense .zcol > .period-badge { top: -7px; right: -7px; width: 14px; height: 14px; }
   .dense .zcol > .period-badge svg { width: 10px; height: 10px; }
   /* Beside "Today", floating: the row keeps its height */
@@ -2692,7 +2733,7 @@ const STYLE = `
                    margin: 0 0 -2px calc(var(--span-w) / -2);
                    box-sizing: border-box; background: var(--primary-color, #03a9f4);
                    border: solid var(--ha-card-background, var(--card-background-color, #fff)); border-width: 1px 0; }
-  .partial .day { color: var(--secondary-text-color); font-style: italic; }
+  .day.partial { font-style: italic; }
   .mark { position: relative; width: 80%; height: 3px; border-radius: 2px; overflow: hidden; }
   .mark.has { background: rgba(127, 127, 127, 0.2); }
   .mark span { position: absolute; top: 0; bottom: 0; }
@@ -2770,10 +2811,10 @@ const STYLE = `
     .day-info { justify-content: center; text-align: center; }
     .day-info.wrapped > .level-dot ~ .extremes { margin-left: 0; }
     /* A day's name over the strips: centered over its column, word and weekday stacked */
-    .strip.two-part-days .col { --row-day: 24px; }
-    .col.day-start .day { justify-self: center; width: auto; padding-left: 0; height: auto; display: flex;
-                        flex-direction: column; align-items: center; text-align: center; }
-    .col.day-start .day .label-sep { display: none; }
+    .strip.two-part-days { --row-day: 24px; }
+    .day.start { left: 50%; translate: -50% 0; padding-left: 0; height: auto; display: flex;
+                 flex-direction: column; align-items: center; text-align: center; }
+    .day.start .label-sep { display: none; }
     .switch .label { display: none; }
   }
   /* Wide (two sections or a big screen): the days move beside hours and parts of the day,
@@ -2810,7 +2851,7 @@ const STYLE = `
     .strip.hours { --col-min: 52px; }
     .strip { --bar-w: 24px; --span-w: 16px; --day-h: 20px; --name-h: 20px; --label-h: 16px; }
     .day { font-size: var(--ha-font-size-m, 14px); }
-    .col.day-start .day { font-size: var(--ha-font-size-l, 16px); }
+    .day.start { font-size: var(--ha-font-size-l, 16px); }
     .chip { font-size: var(--ha-font-size-s, 12px); line-height: 18px; }
     .name { font-size: var(--ha-font-size-m, 14px); }
     .range, .extreme { font-size: var(--ha-font-size-s, 12px); }
@@ -2859,7 +2900,7 @@ const STYLE = `
   /* Compact: in the switch's line, at its left */
   .switch > .action-button { margin: 0 auto 0 -8px; }
   .action-button:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.08); }
-  .action-button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 0; }
+  .action-button:focus-visible { outline: var(--focus-ring); outline-offset: 0; }
   /* Shown only while focused by keyboard, like a skip link */
   .action-button.focus-only { position: absolute; top: 8px; left: 8px; z-index: 2; margin: 0; min-height: 36px; padding: 0 12px;
                               background: var(--ha-card-background, var(--card-background-color, #fff));
@@ -2870,21 +2911,29 @@ const STYLE = `
                    border-radius: 24px; background: none; cursor: pointer; font: inherit; color: inherit;
                    touch-action: manipulation; -webkit-tap-highlight-color: transparent; --mdc-icon-size: 18px; }
   .legend-button:hover { color: var(--primary-text-color); }
-  .legend-button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -6px; }
+  .legend-button:focus-visible { outline: var(--focus-ring); outline-offset: -6px; }
   /* Legend and details: a modal dialog in the top layer, so no card or section edge cuts it off.
      Built like HA's own dialogs: the close button (X) left of the title in a header that stays
-     on top while the content scrolls, full screen on phones. From 720 px on, the legend uses
-     two columns (see the entries below) */
+     put while the content below it scrolls, full screen on phones. From 720 px on, the legend
+     uses two columns (see the entries below) */
   dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 64px); box-sizing: border-box;
-           padding: 0; border: 0; border-radius: var(--ha-card-border-radius, 12px); overflow: auto;
+           padding: 0; border: 0; border-radius: var(--ha-card-border-radius, 12px); overflow: hidden;
            color: var(--primary-text-color); font-family: var(--ha-font-family-body, inherit);
            background: var(--ha-card-background, var(--card-background-color, #fff));
            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+  dialog[open] { display: flex; flex-direction: column; }
   dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
-  /* Full screen exactly when HA's own dialogs go full screen */
+  .dialog-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+  /* Full screen exactly when HA's own dialogs go full screen. There the window reaches under the
+     status bar, the home indicator and the notch: padded off them like HA's own dialogs, with
+     the safe area insets HA sets for its frontend and the companion app (else the browser's) */
   @media all and (max-width: 450px), all and (max-height: 500px) {
     :host dialog,
-    :host dialog:has(.detail) { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border-radius: 0; }
+    :host dialog:has(.detail) { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border-radius: 0;
+                                padding: var(--safe-area-inset-top, env(safe-area-inset-top, 0px))
+                                         var(--safe-area-inset-right, env(safe-area-inset-right, 0px))
+                                         var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))
+                                         var(--safe-area-inset-left, env(safe-area-inset-left, 0px)); }
   }
   @media (min-width: 720px) {
     dialog { width: min(880px, calc(100vw - 64px)); }
@@ -2893,9 +2942,8 @@ const STYLE = `
     .entries.pairs { grid-template-columns: 1fr 1fr; column-gap: 32px; }
     .entries.pairs > .row-start { grid-column: 1; }
   }
-  .dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; min-height: 64px;
-                 box-sizing: border-box; padding: 4px 24px 0 4px;
-                 background: var(--ha-card-background, var(--card-background-color, #fff)); }
+  .dialog-head { flex: none; display: flex; align-items: center; min-height: 64px; box-sizing: border-box;
+                 padding: 4px 24px 0 4px; }
   .dialog-head h2 { flex: 1; min-width: 0; margin: 0 0 0 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
                     color: var(--ha-dialog-header-title-color, var(--primary-text-color));
                     font-size: var(--ha-dialog-header-title-font-size, var(--ha-font-size-2xl, 24px));
@@ -2906,7 +2954,7 @@ const STYLE = `
            touch-action: manipulation; }
   .close svg { width: 24px; height: 24px; fill: currentColor; }
   .close:hover { background: rgba(127, 127, 127, 0.12); }
-  .close:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -4px; }
+  .close:focus-visible { outline: var(--focus-ring); outline-offset: -4px; }
   .dialog-body { padding: 8px 24px 24px; }
   .entries { display: grid; row-gap: 16px; margin: 0; padding: 0; list-style: none; }
   .entries + .entries { margin-top: 16px; }
@@ -2988,7 +3036,7 @@ const STYLE = `
                  touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .values-link svg { width: 24px; height: 24px; flex: none; fill: var(--secondary-text-color); }
   .values-link:hover svg { fill: var(--primary-text-color); }
-  .values-link:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; border-radius: 4px; }
+  .values-link:focus-visible { outline: var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
   /* All values: like HA's "Details" of an entity, a heading per section over a framed list */
   .values { display: grid; row-gap: 24px; padding-top: 12px; }
   .values h3 { margin: 0 0 12px; font-size: var(--ha-font-size-l, 16px); line-height: 24px;
@@ -3016,7 +3064,7 @@ const STYLE = `
   .zcol.drill, .zcol[data-pick] { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .zcol.drill:hover, .zcol[data-pick]:hover { background: rgba(127, 127, 127, 0.12); }
   .zcol.drill.current:hover, .zcol[data-pick].current:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.2); }
-  .zcol.drill:focus-visible, .zcol[data-pick]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  .zcol.drill:focus-visible, .zcol[data-pick]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   /* A picked quarter hour: ringed, its line below the chart */
   .zcol.picked { box-shadow: inset 0 0 0 2px var(--primary-text-color); }
   .zpick { margin-top: -8px; padding: 0 4px; min-height: 20px; font-size: var(--ha-font-size-m, 14px); line-height: 20px; }
@@ -3077,7 +3125,7 @@ const STYLE = `
   /* A part of the day that opens its own details */
   .zbands span[data-drill] { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .zbands span[data-drill]:hover { color: var(--primary-text-color); background: rgba(127, 127, 127, 0.32); }
-  .zbands span[data-drill]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 1px; }
+  .zbands span[data-drill]:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   /* ‹ › in the header: to the time before or after */
   .dialog-head .nav { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
                       display: inline-flex; align-items: center; justify-content: center; color: var(--primary-text-color);
@@ -3085,7 +3133,7 @@ const STYLE = `
   .dialog-head .nav svg { width: 24px; height: 24px; fill: currentColor; }
   .dialog-head .nav:hover:not(:disabled) { background: rgba(127, 127, 127, 0.12); }
   .dialog-head .nav:disabled { opacity: 0.3; cursor: default; }
-  .dialog-head .nav:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -4px; }
+  .dialog-head .nav:focus-visible { outline: var(--focus-ring); outline-offset: -4px; }
   /* "Now" / "Today": a small text button before ‹ ›, its touch target 48 px high */
   .dialog-head .nav-now { position: relative; height: 32px; margin-right: 4px; padding: 0 12px; border-radius: 16px; cursor: pointer;
                           border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3)); background: none; font: inherit;
@@ -3094,7 +3142,7 @@ const STYLE = `
   .dialog-head .nav-now::after { content: ""; position: absolute; inset: -8px -2px; }
   .dialog-head .nav-now:hover:not(:disabled) { background: rgba(127, 127, 127, 0.12); }
   .dialog-head .nav-now.here { visibility: hidden; }
-  .dialog-head .nav-now:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
+  .dialog-head .nav-now:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .dialog-head:has(.nav) { padding-right: 8px; }
   /* A detail card's title may take two lines next to ‹ › rather than be cut off */
   .dialog-head:has(.nav) h2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal;
@@ -3105,7 +3153,7 @@ const STYLE = `
                  cursor: pointer; font: inherit; font-size: var(--ha-font-size-s, 12px);
                  color: var(--secondary-text-color); touch-action: manipulation; --mdc-icon-size: 18px; }
   .legend-link:hover { color: var(--primary-text-color); background: rgba(127, 127, 127, 0.08); }
-  .legend-link:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  .legend-link:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   .group + .group, .groups + .group { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2)); }
   .group h3 { margin: 0 0 12px; font-size: var(--ha-font-size-s, 12px); font-weight: var(--ha-font-weight-medium, 500);
               line-height: 16px; color: var(--secondary-text-color); }
@@ -3165,7 +3213,7 @@ const STYLE = `
      its own (now-head), and the now card's three styles */
   .now-block { position: relative; color: var(--primary-text-color); border-radius: 12px; }
   .now-block[data-detail] { cursor: pointer; }
-  .now-block[data-detail]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  .now-block[data-detail]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   @media (hover: hover) {
     .now-block[data-detail]:hover { background: rgba(127, 127, 127, 0.08); }
   }
@@ -3554,6 +3602,8 @@ class TibberPricesForecastCard extends HTMLElement {
       this.shadowRoot.innerHTML = `<style>${STYLE}</style><ha-card></ha-card><dialog aria-labelledby="legend-title"></dialog>`;
       this._bindActions(this.shadowRoot.querySelector("ha-card"));
       this._bindLegend(this.shadowRoot.querySelector("dialog"));
+      // Each focus decides whether focus rings show (keyboard) or not (tap, click)
+      this.shadowRoot.addEventListener("focusin", () => this.toggleAttribute("data-keyboard", keyboardInput));
     }
     const card = this.shadowRoot.querySelector("ha-card");
     this._updateInteractive(card);
@@ -4145,7 +4195,10 @@ class TibberPricesForecastCard extends HTMLElement {
       if (!pinned) hide();
     };
     strip.addEventListener("pointerleave", leave);
-    strip.addEventListener("focusin", (event) => later(event.target.closest(columnSelector), 0));
+    // By keyboard only: after a tap, the focus coming back from a closed window leaves them off
+    strip.addEventListener("focusin", (event) => {
+      if (keyboardInput) later(event.target.closest(columnSelector), 0);
+    });
     strip.addEventListener("focusout", leave);
     return {
       // Keeps a column's arrows shown (undefined: back to showing them on hovering)
@@ -4308,9 +4361,10 @@ class TibberPricesForecastCard extends HTMLElement {
     const edge = strip.classList.contains("more-left")
       ? Math.min(FADE.max, Math.max(FADE.min, FADE.share * strip.clientWidth)) - 6
       : 0;
-    const labels = [...strip.querySelectorAll(".col.day-start > .day")];
+    const labels = [...strip.querySelectorAll(":scope > .day.start")];
+    // The column under each name (the columns come first among the strip's children)
     const places = labels.map((label) => ({
-      start: label.parentElement.getBoundingClientRect().left - left,
+      start: strip.children[Number(label.dataset.col)].getBoundingClientRect().left - left,
       width: label.scrollWidth,
     }));
     labels.forEach((label, i) => {
@@ -4514,6 +4568,7 @@ class TibberPricesForecastCard extends HTMLElement {
     // Where the strip rests: the block before the one running now (or that one, if first)
     const currentIndex = blocks.findIndex(isCurrent);
     const homeIndex = Math.max(0, currentIndex - 1);
+    const dayNames = [];
     const columns = blocks.map((block, index) => {
       const start = Date.parse(block.start);
       const end = Date.parse(block.end);
@@ -4525,6 +4580,14 @@ class TibberPricesForecastCard extends HTMLElement {
       const until = partial ? endTime(clock, block.end) : "";
       const day = partial ? t.until.replace("{time}", until) : named.day;
       const dayHtml = partial ? day : named.dayHtml;
+      // The day's name (or how far it's known) goes into the strip's day row, over this column
+      // (both grid lines: for an absolutely placed item, a missing end line is the strip's edge)
+      if (dayHtml) {
+        const nameKinds = [named.newDay && "start", partial && "partial", end <= now && !named.ongoing && "past"];
+        dayNames.push(
+          `<span class="${["day", ...nameKinds.filter(Boolean)].join(" ")}" style="grid-column:${index + 1} / ${index + 2}" data-col="${index}" aria-hidden="true">${dayHtml}</span>`
+        );
+      }
       const color = levelColor(block.level);
       let graph = "";
       // The current price beside the median (running part only), see below
@@ -4627,10 +4690,10 @@ class TibberPricesForecastCard extends HTMLElement {
         .filter(Boolean)
         .join(", ");
       // A column that opens its details is a button of its own (the strip then a group of them)
-      return `<div class="col${isNow ? " current" : ""}${index === homeIndex ? " home" : ""}${end <= now ? " past" : ""}${partial ? " partial" : ""}${named.newDay ? " day-start" : ""}${named.divider ? " new-day" : ""}" aria-label="${label}"${
+      return `<div class="col${isNow ? " current" : ""}${index === homeIndex ? " home" : ""}${end <= now ? " past" : ""}${partial ? " partial" : ""}${named.divider ? " new-day" : ""}" aria-label="${label}"${
         !ranged && typeof block[key] === "number" ? ` data-value="${shownPrice(format, block[key])}"` : ""
       }${tappable ? ` role="button" tabindex="0" aria-haspopup="dialog" data-detail="${detail}"` : ' role="listitem"'}>
-        ${active ? periodBadge(active.kind, active.title) : ""}<div class="day${named.ongoing ? " ongoing" : ""}" aria-hidden="true">${dayHtml}</div>
+        ${active ? periodBadge(active.kind, active.title) : ""}
         <div class="name" aria-hidden="true"${hoursOf(block) ? ` title="${hoursOf(block)}"` : ""}>${name}</div>
         <div class="graph" aria-hidden="true" title="${graphHint}${
           partial ? ` · ${t.partial_note.replace("{time}", until)}` : ""
@@ -4663,7 +4726,7 @@ class TibberPricesForecastCard extends HTMLElement {
       twoPartDays ? " two-part-days" : ""
     }"${collapsed.length ? ` style="${collapsed.join(";")}"` : ""} role="${tappable ? "group" : "list"}" aria-label="${
       t[kind === "parts" ? "day_parts" : "hours"]
-    }">${columns.join("")}</div>${button("forward", t.later, CHEVRON_RIGHT)}</div>`;
+    }">${columns.join("")}${dayNames.join("")}</div>${button("forward", t.later, CHEVRON_RIGHT)}</div>`;
   }
 
   /**
@@ -5152,8 +5215,8 @@ class TibberPricesForecastCard extends HTMLElement {
     return { dataset: { legend: shows.marks.join(" "), sections: [...new Set(shows.sections)].join(" ") } };
   }
 
-  // Fills the dialog (title with HA's close button, buttons at its end, then the body), opens it
-  // and starts it at the top
+  // Fills the dialog (title with HA's close button, buttons at its end, then the body, which
+  // scrolls on its own and starts at the top) and opens it
   _showDialog(title, body, opener, headEnd = "", subtitle = "") {
     const dialog = this.shadowRoot.querySelector("dialog");
     const t = stringsFor(this._hass);
@@ -5165,10 +5228,9 @@ class TibberPricesForecastCard extends HTMLElement {
       back ? BACK_PATH : CLOSE_PATH
     }"></path></svg></button><div class="dialog-titles">${
       subtitle ? `<div class="dialog-subtitle">${subtitle}</div>` : ""
-    }<h2 id="legend-title">${title}</h2></div>${headEnd}</div>${body}`;
+    }<h2 id="legend-title">${title}</h2></div>${headEnd}</div><div class="dialog-scroll">${body}</div>`;
     this._legendOpener = opener;
     if (!dialog.open) dialog.showModal();
-    dialog.scrollTop = 0;
   }
 
   /**
@@ -5611,10 +5673,10 @@ class TibberPricesForecastCard extends HTMLElement {
     const dialog = this.shadowRoot.querySelector("dialog");
     const shown = this._detailShown;
     if (!dialog || !dialog.open || !this._detailNav || !shown) return;
-    const scroll = dialog.scrollTop;
+    const scroll = dialogScroll(dialog).scrollTop;
     const focused = dialog.contains(this.shadowRoot.activeElement);
     if (!this._reopen(shown, this._legendOpener)) return;
-    dialog.scrollTop = scroll;
+    dialogScroll(dialog).scrollTop = scroll;
     if (focused) dialog.querySelector(".close").focus();
   }
 
@@ -5635,7 +5697,12 @@ class TibberPricesForecastCard extends HTMLElement {
   // control that left it)
   _pushBack(dialog, focus) {
     if (!this._detailNav || !this._detailShown) return;
-    this._detailBack.push({ shown: this._detailShown, opener: this._legendOpener, scroll: dialog.scrollTop, focus });
+    this._detailBack.push({
+      shown: this._detailShown,
+      opener: this._legendOpener,
+      scroll: dialogScroll(dialog).scrollTop,
+      focus,
+    });
   }
 
   /**
@@ -5703,7 +5770,7 @@ class TibberPricesForecastCard extends HTMLElement {
       dialog.close();
       return;
     }
-    dialog.scrollTop = entry.scroll;
+    dialogScroll(dialog).scrollTop = entry.scroll;
     const control = entry.focus && dialog.querySelector(entry.focus);
     if (control) {
       control.focus({ preventScroll: true });
