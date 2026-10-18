@@ -2494,29 +2494,30 @@ const STYLE = `
   /* Room around a day row for its hover and focus, without moving anything */
   .day-row[data-day] { margin: -4px -8px; padding: 4px 8px; border-radius: 12px; }
   @media (hover: hover) {
-    ha-card.column-details .col[data-detail]:hover::after,
+    ha-card.column-details .col[data-detail]:hover,
     ha-card.column-details .day-row[data-day]:hover { background: rgba(127, 127, 127, 0.08); }
-    ha-card.column-details .col.current[data-detail]:hover::after { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.18); }
+    ha-card.column-details .col.current[data-detail]:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.18); }
     ha-card.interactive.column-details:hover:has(.col[data-detail]:hover, .day-row[data-day]:hover)::before { opacity: 0; }
   }
-  ha-card.column-details .col[data-detail]:focus-visible { outline: none; }
-  ha-card.column-details .col[data-detail]:focus-visible::after,
+  ha-card.column-details .col[data-detail]:focus-visible,
   ha-card.column-details .day-row[data-day]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   ha-card.interactive:active:not(:has(button:active)):not(.column-details:has(.col:active, .day-row[data-day]:active))::before {
     background: var(--ha-ripple-pressed-color, var(--ha-ripple-color, var(--state-icon-color, #44739e)));
     opacity: var(--ha-ripple-pressed-opacity, 0.12); }
   ha-card:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   /* Scrolling sideways clips the top too: 9 px of room above the columns, given back by the
-     margin, so a badge on a column's corner isn't cut off and nothing moves */
-  .strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(var(--col-min), 1fr); gap: 4px;
-           overflow-x: auto; scrollbar-width: none; padding-top: 9px; margin-top: -9px; }
+     margin, so a badge on a column's corner isn't cut off and nothing moves. Above that room,
+     the day row: a band of the strip, not of its columns, where the day names run across the
+     columns (see .day), clear of a column's tint, hover and focus ring */
+  .strip { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(var(--col-min), 1fr); gap: 4px;
+           overflow-x: auto; scrollbar-width: none; padding-top: calc(9px + var(--row-day, var(--day-h)) + 4px); margin-top: -9px; }
   .strip::-webkit-scrollbar { display: none; }
   /* Places to snap to: where the strip rests (letting go near it, it settles there, as in other
      apps), and both ends, so an end close to that place stays reachable rather than snapping
      back; in between, scrolling stays free */
   .strip { scroll-snap-type: x proximity; }
   /* The price steps to the neighbouring hours, while one is hovered */
-  .strip.hours, .zoom { position: relative; }
+  .zoom { position: relative; }
   .steps { position: absolute; top: 0; left: 0; z-index: 2; overflow: visible; pointer-events: none;
            opacity: 0; transition: opacity 0.2s ease-out; }
   .steps.shown { opacity: 1; }
@@ -2536,8 +2537,8 @@ const STYLE = `
   .steps .same { color: var(--secondary-text-color); }
   /* Meanwhile the chips step back, so the percentages don't collide with them */
   .strip.hours.steps-on .chip { opacity: 0.15; }
-  .col.home, .col:first-child { scroll-snap-align: start; }
-  .col:last-child { scroll-snap-align: end; }
+  .col.home, .col:first-of-type { scroll-snap-align: start; }
+  .col:last-of-type { scroll-snap-align: end; }
   .strip.hours { --col-min: 40px; }
   /* Touch: hours a finger's width (44 px, Apple's minimum target; Material asks 48). Wider cards
      set wider columns below anyway */
@@ -2563,7 +2564,7 @@ const STYLE = `
   .strip.more-left.more-right {
     mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent); }
   /* Page buttons where a strip goes on: for mouse and keyboard, and as a visible cue to swipe.
-     Centered on the graph row: padding 8 + day 12 + name 16 + 2 gaps of 4 = 44 above it,
+     Centered on the graph row: day row 12 + 4, padding 8, name 16 + gap 4 = 44 above it,
      --below under it */
   .scroll { position: absolute; top: calc(var(--above) + (100% - var(--above) - var(--below)) / 2); width: 32px; height: 32px; margin-top: -16px; padding: 0; border: 0;
             border-radius: 50%; display: none; align-items: center; justify-content: center; cursor: pointer;
@@ -2581,17 +2582,10 @@ const STYLE = `
   .scroll:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .strip-wrap + .strip-wrap { margin-top: calc(16px - 8px * var(--squeeze, 0)); }
   .col { position: relative; display: grid; row-gap: 4px;
-         grid-template-rows: var(--row-day, var(--day-h)) var(--name-h) var(--graph) var(--value-h) var(--row-range, var(--label-h))
+         grid-template-rows: var(--name-h) var(--graph) var(--value-h) var(--row-range, var(--label-h))
                              var(--row-extreme, var(--label-h)) var(--row-mark, 3px);
-         justify-items: center; padding: var(--pad) 0; border-radius: 12px; isolation: isolate; }
-  /* The column as a box (the tint of now, hover, the focus ring) starts below its day row: the
-     day's name there runs on across the next columns and stays clear of them. Without a day
-     row (--box-top: 0), the box is the whole column. The day's name sits 4 px up (see .day),
-     as room between the box's edge and the hour. Only a column that shows its box has one */
-  .col.current::after, .col[data-detail]:hover::after, .col[data-detail]:focus-visible::after { content: ""; }
-  .col::after { position: absolute; z-index: -1; inset: var(--box-top, calc(var(--pad) - 4px + var(--row-day, var(--day-h)))) 0 0;
-                border-radius: 12px; pointer-events: none; }
-  .col.current::after { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12); }
+         justify-items: center; padding: var(--pad) 0; border-radius: 12px; }
+  .col.current { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12); }
   /* What's over (the hour before now): faded, like past bars in the details; the day's dashed
      line runs on unbroken */
   .col.past > :not(.graph) { opacity: 0.45; }
@@ -2604,22 +2598,24 @@ const STYLE = `
   .col.past .tick, .partial .tick { border-right-color: color-mix(in srgb, var(--primary-text-color) var(--pale-marks), var(--fade-bg)); }
   .col.past .tick-line, .partial .tick-line { background: color-mix(in srgb, var(--on-level-color) var(--pale-marks), var(--fade-bg)); }
   .col.past .bar, .col.past .span, .zcol.past .zbar { box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05); }
-  .col.past > .day.ongoing { opacity: 1; }
   /* Where the next day begins: a line in the gap before its first column, and its name set
      like a calendar's month, from the line onwards across the columns. It also explains why
      the dashed reference line jumps there: from here on it's the next day's. The line fades out
      at both ends, so the lines of two strips one above the other don't meet hard */
-  .col.new-day::before { content: ""; position: absolute; top: 0; bottom: 0; left: -2.5px; width: 1px; opacity: 0.35;
+  .col.new-day::before { content: ""; position: absolute; top: calc(-4px - var(--row-day, var(--day-h))); bottom: 0; left: -2.5px; width: 1px; opacity: 0.35;
                          color: var(--secondary-text-color);
                          background: linear-gradient(to bottom, transparent, currentColor 32px,
                                                      currentColor calc(100% - 32px), transparent); }
-  .col.day-start .day { justify-self: start; width: 0; overflow: visible; padding-left: 6px; font-size: var(--ha-font-size-s, 12px);
-                      font-weight: var(--ha-font-weight-bold, 600); color: var(--primary-text-color); }
-  /* Moved along while its divider is scrolled out on the left (see _stickDayNames): above the
-     columns it passes */
-  .col.day-start > .day { position: relative; z-index: 2; }
   .day, .name, .range { white-space: nowrap; color: var(--secondary-text-color); }
-  .day { translate: 0 -4px; height: var(--day-h); line-height: var(--day-h); font-size: var(--ha-font-size-xs, 10px); }
+  /* A day's name (or how far a part of the day is known) in the strip's day row, over its column:
+     placed in the column's grid area, it takes no room in the strip. Moved along while its
+     divider is scrolled out on the left (see _stickDayNames), above the columns it passes */
+  .day { position: absolute; z-index: 2; grid-row: 1; top: calc(-1 * var(--row-day, var(--day-h)));
+         height: var(--day-h); line-height: var(--day-h); font-size: var(--ha-font-size-xs, 10px); pointer-events: none; }
+  .day:not(.start) { left: 50%; translate: -50% 0; }
+  .day.past { opacity: 0.45; }
+  .day.start { left: 0; padding-left: 6px; font-size: var(--ha-font-size-s, 12px); font-weight: var(--ha-font-weight-bold, 600);
+               color: var(--primary-text-color); }
   .name { height: var(--name-h); line-height: var(--name-h); font-size: var(--ha-font-size-s, 12px); }
   .current .name { color: var(--primary-text-color); font-weight: var(--ha-font-weight-bold, 600); }
   .chip { font-size: var(--ha-font-size-xs, 10px); font-weight: var(--ha-font-weight-bold, 600); line-height: 16px;
@@ -2664,15 +2660,15 @@ const STYLE = `
   .ref { position: absolute; z-index: -1; left: -2px; right: -2px; height: 0; margin-bottom: -0.75px; pointer-events: none;
          border-top: 1.5px dashed var(--secondary-text-color); opacity: 0.8; }
   /* The outer columns stay inside the strip, or it would count as scrolling */
-  .col:first-child .ref { left: 0; }
-  .col:last-child .ref { right: 0; }
+  .col:first-of-type .ref { left: 0; }
+  .col:last-of-type .ref { right: 0; }
   .value { font-size: var(--ha-font-size-m, 14px); font-weight: var(--ha-font-weight-medium, 500); line-height: var(--value-h);
            color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
   .range { height: var(--label-h); line-height: var(--label-h); font-size: 11px; font-variant-numeric: tabular-nums; }
   /* Hours, and parts of the day in the compact layout, have no min–max row (the span shows them;
      screen readers still get them), so both strips line up exactly */
   .hours .col, .compact .parts .col {
-    grid-template-rows: var(--row-day, var(--day-h)) var(--name-h) var(--graph) var(--value-h)
+    grid-template-rows: var(--name-h) var(--graph) var(--value-h)
                         var(--row-extreme, var(--label-h)) var(--row-mark, 3px);
   }
   .hours .range, .compact .parts .range { display: none; }
@@ -2733,7 +2729,7 @@ const STYLE = `
                    margin: 0 0 -2px calc(var(--span-w) / -2);
                    box-sizing: border-box; background: var(--primary-color, #03a9f4);
                    border: solid var(--ha-card-background, var(--card-background-color, #fff)); border-width: 1px 0; }
-  .partial .day { color: var(--secondary-text-color); font-style: italic; }
+  .day.partial { font-style: italic; }
   .mark { position: relative; width: 80%; height: 3px; border-radius: 2px; overflow: hidden; }
   .mark.has { background: rgba(127, 127, 127, 0.2); }
   .mark span { position: absolute; top: 0; bottom: 0; }
@@ -2811,10 +2807,10 @@ const STYLE = `
     .day-info { justify-content: center; text-align: center; }
     .day-info.wrapped > .level-dot ~ .extremes { margin-left: 0; }
     /* A day's name over the strips: centered over its column, word and weekday stacked */
-    .strip.two-part-days .col { --row-day: 24px; }
-    .col.day-start .day { justify-self: center; width: auto; padding-left: 0; height: auto; display: flex;
-                        flex-direction: column; align-items: center; text-align: center; }
-    .col.day-start .day .label-sep { display: none; }
+    .strip.two-part-days { --row-day: 24px; }
+    .day.start { left: 50%; translate: -50% 0; padding-left: 0; height: auto; display: flex;
+                 flex-direction: column; align-items: center; text-align: center; }
+    .day.start .label-sep { display: none; }
     .switch .label { display: none; }
   }
   /* Wide (two sections or a big screen): the days move beside hours and parts of the day,
@@ -2851,7 +2847,7 @@ const STYLE = `
     .strip.hours { --col-min: 52px; }
     .strip { --bar-w: 24px; --span-w: 16px; --day-h: 20px; --name-h: 20px; --label-h: 16px; }
     .day { font-size: var(--ha-font-size-m, 14px); }
-    .col.day-start .day { font-size: var(--ha-font-size-l, 16px); }
+    .day.start { font-size: var(--ha-font-size-l, 16px); }
     .chip { font-size: var(--ha-font-size-s, 12px); line-height: 18px; }
     .name { font-size: var(--ha-font-size-m, 14px); }
     .range, .extreme { font-size: var(--ha-font-size-s, 12px); }
@@ -4361,9 +4357,10 @@ class TibberPricesForecastCard extends HTMLElement {
     const edge = strip.classList.contains("more-left")
       ? Math.min(FADE.max, Math.max(FADE.min, FADE.share * strip.clientWidth)) - 6
       : 0;
-    const labels = [...strip.querySelectorAll(".col.day-start > .day")];
+    const labels = [...strip.querySelectorAll(":scope > .day.start")];
+    const columns = strip.querySelectorAll(":scope > .col");
     const places = labels.map((label) => ({
-      start: label.parentElement.getBoundingClientRect().left - left,
+      start: columns[Number(label.dataset.col)].getBoundingClientRect().left - left,
       width: label.scrollWidth,
     }));
     labels.forEach((label, i) => {
@@ -4567,6 +4564,7 @@ class TibberPricesForecastCard extends HTMLElement {
     // Where the strip rests: the block before the one running now (or that one, if first)
     const currentIndex = blocks.findIndex(isCurrent);
     const homeIndex = Math.max(0, currentIndex - 1);
+    const dayNames = [];
     const columns = blocks.map((block, index) => {
       const start = Date.parse(block.start);
       const end = Date.parse(block.end);
@@ -4578,6 +4576,14 @@ class TibberPricesForecastCard extends HTMLElement {
       const until = partial ? endTime(clock, block.end) : "";
       const day = partial ? t.until.replace("{time}", until) : named.day;
       const dayHtml = partial ? day : named.dayHtml;
+      // The day's name (or how far it's known) goes into the strip's day row, over this column
+      // (both grid lines: for an absolutely placed item, a missing end line is the strip's edge)
+      if (dayHtml) {
+        const nameKinds = [named.newDay && "start", partial && "partial", end <= now && !named.ongoing && "past"];
+        dayNames.push(
+          `<span class="${["day", ...nameKinds.filter(Boolean)].join(" ")}" style="grid-column:${index + 1} / ${index + 2}" data-col="${index}" aria-hidden="true">${dayHtml}</span>`
+        );
+      }
       const color = levelColor(block.level);
       let graph = "";
       // The current price beside the median (running part only), see below
@@ -4680,10 +4686,10 @@ class TibberPricesForecastCard extends HTMLElement {
         .filter(Boolean)
         .join(", ");
       // A column that opens its details is a button of its own (the strip then a group of them)
-      return `<div class="col${isNow ? " current" : ""}${index === homeIndex ? " home" : ""}${end <= now ? " past" : ""}${partial ? " partial" : ""}${named.newDay ? " day-start" : ""}${named.divider ? " new-day" : ""}" aria-label="${label}"${
+      return `<div class="col${isNow ? " current" : ""}${index === homeIndex ? " home" : ""}${end <= now ? " past" : ""}${partial ? " partial" : ""}${named.divider ? " new-day" : ""}" aria-label="${label}"${
         !ranged && typeof block[key] === "number" ? ` data-value="${shownPrice(format, block[key])}"` : ""
       }${tappable ? ` role="button" tabindex="0" aria-haspopup="dialog" data-detail="${detail}"` : ' role="listitem"'}>
-        ${active ? periodBadge(active.kind, active.title) : ""}<div class="day${named.ongoing ? " ongoing" : ""}" aria-hidden="true">${dayHtml}</div>
+        ${active ? periodBadge(active.kind, active.title) : ""}
         <div class="name" aria-hidden="true"${hoursOf(block) ? ` title="${hoursOf(block)}"` : ""}>${name}</div>
         <div class="graph" aria-hidden="true" title="${graphHint}${
           partial ? ` · ${t.partial_note.replace("{time}", until)}` : ""
@@ -4705,7 +4711,7 @@ class TibberPricesForecastCard extends HTMLElement {
     // Rows of details left out entirely collapse (by setting only, never by data, so the height
     // never changes on its own). The parts' day row stays: it also says how far a part is known
     const collapsed = [
-      !ranged && hide.has("tomorrow") && hide.has("weekday") && "--row-day:0px;--box-top:0px",
+      !ranged && hide.has("tomorrow") && hide.has("weekday") && "--row-day:0px",
       hide.has("range") && "--row-range:0px",
       hide.has("low") && hide.has("high") && "--row-extreme:0px",
       hide.has("periods") && "--row-mark:0px",
@@ -4716,7 +4722,7 @@ class TibberPricesForecastCard extends HTMLElement {
       twoPartDays ? " two-part-days" : ""
     }"${collapsed.length ? ` style="${collapsed.join(";")}"` : ""} role="${tappable ? "group" : "list"}" aria-label="${
       t[kind === "parts" ? "day_parts" : "hours"]
-    }">${columns.join("")}</div>${button("forward", t.later, CHEVRON_RIGHT)}</div>`;
+    }">${columns.join("")}${dayNames.join("")}</div>${button("forward", t.later, CHEVRON_RIGHT)}</div>`;
   }
 
   /**
