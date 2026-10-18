@@ -1,0 +1,86 @@
+#!/bin/bash
+
+# script/seed-http-config: Give a new development config the HTTP settings it needs
+#
+# Since Home Assistant 2026.8, the HTTP settings live in config/.storage/http and
+# are managed in the UI (Settings > System > Network). An http: block in
+# configuration.yaml is only imported once and ignored afterwards, with a repair
+# issue asking to remove it. config/.storage/ isn't part of the repository, so
+# this script writes the development settings there when the file is missing.
+# An existing file is never touched: what was changed in the UI stays.
+#
+# Settings: listen on all interfaces, no IP banning (no lockouts while
+# developing), trust X-Forwarded-For from local and private networks (Codespaces
+# reverse proxy), CORS for any origin.
+#
+# Usage:
+#   ./scripts/setup/seed-http-config
+#
+# Environment:
+#   SETUP_PORT  Port of the new config (default: 8123). Home Assistant reads the
+#               same variable for its own default port. Only used when the file
+#               is created; afterwards the port is changed in the UI.
+#
+# Examples:
+#   ./scripts/setup/seed-http-config
+#   SETUP_PORT=8125 ./scripts/setup/seed-http-config
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+STORE_FILE="config/.storage/http"
+
+if [[ -f $STORE_FILE ]]; then
+    exit 0
+fi
+
+require_command python3
+
+PORT="${SETUP_PORT:-8123}"
+
+mkdir -p "$(dirname "$STORE_FILE")"
+
+# Home Assistant's storage format for the HTTP settings (version 2.2, as written
+# by Home Assistant 2026.8). Older versions are migrated by Home Assistant itself.
+# No server_host: Home Assistant listens on all interfaces (IPv4 and IPv6).
+# yaml_migration_done: there is no YAML to import. A port that isn't a number
+# stops the script before the file is written
+python3 - "$STORE_FILE" "$PORT" <<'EOF'
+import json
+import sys
+from datetime import UTC, datetime
+
+path, port = sys.argv[1], int(sys.argv[2])
+data = {
+    "version": 2,
+    "minor_version": 2,
+    "key": "http",
+    "data": {
+        "stable": {
+            "server_port": port,
+            "ip_ban_enabled": False,
+            "use_x_forwarded_for": True,
+            "trusted_proxies": ["127.0.0.0/8", "::1/128", "192.168.0.0/16", "172.16.0.0/12", "10.0.0.0/8"],
+            "cors_allowed_origins": ["*"],
+            "use_x_frame_options": True,
+            "ssl_profile": "modern",
+            "login_attempts_threshold": -1,
+            "created_at": datetime.now(UTC).isoformat(),
+            "error": None,
+            "error_message": None,
+        },
+        "pending": None,
+        "yaml_migration_done": True,
+    },
+}
+with open(path, "w", encoding="utf-8") as file:
+    json.dump(data, file, indent=2)
+    file.write("\n")
+EOF
+
+log_success "HTTP settings created in ${STORE_FILE} (port ${PORT})"
