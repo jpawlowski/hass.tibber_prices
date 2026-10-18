@@ -2539,6 +2539,11 @@ const STYLE = `
   .col.home, .col:first-child { scroll-snap-align: start; }
   .col:last-child { scroll-snap-align: end; }
   .strip.hours { --col-min: 40px; }
+  /* Touch: hours a finger's width (44 px, Apple's minimum target; Material asks 48). Wider cards
+     set wider columns below anyway */
+  @media (any-pointer: coarse) {
+    .strip.hours { --col-min: 44px; }
+  }
   /* Four parts of the day at a time, a whole day's round: the one before now, now, and two to
      come; scrolling shows more */
   .strip.parts { --col-min: 60px; grid-auto-columns: max(var(--col-min), calc((100% - 12px) / 4)); }
@@ -2565,6 +2570,10 @@ const STYLE = `
             color: var(--primary-text-color); background: var(--ha-card-background, var(--card-background-color, #fff));
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25); z-index: 1; }
   .scroll svg { width: 20px; height: 20px; fill: currentColor; }
+  /* Touch: a 44 px target around the 32 px button (a bigger button would hide a column) */
+  @media (any-pointer: coarse) {
+    .scroll::after { content: ""; position: absolute; inset: -6px; border-radius: 50%; }
+  }
   .scroll.back { left: 0; }
   .scroll.forward { right: 0; }
   .strip-wrap.more-left .scroll.back, .strip-wrap.more-right .scroll.forward { display: inline-flex; }
