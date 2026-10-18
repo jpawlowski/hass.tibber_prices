@@ -365,9 +365,7 @@ def test_pool_protected_range_follows_shifted_clock() -> None:
         evict the historical intervals it just fetched, because they fall
         outside the live day-before-yesterday..tomorrow window.
     """
-    from custom_components.tibber_prices.interval_pool.cache import (  # noqa: PLC0415
-        TibberPricesIntervalPoolFetchGroupCache,
-    )
+    from custom_components.tibber_prices.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache  # noqa: PLC0415
 
     reference = datetime(2026, 8, 7, 14, 30, tzinfo=TZ)
     cache = TibberPricesIntervalPoolFetchGroupCache(time_service=TibberPricesTimeService(reference_time=reference))
@@ -472,9 +470,7 @@ def test_diagnostic_sensors_describe_a_view() -> None:
     Expected: Mode and year offset are reported, the day offset is None (wrong
         mode), and the fine-tuning shows as a signed clock string.
     """
-    from custom_components.tibber_prices.sensor.calculators.time_travel import (  # noqa: PLC0415
-        TibberPricesTimeTravelCalculator,
-    )
+    from custom_components.tibber_prices.sensor.calculators.time_travel import TibberPricesTimeTravelCalculator  # noqa: PLC0415
 
     coordinator = Mock()
     coordinator.time_shift = TimeShift(mode=MODE_YEARLY, years=-1, hours=-2, minutes=-30)
@@ -502,9 +498,7 @@ def test_diagnostic_sensors_on_a_live_device() -> None:
     Expected: "live" with no offsets - someone comparing two devices in a chart
         needs that answer, not an empty entity.
     """
-    from custom_components.tibber_prices.sensor.calculators.time_travel import (  # noqa: PLC0415
-        TibberPricesTimeTravelCalculator,
-    )
+    from custom_components.tibber_prices.sensor.calculators.time_travel import TibberPricesTimeTravelCalculator  # noqa: PLC0415
 
     coordinator = Mock()
     coordinator.time_shift = TimeShift()
@@ -735,9 +729,7 @@ def test_view_title_is_built_on_the_home_device_name() -> None:
     """
     from unittest.mock import MagicMock  # noqa: PLC0415
 
-    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (  # noqa: PLC0415
-        TibberPricesSubentryFlowHandler,
-    )
+    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler  # noqa: PLC0415
     from custom_components.tibber_prices.device import build_device_info  # noqa: PLC0415
 
     entry_data = {
@@ -823,9 +815,7 @@ def test_view_midnight_arrives_late_when_shifted_by_hours() -> None:
         would rotate the view's data three hours too early.
     """
     from custom_components.tibber_prices.coordinator.core import TibberPricesDataUpdateCoordinator  # noqa: PLC0415
-    from custom_components.tibber_prices.coordinator.midnight_handler import (  # noqa: PLC0415
-        TibberPricesMidnightHandler,
-    )
+    from custom_components.tibber_prices.coordinator.midnight_handler import TibberPricesMidnightHandler  # noqa: PLC0415
 
     coordinator = Mock(spec=TibberPricesDataUpdateCoordinator)
     coordinator._time_shift = TimeShift(days=-7, hours=-3)  # noqa: SLF001

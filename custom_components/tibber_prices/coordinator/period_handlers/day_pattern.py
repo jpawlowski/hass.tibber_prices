@@ -26,6 +26,7 @@ interval dicts produced by utils/price.py.
 
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 import math
 from typing import TYPE_CHECKING, Any
@@ -109,10 +110,8 @@ def detect_day_patterns(
     now = time.now()
     today_date: date = now.date()
 
-    import datetime as _dt  # noqa: PLC0415
-
-    yesterday_date = today_date - _dt.timedelta(days=1)
-    tomorrow_date = today_date + _dt.timedelta(days=1)
+    yesterday_date = today_date - timedelta(days=1)
+    tomorrow_date = today_date + timedelta(days=1)
 
     result: dict[str, dict[str, Any] | None] = {
         "yesterday": None,

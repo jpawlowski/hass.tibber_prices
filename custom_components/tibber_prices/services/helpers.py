@@ -905,9 +905,7 @@ def smooth_service_intervals(
         Smoothed intervals have '_original_total' preserving the real price.
 
     """
-    from custom_components.tibber_prices.coordinator.period_handlers.outlier_filtering import (  # noqa: PLC0415
-        filter_price_outliers,
-    )
+    from custom_components.tibber_prices.coordinator.period_handlers.outlier_filtering import filter_price_outliers  # noqa: PLC0415
 
     return filter_price_outliers(intervals, DEFAULT_SERVICE_SMOOTHING_FLEX, 0)
 

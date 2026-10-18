@@ -18,45 +18,45 @@ class TestListenerCleanup:
         """Test that time-sensitive listeners can be removed."""
         # Create listener manager
         manager = object.__new__(TibberPricesListenerManager)
-        manager._time_sensitive_listeners = []  # noqa: SLF001
-        manager._log = lambda *_a, **_kw: None  # noqa: SLF001
+        manager._time_sensitive_listeners = []
+        manager._log = lambda *_a, **_kw: None
 
         # Add a listener
         callback = Mock()
         remove_fn = manager.async_add_time_sensitive_listener(callback)
 
         # Verify listener was added
-        assert callback in manager._time_sensitive_listeners  # noqa: SLF001
-        assert len(manager._time_sensitive_listeners) == 1  # noqa: SLF001
+        assert callback in manager._time_sensitive_listeners
+        assert len(manager._time_sensitive_listeners) == 1
 
         # Remove listener
         remove_fn()
 
         # Verify listener was removed
-        assert callback not in manager._time_sensitive_listeners  # noqa: SLF001
-        assert len(manager._time_sensitive_listeners) == 0  # noqa: SLF001
+        assert callback not in manager._time_sensitive_listeners
+        assert len(manager._time_sensitive_listeners) == 0
 
     def test_listener_manager_removes_minute_listeners(self) -> None:
         """Test that minute-update listeners can be removed."""
         # Create listener manager
         manager = object.__new__(TibberPricesListenerManager)
-        manager._minute_update_listeners = []  # noqa: SLF001
-        manager._log = lambda *_a, **_kw: None  # noqa: SLF001
+        manager._minute_update_listeners = []
+        manager._log = lambda *_a, **_kw: None
 
         # Add a listener
         callback = Mock()
         remove_fn = manager.async_add_minute_update_listener(callback)
 
         # Verify listener was added
-        assert callback in manager._minute_update_listeners  # noqa: SLF001
-        assert len(manager._minute_update_listeners) == 1  # noqa: SLF001
+        assert callback in manager._minute_update_listeners
+        assert len(manager._minute_update_listeners) == 1
 
         # Remove listener
         remove_fn()
 
         # Verify listener was removed
-        assert callback not in manager._minute_update_listeners  # noqa: SLF001
-        assert len(manager._minute_update_listeners) == 0  # noqa: SLF001
+        assert callback not in manager._minute_update_listeners
+        assert len(manager._minute_update_listeners) == 0
 
     @pytest.mark.asyncio
     async def test_sensor_cleanup_pattern_exists(self) -> None:
@@ -98,8 +98,8 @@ class TestTimerCleanup:
         # Create listener manager
         manager = object.__new__(TibberPricesListenerManager)
         mock_cancel = Mock()
-        manager._quarter_hour_timer_cancel = mock_cancel  # noqa: SLF001
-        manager._minute_timer_cancel = None  # noqa: SLF001
+        manager._quarter_hour_timer_cancel = mock_cancel
+        manager._minute_timer_cancel = None
 
         # Cancel timers
         manager.cancel_timers()
@@ -108,15 +108,15 @@ class TestTimerCleanup:
         mock_cancel.assert_called_once()
 
         # Verify reference was cleared
-        assert manager._quarter_hour_timer_cancel is None  # noqa: SLF001
+        assert manager._quarter_hour_timer_cancel is None
 
     def test_cancel_timers_clears_minute_timer(self) -> None:
         """Test that minute timer is cancelled and cleared."""
         # Create listener manager
         manager = object.__new__(TibberPricesListenerManager)
-        manager._quarter_hour_timer_cancel = None  # noqa: SLF001
+        manager._quarter_hour_timer_cancel = None
         mock_cancel = Mock()
-        manager._minute_timer_cancel = mock_cancel  # noqa: SLF001
+        manager._minute_timer_cancel = mock_cancel
 
         # Cancel timers
         manager.cancel_timers()
@@ -125,7 +125,7 @@ class TestTimerCleanup:
         mock_cancel.assert_called_once()
 
         # Verify reference was cleared
-        assert manager._minute_timer_cancel is None  # noqa: SLF001
+        assert manager._minute_timer_cancel is None
 
     def test_cancel_timers_handles_both_timers(self) -> None:
         """Test that both timers are cancelled together."""
@@ -133,8 +133,8 @@ class TestTimerCleanup:
         manager = object.__new__(TibberPricesListenerManager)
         mock_quarter_cancel = Mock()
         mock_minute_cancel = Mock()
-        manager._quarter_hour_timer_cancel = mock_quarter_cancel  # noqa: SLF001
-        manager._minute_timer_cancel = mock_minute_cancel  # noqa: SLF001
+        manager._quarter_hour_timer_cancel = mock_quarter_cancel
+        manager._minute_timer_cancel = mock_minute_cancel
 
         # Cancel timers
         manager.cancel_timers()
@@ -144,22 +144,22 @@ class TestTimerCleanup:
         mock_minute_cancel.assert_called_once()
 
         # Verify references were cleared
-        assert manager._quarter_hour_timer_cancel is None  # noqa: SLF001
-        assert manager._minute_timer_cancel is None  # noqa: SLF001
+        assert manager._quarter_hour_timer_cancel is None
+        assert manager._minute_timer_cancel is None
 
     def test_cancel_timers_handles_none_gracefully(self) -> None:
         """Test that cancel_timers doesn't crash if timers are None."""
         # Create listener manager with no timers
         manager = object.__new__(TibberPricesListenerManager)
-        manager._quarter_hour_timer_cancel = None  # noqa: SLF001
-        manager._minute_timer_cancel = None  # noqa: SLF001
+        manager._quarter_hour_timer_cancel = None
+        manager._minute_timer_cancel = None
 
         # Should not raise
         manager.cancel_timers()
 
         # Verify still None
-        assert manager._quarter_hour_timer_cancel is None  # noqa: SLF001
-        assert manager._minute_timer_cancel is None  # noqa: SLF001
+        assert manager._quarter_hour_timer_cancel is None
+        assert manager._minute_timer_cancel is None
 
 
 @pytest.mark.unit
@@ -187,28 +187,24 @@ class TestConfigEntryCleanup:
         coordinator = object.__new__(TibberPricesDataUpdateCoordinator)
         coordinator.hass = hass
         coordinator.config_entry = config_entry
-        coordinator._log_prefix = "[test]"  # noqa: SLF001
-        coordinator._log = lambda *_a, **_kw: None  # noqa: SLF001
+        coordinator._log_prefix = "[test]"
+        coordinator._log = lambda *_a, **_kw: None
 
         # Initialize necessary components
-        from custom_components.tibber_prices.coordinator.data_transformation import (  # noqa: PLC0415
-            TibberPricesDataTransformer,
-        )
+        from custom_components.tibber_prices.coordinator.data_transformation import TibberPricesDataTransformer  # noqa: PLC0415
         from custom_components.tibber_prices.coordinator.listeners import TibberPricesListenerManager  # noqa: PLC0415
         from custom_components.tibber_prices.coordinator.periods import TibberPricesPeriodCalculator  # noqa: PLC0415
         from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService  # noqa: PLC0415
 
         coordinator.time = TibberPricesTimeService(hass)
-        coordinator._listener_manager = object.__new__(TibberPricesListenerManager)  # noqa: SLF001
-        coordinator._data_transformer = object.__new__(TibberPricesDataTransformer)  # noqa: SLF001
-        coordinator._period_calculator = object.__new__(TibberPricesPeriodCalculator)  # noqa: SLF001
+        coordinator._listener_manager = object.__new__(TibberPricesListenerManager)
+        coordinator._data_transformer = object.__new__(TibberPricesDataTransformer)
+        coordinator._period_calculator = object.__new__(TibberPricesPeriodCalculator)
         setattr(coordinator, "_lifecycle_callbacks", [])
 
         # Manually call the registration that happens in __init__
         # This tests the pattern: entry.async_on_unload(entry.add_update_listener(...))
-        update_listener = config_entry.add_update_listener(
-            coordinator._handle_options_update  # noqa: SLF001
-        )
+        update_listener = config_entry.add_update_listener(coordinator._handle_options_update)
         config_entry.async_on_unload(update_listener)
 
         # Verify the listener was registered
@@ -226,22 +222,20 @@ class TestCacheInvalidation:
 
     def test_config_cache_invalidated_on_options_change(self) -> None:
         """Test that config caches are cleared when options change."""
-        from custom_components.tibber_prices.coordinator.data_transformation import (  # noqa: PLC0415
-            TibberPricesDataTransformer,
-        )
+        from custom_components.tibber_prices.coordinator.data_transformation import TibberPricesDataTransformer  # noqa: PLC0415
 
         # Create transformer with cached config
         transformer = object.__new__(TibberPricesDataTransformer)
-        transformer._config_cache = {"some": "data"}  # noqa: SLF001
-        transformer._config_cache_valid = True  # noqa: SLF001
-        transformer._log = lambda *_a, **_kw: None  # noqa: SLF001
+        transformer._config_cache = {"some": "data"}
+        transformer._config_cache_valid = True
+        transformer._log = lambda *_a, **_kw: None
 
         # Invalidate cache
         transformer.invalidate_config_cache()
 
         # Verify cache was cleared
-        assert transformer._config_cache_valid is False  # noqa: SLF001
-        assert transformer._config_cache is None  # noqa: SLF001
+        assert transformer._config_cache_valid is False
+        assert transformer._config_cache is None
 
     def test_period_cache_invalidated_on_options_change(self) -> None:
         """Test that period calculation cache is cleared when options change."""
@@ -249,38 +243,36 @@ class TestCacheInvalidation:
 
         # Create calculator with cached data
         calculator = object.__new__(TibberPricesPeriodCalculator)
-        calculator._config_cache = {"best": {"some": "data"}}  # noqa: SLF001
-        calculator._config_cache_valid = True  # noqa: SLF001
-        calculator._cached_periods = {"cached": "periods"}  # noqa: SLF001
-        calculator._last_periods_hash = "some_hash"  # noqa: SLF001
-        calculator._log = lambda *_a, **_kw: None  # noqa: SLF001
+        calculator._config_cache = {"best": {"some": "data"}}
+        calculator._config_cache_valid = True
+        calculator._cached_periods = {"cached": "periods"}
+        calculator._last_periods_hash = "some_hash"
+        calculator._log = lambda *_a, **_kw: None
 
         # Invalidate cache
         calculator.invalidate_config_cache()
 
         # Verify all caches were cleared
-        assert calculator._config_cache_valid is False  # noqa: SLF001
-        assert calculator._config_cache is None  # noqa: SLF001
-        assert calculator._cached_periods is None  # noqa: SLF001
-        assert calculator._last_periods_hash is None  # noqa: SLF001
+        assert calculator._config_cache_valid is False
+        assert calculator._config_cache is None
+        assert calculator._cached_periods is None
+        assert calculator._last_periods_hash is None
 
     def test_trend_cache_cleared_on_coordinator_update(self) -> None:
         """Test that trend cache is cleared when coordinator updates."""
-        from custom_components.tibber_prices.sensor.calculators.trend import (  # noqa: PLC0415
-            TibberPricesTrendCalculator,
-        )
+        from custom_components.tibber_prices.sensor.calculators.trend import TibberPricesTrendCalculator  # noqa: PLC0415
 
         # Create calculator with cached trend
         calculator = object.__new__(TibberPricesTrendCalculator)
-        calculator._cached_trend_value = "some_trend"  # noqa: SLF001
-        calculator._trend_attributes = {"some": "data"}  # noqa: SLF001
+        calculator._cached_trend_value = "some_trend"
+        calculator._trend_attributes = {"some": "data"}
 
         # Clear cache
         calculator.clear_trend_cache()
 
         # Verify cache was cleared (clears _cached_trend_value + _trend_attributes)
-        assert calculator._cached_trend_value is None  # noqa: SLF001
-        assert calculator._trend_attributes == {}  # noqa: SLF001
+        assert calculator._cached_trend_value is None
+        assert calculator._trend_attributes == {}
 
 
 @pytest.mark.unit
