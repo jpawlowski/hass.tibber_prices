@@ -118,9 +118,7 @@ class TibberPricesBaseCalculator:
         if not self.coordinator_data:
             return None
 
-        from custom_components.tibber_prices.utils.price import (  # noqa: PLC0415 - avoid circular import
-            find_price_data_for_interval,
-        )
+        from custom_components.tibber_prices.utils.price import find_price_data_for_interval  # noqa: PLC0415 - avoid circular import
 
         time = self.coordinator.time
         target_time = time.get_interval_offset_time(offset)

@@ -19,20 +19,20 @@ async def test_coordinator_shutdown_saves_cache() -> None:
     coordinator = object.__new__(TibberPricesDataUpdateCoordinator)
 
     # Mock the _store_cache method, listener manager, and repair manager
-    coordinator._store_cache = AsyncMock()  # noqa: SLF001
+    coordinator._store_cache = AsyncMock()
     mock_listener_manager = MagicMock()
     mock_listener_manager.cancel_timers = MagicMock()
-    coordinator._listener_manager = mock_listener_manager  # noqa: SLF001
+    coordinator._listener_manager = mock_listener_manager
     mock_repair_manager = MagicMock()
     mock_repair_manager.clear_all_repairs = AsyncMock()
-    coordinator._repair_manager = mock_repair_manager  # noqa: SLF001
-    coordinator._log = lambda *_a, **_kw: None  # noqa: SLF001
+    coordinator._repair_manager = mock_repair_manager
+    coordinator._log = lambda *_a, **_kw: None
 
     # Call shutdown
     await coordinator.async_shutdown()
 
     # Verify cache was saved
-    coordinator._store_cache.assert_called_once()  # noqa: SLF001
+    coordinator._store_cache.assert_called_once()
     # Verify repairs were cleared
     mock_repair_manager.clear_all_repairs.assert_called_once()
     # Verify timers were cancelled
@@ -50,19 +50,19 @@ async def test_coordinator_shutdown_handles_cache_error() -> None:
     coordinator = object.__new__(TibberPricesDataUpdateCoordinator)
 
     # Mock _store_cache to raise an exception
-    coordinator._store_cache = AsyncMock(side_effect=OSError("Disk full"))  # noqa: SLF001
+    coordinator._store_cache = AsyncMock(side_effect=OSError("Disk full"))
     mock_listener_manager = MagicMock()
     mock_listener_manager.cancel_timers = MagicMock()
-    coordinator._listener_manager = mock_listener_manager  # noqa: SLF001
+    coordinator._listener_manager = mock_listener_manager
     mock_repair_manager = MagicMock()
     mock_repair_manager.clear_all_repairs = AsyncMock()
-    coordinator._repair_manager = mock_repair_manager  # noqa: SLF001
-    coordinator._log = lambda *_a, **_kw: None  # noqa: SLF001
+    coordinator._repair_manager = mock_repair_manager
+    coordinator._log = lambda *_a, **_kw: None
 
     # Shutdown should complete without raising
     await coordinator.async_shutdown()
 
     # Verify _store_cache was called (even though it raised)
-    coordinator._store_cache.assert_called_once()  # noqa: SLF001
+    coordinator._store_cache.assert_called_once()
     # Verify timers were still cancelled despite error
     mock_listener_manager.cancel_timers.assert_called_once()

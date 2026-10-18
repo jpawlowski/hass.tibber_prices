@@ -50,11 +50,7 @@ def add_description_attributes(
         return
 
     # Import here to avoid circular dependency
-    from ..const import (  # noqa: PLC0415, TID252
-        CONF_EXTENDED_DESCRIPTIONS,
-        DEFAULT_EXTENDED_DESCRIPTIONS,
-        get_entity_description,
-    )
+    from ..const import CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS, get_entity_description  # noqa: PLC0415, TID252
 
     language = hass.config.language or "en"
 
@@ -141,11 +137,7 @@ async def async_add_description_attributes(
         return
 
     # Import here to avoid circular dependency
-    from ..const import (  # noqa: PLC0415, TID252
-        CONF_EXTENDED_DESCRIPTIONS,
-        DEFAULT_EXTENDED_DESCRIPTIONS,
-        async_get_entity_description,
-    )
+    from ..const import CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS, async_get_entity_description  # noqa: PLC0415, TID252
 
     language = hass.config.language or "en"
 
