@@ -115,6 +115,21 @@ const ATTACHED_CARDS = new Set();
 // The part of a card's window that scrolls (below its header; see _showDialog)
 const dialogScroll = (dialog) => dialog.querySelector(".dialog-scroll");
 
+// Whether the last input was the keyboard rather than a tap or a click. The cards move the focus
+// themselves (into a window, to its close button, back to what opened it), and Safari and Chrome
+// show the focus ring on focus set from a script even after a tap: the cards show it only to
+// keyboard users (see `data-keyboard` in the style)
+let keyboardInput = false;
+const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
+window.addEventListener(
+  "keydown",
+  (event) => {
+    if (!MODIFIER_KEYS.has(event.key)) keyboardInput = true;
+  },
+  true
+);
+window.addEventListener("pointerdown", () => (keyboardInput = false), true);
+
 // The legend button of the section on screen (compact) or of the card
 const OWN_LEGEND_BUTTON = ".panel:not(.inactive) .legend-button, ha-card:not(.compact) .legend-button";
 
@@ -2420,6 +2435,12 @@ function languageStrings(table) {
 // prices and marks sit on one line across a strip, whatever a column contains
 const STYLE = `
   :host { display: block; height: 100%; }
+  /* Focus rings for the keyboard only (see keyboardInput): after a tap or a click, focus the
+     card set itself (the window's close button, the column a window was opened from) stays
+     without one. The cards' rings draw --focus-ring; the browser's own ring goes too */
+  :host { --focus-ring: none; }
+  :host([data-keyboard]) { --focus-ring: 2px solid var(--primary-color, #03a9f4); }
+  :host(:not([data-keyboard])) :focus-visible { outline: none; }
   /* Lines drawn on the level colors: those colors don't change with the theme, and only a near
      black stands out on all five (contrast 4.5 to 10; white, light grey and the primary blue
      reach 1.1 to 3.8). The "now" line keeps its blue as a core between two such edges */
@@ -2479,11 +2500,11 @@ const STYLE = `
     ha-card.interactive.column-details:hover:has(.col[data-detail]:hover, .day-row[data-day]:hover)::before { opacity: 0; }
   }
   ha-card.column-details .col[data-detail]:focus-visible,
-  ha-card.column-details .day-row[data-day]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  ha-card.column-details .day-row[data-day]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   ha-card.interactive:active:not(:has(button:active)):not(.column-details:has(.col:active, .day-row[data-day]:active))::before {
     background: var(--ha-ripple-pressed-color, var(--ha-ripple-color, var(--state-icon-color, #44739e)));
     opacity: var(--ha-ripple-pressed-opacity, 0.12); }
-  ha-card:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
+  ha-card:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   /* Scrolling sideways clips the top too: 9 px of room above the columns, given back by the
      margin, so a badge on a column's corner isn't cut off and nothing moves */
   .strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(var(--col-min), 1fr); gap: 4px;
@@ -2547,7 +2568,7 @@ const STYLE = `
   .scroll.forward { right: 0; }
   .strip-wrap.more-left .scroll.back, .strip-wrap.more-right .scroll.forward { display: inline-flex; }
   .no-scroll-back .scroll.back, .no-scroll-forward .scroll.forward { display: none !important; }
-  .scroll:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
+  .scroll:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .strip-wrap + .strip-wrap { margin-top: calc(16px - 8px * var(--squeeze, 0)); }
   .col { position: relative; display: grid; row-gap: 4px;
          grid-template-rows: var(--row-day, var(--day-h)) var(--name-h) var(--graph) var(--value-h) var(--row-range, var(--label-h))
@@ -2862,7 +2883,7 @@ const STYLE = `
   /* Compact: in the switch's line, at its left */
   .switch > .action-button { margin: 0 auto 0 -8px; }
   .action-button:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.08); }
-  .action-button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 0; }
+  .action-button:focus-visible { outline: var(--focus-ring); outline-offset: 0; }
   /* Shown only while focused by keyboard, like a skip link */
   .action-button.focus-only { position: absolute; top: 8px; left: 8px; z-index: 2; margin: 0; min-height: 36px; padding: 0 12px;
                               background: var(--ha-card-background, var(--card-background-color, #fff));
@@ -2873,7 +2894,7 @@ const STYLE = `
                    border-radius: 24px; background: none; cursor: pointer; font: inherit; color: inherit;
                    touch-action: manipulation; -webkit-tap-highlight-color: transparent; --mdc-icon-size: 18px; }
   .legend-button:hover { color: var(--primary-text-color); }
-  .legend-button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -6px; }
+  .legend-button:focus-visible { outline: var(--focus-ring); outline-offset: -6px; }
   /* Legend and details: a modal dialog in the top layer, so no card or section edge cuts it off.
      Built like HA's own dialogs: the close button (X) left of the title in a header that stays
      put while the content below it scrolls, full screen on phones. From 720 px on, the legend
@@ -2916,7 +2937,7 @@ const STYLE = `
            touch-action: manipulation; }
   .close svg { width: 24px; height: 24px; fill: currentColor; }
   .close:hover { background: rgba(127, 127, 127, 0.12); }
-  .close:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -4px; }
+  .close:focus-visible { outline: var(--focus-ring); outline-offset: -4px; }
   .dialog-body { padding: 8px 24px 24px; }
   .entries { display: grid; row-gap: 16px; margin: 0; padding: 0; list-style: none; }
   .entries + .entries { margin-top: 16px; }
@@ -2998,7 +3019,7 @@ const STYLE = `
                  touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
   .values-link svg { width: 24px; height: 24px; flex: none; fill: var(--secondary-text-color); }
   .values-link:hover svg { fill: var(--primary-text-color); }
-  .values-link:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; border-radius: 4px; }
+  .values-link:focus-visible { outline: var(--focus-ring); outline-offset: 2px; border-radius: 4px; }
   /* All values: like HA's "Details" of an entity, a heading per section over a framed list */
   .values { display: grid; row-gap: 24px; padding-top: 12px; }
   .values h3 { margin: 0 0 12px; font-size: var(--ha-font-size-l, 16px); line-height: 24px;
@@ -3026,7 +3047,7 @@ const STYLE = `
   .zcol.drill, .zcol[data-pick] { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .zcol.drill:hover, .zcol[data-pick]:hover { background: rgba(127, 127, 127, 0.12); }
   .zcol.drill.current:hover, .zcol[data-pick].current:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.2); }
-  .zcol.drill:focus-visible, .zcol[data-pick]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  .zcol.drill:focus-visible, .zcol[data-pick]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   /* A picked quarter hour: ringed, its line below the chart */
   .zcol.picked { box-shadow: inset 0 0 0 2px var(--primary-text-color); }
   .zpick { margin-top: -8px; padding: 0 4px; min-height: 20px; font-size: var(--ha-font-size-m, 14px); line-height: 20px; }
@@ -3087,7 +3108,7 @@ const STYLE = `
   /* A part of the day that opens its own details */
   .zbands span[data-drill] { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .zbands span[data-drill]:hover { color: var(--primary-text-color); background: rgba(127, 127, 127, 0.32); }
-  .zbands span[data-drill]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 1px; }
+  .zbands span[data-drill]:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
   /* ‹ › in the header: to the time before or after */
   .dialog-head .nav { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
                       display: inline-flex; align-items: center; justify-content: center; color: var(--primary-text-color);
@@ -3095,7 +3116,7 @@ const STYLE = `
   .dialog-head .nav svg { width: 24px; height: 24px; fill: currentColor; }
   .dialog-head .nav:hover:not(:disabled) { background: rgba(127, 127, 127, 0.12); }
   .dialog-head .nav:disabled { opacity: 0.3; cursor: default; }
-  .dialog-head .nav:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -4px; }
+  .dialog-head .nav:focus-visible { outline: var(--focus-ring); outline-offset: -4px; }
   /* "Now" / "Today": a small text button before ‹ ›, its touch target 48 px high */
   .dialog-head .nav-now { position: relative; height: 32px; margin-right: 4px; padding: 0 12px; border-radius: 16px; cursor: pointer;
                           border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3)); background: none; font: inherit;
@@ -3104,7 +3125,7 @@ const STYLE = `
   .dialog-head .nav-now::after { content: ""; position: absolute; inset: -8px -2px; }
   .dialog-head .nav-now:hover:not(:disabled) { background: rgba(127, 127, 127, 0.12); }
   .dialog-head .nav-now.here { visibility: hidden; }
-  .dialog-head .nav-now:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: 2px; }
+  .dialog-head .nav-now:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .dialog-head:has(.nav) { padding-right: 8px; }
   /* A detail card's title may take two lines next to ‹ › rather than be cut off */
   .dialog-head:has(.nav) h2 { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; white-space: normal;
@@ -3115,7 +3136,7 @@ const STYLE = `
                  cursor: pointer; font: inherit; font-size: var(--ha-font-size-s, 12px);
                  color: var(--secondary-text-color); touch-action: manipulation; --mdc-icon-size: 18px; }
   .legend-link:hover { color: var(--primary-text-color); background: rgba(127, 127, 127, 0.08); }
-  .legend-link:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  .legend-link:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   .group + .group, .groups + .group { margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2)); }
   .group h3 { margin: 0 0 12px; font-size: var(--ha-font-size-s, 12px); font-weight: var(--ha-font-weight-medium, 500);
               line-height: 16px; color: var(--secondary-text-color); }
@@ -3175,7 +3196,7 @@ const STYLE = `
      its own (now-head), and the now card's three styles */
   .now-block { position: relative; color: var(--primary-text-color); border-radius: 12px; }
   .now-block[data-detail] { cursor: pointer; }
-  .now-block[data-detail]:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -2px; }
+  .now-block[data-detail]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   @media (hover: hover) {
     .now-block[data-detail]:hover { background: rgba(127, 127, 127, 0.08); }
   }
@@ -3564,6 +3585,8 @@ class TibberPricesForecastCard extends HTMLElement {
       this.shadowRoot.innerHTML = `<style>${STYLE}</style><ha-card></ha-card><dialog aria-labelledby="legend-title"></dialog>`;
       this._bindActions(this.shadowRoot.querySelector("ha-card"));
       this._bindLegend(this.shadowRoot.querySelector("dialog"));
+      // Each focus decides whether focus rings show (keyboard) or not (tap, click)
+      this.shadowRoot.addEventListener("focusin", () => this.toggleAttribute("data-keyboard", keyboardInput));
     }
     const card = this.shadowRoot.querySelector("ha-card");
     this._updateInteractive(card);
@@ -4155,7 +4178,10 @@ class TibberPricesForecastCard extends HTMLElement {
       if (!pinned) hide();
     };
     strip.addEventListener("pointerleave", leave);
-    strip.addEventListener("focusin", (event) => later(event.target.closest(columnSelector), 0));
+    // By keyboard only: after a tap, the focus coming back from a closed window leaves them off
+    strip.addEventListener("focusin", (event) => {
+      if (keyboardInput) later(event.target.closest(columnSelector), 0);
+    });
     strip.addEventListener("focusout", leave);
     return {
       // Keeps a column's arrows shown (undefined: back to showing them on hovering)
