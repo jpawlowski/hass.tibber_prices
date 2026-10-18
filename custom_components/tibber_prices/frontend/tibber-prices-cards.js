@@ -2494,12 +2494,13 @@ const STYLE = `
   /* Room around a day row for its hover and focus, without moving anything */
   .day-row[data-day] { margin: -4px -8px; padding: 4px 8px; border-radius: 12px; }
   @media (hover: hover) {
-    ha-card.column-details .col[data-detail]:hover,
+    ha-card.column-details .col[data-detail]:hover::after,
     ha-card.column-details .day-row[data-day]:hover { background: rgba(127, 127, 127, 0.08); }
-    ha-card.column-details .col.current[data-detail]:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.18); }
+    ha-card.column-details .col.current[data-detail]:hover::after { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.18); }
     ha-card.interactive.column-details:hover:has(.col[data-detail]:hover, .day-row[data-day]:hover)::before { opacity: 0; }
   }
-  ha-card.column-details .col[data-detail]:focus-visible,
+  ha-card.column-details .col[data-detail]:focus-visible { outline: none; }
+  ha-card.column-details .col[data-detail]:focus-visible::after,
   ha-card.column-details .day-row[data-day]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   ha-card.interactive:active:not(:has(button:active)):not(.column-details:has(.col:active, .day-row[data-day]:active))::before {
     background: var(--ha-ripple-pressed-color, var(--ha-ripple-color, var(--state-icon-color, #44739e)));
@@ -2573,8 +2574,15 @@ const STYLE = `
   .col { position: relative; display: grid; row-gap: 4px;
          grid-template-rows: var(--row-day, var(--day-h)) var(--name-h) var(--graph) var(--value-h) var(--row-range, var(--label-h))
                              var(--row-extreme, var(--label-h)) var(--row-mark, 3px);
-         justify-items: center; padding: var(--pad) 0; border-radius: 12px; }
-  .col.current { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12); }
+         justify-items: center; padding: var(--pad) 0; border-radius: 12px; isolation: isolate; }
+  /* The column as a box (the tint of now, hover, the focus ring) starts below its day row: the
+     day's name there runs on across the next columns and stays clear of them. Without a day
+     row (--box-top: 0), the box is the whole column. The day's name sits 4 px up (see .day),
+     as room between the box's edge and the hour. Only a column that shows its box has one */
+  .col.current::after, .col[data-detail]:hover::after, .col[data-detail]:focus-visible::after { content: ""; }
+  .col::after { position: absolute; z-index: -1; inset: var(--box-top, calc(var(--pad) - 4px + var(--row-day, var(--day-h)))) 0 0;
+                border-radius: 12px; pointer-events: none; }
+  .col.current::after { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.12); }
   /* What's over (the hour before now): faded, like past bars in the details; the day's dashed
      line runs on unbroken */
   .col.past > :not(.graph) { opacity: 0.45; }
@@ -2602,7 +2610,7 @@ const STYLE = `
      columns it passes */
   .col.day-start > .day { position: relative; z-index: 2; }
   .day, .name, .range { white-space: nowrap; color: var(--secondary-text-color); }
-  .day { height: var(--day-h); line-height: var(--day-h); font-size: var(--ha-font-size-xs, 10px); }
+  .day { translate: 0 -4px; height: var(--day-h); line-height: var(--day-h); font-size: var(--ha-font-size-xs, 10px); }
   .name { height: var(--name-h); line-height: var(--name-h); font-size: var(--ha-font-size-s, 12px); }
   .current .name { color: var(--primary-text-color); font-weight: var(--ha-font-weight-bold, 600); }
   .chip { font-size: var(--ha-font-size-xs, 10px); font-weight: var(--ha-font-weight-bold, 600); line-height: 16px;
@@ -4688,7 +4696,7 @@ class TibberPricesForecastCard extends HTMLElement {
     // Rows of details left out entirely collapse (by setting only, never by data, so the height
     // never changes on its own). The parts' day row stays: it also says how far a part is known
     const collapsed = [
-      !ranged && hide.has("tomorrow") && hide.has("weekday") && "--row-day:0px",
+      !ranged && hide.has("tomorrow") && hide.has("weekday") && "--row-day:0px;--box-top:0px",
       hide.has("range") && "--row-range:0px",
       hide.has("low") && hide.has("high") && "--row-extreme:0px",
       hide.has("periods") && "--row-mark:0px",
