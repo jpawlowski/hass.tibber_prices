@@ -112,6 +112,9 @@ const DETAIL_LEGEND_ORDER = [
 // with one card per section usually only one of them shows the legend
 const ATTACHED_CARDS = new Set();
 
+// The part of a card's window that scrolls (below its header; see _showDialog)
+const dialogScroll = (dialog) => dialog.querySelector(".dialog-scroll");
+
 // The legend button of the section on screen (compact) or of the card
 const OWN_LEGEND_BUTTON = ".panel:not(.inactive) .legend-button, ha-card:not(.compact) .legend-button";
 
@@ -2873,18 +2876,26 @@ const STYLE = `
   .legend-button:focus-visible { outline: 2px solid var(--primary-color, #03a9f4); outline-offset: -6px; }
   /* Legend and details: a modal dialog in the top layer, so no card or section edge cuts it off.
      Built like HA's own dialogs: the close button (X) left of the title in a header that stays
-     on top while the content scrolls, full screen on phones. From 720 px on, the legend uses
-     two columns (see the entries below) */
+     put while the content below it scrolls, full screen on phones. From 720 px on, the legend
+     uses two columns (see the entries below) */
   dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 64px); box-sizing: border-box;
-           padding: 0; border: 0; border-radius: var(--ha-card-border-radius, 12px); overflow: auto;
+           padding: 0; border: 0; border-radius: var(--ha-card-border-radius, 12px); overflow: hidden;
            color: var(--primary-text-color); font-family: var(--ha-font-family-body, inherit);
            background: var(--ha-card-background, var(--card-background-color, #fff));
            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+  dialog[open] { display: flex; flex-direction: column; }
   dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
-  /* Full screen exactly when HA's own dialogs go full screen */
+  .dialog-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+  /* Full screen exactly when HA's own dialogs go full screen. There the window reaches under the
+     status bar, the home indicator and the notch: padded off them like HA's own dialogs, with
+     the safe area insets HA sets for its frontend and the companion app (else the browser's) */
   @media all and (max-width: 450px), all and (max-height: 500px) {
     :host dialog,
-    :host dialog:has(.detail) { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border-radius: 0; }
+    :host dialog:has(.detail) { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border-radius: 0;
+                                padding: var(--safe-area-inset-top, env(safe-area-inset-top, 0px))
+                                         var(--safe-area-inset-right, env(safe-area-inset-right, 0px))
+                                         var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))
+                                         var(--safe-area-inset-left, env(safe-area-inset-left, 0px)); }
   }
   @media (min-width: 720px) {
     dialog { width: min(880px, calc(100vw - 64px)); }
@@ -2893,9 +2904,8 @@ const STYLE = `
     .entries.pairs { grid-template-columns: 1fr 1fr; column-gap: 32px; }
     .entries.pairs > .row-start { grid-column: 1; }
   }
-  .dialog-head { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; min-height: 64px;
-                 box-sizing: border-box; padding: 4px 24px 0 4px;
-                 background: var(--ha-card-background, var(--card-background-color, #fff)); }
+  .dialog-head { flex: none; display: flex; align-items: center; min-height: 64px; box-sizing: border-box;
+                 padding: 4px 24px 0 4px; }
   .dialog-head h2 { flex: 1; min-width: 0; margin: 0 0 0 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
                     color: var(--ha-dialog-header-title-color, var(--primary-text-color));
                     font-size: var(--ha-dialog-header-title-font-size, var(--ha-font-size-2xl, 24px));
@@ -5152,8 +5162,8 @@ class TibberPricesForecastCard extends HTMLElement {
     return { dataset: { legend: shows.marks.join(" "), sections: [...new Set(shows.sections)].join(" ") } };
   }
 
-  // Fills the dialog (title with HA's close button, buttons at its end, then the body), opens it
-  // and starts it at the top
+  // Fills the dialog (title with HA's close button, buttons at its end, then the body, which
+  // scrolls on its own and starts at the top) and opens it
   _showDialog(title, body, opener, headEnd = "", subtitle = "") {
     const dialog = this.shadowRoot.querySelector("dialog");
     const t = stringsFor(this._hass);
@@ -5165,10 +5175,9 @@ class TibberPricesForecastCard extends HTMLElement {
       back ? BACK_PATH : CLOSE_PATH
     }"></path></svg></button><div class="dialog-titles">${
       subtitle ? `<div class="dialog-subtitle">${subtitle}</div>` : ""
-    }<h2 id="legend-title">${title}</h2></div>${headEnd}</div>${body}`;
+    }<h2 id="legend-title">${title}</h2></div>${headEnd}</div><div class="dialog-scroll">${body}</div>`;
     this._legendOpener = opener;
     if (!dialog.open) dialog.showModal();
-    dialog.scrollTop = 0;
   }
 
   /**
@@ -5611,10 +5620,10 @@ class TibberPricesForecastCard extends HTMLElement {
     const dialog = this.shadowRoot.querySelector("dialog");
     const shown = this._detailShown;
     if (!dialog || !dialog.open || !this._detailNav || !shown) return;
-    const scroll = dialog.scrollTop;
+    const scroll = dialogScroll(dialog).scrollTop;
     const focused = dialog.contains(this.shadowRoot.activeElement);
     if (!this._reopen(shown, this._legendOpener)) return;
-    dialog.scrollTop = scroll;
+    dialogScroll(dialog).scrollTop = scroll;
     if (focused) dialog.querySelector(".close").focus();
   }
 
@@ -5635,7 +5644,12 @@ class TibberPricesForecastCard extends HTMLElement {
   // control that left it)
   _pushBack(dialog, focus) {
     if (!this._detailNav || !this._detailShown) return;
-    this._detailBack.push({ shown: this._detailShown, opener: this._legendOpener, scroll: dialog.scrollTop, focus });
+    this._detailBack.push({
+      shown: this._detailShown,
+      opener: this._legendOpener,
+      scroll: dialogScroll(dialog).scrollTop,
+      focus,
+    });
   }
 
   /**
@@ -5703,7 +5717,7 @@ class TibberPricesForecastCard extends HTMLElement {
       dialog.close();
       return;
     }
-    dialog.scrollTop = entry.scroll;
+    dialogScroll(dialog).scrollTop = entry.scroll;
     const control = entry.focus && dialog.querySelector(entry.focus);
     if (control) {
       control.focus({ preventScroll: true });
