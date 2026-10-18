@@ -124,7 +124,8 @@ const MODIFIER_KEYS = new Set(["Shift", "Control", "Alt", "Meta"]);
 window.addEventListener(
   "keydown",
   (event) => {
-    if (!MODIFIER_KEYS.has(event.key)) keyboardInput = true;
+    // Not a lone modifier, nor a shortcut with one (Cmd+Tab, Ctrl+C): those don't move the focus
+    if (!MODIFIER_KEYS.has(event.key) && !event.metaKey && !event.ctrlKey && !event.altKey) keyboardInput = true;
   },
   true
 );
@@ -2690,8 +2691,11 @@ const STYLE = `
   .period-badge.best { --badge: var(--success-color, #43a047); }
   .period-badge.peak { --badge: var(--error-color, #db4437); }
   /* Centered on the top right corner of the highlighted column, like a badge on an app icon:
-     out of the flow, it takes no room */
+     out of the flow, it takes no room. In a strip, its top on the column's top instead (above it
+     is the day row, where the day's name runs across the columns) and 3 px further out, so its
+     ring stays clear of the hour's name ("Now") in a 40 px column */
   .col > .period-badge, .zcol > .period-badge { position: absolute; top: -9px; right: -9px; z-index: 1; }
+  .col > .period-badge { top: 0; right: -12px; }
   .dense .zcol > .period-badge { top: -7px; right: -7px; width: 14px; height: 14px; }
   .dense .zcol > .period-badge svg { width: 10px; height: 10px; }
   /* Beside "Today", floating: the row keeps its height */
@@ -4358,9 +4362,9 @@ class TibberPricesForecastCard extends HTMLElement {
       ? Math.min(FADE.max, Math.max(FADE.min, FADE.share * strip.clientWidth)) - 6
       : 0;
     const labels = [...strip.querySelectorAll(":scope > .day.start")];
-    const columns = strip.querySelectorAll(":scope > .col");
+    // The column under each name (the columns come first among the strip's children)
     const places = labels.map((label) => ({
-      start: columns[Number(label.dataset.col)].getBoundingClientRect().left - left,
+      start: strip.children[Number(label.dataset.col)].getBoundingClientRect().left - left,
       width: label.scrollWidth,
     }));
     labels.forEach((label, i) => {
