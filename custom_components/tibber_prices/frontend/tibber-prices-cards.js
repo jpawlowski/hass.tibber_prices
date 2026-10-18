@@ -5533,7 +5533,8 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       const shift = Math.min(Math.max(edge - start, 0), next - start - width - 8);
       const over = edge - start - shift;
       label.style.transform = shift ? `translateX(${shift}px)` : "";
-      if (over > 0) label.style.setProperty("--pushed-out", String(Math.max(0, 1 - over / (width / 2))));
+      // (Gone within a few pixels: a name half out of view reads as cut off, faded or not)
+      if (over > 0) label.style.setProperty("--pushed-out", String(Math.max(0, 1 - over / 16)));
       else label.style.removeProperty("--pushed-out");
     });
   }
