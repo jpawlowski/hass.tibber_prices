@@ -18,6 +18,7 @@
   },
   "dashboard": {
     "overview": "Stroomprijzen",
+    "compact": "Compact",
     "missing_card": "Deze kaart heeft {card} uit HACS nodig.",
     "today": "Vandaag",
     "tomorrow": "Morgen",
@@ -25,7 +26,7 @@
     "two_days": "2 dagen",
     "outlook": "Vooruitblik",
     "resolution_15min": "15 min",
-    "resolution_hourly": "1 u",
+    "resolution_hourly": "60 min",
     "notification": {
       "title": "Tibber Prices: dashboardweergaven onvolledig",
       "intro": "Je hebt zojuist dashboardweergaven gemaakt met de actie „Dashboard-YAML ophalen”. Sommige delen konden niet worden opgenomen:",

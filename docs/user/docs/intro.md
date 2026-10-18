@@ -19,7 +19,8 @@ This is an independent, community-maintained custom integration. It is **not** a
 -   **[Dynamic Icons](dynamic-icons.md)** - State-based automatic icon changes
 -   **[Dynamic Icon Colors](icon-colors.md)** - Using icon_color attribute for color-coded dashboards
 -   **[Actions](actions.md)** - Scheduling, chart, and data actions for automations and dashboards
--   **[Chart Examples](chart-examples.md)** - ✨ ApexCharts visualizations with screenshots
+-   **[Dashboard Cards](dashboard-cards.md)** - ✨ The integration's own cards: forecast, now and the price chart
+-   **[Chart Examples](chart-examples.md)** - ApexCharts visualizations, as an alternative to the chart card
 -   **[Automation Examples](automation-examples.md)** - Ready-to-use automation recipes
 -   **[Troubleshooting](troubleshooting.md)** - Common issues and solutions
 
@@ -37,7 +38,8 @@ This is an independent, community-maintained custom integration. It is **not** a
 -   **Statistical analysis** - Trailing/leading 24h averages for context
 -   **Price ratings** - LOW/NORMAL/HIGH classification based on your thresholds
 -   **Best/Peak hour detection** - Automatic detection of cheapest/peak periods with configurable filters ([learn how](period-calculation.md))
--   **Beautiful ApexCharts** - Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](chart-examples.md))
+-   **Dashboard cards of its own** - Forecast, now and a price chart read with a cursor, nothing to install ([see the cards](dashboard-cards.md))
+-   **ApexCharts as an alternative** - Auto-generated chart configurations with dynamic Y-axis scaling ([see examples](chart-examples.md))
 -   **Chart metadata sensor** - Dynamic chart configuration for optimal visualization
 -   **Flexible currency display** - Choose base currency (€, kr) or subunit (ct, øre) with smart defaults per currency
 

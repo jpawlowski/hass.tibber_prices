@@ -9,6 +9,9 @@
  * tibber-prices-forecast-card: the coming hours and parts of the day, shaped like a weather
  * forecast. Reads the `outlook_hours` / `outlook_day_parts` attributes of the Current
  * Electricity Price sensor; best/peak price periods come from the period binary sensors.
+ *
+ * tibber-prices-now-card: the current price as a tile, gauge or clock.
+ * tibber-prices-chart-card: the price curve with a cursor to read it (see its class).
  */
 
 // Same colors as the charts from get_apexcharts_yaml (level_type: level), so a column and the
@@ -50,6 +53,10 @@ const FEATURE_NAMES = {
 // mdi:chevron-left / mdi:chevron-right
 const CHEVRON_LEFT = "M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z";
 const CHEVRON_RIGHT = "M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z";
+const CHEVRON_UP = "M7.41,15.41L12,10.83L16.59,15.41L18,14L12,8L6,14L7.41,15.41Z";
+const CHEVRON_DOWN = "M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z";
+// mdi:menu-down
+const MENU_DOWN = "M7,10L12,15L17,10H7Z";
 
 // Order of the legend: first how to read the graph (its shapes, the cut-off variant of a span,
 // what their color means, the line across it), then the marks around it from top to bottom of
@@ -132,7 +139,7 @@ window.addEventListener(
 window.addEventListener("pointerdown", () => (keyboardInput = false), true);
 
 // The legend button of the section on screen (compact) or of the card
-const OWN_LEGEND_BUTTON = ".panel:not(.inactive) .legend-button, ha-card:not(.compact) .legend-button";
+const OWN_LEGEND_BUTTON = ".panel:not(.inactive) .legend-button, ha-card:not(.is-compact) .legend-button";
 
 // mdi:close
 // mdi:arrow-left, the way back from a detail opened inside another
@@ -401,6 +408,26 @@ const STRINGS = {
     no_data: "No price outlook yet.",
     // The card's title, unless one of its own is set
     card_title: "Electricity prices",
+    // The chart card: its views, its resolution switch and its curve
+    chart: {
+      open: "Price chart",
+      outlook: "Outlook",
+      two_days: "2 days",
+      quarter_hour: "15 min",
+      hour: "60 min",
+      resolution: "Resolution",
+      views: "Views",
+      label: "Price curve: drag across it or use the arrow keys to read the prices",
+      back_to_now: "Back to now",
+      axis_time: "Time",
+      axis_price: "Price",
+      styles: "Style",
+      // Against the average of what the view shows (its dashed line), where that's more than a day
+      vs_view: {
+        outlook: { mean: "{percent} vs. the outlook's average", median: "{percent} vs. the outlook's median" },
+        two_days: { mean: "{percent} vs. the 2 days' average", median: "{percent} vs. the 2 days' median" },
+      },
+    },
   },
   de: {
     // A part of the day on a weekday, as the language says it; a night by the day it leads into
@@ -636,6 +663,26 @@ const STRINGS = {
     no_data: "Noch keine Preisvorschau.",
     // The card's title, unless one of its own is set
     card_title: "Strompreise",
+    // The chart card: its views, its resolution switch and its curve
+    chart: {
+      open: "Preisverlauf",
+      outlook: "Ausblick",
+      two_days: "2 Tage",
+      quarter_hour: "15 min",
+      hour: "60 min",
+      resolution: "Auflösung",
+      views: "Ansichten",
+      label: "Preisverlauf: darüber ziehen oder die Pfeiltasten nutzen, um die Preise abzulesen",
+      back_to_now: "Zurück zu jetzt",
+      axis_time: "Uhrzeit",
+      axis_price: "Preis",
+      styles: "Darstellung",
+      // Against the average of what the view shows (its dashed line), where that's more than a day
+      vs_view: {
+        outlook: { mean: "{percent} zum Durchschnitt im Ausblick", median: "{percent} zum Median im Ausblick" },
+        two_days: { mean: "{percent} zum Durchschnitt der 2 Tage", median: "{percent} zum Median der 2 Tage" },
+      },
+    },
   },
   nb: {
     // A part of the day on a weekday, as the language says it; a night by the day it leads into
@@ -869,6 +916,26 @@ const STRINGS = {
     no_data: "Ingen prisoversikt ennå.",
     // The card's title, unless one of its own is set
     card_title: "Strømpriser",
+    // The chart card: its views, its resolution switch and its curve
+    chart: {
+      open: "Prisforløp",
+      outlook: "Fremover",
+      two_days: "2 dager",
+      quarter_hour: "15 min",
+      hour: "60 min",
+      resolution: "Oppløsning",
+      views: "Visninger",
+      label: "Priskurve: dra over den eller bruk piltastene for å lese av prisene",
+      back_to_now: "Tilbake til nå",
+      axis_time: "Tid",
+      axis_price: "Pris",
+      styles: "Stil",
+      // Against the average of what the view shows (its dashed line), where that's more than a day
+      vs_view: {
+        outlook: { mean: "{percent} mot snittet fremover", median: "{percent} mot medianen fremover" },
+        two_days: { mean: "{percent} mot snittet for de 2 dagene", median: "{percent} mot medianen for de 2 dagene" },
+      },
+    },
   },
   nl: {
     // A part of the day on a weekday, as the language says it; a night by the day it leads into
@@ -1104,6 +1171,32 @@ const STRINGS = {
     no_data: "Nog geen prijsvooruitblik.",
     // The card's title, unless one of its own is set
     card_title: "Stroomprijzen",
+    // The chart card: its views, its resolution switch and its curve
+    chart: {
+      open: "Prijsverloop",
+      outlook: "Vooruitblik",
+      two_days: "2 dagen",
+      quarter_hour: "15 min",
+      hour: "60 min",
+      resolution: "Resolutie",
+      views: "Weergaven",
+      label: "Prijsverloop: sleep eroverheen of gebruik de pijltjestoetsen om de prijzen af te lezen",
+      back_to_now: "Terug naar nu",
+      axis_time: "Tijd",
+      axis_price: "Prijs",
+      styles: "Stijl",
+      // Against the average of what the view shows (its dashed line), where that's more than a day
+      vs_view: {
+        outlook: {
+          mean: "{percent} t.o.v. het gemiddelde in de vooruitblik",
+          median: "{percent} t.o.v. de mediaan in de vooruitblik",
+        },
+        two_days: {
+          mean: "{percent} t.o.v. het gemiddelde van de 2 dagen",
+          median: "{percent} t.o.v. de mediaan van de 2 dagen",
+        },
+      },
+    },
   },
   sv: {
     // A part of the day on a weekday, as the language says it; a night by the day it leads into
@@ -1331,12 +1424,90 @@ const STRINGS = {
     no_data: "Ingen prisöversikt än.",
     // The card's title, unless one of its own is set
     card_title: "Elpriser",
+    // The chart card: its views, its resolution switch and its curve
+    chart: {
+      open: "Prisförlopp",
+      outlook: "Framåt",
+      two_days: "2 dagar",
+      quarter_hour: "15 min",
+      hour: "60 min",
+      resolution: "Upplösning",
+      views: "Vyer",
+      label: "Priskurva: dra över den eller använd piltangenterna för att läsa av priserna",
+      back_to_now: "Tillbaka till nu",
+      axis_time: "Tid",
+      axis_price: "Pris",
+      styles: "Stil",
+      // Against the average of what the view shows (its dashed line), where that's more than a day
+      vs_view: {
+        outlook: { mean: "{percent} mot snittet framåt", median: "{percent} mot medianen framåt" },
+        two_days: { mean: "{percent} mot snittet för de 2 dagarna", median: "{percent} mot medianen för de 2 dagarna" },
+      },
+    },
   },
 };
 
 // Labels of the visual editor (the card's own texts are in STRINGS)
 const EDITOR_STRINGS = {
   en: {
+    chart_button: "Icon for the chart card",
+    chart_button_help: "Top right; opens the price chart in a window",
+    chart_icon: "Icon",
+    tap_opens_chart: "Chart card in a window",
+    nested_chart: "Chart card in a window",
+    nested_forecast: "Forecast card in a window",
+    nested_help: "Its own settings",
+    nested_back: "Back",
+    day_shade_strength: "Day line: shade",
+    day_shade_strength_help: "At the line, towards the other day; one value for light and dark themes. 0: none",
+    day_shade_width: "Day line: shade reach",
+    day_shade_width_help: "Hours of the view",
+    day_line_width: "Day line: thickness",
+    day_line_width_help: "Default 1 px; 0: none",
+    day_line_strength: "Day line: strength",
+    day_line_strength_help: "Share of the text color. Empty: as the price lines",
+    grid_line_width: "Price lines: thickness",
+    grid_line_width_help: "Default 0.75 px; 0: none",
+    grid_line_strength: "Price lines: strength",
+    grid_line_strength_help:
+      "Share of the text color, so it suits light and dark themes alike. Empty: the theme's divider color",
+    header_details: "Level and gap in the top line",
+    header_level: "Price level",
+    header_delta: "Gap from the average",
+    chip_show_always: "Always",
+    chip_show_reading: "Only while reading prices",
+    chip_show_never: "Never",
+    header_level_at: "Only at these levels",
+    header_level_at_help: "None ticked: at every level",
+    header_delta_from: "Only from a gap of",
+    header_delta_from_help:
+      "0: at any gap; else only where the price lies at least this far above or below the average",
+    axis_decimals: "Decimals of the price axis",
+    axis_decimals_auto: "By the unit (€, kr: one; ct, øre: none)",
+    axis_title_x: "Title of the time axis",
+    axis_title_y: "Title of the price axis",
+    units: "Units",
+    unit_place_header: "In the top line",
+    unit_place_tag: "On the cursor's tag",
+    unit_place_axis: "At the price axis",
+    unit_display_full: "Unit rate (e.g. ct/kWh)",
+    unit_display_currency: "Currency only (e.g. ct)",
+    unit_display_none: "None",
+    unit_display_help:
+      "The unit rate is the price per kWh; a small ring shows the currency only. Screen readers always read the whole unit",
+    day_colors: "Day colors",
+    day_colors_help: "The pills of yesterday, today and tomorrow above the curve (now's is in the color of now)",
+    header: "Top line",
+    header_chips: "A line with chips",
+    header_dial: "Ring",
+    header_none: "Hide",
+    header_help:
+      "Without it, the tag above the curve still shows the time and price; actions run from the card's own button only",
+    style_number: "Style {n}",
+    style_label: "Name",
+    chart_tap_action_help: "On the card's top (price and time); a tap on the curve moves the cursor",
+    default_mark: "default",
+    view_inherit_option: "As for all views ({value})",
     device_id: "Home",
     device_id_help: "Your Tibber home, or one of its time-travel views",
     price_unit: "Price unit",
@@ -1367,8 +1538,9 @@ const EDITOR_STRINGS = {
     title: "Title",
     title_help: "Empty: “Electricity prices”",
     layout: "Layout",
-    detailed: "Detailed: all sections, one below the other",
-    compact: "Compact: one section at a time, with a switch",
+    detailed: "Detailed",
+    compact: "Compact",
+    layout_help: "Detailed: all sections, one below the other. Compact: one section at a time, with a switch",
     show: "Sections",
     now_decimals: "Decimals of the current price",
     now_decimals_help: "In Now and its details; by default as set for the Current Electricity Price entity",
@@ -1386,6 +1558,10 @@ const EDITOR_STRINGS = {
     hide: "Leave out",
     hide_help: "The section itself always stays",
     hide_option: {
+      header_average: "Average in the top line (where the chart has no dashed line)",
+      day_word: "Today, Tomorrow or Yesterday above each day (in views of more than one day)",
+      day_weekday: "Weekday above each day",
+      day_shade: "Soft shade off the day line (towards the other day)",
       gauge: "Scale beside the price",
       verdict: "What to make of it (best price, cheap until …)",
       trend: "Trend (icon top right)",
@@ -1393,6 +1569,9 @@ const EDITOR_STRINGS = {
       compare: "Comparison with today (on tomorrow's row)",
       steps: "Price steps on hovering an hour (arrows with percentages)",
       reference: "Dashed line (the day's average)",
+      reference_label: "Price on the dashed line",
+      now_line_quarter_hour: "Line of now at 15 min",
+      now_line_hour: "Line of now at 60 min",
       tomorrow: "Day name where a new day begins (Today, Tomorrow)",
       weekday: "Weekday where the next day begins",
       cheapest: "Cheapest of the day (green chips)",
@@ -1415,19 +1594,24 @@ const EDITOR_STRINGS = {
       "With only tomorrow and no other section, the whole card stays hidden until then (in edit mode it stays visible)",
     tomorrow_pending_placeholder: "Say when they usually come",
     tomorrow_pending_hide: "Hide tomorrow",
+    tomorrow_pending_yesterday: "Show yesterday instead",
     appearance: "Light or dark",
     appearance_help:
       "Always light or always dark keeps the card so on any dashboard, in your theme's colors where it has both modes",
-    appearance_auto: "Auto (as Home Assistant)",
+    appearance_auto: "As Home Assistant",
     appearance_light: "Light",
     appearance_dark: "Dark",
     style: "Style",
-    style_tile: "Tile: one row, like Home Assistant's tile card",
-    style_gauge: "Gauge: the price on today's scale",
-    style_clock: "Clock: the coming 12 hours around a dial",
+    style_tile: "Tile",
+    style_gauge: "Gauge",
+    style_clock: "Clock",
+    style_help:
+      "Tile: one row, like Home Assistant's tile card. Gauge: the price on today's scale. Clock: the coming 12 hours around a dial",
     now_tap_action_help: "Nothing: a tap opens what “Tap opens” says. Set e.g. Navigate to open a dashboard instead",
     tap_opens: "Tap opens",
     tap_opens_details: "Details of now",
+    tap_opens_nothing: "Nothing",
+    tap_opens_help: "Where no tap action is set below",
     tap_opens_forecast: "Forecast card in a window",
     window_width: "Window width",
     window_width_narrow: "Narrow (like More info)",
@@ -1435,8 +1619,114 @@ const EDITOR_STRINGS = {
     window_width_wide: "Wide",
     window_width_full: "Full screen width",
     forecast: "Forecast card",
+    styles: "Styles",
+    style_switch: "Switchable in the card",
+    style_switch_help: "A small switch at the top right changes between the styles picked",
+    style_name: "Line {line} · area {fill}",
+    all_views: "All views",
+    all_views_help: "What every view shows, unless its own panel says otherwise",
+    view_inherit_help: "Empty: as for all views",
+    style_line: "Line",
+    style_fill: "Area",
+    style_reference: "Dashed line (each day's average)",
+    style_add: "Add style",
+    style_remove: "Remove",
+    style_up: "Move up",
+    style_down: "Move down",
+    styles_inherited: "As for all views:",
+    styles_customize: "Own styles for this view",
+    styles_inherit: "As for all views again",
+    style_fill_average_shown: "below/above ⌀ of the view",
+    style_fill_average_day: "below/above each day's ⌀",
+    style_name_reference: " · ⌀ line",
+    style_line_level: "price level",
+    style_line_average: "as the area",
+    style_line_single: "one color",
+    style_fill_level: "price level",
+    line_colors: "Line colors",
+    fill_colors: "Area colors",
+    color_now: "Now (line and label)",
+    color_single: "One color",
+    color_below: "Below average",
+    color_above: "Above average",
+    mode_light: "light",
+    mode_dark: "dark",
+    line_colors_help:
+      "Unset colors come from your theme (one color: text color; below: teal; above: warning color) or are the price level's usual ones.",
+    fill_colors_help: "Unset colors are the line's.",
+    color_reset: "Back to the standard color",
+    color_reset_all: "Reset all to standard",
+    views: "Views",
+    views_help: "Which ones, in this order; the first one opens first",
+    resolution: "Resolution",
+    resolution_switch: "Switchable, starts at 15 min",
+    resolution_switch_hour: "Switchable, starts at 60 min",
+    resolution_quarter_hour: "Only 15 min",
+    resolution_hour: "Only 60 min",
+    chart_average_help: "The 60-minute prices and the dashed line: the arithmetic mean by default",
+    chart_hide_help: "The curve itself always stays",
+    chart_tomorrow_pending_help:
+      "Until then, Tomorrow says when they usually come, isn't offered, or makes way for Yesterday",
   },
   de: {
+    chart_button: "Symbol für die Chart-Karte",
+    chart_button_help: "Oben rechts; öffnet den Preisverlauf in einem Fenster",
+    chart_icon: "Symbol",
+    tap_opens_chart: "Chart-Karte im Fenster",
+    nested_chart: "Chart-Karte im Fenster",
+    nested_forecast: "Forecast-Karte im Fenster",
+    nested_help: "Ihre eigenen Einstellungen",
+    nested_back: "Zurück",
+    day_shade_strength: "Tageslinie: Schatten",
+    day_shade_strength_help: "An der Linie, zum anderen Tag hin; ein Wert für helle und dunkle Themes. 0: keiner",
+    day_shade_width: "Tageslinie: Schattenbreite",
+    day_shade_width_help: "Stunden der Ansicht",
+    day_line_width: "Tageslinie: Stärke",
+    day_line_width_help: "Standard 1 px; 0: keine",
+    day_line_strength: "Tageslinie: Deutlichkeit",
+    day_line_strength_help: "Anteil der Textfarbe. Leer: wie die Preislinien",
+    grid_line_width: "Preislinien: Stärke",
+    grid_line_width_help: "Standard 0,75 px; 0: keine",
+    grid_line_strength: "Preislinien: Deutlichkeit",
+    grid_line_strength_help:
+      "Anteil der Textfarbe, passt so zu hellen und dunklen Themes. Leer: Trennlinienfarbe des Themes",
+    header_details: "Niveau und Abweichung in der Kopfzeile",
+    header_level: "Preisniveau",
+    header_delta: "Abweichung vom Durchschnitt",
+    chip_show_always: "Immer",
+    chip_show_reading: "Nur beim Ablesen der Preise",
+    chip_show_never: "Nie",
+    header_level_at: "Nur bei diesen Niveaus",
+    header_level_at_help: "Keins angehakt: bei jedem Niveau",
+    header_delta_from: "Erst ab einer Abweichung von",
+    header_delta_from_help:
+      "0: bei jeder Abweichung; sonst nur, wenn der Preis mindestens so weit über oder unter dem Durchschnitt liegt",
+    axis_decimals: "Nachkommastellen der Preisachse",
+    axis_decimals_auto: "Nach Einheit (€, kr: eine; ct, øre: keine)",
+    axis_title_x: "Titel der Zeitachse",
+    axis_title_y: "Titel der Preisachse",
+    units: "Einheiten",
+    unit_place_header: "In der Kopfzeile",
+    unit_place_tag: "An der Preismarke über der Kurve",
+    unit_place_axis: "An der Preisachse",
+    unit_display_full: "Arbeitspreis (z. B. ct/kWh)",
+    unit_display_currency: "Nur Währung (z. B. ct)",
+    unit_display_none: "Keine",
+    unit_display_help:
+      "Der Arbeitspreis ist der Preis pro kWh; ein kleiner Kreis zeigt nur die Währung. Screenreader lesen immer die ganze Einheit vor",
+    day_colors: "Farben der Tage",
+    day_colors_help: "Die Pillen für gestern, heute und morgen über der Kurve (die für jetzt hat die Jetzt-Farbe)",
+    header: "Kopfzeile",
+    header_chips: "Zeile mit Chips",
+    header_dial: "Kreis",
+    header_none: "Ausblenden",
+    header_help:
+      "Ohne sie zeigt die Marke über der Kurve weiter Zeit und Preis; Aktionen laufen dann nur über den eigenen Knopf der Karte",
+    style_number: "Darstellung {n}",
+    style_label: "Name",
+    chart_tap_action_help: "Auf dem Kopf der Karte (Preis und Zeit); ein Tippen auf die Kurve setzt den Cursor",
+    default_mark: "Standard",
+    view_inherit_option: "Wie bei allen Ansichten ({value})",
     device_id: "Zuhause",
     device_id_help: "Dein Tibber-Zuhause oder eine seiner Zeitreise-Ansichten",
     price_unit: "Preiseinheit",
@@ -1468,8 +1758,9 @@ const EDITOR_STRINGS = {
     title: "Titel",
     title_help: "Leer: „Strompreise“",
     layout: "Layout",
-    detailed: "Detailliert: alle Bereiche untereinander",
-    compact: "Kompakt: ein Bereich, umschaltbar",
+    detailed: "Detailliert",
+    compact: "Kompakt",
+    layout_help: "Detailliert: alle Bereiche untereinander. Kompakt: ein Bereich, umschaltbar",
     show: "Bereiche",
     now_decimals: "Nachkommastellen des aktuellen Preises",
     now_decimals_help:
@@ -1488,6 +1779,10 @@ const EDITOR_STRINGS = {
     hide: "Ausblenden",
     hide_help: "Der Bereich selbst bleibt immer",
     hide_option: {
+      header_average: "Durchschnitt in der Kopfzeile (wo das Chart keine gestrichelte Linie hat)",
+      day_word: "Heute, Morgen oder Gestern über jedem Tag (in Ansichten mit mehr als einem Tag)",
+      day_weekday: "Wochentag über jedem Tag",
+      day_shade: "Sanfter Schatten an der Tageslinie (zum anderen Tag hin)",
       gauge: "Skala neben dem Preis",
       verdict: "Einordnung (Bestpreis, günstig bis …)",
       trend: "Trend (Symbol oben rechts)",
@@ -1495,6 +1790,9 @@ const EDITOR_STRINGS = {
       compare: "Vergleich mit heute (bei Morgen)",
       steps: "Preissprünge beim Darüberfahren (Pfeile mit Prozent)",
       reference: "Gestrichelte Linie (Tagesdurchschnitt)",
+      reference_label: "Preis an der gestrichelten Linie",
+      now_line_quarter_hour: "Linie für jetzt bei 15 min",
+      now_line_hour: "Linie für jetzt bei 60 min",
       tomorrow: "Tagesname am Tageswechsel (Heute, Morgen)",
       weekday: "Wochentag am Tageswechsel",
       cheapest: "Günstigste des Tages (grüne Chips)",
@@ -1517,20 +1815,25 @@ const EDITOR_STRINGS = {
       "Mit nur morgen und keinem anderen Bereich bleibt die ganze Karte bis dahin ausgeblendet (im Bearbeitungsmodus bleibt sie sichtbar)",
     tomorrow_pending_placeholder: "Anzeigen, wann sie meist kommen",
     tomorrow_pending_hide: "Morgen ausblenden",
+    tomorrow_pending_yesterday: "Stattdessen gestern zeigen",
     appearance: "Hell oder dunkel",
     appearance_help:
       "Immer hell oder immer dunkel zeigt die Karte auf jedem Dashboard so, in den Farben deines Themes, wenn es beide Modi hat",
-    appearance_auto: "Automatisch (wie Home Assistant)",
+    appearance_auto: "Wie Home Assistant",
     appearance_light: "Hell",
     appearance_dark: "Dunkel",
     style: "Darstellung",
-    style_tile: "Kachel: eine Zeile, wie die Kachel-Karte von Home Assistant",
-    style_gauge: "Skala: der Preis auf der Skala des Tages",
-    style_clock: "Uhr: die nächsten 12 Stunden rund um ein Zifferblatt",
+    style_tile: "Kachel",
+    style_gauge: "Skala",
+    style_clock: "Uhr",
+    style_help:
+      "Kachel: eine Zeile, wie die Kachel-Karte von Home Assistant. Skala: der Preis auf der Skala des Tages. Uhr: die nächsten 12 Stunden rund um ein Zifferblatt",
     now_tap_action_help:
       "Nichts: Antippen öffnet, was bei „Antippen öffnet“ steht. Wähle z. B. Navigieren, um stattdessen ein Dashboard zu öffnen",
     tap_opens: "Antippen öffnet",
     tap_opens_details: "Details von Jetzt",
+    tap_opens_nothing: "Nichts",
+    tap_opens_help: "Sofern unten keine Aktion fürs Antippen gesetzt ist",
     tap_opens_forecast: "Forecast-Karte im Fenster",
     window_width: "Fensterbreite",
     window_width_narrow: "Schmal (wie „Mehr Infos“)",
@@ -1538,8 +1841,114 @@ const EDITOR_STRINGS = {
     window_width_wide: "Breit",
     window_width_full: "Ganze Bildschirmbreite",
     forecast: "Forecast-Karte",
+    styles: "Darstellungen",
+    style_switch: "In der Karte umschaltbar",
+    style_switch_help: "Ein kleiner Umschalter oben rechts wechselt zwischen den gewählten Darstellungen",
+    style_name: "Linie {line} · Fläche {fill}",
+    all_views: "Alle Ansichten",
+    all_views_help: "Was jede Ansicht zeigt, solange ihr eigener Bereich nichts anderes sagt",
+    view_inherit_help: "Leer: wie bei allen Ansichten",
+    style_line: "Linie",
+    style_fill: "Fläche",
+    style_reference: "Gestrichelte Linie (Durchschnitt jedes Tages)",
+    style_add: "Darstellung hinzufügen",
+    style_remove: "Entfernen",
+    style_up: "Nach oben",
+    style_down: "Nach unten",
+    styles_inherited: "Wie bei allen Ansichten:",
+    styles_customize: "Eigene Darstellungen für diese Ansicht",
+    styles_inherit: "Wieder wie bei allen Ansichten",
+    style_fill_average_shown: "unter/über ⌀ der Ansicht",
+    style_fill_average_day: "unter/über ⌀ jedes Tages",
+    style_name_reference: " · ⌀-Linie",
+    style_line_level: "Preisniveau",
+    style_line_average: "wie die Fläche",
+    style_line_single: "eine Farbe",
+    style_fill_level: "Preisniveau",
+    line_colors: "Linienfarben",
+    fill_colors: "Flächenfarben",
+    color_now: "Jetzt (Linie und Hinweis)",
+    color_single: "Eine Farbe",
+    color_below: "Unter dem Durchschnitt",
+    color_above: "Über dem Durchschnitt",
+    mode_light: "hell",
+    mode_dark: "dunkel",
+    line_colors_help:
+      "Farben ohne eigene Wahl kommen aus deinem Theme (eine Farbe: Textfarbe; darunter: Petrol; darüber: Warnfarbe) oder sind die üblichen des Preisniveaus.",
+    fill_colors_help: "Farben ohne eigene Wahl sind die der Linie.",
+    color_reset: "Zurück zur Standardfarbe",
+    color_reset_all: "Alle auf Standard zurücksetzen",
+    views: "Ansichten",
+    views_help: "Welche, in dieser Reihenfolge; die erste öffnet zuerst",
+    resolution: "Auflösung",
+    resolution_switch: "Umschaltbar, startet bei 15 min",
+    resolution_switch_hour: "Umschaltbar, startet bei 60 min",
+    resolution_quarter_hour: "Nur 15 min",
+    resolution_hour: "Nur 60 min",
+    chart_average_help: "Die 60-Minuten-Preise und die gestrichelte Linie: standardmäßig das arithmetische Mittel",
+    chart_hide_help: "Die Kurve selbst bleibt immer",
+    chart_tomorrow_pending_help:
+      "Bis dahin sagt „Morgen“, wann sie meist kommen, fehlt ganz oder macht Platz für „Gestern“",
   },
   nb: {
+    chart_button: "Symbol for diagramkortet",
+    chart_button_help: "Øverst til høyre; åpner prisforløpet i et vindu",
+    chart_icon: "Symbol",
+    tap_opens_chart: "Diagramkort i et vindu",
+    nested_chart: "Diagramkort i et vindu",
+    nested_forecast: "Prognosekort i et vindu",
+    nested_help: "Egne innstillinger",
+    nested_back: "Tilbake",
+    day_shade_strength: "Daglinje: skygge",
+    day_shade_strength_help: "Ved linjen, mot den andre dagen; én verdi for lyse og mørke temaer. 0: ingen",
+    day_shade_width: "Daglinje: skyggebredde",
+    day_shade_width_help: "Timer i visningen",
+    day_line_width: "Daglinje: tykkelse",
+    day_line_width_help: "Standard 1 px; 0: ingen",
+    day_line_strength: "Daglinje: tydelighet",
+    day_line_strength_help: "Andel av tekstfargen. Tomt: som prislinjene",
+    grid_line_width: "Prislinjer: tykkelse",
+    grid_line_width_help: "Standard 0,75 px; 0: ingen",
+    grid_line_strength: "Prislinjer: tydelighet",
+    grid_line_strength_help:
+      "Andel av tekstfargen, passer slik til lyse og mørke temaer. Tomt: temaets skillelinjefarge",
+    header_details: "Nivå og avvik i topplinjen",
+    header_level: "Prisnivå",
+    header_delta: "Avvik fra gjennomsnittet",
+    chip_show_always: "Alltid",
+    chip_show_reading: "Bare når du leser av prisene",
+    chip_show_never: "Aldri",
+    header_level_at: "Bare ved disse nivåene",
+    header_level_at_help: "Ingen krysset av: ved alle nivåer",
+    header_delta_from: "Først fra et avvik på",
+    header_delta_from_help:
+      "0: ved ethvert avvik; ellers bare når prisen ligger minst så langt over eller under gjennomsnittet",
+    axis_decimals: "Desimaler på prisaksen",
+    axis_decimals_auto: "Etter enhet (kr: én; øre: ingen)",
+    axis_title_x: "Tittel på tidsaksen",
+    axis_title_y: "Tittel på prisaksen",
+    units: "Enheter",
+    unit_place_header: "I toppraden",
+    unit_place_tag: "På merket over kurven",
+    unit_place_axis: "Ved prisaksen",
+    unit_display_full: "Energipris (f.eks. øre/kWh)",
+    unit_display_currency: "Bare valuta (f.eks. øre)",
+    unit_display_none: "Ingen",
+    unit_display_help:
+      "Energiprisen er prisen per kWh; en liten ring viser bare valutaen. Skjermlesere leser alltid hele enheten",
+    day_colors: "Dagfarger",
+    day_colors_help: "Pillene for i går, i dag og i morgen over kurven (den for nå har nåfargen)",
+    header: "Topprad",
+    header_chips: "Rad med brikker",
+    header_dial: "Ring",
+    header_none: "Skjul",
+    header_help:
+      "Uten den viser merket over kurven fortsatt tid og pris; handlinger kjøres da bare fra kortets egen knapp",
+    style_number: "Stil {n}",
+    style_label: "Navn",
+    chart_tap_action_help: "På toppen av kortet (pris og tid); et trykk på kurven flytter markøren",
+    default_mark: "standard",
+    view_inherit_option: "Som for alle visninger ({value})",
     device_id: "Hjem",
     device_id_help: "Tibber-hjemmet ditt, eller en av tidsreisevisningene",
     price_unit: "Prisenhet",
@@ -1570,8 +1979,9 @@ const EDITOR_STRINGS = {
     title: "Tittel",
     title_help: "Tom: «Strømpriser»",
     layout: "Visning",
-    detailed: "Detaljert: alle deler under hverandre",
-    compact: "Kompakt: én del om gangen, med bryter",
+    detailed: "Detaljert",
+    compact: "Kompakt",
+    layout_help: "Detaljert: alle deler under hverandre. Kompakt: én del om gangen, med bryter",
     show: "Deler",
     now_decimals: "Desimaler for nåværende pris",
     now_decimals_help: "I Nå og detaljene; som standard som innstilt for enheten «Nåværende strømpris»",
@@ -1589,6 +1999,10 @@ const EDITOR_STRINGS = {
     hide: "Skjul",
     hide_help: "Selve delen blir alltid stående",
     hide_option: {
+      header_average: "Snitt i toppraden (der diagrammet ikke har stiplet linje)",
+      day_word: "I dag, I morgen eller I går over hver dag (i visninger med mer enn én dag)",
+      day_weekday: "Ukedag over hver dag",
+      day_shade: "Myk skygge ved daglinjen (mot den andre dagen)",
       gauge: "Skala ved siden av prisen",
       verdict: "Vurdering (beste pris, billig til …)",
       trend: "Trend (symbol øverst til høyre)",
@@ -1596,6 +2010,9 @@ const EDITOR_STRINGS = {
       compare: "Sammenligning med i dag (ved i morgen)",
       steps: "Prishopp når du holder musen over en time (piler med prosent)",
       reference: "Stiplet linje (dagens gjennomsnitt)",
+      reference_label: "Pris på den stiplede linjen",
+      now_line_quarter_hour: "Linjen for nå ved 15 min",
+      now_line_hour: "Linjen for nå ved 60 min",
       tomorrow: "Dagsnavn ved dagsskiftet (I dag, I morgen)",
       weekday: "Ukedag ved dagsskiftet",
       cheapest: "Dagens billigste (grønne merker)",
@@ -1618,20 +2035,25 @@ const EDITOR_STRINGS = {
       "Med bare i morgen og ingen andre deler er hele kortet skjult til da (i redigeringsmodus forblir det synlig)",
     tomorrow_pending_placeholder: "Vis når de vanligvis kommer",
     tomorrow_pending_hide: "Skjul i morgen",
+    tomorrow_pending_yesterday: "Vis i går i stedet",
     appearance: "Lys eller mørk",
     appearance_help:
       "Alltid lys eller alltid mørk viser kortet slik på alle dashbord, i temaets farger når det har begge moduser",
-    appearance_auto: "Automatisk (som Home Assistant)",
+    appearance_auto: "Som Home Assistant",
     appearance_light: "Lys",
     appearance_dark: "Mørk",
     style: "Visning",
-    style_tile: "Flis: én rad, som flis-kortet i Home Assistant",
-    style_gauge: "Måler: prisen på dagens skala",
-    style_clock: "Klokke: de neste 12 timene rundt en urskive",
+    style_tile: "Flis",
+    style_gauge: "Måler",
+    style_clock: "Klokke",
+    style_help:
+      "Flis: én rad, som flis-kortet i Home Assistant. Måler: prisen på dagens skala. Klokke: de neste 12 timene rundt en urskive",
     now_tap_action_help:
       "Ingenting: et trykk åpner det som står under «Trykk åpner». Velg f.eks. Naviger for å åpne et dashbord i stedet",
     tap_opens: "Trykk åpner",
     tap_opens_details: "Detaljer for nå",
+    tap_opens_nothing: "Ingenting",
+    tap_opens_help: "Så lenge ingen trykkhandling er satt nedenfor",
     tap_opens_forecast: "Prognosekort i et vindu",
     window_width: "Vindusbredde",
     window_width_narrow: "Smal (som «Mer info»)",
@@ -1639,8 +2061,114 @@ const EDITOR_STRINGS = {
     window_width_wide: "Bred",
     window_width_full: "Hele skjermbredden",
     forecast: "Prognosekort",
+    styles: "Stiler",
+    style_switch: "Kan byttes i kortet",
+    style_switch_help: "En liten bryter øverst til høyre bytter mellom de valgte stilene",
+    style_name: "Linje {line} · flate {fill}",
+    all_views: "Alle visninger",
+    all_views_help: "Det hver visning viser, så lenge dens eget område ikke sier noe annet",
+    view_inherit_help: "Tom: som for alle visninger",
+    style_line: "Linje",
+    style_fill: "Flate",
+    style_reference: "Stiplet linje (hver dags snitt)",
+    style_add: "Legg til stil",
+    style_remove: "Fjern",
+    style_up: "Flytt opp",
+    style_down: "Flytt ned",
+    styles_inherited: "Som for alle visninger:",
+    styles_customize: "Egne stiler for denne visningen",
+    styles_inherit: "Som for alle visninger igjen",
+    style_fill_average_shown: "under/over ⌀ i visningen",
+    style_fill_average_day: "under/over hver dags ⌀",
+    style_name_reference: " · ⌀-linje",
+    style_line_level: "prisnivå",
+    style_line_average: "som flaten",
+    style_line_single: "én farge",
+    style_fill_level: "prisnivå",
+    line_colors: "Linjefarger",
+    fill_colors: "Flatefarger",
+    color_now: "Nå (linje og merke)",
+    color_single: "Én farge",
+    color_below: "Under snittet",
+    color_above: "Over snittet",
+    mode_light: "lys",
+    mode_dark: "mørk",
+    line_colors_help:
+      "Farger uten eget valg kommer fra temaet ditt (én farge: tekstfarge; under: blågrønn; over: varselfarge) eller er prisnivåets vanlige.",
+    fill_colors_help: "Farger uten eget valg er linjens.",
+    color_reset: "Tilbake til standardfargen",
+    color_reset_all: "Tilbakestill alle til standard",
+    views: "Visninger",
+    views_help: "Hvilke, i denne rekkefølgen; den første åpnes først",
+    resolution: "Oppløsning",
+    resolution_switch: "Kan byttes, starter på 15 min",
+    resolution_switch_hour: "Kan byttes, starter på 60 min",
+    resolution_quarter_hour: "Bare 15 min",
+    resolution_hour: "Bare 60 min",
+    chart_average_help: "60-minuttersprisene og den stiplede linjen: som standard det aritmetiske gjennomsnittet",
+    chart_hide_help: "Selve kurven blir alltid",
+    chart_tomorrow_pending_help:
+      "Til da sier «I morgen» når de vanligvis kommer, vises ikke eller gir plass til «I går»",
   },
   nl: {
+    chart_button: "Pictogram voor de grafiekkaart",
+    chart_button_help: "Rechtsboven; opent het prijsverloop in een venster",
+    chart_icon: "Pictogram",
+    tap_opens_chart: "Grafiekkaart in een venster",
+    nested_chart: "Grafiekkaart in een venster",
+    nested_forecast: "Prognosekaart in een venster",
+    nested_help: "Eigen instellingen",
+    nested_back: "Terug",
+    day_shade_strength: "Daglijn: schaduw",
+    day_shade_strength_help: "Bij de lijn, naar de andere dag toe; één waarde voor lichte en donkere thema's. 0: geen",
+    day_shade_width: "Daglijn: schaduwbreedte",
+    day_shade_width_help: "Uren van de weergave",
+    day_line_width: "Daglijn: dikte",
+    day_line_width_help: "Standaard 1 px; 0: geen",
+    day_line_strength: "Daglijn: sterkte",
+    day_line_strength_help: "Aandeel van de tekstkleur. Leeg: als de prijslijnen",
+    grid_line_width: "Prijslijnen: dikte",
+    grid_line_width_help: "Standaard 0,75 px; 0: geen",
+    grid_line_strength: "Prijslijnen: sterkte",
+    grid_line_strength_help:
+      "Aandeel van de tekstkleur, past zo bij lichte en donkere thema's. Leeg: de scheidingslijnkleur van het thema",
+    header_details: "Niveau en afwijking in de bovenste regel",
+    header_level: "Prijsniveau",
+    header_delta: "Afwijking van het gemiddelde",
+    chip_show_always: "Altijd",
+    chip_show_reading: "Alleen bij het aflezen van prijzen",
+    chip_show_never: "Nooit",
+    header_level_at: "Alleen bij deze niveaus",
+    header_level_at_help: "Niets aangevinkt: bij elk niveau",
+    header_delta_from: "Pas vanaf een afwijking van",
+    header_delta_from_help:
+      "0: bij elke afwijking; anders alleen als de prijs minstens zo ver boven of onder het gemiddelde ligt",
+    axis_decimals: "Decimalen van de prijsas",
+    axis_decimals_auto: "Naar eenheid (€: één; ct: geen)",
+    axis_title_x: "Titel van de tijdas",
+    axis_title_y: "Titel van de prijsas",
+    units: "Eenheden",
+    unit_place_header: "In de bovenste regel",
+    unit_place_tag: "Op het label boven de curve",
+    unit_place_axis: "Bij de prijsas",
+    unit_display_full: "Prijs per kWh (bijv. ct/kWh)",
+    unit_display_currency: "Alleen valuta (bijv. ct)",
+    unit_display_none: "Geen",
+    unit_display_help:
+      "De prijs per kWh; een kleine ring toont alleen de valuta. Schermlezers lezen altijd de hele eenheid voor",
+    day_colors: "Kleuren van de dagen",
+    day_colors_help: "De pillen voor gisteren, vandaag en morgen boven de curve (die van nu heeft de kleur van nu)",
+    header: "Bovenste regel",
+    header_chips: "Regel met chips",
+    header_dial: "Ring",
+    header_none: "Verbergen",
+    header_help:
+      "Zonder toont het label boven de curve nog tijd en prijs; acties lopen dan alleen via de eigen knop van de kaart",
+    style_number: "Stijl {n}",
+    style_label: "Naam",
+    chart_tap_action_help: "Op de bovenkant van de kaart (prijs en tijd); een tik op de curve verplaatst de cursor",
+    default_mark: "standaard",
+    view_inherit_option: "Zoals bij alle weergaven ({value})",
     device_id: "Woning",
     device_id_help: "Je Tibber-woning, of een van de tijdreisweergaven",
     price_unit: "Prijseenheid",
@@ -1671,8 +2199,9 @@ const EDITOR_STRINGS = {
     title: "Titel",
     title_help: "Leeg: „Stroomprijzen”",
     layout: "Weergave",
-    detailed: "Gedetailleerd: alle onderdelen onder elkaar",
-    compact: "Compact: één onderdeel tegelijk, met schakelaar",
+    detailed: "Gedetailleerd",
+    compact: "Compact",
+    layout_help: "Gedetailleerd: alle onderdelen onder elkaar. Compact: één onderdeel tegelijk, met schakelaar",
     show: "Onderdelen",
     now_decimals: "Decimalen van de huidige prijs",
     now_decimals_help:
@@ -1690,6 +2219,10 @@ const EDITOR_STRINGS = {
     hide: "Verbergen",
     hide_help: "Het onderdeel zelf blijft altijd",
     hide_option: {
+      header_average: "Gemiddelde in de bovenste regel (waar de grafiek geen stippellijn heeft)",
+      day_word: "Vandaag, Morgen of Gisteren boven elke dag (in weergaven met meer dan één dag)",
+      day_weekday: "Weekdag boven elke dag",
+      day_shade: "Zachte schaduw bij de daglijn (naar de andere dag toe)",
       gauge: "Schaal naast de prijs",
       verdict: "Duiding (beste prijs, goedkoop tot …)",
       trend: "Trend (pictogram rechtsboven)",
@@ -1697,6 +2230,9 @@ const EDITOR_STRINGS = {
       compare: "Vergelijking met vandaag (bij morgen)",
       steps: "Prijssprongen bij aanwijzen van een uur (pijlen met procenten)",
       reference: "Stippellijn (daggemiddelde)",
+      reference_label: "Prijs bij de stippellijn",
+      now_line_quarter_hour: "Lijn van nu bij 15 min",
+      now_line_hour: "Lijn van nu bij 60 min",
       tomorrow: "Dagnaam bij de dagwissel (Vandaag, Morgen)",
       weekday: "Weekdag bij de dagwissel",
       cheapest: "Goedkoopste van de dag (groene labels)",
@@ -1719,20 +2255,25 @@ const EDITOR_STRINGS = {
       "Met alleen morgen en geen ander onderdeel blijft de hele kaart tot dan verborgen (in de bewerkmodus blijft ze zichtbaar)",
     tomorrow_pending_placeholder: "Tonen wanneer ze meestal komen",
     tomorrow_pending_hide: "Morgen verbergen",
+    tomorrow_pending_yesterday: "Gisteren in plaats daarvan tonen",
     appearance: "Licht of donker",
     appearance_help:
       "Altijd licht of altijd donker toont de kaart zo op elk dashboard, in de kleuren van je thema als het beide modi heeft",
-    appearance_auto: "Automatisch (zoals Home Assistant)",
+    appearance_auto: "Zoals Home Assistant",
     appearance_light: "Licht",
     appearance_dark: "Donker",
     style: "Weergave",
-    style_tile: "Tegel: één rij, zoals de tegelkaart van Home Assistant",
-    style_gauge: "Meter: de prijs op de schaal van vandaag",
-    style_clock: "Klok: de komende 12 uur rond een wijzerplaat",
+    style_tile: "Tegel",
+    style_gauge: "Meter",
+    style_clock: "Klok",
+    style_help:
+      "Tegel: één rij, zoals de tegelkaart van Home Assistant. Meter: de prijs op de schaal van vandaag. Klok: de komende 12 uur rond een wijzerplaat",
     now_tap_action_help:
       "Niets: tikken opent wat bij „Tikken opent” staat. Kies bijv. Navigeren om in plaats daarvan een dashboard te openen",
     tap_opens: "Tikken opent",
     tap_opens_details: "Details van nu",
+    tap_opens_nothing: "Niets",
+    tap_opens_help: "Zolang hieronder geen tikactie is ingesteld",
     tap_opens_forecast: "Prognosekaart in een venster",
     window_width: "Vensterbreedte",
     window_width_narrow: "Smal (zoals „Meer info”)",
@@ -1740,8 +2281,113 @@ const EDITOR_STRINGS = {
     window_width_wide: "Breed",
     window_width_full: "Volledige schermbreedte",
     forecast: "Prognosekaart",
+    styles: "Stijlen",
+    style_switch: "Wisselbaar in de kaart",
+    style_switch_help: "Een kleine schakelaar rechtsboven wisselt tussen de gekozen stijlen",
+    style_name: "Lijn {line} · vlak {fill}",
+    all_views: "Alle weergaven",
+    all_views_help: "Wat elke weergave toont, zolang haar eigen gedeelte niets anders zegt",
+    view_inherit_help: "Leeg: zoals bij alle weergaven",
+    style_line: "Lijn",
+    style_fill: "Vlak",
+    style_reference: "Stippellijn (gemiddelde van elke dag)",
+    style_add: "Stijl toevoegen",
+    style_remove: "Verwijderen",
+    style_up: "Omhoog",
+    style_down: "Omlaag",
+    styles_inherited: "Zoals bij alle weergaven:",
+    styles_customize: "Eigen stijlen voor deze weergave",
+    styles_inherit: "Weer zoals bij alle weergaven",
+    style_fill_average_shown: "onder/boven ⌀ van de weergave",
+    style_fill_average_day: "onder/boven ⌀ van elke dag",
+    style_name_reference: " · ⌀-lijn",
+    style_line_level: "prijsniveau",
+    style_line_average: "zoals het vlak",
+    style_line_single: "één kleur",
+    style_fill_level: "prijsniveau",
+    line_colors: "Lijnkleuren",
+    fill_colors: "Vlakkleuren",
+    color_now: "Nu (lijn en label)",
+    color_single: "Eén kleur",
+    color_below: "Onder het gemiddelde",
+    color_above: "Boven het gemiddelde",
+    mode_light: "licht",
+    mode_dark: "donker",
+    line_colors_help:
+      "Kleuren zonder eigen keuze komen uit je thema (één kleur: tekstkleur; onder: blauwgroen; boven: waarschuwingskleur) of zijn de gebruikelijke van het prijsniveau.",
+    fill_colors_help: "Kleuren zonder eigen keuze zijn die van de lijn.",
+    color_reset: "Terug naar de standaardkleur",
+    color_reset_all: "Alles terugzetten naar standaard",
+    views: "Weergaven",
+    views_help: "Welke, in deze volgorde; de eerste opent eerst",
+    resolution: "Resolutie",
+    resolution_switch: "Wisselbaar, begint bij 15 min",
+    resolution_switch_hour: "Wisselbaar, begint bij 60 min",
+    resolution_quarter_hour: "Alleen 15 min",
+    resolution_hour: "Alleen 60 min",
+    chart_average_help: "De prijzen per 60 minuten en de stippellijn: standaard het rekenkundig gemiddelde",
+    chart_hide_help: "De curve zelf blijft altijd",
+    chart_tomorrow_pending_help:
+      "Tot dan zegt „Morgen” wanneer ze meestal komen, ontbreekt of maakt plaats voor „Gisteren”",
   },
   sv: {
+    chart_button: "Symbol för diagramkortet",
+    chart_button_help: "Uppe till höger; öppnar prisförloppet i ett fönster",
+    chart_icon: "Symbol",
+    tap_opens_chart: "Diagramkort i ett fönster",
+    nested_chart: "Diagramkort i ett fönster",
+    nested_forecast: "Prognoskort i ett fönster",
+    nested_help: "Egna inställningar",
+    nested_back: "Tillbaka",
+    day_shade_strength: "Daglinje: skugga",
+    day_shade_strength_help: "Vid linjen, mot den andra dagen; ett värde för ljusa och mörka teman. 0: ingen",
+    day_shade_width: "Daglinje: skuggbredd",
+    day_shade_width_help: "Timmar i vyn",
+    day_line_width: "Daglinje: tjocklek",
+    day_line_width_help: "Standard 1 px; 0: ingen",
+    day_line_strength: "Daglinje: tydlighet",
+    day_line_strength_help: "Andel av textfärgen. Tomt: som prislinjerna",
+    grid_line_width: "Prislinjer: tjocklek",
+    grid_line_width_help: "Standard 0,75 px; 0: inga",
+    grid_line_strength: "Prislinjer: tydlighet",
+    grid_line_strength_help: "Andel av textfärgen, passar så till ljusa och mörka teman. Tomt: temats avdelarfärg",
+    header_details: "Nivå och avvikelse i översta raden",
+    header_level: "Prisnivå",
+    header_delta: "Avvikelse från genomsnittet",
+    chip_show_always: "Alltid",
+    chip_show_reading: "Bara när du läser av priserna",
+    chip_show_never: "Aldrig",
+    header_level_at: "Bara vid dessa nivåer",
+    header_level_at_help: "Inget markerat: vid alla nivåer",
+    header_delta_from: "Först från en avvikelse på",
+    header_delta_from_help:
+      "0: vid varje avvikelse; annars bara när priset ligger minst så långt över eller under genomsnittet",
+    axis_decimals: "Decimaler på prisaxeln",
+    axis_decimals_auto: "Efter enhet (kr: en; öre: inga)",
+    axis_title_x: "Titel på tidsaxeln",
+    axis_title_y: "Titel på prisaxeln",
+    units: "Enheter",
+    unit_place_header: "I översta raden",
+    unit_place_tag: "På etiketten ovanför kurvan",
+    unit_place_axis: "Vid prisaxeln",
+    unit_display_full: "Energipris (t.ex. öre/kWh)",
+    unit_display_currency: "Endast valuta (t.ex. öre)",
+    unit_display_none: "Ingen",
+    unit_display_help:
+      "Energipriset är priset per kWh; en liten ring visar bara valutan. Skärmläsare läser alltid hela enheten",
+    day_colors: "Dagarnas färger",
+    day_colors_help: "Pillren för i går, i dag och i morgon ovanför kurvan (den för nu har nu-färgen)",
+    header: "Översta raden",
+    header_chips: "Rad med etiketter",
+    header_dial: "Ring",
+    header_none: "Dölj",
+    header_help:
+      "Utan den visar etiketten ovanför kurvan fortfarande tid och pris; åtgärder körs då bara från kortets egen knapp",
+    style_number: "Stil {n}",
+    style_label: "Namn",
+    chart_tap_action_help: "På kortets överdel (pris och tid); ett tryck på kurvan flyttar markören",
+    default_mark: "standard",
+    view_inherit_option: "Som för alla vyer ({value})",
     device_id: "Hem",
     device_id_help: "Ditt Tibber-hem, eller en av dess tidsresevyer",
     price_unit: "Prisenhet",
@@ -1772,8 +2418,9 @@ const EDITOR_STRINGS = {
     title: "Titel",
     title_help: "Tom: ”Elpriser”",
     layout: "Visning",
-    detailed: "Detaljerad: alla delar under varandra",
-    compact: "Kompakt: en del i taget, med växel",
+    detailed: "Detaljerad",
+    compact: "Kompakt",
+    layout_help: "Detaljerad: alla delar under varandra. Kompakt: en del i taget, med växel",
     show: "Delar",
     now_decimals: "Decimaler för aktuellt pris",
     now_decimals_help: "I Nu och detaljerna; som standard som inställt för entiteten ”Aktuellt elpris”",
@@ -1791,6 +2438,10 @@ const EDITOR_STRINGS = {
     hide: "Dölj",
     hide_help: "Själva avsnittet finns alltid kvar",
     hide_option: {
+      header_average: "Snitt i översta raden (där diagrammet saknar streckad linje)",
+      day_word: "I dag, I morgon eller I går över varje dag (i vyer med mer än en dag)",
+      day_weekday: "Veckodag över varje dag",
+      day_shade: "Mjuk skugga vid daglinjen (mot den andra dagen)",
       gauge: "Skala bredvid priset",
       verdict: "Bedömning (bästa pris, billigt till …)",
       trend: "Trend (ikon uppe till höger)",
@@ -1798,6 +2449,9 @@ const EDITOR_STRINGS = {
       compare: "Jämförelse med i dag (vid i morgon)",
       steps: "Prissteg när du håller muspekaren över en timme (pilar med procent)",
       reference: "Streckad linje (dagens medelvärde)",
+      reference_label: "Pris vid den streckade linjen",
+      now_line_quarter_hour: "Linjen för nu vid 15 min",
+      now_line_hour: "Linjen för nu vid 60 min",
       tomorrow: "Dagsnamn vid dagsskiftet (Idag, Imorgon)",
       weekday: "Veckodag vid dagsskiftet",
       cheapest: "Dagens billigaste (gröna märken)",
@@ -1820,20 +2474,25 @@ const EDITOR_STRINGS = {
       "Med bara i morgon och inget annat avsnitt är hela kortet dolt tills dess (i redigeringsläget syns det)",
     tomorrow_pending_placeholder: "Visa när de brukar komma",
     tomorrow_pending_hide: "Dölj i morgon",
+    tomorrow_pending_yesterday: "Visa i går i stället",
     appearance: "Ljust eller mörkt",
     appearance_help:
       "Alltid ljust eller alltid mörkt visar kortet så på alla instrumentpaneler, i temats färger när det har båda lägena",
-    appearance_auto: "Automatiskt (som Home Assistant)",
+    appearance_auto: "Som Home Assistant",
     appearance_light: "Ljust",
     appearance_dark: "Mörkt",
     style: "Visning",
-    style_tile: "Ruta: en rad, som rutkortet i Home Assistant",
-    style_gauge: "Mätare: priset på dagens skala",
-    style_clock: "Klocka: de kommande 12 timmarna runt en urtavla",
+    style_tile: "Ruta",
+    style_gauge: "Mätare",
+    style_clock: "Klocka",
+    style_help:
+      "Ruta: en rad, som rutkortet i Home Assistant. Mätare: priset på dagens skala. Klocka: de kommande 12 timmarna runt en urtavla",
     now_tap_action_help:
       "Inget: ett tryck öppnar det som står under ”Tryck öppnar”. Välj t.ex. Navigera för att öppna en instrumentpanel i stället",
     tap_opens: "Tryck öppnar",
     tap_opens_details: "Detaljer för nu",
+    tap_opens_nothing: "Ingenting",
+    tap_opens_help: "Så länge ingen tryckåtgärd är satt nedan",
     tap_opens_forecast: "Prognoskort i ett fönster",
     window_width: "Fönsterbredd",
     window_width_narrow: "Smal (som ”Mer info”)",
@@ -1841,6 +2500,54 @@ const EDITOR_STRINGS = {
     window_width_wide: "Bred",
     window_width_full: "Hela skärmbredden",
     forecast: "Prognoskort",
+    styles: "Stilar",
+    style_switch: "Växlingsbar i kortet",
+    style_switch_help: "En liten växel uppe till höger byter mellan de valda stilarna",
+    style_name: "Linje {line} · yta {fill}",
+    all_views: "Alla vyer",
+    all_views_help: "Det varje vy visar, så länge dess eget avsnitt inte säger något annat",
+    view_inherit_help: "Tom: som för alla vyer",
+    style_line: "Linje",
+    style_fill: "Yta",
+    style_reference: "Streckad linje (varje dags snitt)",
+    style_add: "Lägg till stil",
+    style_remove: "Ta bort",
+    style_up: "Flytta upp",
+    style_down: "Flytta ned",
+    styles_inherited: "Som för alla vyer:",
+    styles_customize: "Egna stilar för den här vyn",
+    styles_inherit: "Som för alla vyer igen",
+    style_fill_average_shown: "under/över vyns ⌀",
+    style_fill_average_day: "under/över varje dags ⌀",
+    style_name_reference: " · ⌀-linje",
+    style_line_level: "prisnivå",
+    style_line_average: "som ytan",
+    style_line_single: "en färg",
+    style_fill_level: "prisnivå",
+    line_colors: "Linjefärger",
+    fill_colors: "Ytfärger",
+    color_now: "Nu (linje och etikett)",
+    color_single: "En färg",
+    color_below: "Under snittet",
+    color_above: "Över snittet",
+    mode_light: "ljus",
+    mode_dark: "mörk",
+    line_colors_help:
+      "Färger utan eget val kommer från ditt tema (en färg: textfärg; under: blågrön; över: varningsfärg) eller är prisnivåns vanliga.",
+    fill_colors_help: "Färger utan eget val är linjens.",
+    color_reset: "Tillbaka till standardfärgen",
+    color_reset_all: "Återställ alla till standard",
+    views: "Vyer",
+    views_help: "Vilka, i den här ordningen; den första öppnas först",
+    resolution: "Upplösning",
+    resolution_switch: "Växlingsbar, börjar på 15 min",
+    resolution_switch_hour: "Växlingsbar, börjar på 60 min",
+    resolution_quarter_hour: "Endast 15 min",
+    resolution_hour: "Endast 60 min",
+    chart_average_help: "60-minuterspriserna och den streckade linjen: som standard det aritmetiska medelvärdet",
+    chart_hide_help: "Själva kurvan finns alltid kvar",
+    chart_tomorrow_pending_help:
+      "Tills dess säger ”I morgon” när de brukar komma, visas inte eller ger plats åt ”I går”",
   },
 };
 
@@ -1866,6 +2573,14 @@ const HOME_ENTITIES = {
   best: "best_price_period",
   peak: "peak_price_period",
 };
+
+// The first home with a price outlook (its device), for a card added from the card picker
+function firstHomeDevice(hass) {
+  const entry = Object.values(hass.entities || {}).find(
+    (e) => e.platform === "tibber_prices" && e.translation_key === HOME_ENTITIES.price && e.device_id
+  );
+  return entry ? entry.device_id : "";
+}
 
 function homeEntities(hass, config) {
   const found = {};
@@ -1948,6 +2663,9 @@ const DEFAULTS = {
   scroll_buttons: "both",
   action_button_position: "bottom",
   show_title: false,
+  chart_button: false,
+  chart_icon: "mdi:chart-line",
+  window_width: "medium",
 };
 
 // Light or dark: as Home Assistant shows it (default; HA itself follows the browser or the
@@ -2252,6 +2970,97 @@ function averageOf(t, kind) {
   return kind === "median" ? { key: "price_median", label: t.median } : { key: "price_mean", label: "⌀" };
 }
 
+// A home's calendar: its time zone, the date of a moment there and the formats of its days and
+// times in the HA language. Kept per language and zone: building an Intl format is the costly part
+const CALENDARS = new Map();
+function homeCalendar(hass) {
+  const zone = timeZone(hass);
+  const key = `${hass.language}|${zone}`;
+  if (!CALENDARS.has(key)) {
+    const day = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: zone });
+    CALENDARS.set(key, {
+      zone,
+      // Calendar date (YYYY-MM-DD) of a moment, in the home's time zone
+      dateOf: (time) => day.format(new Date(time)),
+      weekday: new Intl.DateTimeFormat(hass.language, { weekday: "long", timeZone: zone }),
+      dayMonth: new Intl.DateTimeFormat(hass.language, { day: "numeric", month: "long", timeZone: zone }),
+      weekdayShort: new Intl.DateTimeFormat(hass.language, { weekday: "short", timeZone: zone }),
+      clock: new Intl.DateTimeFormat(hass.language, {
+        hour: "2-digit",
+        minute: "2-digit",
+        hourCycle: "h23",
+        timeZone: zone,
+      }),
+      hourLabel: new Intl.DateTimeFormat(hass.language, { hour: "2-digit", hourCycle: "h23", timeZone: zone }),
+    });
+  }
+  return CALENDARS.get(key);
+}
+
+// Every quarter hour of the price sensor's outlook (from last night on), in the unit shown;
+// undefined from an integration without them
+function quarterSeries(stateObj, factor) {
+  const series = stateObj.attributes.outlook_quarters;
+  if (!series || !Array.isArray(series.prices)) return undefined;
+  return {
+    start: Date.parse(series.start),
+    step: (series.minutes || 15) * 60000,
+    prices: series.prices.map((price) => (typeof price === "number" ? price * factor : null)),
+    levels: series.levels || [],
+  };
+}
+
+// The average a card shows: the mean unless it says otherwise ("auto": as set for the
+// integration's average sensors, which the days carry)
+function averageKindOf(config, days) {
+  return config.average === "auto" ? (days[0] && days[0].reference) || "mean" : config.average;
+}
+
+// Each day's average of a kind by date, yesterday's too (after midnight its last hour is still
+// shown)
+function dayReferences(stateObj, factor, days, key) {
+  const yesterday = stateObj.attributes.outlook_yesterday;
+  return Object.fromEntries(
+    [...(yesterday ? scalePrices([yesterday], factor) : []), ...days].map((day) => [day.date, day[key]])
+  );
+}
+
+// A period sensor's periods (today's and tomorrow's) as [start, end], after those that ended
+// before today as far back as the outlook reaches (from the price sensor); none without the sensor
+function periodSpans(hass, entity, past = []) {
+  const stateObj = entity && hass.states[entity];
+  if (!stateObj) return [];
+  return [...past, ...(stateObj.attributes.periods || [])].map((p) => [Date.parse(p.start), Date.parse(p.end)]);
+}
+
+// The home's best and peak price periods (see periodSpans)
+function homePeriods(hass, entities, stateObj) {
+  const past = stateObj.attributes.outlook_past_periods || {};
+  return {
+    best: periodSpans(hass, entities.best, past.best_price),
+    peak: periodSpans(hass, entities.peak, past.peak_price),
+  };
+}
+
+// Prices in steps of `size` (a quarter hour or an hour) from `from` to `to`, each with its level:
+// the quarter hours in it, aggregated (mean or median); null where there are none
+function quarterSlots(quarters, from, to, size, kind) {
+  const slots = [];
+  for (let at = from; at < to; at += size) {
+    const end = Math.min(at + size, to);
+    const prices = [];
+    const levels = [];
+    for (let time = at; quarters && time < end; time += quarters.step) {
+      const index = Math.round((time - quarters.start) / quarters.step);
+      if (typeof quarters.prices[index] !== "number") continue;
+      prices.push(quarters.prices[index]);
+      levels.push(quarters.levels[index]);
+    }
+    slots.push({ start: at, end, price: prices.length ? aggregate(prices, kind) : null, level: levelOfMany(levels) });
+  }
+  return slots;
+}
+
 // "Tagestief 0,22 kr/kWh um 03:15"
 /**
  * The mark of the day's low or high: an arrow onto a line, so it reads as the bottom or top
@@ -2420,6 +3229,24 @@ function validateConfig(config) {
   if (config.action_button_position && !ACTION_BUTTON_POSITIONS.includes(config.action_button_position)) {
     throw new Error("`action_button_position` is `bottom` or `top`");
   }
+  if (config.chart_button !== undefined && typeof config.chart_button !== "boolean") {
+    throw new Error("`chart_button` is `true` (an icon top right opening the chart card) or `false`");
+  }
+  if (config.chart_icon !== undefined && typeof config.chart_icon !== "string") {
+    throw new Error("`chart_icon` is an icon, e.g. `mdi:chart-line`");
+  }
+  if (config.window_width && !WINDOW_WIDTHS.includes(config.window_width)) {
+    throw new Error("`window_width` is `narrow`, `medium`, `wide` or `full`");
+  }
+  // The cards opened in a window (now and chart card), set up as on their own
+  if (config.forecast !== undefined && !isPlainObject(config.forecast)) {
+    throw new Error("`forecast` holds the forecast card's options, e.g. `show: [hours, days]`");
+  }
+  if (config.forecast) validateConfig(config.forecast);
+  if (config.chart !== undefined && !isPlainObject(config.chart)) {
+    throw new Error("`chart` holds the chart card's options, e.g. `views: [today, tomorrow]`");
+  }
+  if (config.chart) validateChartConfig(config.chart);
 }
 
 function stringsFor(hass) {
@@ -2431,17 +3258,156 @@ function languageStrings(table) {
   return table[(document.documentElement.lang || "en").split("-")[0]] || table.en;
 }
 
+// An icon of Material Design's 24 px grid, for a button
+function svgIcon(path) {
+  return `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"></path></svg>`;
+}
+
+// The head of a window, like HA's dialogs: the close (or back) button left of the title (a
+// smaller line above it where given), buttons at its end
+function dialogHead({ id, title, label, back = false, subtitle = "", end = "" }) {
+  return `<div class="dialog-head"><button class="close${back ? " back" : ""}" aria-label="${label}" title="${label}">${svgIcon(
+    back ? BACK_PATH : CLOSE_PATH
+  )}</button><div class="dialog-titles">${
+    subtitle ? `<div class="dialog-subtitle">${subtitle}</div>` : ""
+  }<h2 id="${id}">${title}</h2></div>${end}</div>`;
+}
+
+// Focus rings only for the keyboard (see BASE_STYLE): each focus in the element's shadow root
+// decides, by the input that led to it
+function trackKeyboard(host) {
+  host.shadowRoot.addEventListener("focusin", () => host.toggleAttribute("data-keyboard", keyboardInput));
+}
+
+// What every shadow root of the cards and editors starts with: focus rings only for the keyboard
+// (the shadow root's focusin sets data-keyboard), and the hidden attribute hiding an element
+// whatever display its class gives it
+const BASE_STYLE = `
+  :host { --focus-ring: none; }
+  :host([data-keyboard]) { --focus-ring: 2px solid var(--primary-color, #03a9f4); }
+  :host(:not([data-keyboard])) :focus-visible { outline: none; }
+  [hidden] { display: none !important; }
+`;
+
+// The pulsing dot of what's live (now): a ring slowly pulsing out of it, like a live broadcast's
+// (in the "now" blue, not red: red means expensive here). Still for those who reduce motion. Its
+// size and color: --live-dot-size, --live-dot-color
+const LIVE_DOT_STYLE = `
+  .live-dot { position: relative; width: var(--live-dot-size, 8px); height: var(--live-dot-size, 8px); border-radius: 50%;
+              background: var(--live-dot-color, var(--primary-color, #03a9f4)); }
+  .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: inherit;
+                     animation: live-pulse 2s ease-out infinite; }
+  @keyframes live-pulse {
+    from { transform: scale(1); opacity: 0.7; }
+    to { transform: scale(2.6); opacity: 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .live-dot::after { animation: none; opacity: 0; }
+  }
+`;
+
+// A card's own action button, a text button in the primary color like HA's; the invisible
+// ::after reaches into the space around it (its touch target)
+const ACTION_BUTTON_STYLE = `
+  .action-button { position: relative; display: inline-flex; align-items: center; min-height: 28px; border: 0;
+                   border-radius: 14px; background: none; cursor: pointer; font: inherit;
+                   font-size: var(--ha-font-size-m, 14px); font-weight: var(--ha-font-weight-medium, 500);
+                   color: var(--primary-color, #03a9f4); white-space: nowrap; touch-action: manipulation; }
+  .action-button::after { content: ""; position: absolute; inset: -10px -4px; }
+  .action-button:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.08); }
+  .action-button:focus-visible { outline: var(--focus-ring); outline-offset: 0; }
+`;
+
+// Class names in the styles: an element's kind is a word (`.chip`, `.col`). A state a script
+// switches on a container is `is-…` (what it is now), `has-…` (what it holds) or `no-…` (what it
+// leaves out): a bare word there would also match an element of that name inside it (a compact
+// card and a compact chip, a cell shown as the default and the default mark). A single item's
+// state stays a word beside its kind (`.col.passed`)
+
+// The frame of a window (legend, details, a card in a window)
+const WINDOW_STYLE = `
+  /* Legend, details, a card in a window: a modal dialog in the top layer, so no card or section edge cuts it off.
+     Built like HA's own dialogs: the close button (X) left of the title in a header that stays
+     put while the content below it scrolls, full screen on phones, wider from 720 px on */
+  dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 64px); box-sizing: border-box;
+           padding: 0; border: 0; border-radius: var(--ha-card-border-radius, 12px); overflow: hidden;
+           color: var(--primary-text-color); font-family: var(--ha-font-family-body, inherit);
+           background: var(--ha-card-background, var(--card-background-color, #fff));
+           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
+  dialog[open] { display: flex; flex-direction: column; }
+  dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
+  .dialog-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
+  /* Full screen exactly when HA's own dialogs go full screen. There the window reaches under the
+     status bar, the home indicator and the notch: padded off them like HA's own dialogs, with
+     the safe area insets HA sets for its frontend and the companion app (else the browser's) */
+  @media all and (max-width: 450px), all and (max-height: 500px) {
+    :host dialog,
+    :host dialog:has(.detail) { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border-radius: 0;
+                                padding: var(--safe-area-inset-top, env(safe-area-inset-top, 0px))
+                                         var(--safe-area-inset-right, env(safe-area-inset-right, 0px))
+                                         var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))
+                                         var(--safe-area-inset-left, env(safe-area-inset-left, 0px)); }
+  }
+  @media (min-width: 720px) {
+    dialog { width: min(880px, calc(100vw - 64px)); }
+  }
+  .dialog-head { flex: none; display: flex; align-items: center; min-height: 64px; box-sizing: border-box;
+                 padding: 4px 24px 0 4px; }
+  .dialog-head h2 { flex: 1; min-width: 0; margin: 0 0 0 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+                    color: var(--ha-dialog-header-title-color, var(--primary-text-color));
+                    font-size: var(--ha-dialog-header-title-font-size, var(--ha-font-size-2xl, 24px));
+                    line-height: var(--ha-dialog-header-title-line-height, var(--ha-line-height-condensed, 1.2));
+                    font-weight: var(--ha-dialog-header-title-font-weight, var(--ha-font-weight-normal, 400)); }
+  .dialog-titles { flex: 1; min-width: 0; margin-left: 8px; }
+  .dialog-titles h2 { margin: 0; }
+  .close { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+           display: inline-flex; align-items: center; justify-content: center; color: var(--primary-text-color);
+           touch-action: manipulation; }
+  .close svg { width: 24px; height: 24px; fill: currentColor; }
+  .close:hover { background: rgba(127, 127, 127, 0.12); }
+  .close:focus-visible { outline: var(--focus-ring); outline-offset: -4px; }
+  .dialog-body { padding: 8px 24px 24px; }
+`;
+
+// The window of a card in another card: the frame, as wide as set (on phones full screen like the
+// other windows), the card without its own frame. It doesn't take the dashboard's rows: its height
+// is its own. The element itself takes no room
+const CARD_WINDOW_STYLE = `
+  ${BASE_STYLE}
+  :host { position: absolute; width: 0; height: 0; overflow: hidden; }
+  ${WINDOW_STYLE}
+  @media (min-width: 451px) and (min-height: 501px) {
+    dialog { width: min(880px, calc(100vw - 64px)); }
+    dialog:has(.narrow) { width: min(560px, calc(100vw - 32px)); }
+    dialog:has(.wide) { width: min(1280px, calc(100vw - 64px)); }
+    dialog:has(.full) { width: calc(100vw - 64px); max-width: none; }
+  }
+  .window-body { padding: 0 8px 8px; --row-size: initial; --row-height: initial; --row-gap: initial; }
+  .window-body > * { display: block; --ha-card-border-width: 0; --ha-card-box-shadow: none; }
+`;
+
 // Layout on an 8 px grid with HA's type scale. Every column has the same fixed rows (day,
 // label, graph with the cheapest chip floating in it, value, range, mark), so labels, bars,
 // prices and marks sit on one line across a strip, whatever a column contains
 const STYLE = `
-  :host { display: block; height: 100%; }
+  :host { position: relative; display: block; height: 100%; }
+  /* The icon top right opening the chart card in a window; the trend gives way to it */
+  .chart-open { position: absolute; top: 6px; right: 6px; z-index: 2; display: inline-flex; align-items: center; justify-content: center;
+                width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+                color: var(--secondary-text-color); --mdc-icon-size: 20px; }
+  .chart-open::after { content: ""; position: absolute; inset: -4px; }
+  .chart-open:hover { background: rgba(127, 127, 127, 0.12); color: var(--primary-text-color); }
+  .chart-open:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  ha-card:has(> .now-tile) ~ .chart-open { top: 50%; transform: translateY(-50%); }
+  ha-card.has-chart-button .now-trend { right: 44px; }
+  ha-card.has-chart-button .now-gauge > .now-trend, ha-card.has-chart-button .now-clock > .now-trend { right: 48px; }
+  ha-card.has-chart-button .now-head.has-trend { padding-right: 76px; }
+  ha-card.has-chart-button .now-head:not(.has-trend) { padding-right: 44px; }
+  ha-card.has-chart-button .now-tile { padding-right: 44px; }
   /* Focus rings for the keyboard only (see keyboardInput): after a tap or a click, focus the
      card set itself (the window's close button, the column a window was opened from) stays
      without one. The cards' rings draw --focus-ring; the browser's own ring goes too */
-  :host { --focus-ring: none; }
-  :host([data-keyboard]) { --focus-ring: 2px solid var(--primary-color, #03a9f4); }
-  :host(:not([data-keyboard])) :focus-visible { outline: none; }
+  ${BASE_STYLE}
   /* Lines drawn on the level colors: those colors don't change with the theme, and only a near
      black stands out on all five (contrast 4.5 to 10; white, light grey and the primary blue
      reach 1.1 to 3.8). The "now" line keeps its blue as a core between two such edges */
@@ -2449,7 +3415,7 @@ const STYLE = `
   /* What past things in a chart are paled toward */
   ha-card, dialog { --fade-bg: var(--ha-card-background, var(--card-background-color, #fff));
                     /* Sizes the wide steps below raise: bar and span widths, the strips' row heights */
-                    --bar-w: 20px; --span-w: 14px; --day-h: 12px; --name-h: 16px; --value-h: 20px; --label-h: 14px; }
+                    --bar-w: 20px; --span-w: 14px; --day-h: 12px; --day-gap: 6px; --name-h: 16px; --value-h: 20px; --label-h: 14px; }
   /* ha-card animates every change (transition: all 0.3s). This card renders as soon as it has
      data, often before Home Assistant has styled the page, and would visibly fade from a square
      card with a light border into its final look on every load. It doesn't animate */
@@ -2458,11 +3424,11 @@ const STYLE = `
   /* A fixed height too small for its content: it scrolls inside the card (see _fitFixedHeight),
      the bottom faded in the card's background while there's more below (not a mask, which
      would fade the card's border too; ::before is the card's hover layer) */
-  ha-card.scroll-y { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
-  ha-card.scroll-y::after { content: ""; position: sticky; bottom: -16px; z-index: 3; flex: none; order: 99;
+  ha-card.is-scrollable { overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+  ha-card.is-scrollable::after { content: ""; position: sticky; bottom: -16px; z-index: 3; flex: none; order: 99;
                             height: 32px; margin: -16px -16px -16px; pointer-events: none; opacity: 0;
                             transition: opacity 0.15s; background: linear-gradient(transparent, var(--fade-bg)); }
-  ha-card.scroll-y.more-below::after { opacity: 1; }
+  ha-card.is-scrollable.has-more-below::after { opacity: 1; }
   /* Room left over when the card is taller than its content (rounded up to whole grid rows, or
      a fixed height): the days spread over it, otherwise the footer moves to the bottom. So the
      card ends where its neighbours do without a blank strip at the bottom */
@@ -2478,15 +3444,15 @@ const STYLE = `
   /* A divider on each side the days have neighbours */
   .split > .side.after > .days { padding-top: calc(16px - 6px * var(--squeeze, 0)); border-top: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2)); }
   .split > .side.before > .days { padding-bottom: calc(16px - 6px * var(--squeeze, 0)); border-bottom: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2)); }
-  ha-card.interactive { cursor: pointer; position: relative; }
+  ha-card.is-interactive { cursor: pointer; position: relative; }
   /* Hover and press feedback like HA's own cards (button, entity): a faint layer in the state
      icon color, 4 % on hover and 12 % when pressed, as their ha-ripple does. Not over the
      card's own buttons, which don't run the card's action */
-  ha-card.interactive::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  ha-card.is-interactive::before { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
                                 background: var(--ha-ripple-color, var(--state-icon-color, #44739e)); opacity: 0;
                                 transition: opacity 15ms linear; }
   @media (hover: hover) {
-    ha-card.interactive:hover:not(:has(button:hover))::before {
+    ha-card.is-interactive:hover:not(:has(button:hover))::before {
       background: var(--ha-ripple-hover-color, var(--ha-ripple-color, var(--state-icon-color, #44739e)));
       opacity: var(--ha-ripple-hover-opacity, 0.04); }
   }
@@ -2498,11 +3464,11 @@ const STYLE = `
     ha-card.column-details .col[data-detail]:hover,
     ha-card.column-details .day-row[data-day]:hover { background: rgba(127, 127, 127, 0.08); }
     ha-card.column-details .col.current[data-detail]:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.18); }
-    ha-card.interactive.column-details:hover:has(.col[data-detail]:hover, .day-row[data-day]:hover)::before { opacity: 0; }
+    ha-card.is-interactive.column-details:hover:has(.col[data-detail]:hover, .day-row[data-day]:hover)::before { opacity: 0; }
   }
   ha-card.column-details .col[data-detail]:focus-visible,
   ha-card.column-details .day-row[data-day]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
-  ha-card.interactive:active:not(:has(button:active)):not(.column-details:has(.col:active, .day-row[data-day]:active))::before {
+  ha-card.is-interactive:active:not(:has(button:active)):not(.column-details:has(.col:active, .day-row[data-day]:active))::before {
     background: var(--ha-ripple-pressed-color, var(--ha-ripple-color, var(--state-icon-color, #44739e)));
     opacity: var(--ha-ripple-pressed-opacity, 0.12); }
   ha-card:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
@@ -2511,7 +3477,8 @@ const STYLE = `
      the day row: a band of the strip, not of its columns, where the day names run across the
      columns (see .day), clear of a column's tint, hover and focus ring */
   .strip { position: relative; display: grid; grid-auto-flow: column; grid-auto-columns: minmax(var(--col-min), 1fr); gap: 4px;
-           overflow-x: auto; scrollbar-width: none; padding-top: calc(9px + var(--row-day, var(--day-h)) + 4px); margin-top: -9px; }
+           overflow-x: auto; scrollbar-width: none; padding-top: calc(9px + var(--row-day, var(--day-h)) + var(--day-gap) + 4px);
+           margin-top: -9px; }
   .strip::-webkit-scrollbar { display: none; }
   /* Places to snap to: where the strip rests (letting go near it, it settles there, as in other
      apps), and both ends, so an end close to that place stays reachable rather than snapping
@@ -2521,8 +3488,8 @@ const STYLE = `
   .zoom { position: relative; }
   .steps { position: absolute; top: 0; left: 0; z-index: 2; overflow: visible; pointer-events: none;
            opacity: 0; transition: opacity 0.2s ease-out; }
-  .steps.shown { opacity: 1; }
-  .steps.leaving { transition-duration: 0.15s; }
+  .steps.is-shown { opacity: 1; }
+  .steps.is-leaving { transition-duration: 0.15s; }
   .strip.hours .chip { transition: opacity 0.2s ease-out; }
   @media (prefers-reduced-motion: reduce) {
     .steps, .strip.hours .chip { transition: none; }
@@ -2537,7 +3504,7 @@ const STYLE = `
   .steps .down { color: var(--success-color, #43a047); }
   .steps .same { color: var(--secondary-text-color); }
   /* Meanwhile the chips step back, so the percentages don't collide with them */
-  .strip.hours.steps-on .chip { opacity: 0.15; }
+  .strip.hours.has-steps .chip { opacity: 0.15; }
   .col.home, .col:first-of-type { scroll-snap-align: start; }
   .col:last-of-type { scroll-snap-align: end; }
   .strip.hours { --col-min: 40px; }
@@ -2559,10 +3526,10 @@ const STYLE = `
   .strip-wrap > .strip { flex: 1 0 auto; }
   /* Below the graph: value, (range,) extreme, mark, their gaps and the column padding */
   .strip-wrap:has(> .parts) { --below: calc(67px + var(--pad)); }
-  .compact .strip-wrap:has(> .parts) { --below: calc(49px + var(--pad)); }
-  .strip.more-right { mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent); }
-  .strip.more-left { mask-image: linear-gradient(to left, #000 calc(100% - var(--fade)), transparent); }
-  .strip.more-left.more-right {
+  .is-compact .strip-wrap:has(> .parts) { --below: calc(49px + var(--pad)); }
+  .strip.has-more-right { mask-image: linear-gradient(to right, #000 calc(100% - var(--fade)), transparent); }
+  .strip.has-more-left { mask-image: linear-gradient(to left, #000 calc(100% - var(--fade)), transparent); }
+  .strip.has-more-left.has-more-right {
     mask-image: linear-gradient(to right, transparent, #000 var(--fade), #000 calc(100% - var(--fade)), transparent); }
   /* Page buttons where a strip goes on: for mouse and keyboard, and as a visible cue to swipe.
      Centered on the graph row: day row 12 + 4, padding 8, name 16 + gap 4 = 44 above it,
@@ -2578,7 +3545,7 @@ const STYLE = `
   }
   .scroll.back { left: 0; }
   .scroll.forward { right: 0; }
-  .strip-wrap.more-left .scroll.back, .strip-wrap.more-right .scroll.forward { display: inline-flex; }
+  .strip-wrap.has-more-left .scroll.back, .strip-wrap.has-more-right .scroll.forward { display: inline-flex; }
   .no-scroll-back .scroll.back, .no-scroll-forward .scroll.forward { display: none !important; }
   .scroll:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .strip-wrap + .strip-wrap { margin-top: calc(16px - 8px * var(--squeeze, 0)); }
@@ -2603,7 +3570,7 @@ const STYLE = `
      like a calendar's month, from the line onwards across the columns. It also explains why
      the dashed reference line jumps there: from here on it's the next day's. The line fades out
      at both ends, so the lines of two strips one above the other don't meet hard */
-  .col.new-day::before { content: ""; position: absolute; top: calc(-4px - var(--row-day, var(--day-h))); bottom: 0; left: -2.5px; width: 1px; opacity: 0.35;
+  .col.new-day::before { content: ""; position: absolute; top: calc(-4px - var(--row-day, var(--day-h)) - var(--day-gap)); bottom: 0; left: -2.5px; width: 1px; opacity: 0.35;
                          color: var(--secondary-text-color);
                          background: linear-gradient(to bottom, transparent, currentColor 32px,
                                                      currentColor calc(100% - 32px), transparent); }
@@ -2611,12 +3578,17 @@ const STYLE = `
   /* A day's name (or how far a part of the day is known) in the strip's day row, over its column:
      placed in the column's grid area, it takes no room in the strip. Moved along while its
      divider is scrolled out on the left (see _stickDayNames), above the columns it passes */
-  .day { position: absolute; z-index: 2; grid-row: 1; top: calc(-1 * var(--row-day, var(--day-h)));
+  /* A day's name over the strip, apart from the columns below it (--day-gap) */
+  .day { position: absolute; z-index: 2; grid-row: 1; top: calc(-1 * (var(--row-day, var(--day-h)) + var(--day-gap)));
          height: var(--day-h); line-height: var(--day-h); font-size: var(--ha-font-size-xs, 10px); pointer-events: none; }
   .day:not(.start) { left: 50%; translate: -50% 0; }
-  .day.past { opacity: 0.45; }
+  /* (Faded as far as the next day's name pushes it out on the left, see _stickDayNames) */
+  .day.start { opacity: var(--pushed-out, 1); }
+  .day.past { opacity: calc(0.45 * var(--pushed-out, 1)); }
   .day.start { left: 0; padding-left: 6px; font-size: var(--ha-font-size-s, 12px); font-weight: var(--ha-font-weight-bold, 600);
                color: var(--primary-text-color); }
+  /* Too little room left in its day: the first word only */
+  .day.start.is-short > :not(:first-child) { display: none; }
   .name { height: var(--name-h); line-height: var(--name-h); font-size: var(--ha-font-size-s, 12px); }
   .current .name { color: var(--primary-text-color); font-weight: var(--ha-font-weight-bold, 600); }
   .chip { font-size: var(--ha-font-size-xs, 10px); font-weight: var(--ha-font-weight-bold, 600); line-height: 16px;
@@ -2668,11 +3640,11 @@ const STYLE = `
   .range { height: var(--label-h); line-height: var(--label-h); font-size: 11px; font-variant-numeric: tabular-nums; }
   /* Hours, and parts of the day in the compact layout, have no min–max row (the span shows them;
      screen readers still get them), so both strips line up exactly */
-  .hours .col, .compact .parts .col {
+  .hours .col, .is-compact .parts .col {
     grid-template-rows: var(--name-h) var(--graph) var(--value-h)
                         var(--row-extreme, var(--label-h)) var(--row-mark, 3px);
   }
-  .hours .range, .compact .parts .range { display: none; }
+  .hours .range, .is-compact .parts .range { display: none; }
   /* The day's low and high: when exactly (quarter hour), under the column it falls in */
   .extreme { height: var(--label-h); line-height: var(--label-h); font-size: var(--ha-font-size-xs, 10px); white-space: nowrap;
              font-weight: var(--ha-font-weight-medium, 500); font-variant-numeric: tabular-nums; }
@@ -2739,11 +3711,14 @@ const STYLE = `
   .mark span { position: absolute; top: 0; bottom: 0; }
   /* Days: one row per day; name, min, span, max and average on one line, details below */
   .days { display: grid; row-gap: 12px; }
-  .day-row { display: grid; grid-template-columns: 72px 40px 1fr 40px minmax(64px, auto); column-gap: 8px; row-gap: 2px;
+  /* (The lines 8 px apart: the median's pointer reaches 6 px under the span) */
+  .day-row { display: grid; grid-template-columns: 72px 40px 1fr 40px minmax(64px, auto); column-gap: 8px; row-gap: 8px;
              grid-template-areas: "name track track track mean" "info info info info info"; align-items: center; }
-  .day-name { grid-area: name; }
+  /* The day's name and its average on one baseline (the average's smaller sign would shift its
+     line otherwise), the span centered beside them */
+  .day-name { grid-area: name; align-self: baseline; }
   .day-track { grid-area: track; }
-  .day-mean { grid-area: mean; }
+  .day-mean { grid-area: mean; align-self: baseline; }
   .day-info { grid-area: info; }
   /* Tomorrow against today, under its average (the row keeps its info line beside it) */
   .day-row.has-vs { grid-template-areas: "name track track track mean" "info info info info vs"; }
@@ -2790,10 +3765,10 @@ const STYLE = `
               color: var(--secondary-text-color); }
   /* Low and high wrapped onto a line of their own: no dot at the end of the line above, and
      lined up with the text (after the level's dot) */
-  .day-info.wrapped .day-sep { display: none; }
+  .day-info.is-wrapped .day-sep { display: none; }
   /* (Spaced by margin: a flex item drops the spaces at its edges) */
   .day-sep { margin: 0 0.3em; }
-  .day-info.wrapped > .level-dot ~ .extremes { margin-left: 14px; }
+  .day-info.is-wrapped > .level-dot ~ .extremes { margin-left: 14px; }
   .level-dot { display: inline-block; width: 8px; height: 8px; flex: none; margin-right: 6px; border-radius: 50%;
                vertical-align: 0; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12); }
   /* Narrow (e.g. half a section): name and reference on top, the span over the full width,
@@ -2809,13 +3784,23 @@ const STYLE = `
     .day-track { margin-top: 8px; margin-bottom: 10px; }
     /* Centered, like the span above; low and high on a line of their own */
     .day-info { justify-content: center; text-align: center; }
-    .day-info.wrapped > .level-dot ~ .extremes { margin-left: 0; }
+    .day-info.is-wrapped > .level-dot ~ .extremes { margin-left: 0; }
     /* A day's name over the strips: centered over its column, word and weekday stacked */
     .strip.two-part-days { --row-day: 24px; }
     .day.start { left: 50%; translate: -50% 0; padding-left: 0; height: auto; display: flex;
                  flex-direction: column; align-items: center; text-align: center; }
     .day.start .label-sep { display: none; }
     .switch .label { display: none; }
+  }
+  /* The days alone in a card wide enough (say tomorrow's on a dashboard): a size up, as in a
+     column of their own beside the strips (see below); the rows spread over the card's height */
+  @container card (min-width: 420px) {
+    ha-card > .days .day-name, ha-card > .days .day-mean { font-size: var(--ha-font-size-l, 16px); line-height: 24px; }
+    ha-card > .days .ref-kind { font-size: var(--ha-font-size-s, 12px); }
+    ha-card > .days .day-info, ha-card > .days .day-vs, ha-card > .days .day-min, ha-card > .days .day-max {
+      font-size: var(--ha-font-size-m, 14px); line-height: 20px; }
+    ha-card > .days .day-track { height: 12px; margin: 0 52px; }
+    ha-card > .days .day-row { row-gap: 10px; }
   }
   /* Wide (two sections or a big screen): the days move beside hours and parts of the day,
      like the daily list next to the hourly one in a weather app */
@@ -2845,7 +3830,7 @@ const STYLE = `
     .split > .side .day-info, .split > .side .day-vs { font-size: var(--ha-font-size-m, 14px); line-height: 20px; }
     .split > .side .day-min, .split > .side .day-max { font-size: var(--ha-font-size-m, 14px); line-height: 20px; }
     .split > .side .day-track { height: 12px; margin: 0 52px; }
-    .split > .side .day-row { row-gap: 4px; }
+    .split > .side .day-row { row-gap: 10px; }
     /* With the days beside them, the strips' labels a size up too, like the days (HA's sizes);
        columns as wide as their widest text (e.g. "↑ 17:00"), bars and spans a little wider */
     .strip.hours { --col-min: 52px; }
@@ -2877,12 +3862,8 @@ const STYLE = `
   /* The card's action as a button of its own: it looks like a small text button (28 px), but
      its touch target is 48 px high like the legend button's, the invisible ::after reaching
      into the space around it */
-  .action-button { position: relative; z-index: 1; display: inline-flex; align-items: center; min-height: 28px;
-                   margin: -6px -8px -6px 12px; padding: 0 8px;
-                   border: 0; border-radius: 14px; background: none; cursor: pointer; font: inherit;
-                   font-size: var(--ha-font-size-m, 14px); font-weight: var(--ha-font-weight-medium, 500);
-                   color: var(--primary-color, #03a9f4); white-space: nowrap; touch-action: manipulation; }
-  .action-button::after { content: ""; position: absolute; inset: -10px -4px; }
+  ${ACTION_BUTTON_STYLE}
+  .action-button { z-index: 1; margin: -6px -8px -6px 12px; padding: 0 8px; }
   .footer .legend-button + .action-button { margin-left: auto; }
   .card-head, .card-foot { display: flex; justify-content: flex-end; }
   /* The title, styled like HA's card header (its theme variables), on its row's left */
@@ -2899,8 +3880,6 @@ const STYLE = `
   .card-foot { margin: 0 0 -8px; }
   /* Compact: in the switch's line, at its left */
   .switch > .action-button { margin: 0 auto 0 -8px; }
-  .action-button:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.08); }
-  .action-button:focus-visible { outline: var(--focus-ring); outline-offset: 0; }
   /* Shown only while focused by keyboard, like a skip link */
   .action-button.focus-only { position: absolute; top: 8px; left: 8px; z-index: 2; margin: 0; min-height: 36px; padding: 0 12px;
                               background: var(--ha-card-background, var(--card-background-color, #fff));
@@ -2909,69 +3888,22 @@ const STYLE = `
   .legend-button { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 6px;
                    min-width: 48px; min-height: 48px; margin: -16px 0 -16px -12px; padding: 0 12px; border: 0;
                    border-radius: 24px; background: none; cursor: pointer; font: inherit; color: inherit;
-                   touch-action: manipulation; -webkit-tap-highlight-color: transparent; --mdc-icon-size: 18px; }
+                   touch-action: manipulation; -webkit-tap-highlight-color: transparent; -webkit-touch-callout: none; --mdc-icon-size: 18px; }
   .legend-button:hover { color: var(--primary-text-color); }
   .legend-button:focus-visible { outline: var(--focus-ring); outline-offset: -6px; }
-  /* Legend and details: a modal dialog in the top layer, so no card or section edge cuts it off.
-     Built like HA's own dialogs: the close button (X) left of the title in a header that stays
-     put while the content below it scrolls, full screen on phones. From 720 px on, the legend
-     uses two columns (see the entries below) */
-  dialog { width: min(440px, calc(100vw - 32px)); max-height: calc(100vh - 64px); box-sizing: border-box;
-           padding: 0; border: 0; border-radius: var(--ha-card-border-radius, 12px); overflow: hidden;
-           color: var(--primary-text-color); font-family: var(--ha-font-family-body, inherit);
-           background: var(--ha-card-background, var(--card-background-color, #fff));
-           box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3); }
-  dialog[open] { display: flex; flex-direction: column; }
-  dialog::backdrop { background: rgba(0, 0, 0, 0.4); }
-  .dialog-scroll { flex: 1 1 auto; min-height: 0; overflow: auto; }
-  /* Full screen exactly when HA's own dialogs go full screen. There the window reaches under the
-     status bar, the home indicator and the notch: padded off them like HA's own dialogs, with
-     the safe area insets HA sets for its frontend and the companion app (else the browser's) */
-  @media all and (max-width: 450px), all and (max-height: 500px) {
-    :host dialog,
-    :host dialog:has(.detail) { width: 100vw; max-width: none; height: 100dvh; max-height: none; margin: 0; border-radius: 0;
-                                padding: var(--safe-area-inset-top, env(safe-area-inset-top, 0px))
-                                         var(--safe-area-inset-right, env(safe-area-inset-right, 0px))
-                                         var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))
-                                         var(--safe-area-inset-left, env(safe-area-inset-left, 0px)); }
-  }
+  ${WINDOW_STYLE}
+  /* From 720 px on, the legend uses two columns (see the entries below) */
   @media (min-width: 720px) {
-    dialog { width: min(880px, calc(100vw - 64px)); }
     .groups { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); column-gap: 32px; }
     .groups > .group + .group { margin-top: 0; padding-top: 0; border-top: 0; }
     .entries.pairs { grid-template-columns: 1fr 1fr; column-gap: 32px; }
     .entries.pairs > .row-start { grid-column: 1; }
   }
-  .dialog-head { flex: none; display: flex; align-items: center; min-height: 64px; box-sizing: border-box;
-                 padding: 4px 24px 0 4px; }
-  .dialog-head h2 { flex: 1; min-width: 0; margin: 0 0 0 8px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-                    color: var(--ha-dialog-header-title-color, var(--primary-text-color));
-                    font-size: var(--ha-dialog-header-title-font-size, var(--ha-font-size-2xl, 24px));
-                    line-height: var(--ha-dialog-header-title-line-height, var(--ha-line-height-condensed, 1.2));
-                    font-weight: var(--ha-dialog-header-title-font-weight, var(--ha-font-weight-normal, 400)); }
-  .close { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
-           display: inline-flex; align-items: center; justify-content: center; color: var(--primary-text-color);
-           touch-action: manipulation; }
-  .close svg { width: 24px; height: 24px; fill: currentColor; }
-  .close:hover { background: rgba(127, 127, 127, 0.12); }
-  .close:focus-visible { outline: var(--focus-ring); outline-offset: -4px; }
-  .dialog-body { padding: 8px 24px 24px; }
   .entries { display: grid; row-gap: 16px; margin: 0; padding: 0; list-style: none; }
   .entries + .entries { margin-top: 16px; }
   /* Detail card: one column like HA's more-info dialog. Price and level on top, the zoomed-in
      chart, a few sentences, the facts as label and value, and quietly at the end the legend */
   dialog:has(.detail) { width: min(480px, calc(100vw - 32px)); }
-  /* The forecast card in a window (from the now card): as wide as set (on phones full screen,
-     like the other windows), the card without its frame. It doesn't take the dashboard's rows:
-     its height is its own */
-  @media (min-width: 451px) and (min-height: 501px) {
-    dialog:has(.forecast-body) { width: min(880px, calc(100vw - 64px)); }
-    dialog:has(.forecast-body.narrow) { width: min(560px, calc(100vw - 32px)); }
-    dialog:has(.forecast-body.wide) { width: min(1280px, calc(100vw - 64px)); }
-    dialog:has(.forecast-body.full) { width: calc(100vw - 64px); max-width: none; }
-  }
-  .forecast-body { padding: 0 8px 8px; --row-size: initial; --row-height: initial; --row-gap: initial; }
-  .forecast-body > tibber-prices-forecast-card { display: block; --ha-card-border-width: 0; --ha-card-box-shadow: none; }
   .detail { display: grid; row-gap: 16px; padding-top: 4px; }
   .hero { display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 6px; row-gap: 8px; }
   /* "Now", "Today", "Tomorrow": a badge first on the price line (not in the title, which would
@@ -2980,19 +3912,9 @@ const STYLE = `
            font-size: var(--ha-font-size-s, 12px); font-weight: var(--ha-font-weight-bold, 600); line-height: 24px;
            color: var(--primary-text-color); background: rgba(127, 127, 127, 0.15); }
   .badge.now { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.18); }
-  /* "Now" is live: a dot in the "now" blue with a ring slowly pulsing out of it, like a live
-     broadcast's (not red: red means expensive here). Still for those who reduce motion */
+  /* "Now" is live: its badge with the pulsing dot */
   .badge.live { display: inline-flex; align-items: center; gap: 6px; }
-  .live-dot { position: relative; width: 8px; height: 8px; border-radius: 50%; background: var(--primary-color, #03a9f4); }
-  .live-dot::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--primary-color, #03a9f4);
-                     animation: live-pulse 2s ease-out infinite; }
-  @keyframes live-pulse {
-    from { transform: scale(1); opacity: 0.7; }
-    to { transform: scale(2.6); opacity: 0; }
-  }
-  @media (prefers-reduced-motion: reduce) {
-    .live-dot::after { animation: none; opacity: 0; }
-  }
+  ${LIVE_DOT_STYLE}
   .hero-kind, .hero-unit { font-size: var(--ha-font-size-m, 14px); color: var(--secondary-text-color); }
   .hero-message { font-size: var(--ha-font-size-2xl, 24px); line-height: 32px; }
   .hero-price { font-size: 40px; line-height: 44px; font-weight: var(--ha-font-weight-normal, 400);
@@ -3044,8 +3966,6 @@ const STYLE = `
   .values .facts { padding: 0 16px; border-radius: var(--ha-card-border-radius, 12px);
                    border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2)); }
   .values .facts > div:first-child { border-top: 0; }
-  .dialog-titles { flex: 1; min-width: 0; margin-left: 8px; }
-  .dialog-titles h2 { margin: 0; }
   .dialog-subtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--ha-font-size-m, 14px);
                      line-height: 20px; color: var(--secondary-text-color); }
   .facts { margin: 0; }
@@ -3066,7 +3986,7 @@ const STYLE = `
   .zcol.drill.current:hover, .zcol[data-pick].current:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.2); }
   .zcol.drill:focus-visible, .zcol[data-pick]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   /* A picked quarter hour: ringed, its line below the chart */
-  .zcol.picked { box-shadow: inset 0 0 0 2px var(--primary-text-color); }
+  .zcol.is-picked { box-shadow: inset 0 0 0 2px var(--primary-text-color); }
   .zpick { margin-top: -8px; padding: 0 4px; min-height: 20px; font-size: var(--ha-font-size-m, 14px); line-height: 20px; }
   .zpick-hint { font-size: var(--ha-font-size-s, 12px); color: var(--secondary-text-color); }
   .zpick-head { display: flex; flex-wrap: wrap; align-items: center; column-gap: 12px; }
@@ -3201,7 +4121,7 @@ const STYLE = `
   .panel > .footer:last-child { margin-top: auto; padding-top: calc(12px - 6px * var(--squeeze, 0)); }
   /* Compact: every section fills the same area; the days spread evenly over that height
      instead of clinging to the top */
-  .compact .panel > .days { flex: 1; align-content: space-evenly; row-gap: 12px; }
+  .is-compact .panel > .days { flex: 1; align-content: space-evenly; row-gap: 12px; }
   .panel.inactive { visibility: hidden; }
   .switch { display: flex; align-items: center; justify-content: flex-end; margin-bottom: calc(8px - 4px * var(--squeeze, 0)); }
   .switch [role="group"] { display: inline-flex; padding: 2px; border-radius: 18px; background: rgba(127, 127, 127, 0.15); }
@@ -3212,10 +4132,11 @@ const STYLE = `
   /* "Now": the current price and what to make of it. On top of the forecast card as a line of
      its own (now-head), and the now card's three styles */
   .now-block { position: relative; color: var(--primary-text-color); border-radius: 12px; }
-  .now-block[data-detail] { cursor: pointer; }
+  .now-block[data-detail], .now-block[data-zone] { cursor: pointer; }
+  .now-block[data-zone]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   .now-block[data-detail]:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   @media (hover: hover) {
-    .now-block[data-detail]:hover { background: rgba(127, 127, 127, 0.08); }
+    .now-block[data-detail]:hover, .now-block[data-zone]:hover { background: rgba(127, 127, 127, 0.08); }
   }
   .now-mini { flex: none; display: block; }
   /* The trend: an icon in the corner, quiet (its name on hover) */
@@ -3261,10 +4182,10 @@ const STYLE = `
   }
 
   /* The now card: no padding of its own, each style brings what it needs */
-  ha-card.now-card { padding: 0; overflow: hidden; }
+  ha-card.is-now-card { padding: 0; overflow: hidden; }
   /* One row like HA's tile card: the scale where the tile has its icon */
   .now-tile { display: flex; align-items: center; gap: 10px; padding: 10px; height: 100%; box-sizing: border-box; }
-  ha-card:not(.fixed) .now-tile { min-height: 56px; }
+  ha-card:not(.is-fixed) .now-tile { min-height: 56px; }
   .now-tile .now-mini { width: 36px; height: 36px; }
   .now-text { min-width: 0; display: grid; }
   .now-tile .now-value, .now-tile .now-unit { font-size: 14px; line-height: 20px; }
@@ -3277,8 +4198,8 @@ const STYLE = `
   .dial-box { width: 100%; display: flex; justify-content: center; }
   .dial { position: relative; width: min(100%, 260px); aspect-ratio: 1; container-type: inline-size; }
   /* A fixed height (rows in a sections view): the dial fills what the verdict leaves */
-  ha-card.fixed .dial-box { flex: 1 1 0; min-height: 0; container-type: size; }
-  ha-card.fixed .dial { width: min(100cqw, 100cqh); }
+  ha-card.is-fixed .dial-box { flex: 1 1 0; min-height: 0; container-type: size; }
+  ha-card.is-fixed .dial { width: min(100cqw, 100cqh); }
   .dial-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center;
                  justify-content: center; gap: 1cqw; text-align: center; pointer-events: none; }
   .dial-price { font-size: 15cqw; font-weight: 500; line-height: 1.05; letter-spacing: -0.01em;
@@ -3303,34 +4224,52 @@ const STYLE = `
                  font-size: 13px; line-height: 18px; text-align: center; color: var(--secondary-text-color);
                  background: rgba(127, 127, 127, 0.08); }
   /* A fixed height: at most three lines, so the dial keeps its room */
-  ha-card.fixed .now-verdict > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
+  ha-card.is-fixed .now-verdict > span { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; }
   .now-verdict.best { background: color-mix(in srgb, var(--success-color, #43a047) 14%, transparent); }
   .now-verdict.peak { background: color-mix(in srgb, var(--error-color, #db4437) 12%, transparent); }
 `;
 
 // Editor fields both cards share (HA draws the form with its own selectors)
 const dropdown = (options) => ({ select: { mode: "dropdown", options } });
+// Options with the one in effect when nothing is set marked "(default)": the editor shows the
+// value that applies, and which of them is the default
+function marked(e, values, label, fallback) {
+  return values.map((value) => ({
+    value,
+    label: value === fallback ? `${label(value)} (${e.default_mark})` : label(value),
+  }));
+}
 const EDITOR_FIELDS = {
+  // The icon top right opening the chart card in a window, and which icon
+  chartButton: () => [
+    { name: "chart_button", selector: { boolean: {} } },
+    { name: "chart_icon", visible: { field: "chart_button", value: true }, selector: { icon: {} } },
+  ],
+  // How wide the window of another card is
+  windowWidth: (e) => ({
+    name: "window_width",
+    selector: dropdown(marked(e, WINDOW_WIDTHS, (value) => e[`window_width_${value}`], DEFAULTS.window_width)),
+  }),
   // Only Tibber Prices homes (and their time-travel views): no wrong entity to pick
   device: () => ({ name: "device_id", selector: { device: { filter: { integration: "tibber_prices" } } } }),
   priceUnit: (e) => ({
     name: "price_unit",
-    selector: dropdown(PRICE_UNITS.map((value) => ({ value, label: e[`unit_${value}`] }))),
+    selector: dropdown(marked(e, PRICE_UNITS, (value) => e[`unit_${value}`], DEFAULTS.price_unit)),
   }),
   average: (e) => ({
     name: "average",
     selector: dropdown(
-      AVERAGES.map((value) => ({ value, label: value === "auto" ? e.unit_auto : e[`average_${value}`] }))
+      marked(e, AVERAGES, (value) => (value === "auto" ? e.unit_auto : e[`average_${value}`]), DEFAULTS.average)
     ),
   }),
   appearance: (e) => ({
     name: "appearance",
-    selector: dropdown(APPEARANCES.map((value) => ({ value, label: e[`appearance_${value}`] }))),
+    selector: dropdown(marked(e, APPEARANCES, (value) => e[`appearance_${value}`], DEFAULTS.appearance)),
   }),
   nowDecimals: (e) => ({
     name: "now_decimals",
     selector: dropdown(
-      NOW_DECIMALS.map((value) => ({ value, label: value === "entity" ? e.now_decimals_entity : value }))
+      marked(e, NOW_DECIMALS, (value) => (value === "entity" ? e.now_decimals_entity : value), "entity")
     ),
   }),
   // Tap, then hold and double tap (added on demand), and the entity "More info" opens
@@ -3351,37 +4290,48 @@ const EDITOR_FIELDS = {
   ],
 };
 
-class TibberPricesForecastCard extends HTMLElement {
-  setConfig(config) {
-    if (!config || !config.device_id) {
-      throw new Error("Pick your home (`device_id`)");
-    }
-    validateConfig(config);
-    this._config = { ...DEFAULTS, ...config };
-    if (!Array.isArray(this._config.show) || !this._config.show.length) this._config.show = [...SECTIONS];
-    // Each section's options, defaults filled in
-    this._sections = Object.fromEntries(
-      SECTIONS.map((section) => [section, { hide: [], ...SECTION_DEFAULTS[section], ...config[section] }])
-    );
-    // Compact layout: the section picked last, remembered per browser, home and set of sections,
-    // so several compact cards of one home with different sections don't override each other
-    this._storageKey = `tibber-prices-forecast:${config.device_id}:${[...this._config.show].sort().join(",")}`;
-    try {
-      this._view = window.localStorage.getItem(this._storageKey) || undefined;
-    } catch (err) {
-      this._view = undefined;
-    }
-    this._entities = undefined;
-    this._signature = undefined;
-    this._themes = undefined;
-    if (this._hass) {
-      this._applyAppearance();
-      this._render();
-    }
+// The cards a card can show in a window, its options for it under their key: the element, its
+// editor (a level down in the outer card's editor) and the icon of its row there
+const WINDOW_CARDS = {
+  forecast: {
+    element: "tibber-prices-forecast-card",
+    editor: "tibber-prices-forecast-card-editor",
+    icon: "mdi:calendar-clock",
+  },
+  // (The chart card has no title of its own: its window says what it is)
+  chart: {
+    element: "tibber-prices-chart-card",
+    editor: "tibber-prices-chart-card-editor",
+    icon: "mdi:chart-line",
+    title: (t) => t.chart.open,
+  },
+};
+
+// Whether a card is the one in another card's window (it then stands alone: no other card on the
+// tab counts it, it counts none)
+function inCardWindow(element) {
+  const root = element.getRootNode();
+  return root instanceof ShadowRoot && root.host instanceof TibberPricesCardWindow;
+}
+
+/**
+ * What the cards share: drawn once per frame when one of the home's entities changes, a forced
+ * light or dark mode, the configured actions (tap, hold, double tap, like any HA card: the card
+ * only reports which gesture happened, HA performs the action) and the other cards they show
+ * in a window (see WINDOW_CARDS)
+ */
+class TibberPricesCardBase extends HTMLElement {
+  // The cards this one shows in a window, `when` its config asks for it
+  static windowCards = [];
+
+  // The cards this one holds the options of, edited a level down
+  static nestedCards(config) {
+    return this.windowCards.filter((card) => card.when(config)).map(({ key }) => ({ key, ...WINDOW_CARDS[key] }));
   }
 
   set hass(hass) {
     this._hass = hass;
+    if (this._window) this._window.hass = hass;
     if (!this._config) return;
     this._applyAppearance();
     // Resolved once per config (and again if the registry changes)
@@ -3399,30 +4349,43 @@ class TibberPricesForecastCard extends HTMLElement {
   }
 
   // A forced light or dark mode: its colors as variables on the card itself, so everything in
-  // it follows, the legend and details windows included. Only when the page is in the other
-  // mode; checked again when the theme or mode changes (HA then replaces hass.themes)
+  // it follows, its windows included. Only when the page is in the other mode; checked again
+  // when the theme or mode changes (HA then replaces hass.themes)
   _applyAppearance() {
     const themes = this._hass.themes || {};
     if (this._themes === themes) return;
     this._themes = themes;
-    const forced = this._config.appearance === "light" || this._config.appearance === "dark";
-    const mode = forced ? this._config.appearance : undefined;
-    const vars = forced && mode !== (themes.darkMode ? "dark" : "light") ? modeVariables(themes, mode) : null;
+    const { appearance } = this._config;
+    const forced = appearance === "light" || appearance === "dark";
+    const vars =
+      forced && appearance !== (themes.darkMode ? "dark" : "light") ? modeVariables(themes, appearance) : null;
     for (const key of this._modeKeys || []) this.style.removeProperty(`--${key}`);
     this._modeKeys = vars ? Object.keys(vars) : [];
     for (const key of this._modeKeys) this.style.setProperty(`--${key}`, String(vars[key]));
-    this.style.colorScheme = vars ? mode : "";
+    this.style.colorScheme = vars ? appearance : "";
   }
 
-  // HA sets this in edit mode, where a card hidden until tomorrow's prices shows its placeholder
-  set preview(value) {
-    if (Boolean(value) === Boolean(this._preview)) return;
-    this._preview = value;
-    if (this._config && this._hass) this._scheduleRender();
+  // Every card is set up for a home
+  static requireHome(config) {
+    if (!config || !config.device_id) throw new Error("Pick your home (`device_id`)");
   }
 
-  get preview() {
-    return this._preview;
+  // A new config is drawn at once (its entities, their states and the theme looked at anew)
+  _configApplied() {
+    this._entities = undefined;
+    this._signature = undefined;
+    this._themes = undefined;
+    if (this._hass) {
+      this._applyAppearance();
+      this._render();
+    }
+  }
+
+  // Whether this card opens that one in a window: as its config asks (windowCards), and not
+  // itself in another card's window (such a card stands alone)
+  _opens(key) {
+    const card = this.constructor.windowCards.find((item) => item.key === key);
+    return Boolean(card && card.when(this._config)) && !inCardWindow(this);
   }
 
   // One render per frame: a data update writes the price sensor and both period sensors in a row
@@ -3434,6 +4397,185 @@ class TibberPricesForecastCard extends HTMLElement {
       // (Taken off the page meanwhile, e.g. leaving the view: drawn when it comes back)
       if (this.isConnected) this._render();
     });
+  }
+
+  // Runs only what's configured: without a tap_action, HA would fall back to more info, but
+  // like hold and double tap, tapping does nothing unless set
+  _action(gesture) {
+    if (!this._configured(gesture)) return;
+    // "More info" and the like act on the entity set for it, else the home's price sensor
+    const config = { ...this._config, entity: this._config.entity || (this._entities || {}).price };
+    this.dispatchEvent(
+      new CustomEvent("hass-action", { bubbles: true, composed: true, detail: { config, action: gesture } })
+    );
+  }
+
+  // Whether a gesture (tap, hold, double_tap) has an action other than "none"
+  _configured(gesture) {
+    const action = this._config[`${gesture}_action`];
+    return Boolean(action) && action.action !== "none";
+  }
+
+  // Whether the card runs an action at all (tap, hold or double tap not set to "none")
+  _hasAction() {
+    return ["tap", "hold", "double_tap"].some((gesture) => this._configured(gesture));
+  }
+
+  // Label of the card's action button: set in the config, or one that fits the tap action
+  _actionText(t) {
+    if (this._config.action_button_text) return this._config.action_button_text;
+    const action = (this._config.tap_action || { action: "none" }).action;
+    if (action === "more-info") return t.action_button["more-info"];
+    if (action === "navigate" || action === "url") return t.action_button.open;
+    return t.action_button.run;
+  }
+
+  /**
+   * Tap, double tap and hold where `zone(event)` gives the element they're on (null: not the
+   * card's gestures there): `tap(element)` runs a tap, the other two their actions. With a
+   * double tap set, a tap waits for a second one; a hold keeps the click after it from tapping
+   * and the browser's context menu from opening
+   */
+  _bindGestures(card, zone, tap) {
+    let holdTimer;
+    let held = false;
+    let tapTimer;
+    card.addEventListener("click", (event) => {
+      const target = zone(event);
+      if (!target) return;
+      if (held) {
+        held = false;
+        return;
+      }
+      if (!this._configured("double_tap")) {
+        tap(target);
+      } else if (tapTimer) {
+        clearTimeout(tapTimer);
+        tapTimer = undefined;
+        this._action("double_tap");
+      } else {
+        tapTimer = setTimeout(() => {
+          tapTimer = undefined;
+          tap(target);
+        }, HOLD_DOUBLE_TAP.doubleTapMs);
+      }
+    });
+    card.addEventListener("pointerdown", (event) => {
+      if (!this._configured("hold") || !zone(event)) return;
+      held = false;
+      holdTimer = setTimeout(() => {
+        held = true;
+        this._action("hold");
+      }, HOLD_DOUBLE_TAP.holdMs);
+    });
+    for (const type of ["pointerup", "pointercancel", "pointerleave"]) {
+      card.addEventListener(type, () => clearTimeout(holdTimer));
+    }
+    card.addEventListener("contextmenu", (event) => {
+      if (this._configured("hold") && zone(event)) event.preventDefault();
+    });
+  }
+
+  /**
+   * Another card in a window, set up as under its key (`forecast`, `chart`) and used like that
+   * card on its own, with this card's home. It opens no window of its own (see _opens), and the
+   * window has the title
+   */
+  _openInWindow(key, opener) {
+    if (!this._window) {
+      this._window = document.createElement("tibber-prices-card-window");
+      this.shadowRoot.append(this._window);
+    }
+    const options = this._config[key] || {};
+    const t = stringsFor(this._hass);
+    const { element, title } = WINDOW_CARDS[key];
+    this._window.open({
+      element,
+      config: { ...options, device_id: this._config.device_id, show_title: false },
+      title: title && !String(options.title || "").trim() ? title(t) : cardTitle(options, t),
+      width: this._config.window_width || DEFAULTS.window_width,
+      hass: this._hass,
+      opener,
+    });
+  }
+}
+
+/**
+ * tibber-prices-card-window: the window of a card in another card, unseen itself: only its
+ * window shows, in the top layer, built like HA's dialogs (the close button left of the title,
+ * full screen on phones). Escape, the button and a tap beside it close it, the focus goes back
+ * to where it was opened from. The card in it is gone with the window, so no card updates unseen
+ */
+class TibberPricesCardWindow extends HTMLElement {
+  constructor() {
+    super();
+    this.attachShadow({ mode: "open" });
+    this.shadowRoot.innerHTML = `<style>${CARD_WINDOW_STYLE}</style><dialog aria-labelledby="window-title"></dialog>`;
+    trackKeyboard(this);
+    const dialog = this.shadowRoot.querySelector("dialog");
+    // A tap on the backdrop lands on the dialog itself; inside, it lands on its content
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog || event.target.closest(".close")) dialog.close();
+    });
+    dialog.addEventListener("close", () => {
+      if (this._card) this._card.remove();
+      this._card = undefined;
+      if (this._opener && this._opener.isConnected) this._opener.focus();
+    });
+  }
+
+  set hass(hass) {
+    if (this._card) this._card.hass = hass;
+  }
+
+  open({ element, config, title, width, hass, opener }) {
+    const dialog = this.shadowRoot.querySelector("dialog");
+    const head = dialogHead({ id: "window-title", title, label: stringsFor(hass).legend.close });
+    dialog.innerHTML = `${head}<div class="dialog-scroll"><div class="dialog-body window-body ${width}"></div></div>`;
+    const card = document.createElement(element);
+    card.setConfig(config);
+    card.hass = hass;
+    this._card = card;
+    this._opener = opener;
+    dialog.querySelector(".window-body").append(card);
+    if (!dialog.open) dialog.showModal();
+  }
+
+  disconnectedCallback() {
+    const dialog = this.shadowRoot.querySelector("dialog");
+    if (dialog.open) dialog.close();
+  }
+}
+
+class TibberPricesForecastCard extends TibberPricesCardBase {
+  // The chart card, from the icon top right
+  static windowCards = [{ key: "chart", when: (config) => Boolean(config.chart_button) }];
+
+  setConfig(config) {
+    TibberPricesCardBase.requireHome(config);
+    validateConfig(config);
+    this._config = { ...DEFAULTS, ...config };
+    if (!Array.isArray(this._config.show) || !this._config.show.length) this._config.show = [...SECTIONS];
+    // Each section's options, defaults filled in
+    this._sections = Object.fromEntries(
+      SECTIONS.map((section) => [section, { hide: [], ...SECTION_DEFAULTS[section], ...config[section] }])
+    );
+    // Compact layout: the section picked last, remembered per browser, home and set of sections,
+    // so several compact cards of one home with different sections don't override each other
+    this._storageKey = `tibber-prices-forecast:${config.device_id}:${[...this._config.show].sort().join(",")}`;
+    this._view = storedValue(this._storageKey);
+    this._configApplied();
+  }
+
+  // HA sets this in edit mode, where a card hidden until tomorrow's prices shows its placeholder
+  set preview(value) {
+    if (Boolean(value) === Boolean(this._preview)) return;
+    this._preview = value;
+    if (this._config && this._hass) this._scheduleRender();
+  }
+
+  get preview() {
+    return this._preview;
   }
 
   getCardSize() {
@@ -3503,10 +4645,7 @@ class TibberPricesForecastCard extends HTMLElement {
               selector: {
                 select: {
                   mode: "box",
-                  options: [
-                    { value: "detailed", label: e.detailed },
-                    { value: "compact", label: e.compact },
-                  ],
+                  options: marked(e, ["detailed", "compact"], (value) => e[value], DEFAULTS.layout),
                 },
               },
             },
@@ -3515,7 +4654,9 @@ class TibberPricesForecastCard extends HTMLElement {
             EDITOR_FIELDS.appearance(e),
             {
               name: "scroll_buttons",
-              selector: dropdown(SCROLL_BUTTONS.map((value) => ({ value, label: e[`scroll_buttons_${value}`] }))),
+              selector: dropdown(
+                marked(e, SCROLL_BUTTONS, (value) => e[`scroll_buttons_${value}`], DEFAULTS.scroll_buttons)
+              ),
             },
             // Several cards for one home, each with its own sections: one legend and unit are enough
             {
@@ -3534,13 +4675,20 @@ class TibberPricesForecastCard extends HTMLElement {
         section("days", [
           {
             name: "shown",
-            selector: dropdown(DAYS_SHOWN.map((value) => ({ value, label: e[`shown_${value}`] }))),
+            selector: dropdown(marked(e, DAYS_SHOWN, (value) => e[`shown_${value}`], SECTION_DEFAULTS.days.shown)),
           },
           {
             name: "tomorrow_pending",
             // Only tomorrow has to wait for its prices
             visible: { field: "shown", operator: "not_eq", value: "today" },
-            selector: dropdown(TOMORROW_PENDING.map((value) => ({ value, label: e[`tomorrow_pending_${value}`] }))),
+            selector: dropdown(
+              marked(
+                e,
+                TOMORROW_PENDING,
+                (value) => e[`tomorrow_pending_${value}`],
+                SECTION_DEFAULTS.days.tomorrow_pending
+              )
+            ),
           },
         ]),
         {
@@ -3561,13 +4709,17 @@ class TibberPricesForecastCard extends HTMLElement {
               selector: {
                 select: {
                   mode: "box",
-                  options: ACTION_BUTTON_POSITIONS.map((value) => ({
-                    value,
-                    label: e[`action_button_position_${value}`],
-                  })),
+                  options: marked(
+                    e,
+                    ACTION_BUTTON_POSITIONS,
+                    (value) => e[`action_button_position_${value}`],
+                    DEFAULTS.action_button_position
+                  ),
                 },
               },
             },
+            ...EDITOR_FIELDS.chartButton(),
+            { ...EDITOR_FIELDS.windowWidth(e), visible: { field: "chart_button", value: true } },
             ...EDITOR_FIELDS.gestures(),
           ],
         },
@@ -3579,16 +4731,42 @@ class TibberPricesForecastCard extends HTMLElement {
     };
   }
 
+  /**
+   * The icon top right opening the chart card in a window, where set (not on a card in another
+   * card's window). On the now card's tile in the middle of its row
+   */
+  _updateChartButton(card) {
+    const button = this.shadowRoot.querySelector(".chart-open");
+    const shown = Boolean(this._config.chart_button) && this._opens("chart");
+    button.hidden = !shown;
+    card.classList.toggle("has-chart-button", shown);
+    if (!shown) return;
+    const label = stringsFor(this._hass).chart.open;
+    button.setAttribute("aria-label", label);
+    button.title = label;
+    const icon = this._config.chart_icon || DEFAULTS.chart_icon;
+    if (button.dataset.icon !== icon) {
+      button.dataset.icon = icon;
+      button.innerHTML = `<ha-icon icon="${escapeHtml(icon)}"></ha-icon>`;
+    }
+  }
+
   // Preselected in the card picker: the first home with a price outlook
   static getStubConfig(hass) {
-    const entry = Object.values(hass.entities || {}).find(
-      (e) => e.platform === "tibber_prices" && e.translation_key === HOME_ENTITIES.price && e.device_id
-    );
+    return { device_id: firstHomeDevice(hass), show: [...SECTIONS] };
+  }
+
+  // HA's form for the options, showing what applies where nothing is set (see the editor)
+  static getConfigElement() {
+    return document.createElement("tibber-prices-forecast-card-editor");
+  }
+
+  // What applies where the config sets nothing, as the editor shows it
+  static configDefaults() {
     return {
-      device_id: entry ? entry.device_id : "",
       ...DEFAULTS,
       show: [...SECTIONS],
-      ...Object.fromEntries(SECTIONS.map((section) => [section, { ...SECTION_DEFAULTS[section] }])),
+      ...Object.fromEntries(SECTIONS.map((section) => [section, { hide: [], ...SECTION_DEFAULTS[section] }])),
     };
   }
 
@@ -3599,15 +4777,19 @@ class TibberPricesForecastCard extends HTMLElement {
       this.attachShadow({ mode: "open" });
       // The legend dialog sits beside the card, not in it: re-rendering the card on a price
       // update leaves an open legend alone, and taps in it never reach the card's actions
-      this.shadowRoot.innerHTML = `<style>${STYLE}</style><ha-card></ha-card><dialog aria-labelledby="legend-title"></dialog>`;
+      this.shadowRoot.innerHTML = `<style>${STYLE}</style><ha-card></ha-card><button type="button" class="chart-open" hidden></button><dialog aria-labelledby="legend-title"></dialog>`;
       this._bindActions(this.shadowRoot.querySelector("ha-card"));
+      // The chart card in a window: beside the card, so a redraw leaves it be, and its tap never
+      // runs the card's action
+      const chartButton = this.shadowRoot.querySelector(".chart-open");
+      chartButton.addEventListener("click", () => this._openInWindow("chart", chartButton));
       this._bindLegend(this.shadowRoot.querySelector("dialog"));
-      // Each focus decides whether focus rings show (keyboard) or not (tap, click)
-      this.shadowRoot.addEventListener("focusin", () => this.toggleAttribute("data-keyboard", keyboardInput));
+      trackKeyboard(this);
     }
     const card = this.shadowRoot.querySelector("ha-card");
     this._updateInteractive(card);
-    card.classList.toggle("compact", this._config.layout === "compact");
+    this._updateChartButton(card);
+    card.classList.toggle("is-compact", this._config.layout === "compact");
     const buttons = this._config.scroll_buttons;
     card.classList.toggle("no-scroll-back", buttons === "forward" || buttons === "none");
     card.classList.toggle("no-scroll-forward", buttons === "back" || buttons === "none");
@@ -3633,30 +4815,15 @@ class TibberPricesForecastCard extends HTMLElement {
       return;
     }
 
-    const past = stateObj.attributes.outlook_past_periods || {};
-    const periods = {
-      best: this._periods(entities.best, past.best_price),
-      peak: this._periods(entities.peak, past.peak_price),
-    };
+    const periods = homePeriods(this._hass, entities, stateObj);
     const now = Date.now();
-    const zone = timeZone(this._hass);
-    const hourFormat = new Intl.DateTimeFormat(this._hass.language, {
-      hour: "2-digit",
-      hourCycle: "h23",
-      timeZone: zone,
-    });
-    const dayFormat = new Intl.DateTimeFormat("en-CA", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      timeZone: zone,
-    });
-    const today = dayFormat.format(new Date(now));
+    const { zone, dateOf, weekday, clock, hourLabel: hourFormat } = homeCalendar(this._hass);
+    const today = dateOf(now);
+    const yesterday = dateOf(dayBounds(today, zone)[0] - 1);
     // The parts of the day reach back as far as the hours (scroll back to see them); four show at
     // a time, from the one before the running one, like the hours
     const parts = allParts;
-    // "Tomorrow · Saturday" above the first block of the next day, in both strips, at a divider
-    const weekday = new Intl.DateTimeFormat(this._hass.language, { weekday: "long", timeZone: zone });
+    // "Tomorrow · Saturday" above the first block of the next day, in both strips, at a divider.
     // Either word can be left out (the section's hide); the divider stays. With `everyDay`, every
     // day the strip reaches is named, the first one too (without a divider before it): like a
     // calendar's headings, the name of the day in view stays at the strip's left edge
@@ -3678,10 +4845,12 @@ class TibberPricesForecastCard extends HTMLElement {
         divider = changed && (!everyDay || previous !== undefined);
         previous = date;
         if (changed) {
-          const word = date > today ? t.tomorrow : date === today ? t.today : t.yesterday;
+          // A day before yesterday (the night that began then) has no word of its own: its weekday
+          // names it, also where the weekdays are left out
+          const word = date > today ? t.tomorrow : date === today ? t.today : date === yesterday ? t.yesterday : "";
           const words = [
             !hide.includes("tomorrow") && word,
-            !hide.includes("weekday") && weekday.format(new Date(at)),
+            (!hide.includes("weekday") || !word) && weekday.format(new Date(at)),
           ].filter(Boolean);
           day = words.join(" · ");
           // Drawn with each word in a span: a narrow card stacks them, centered
@@ -3701,23 +4870,14 @@ class TibberPricesForecastCard extends HTMLElement {
         };
       };
     };
-    // The average shown: the mean unless the card says otherwise ("auto": as set for the
-    // integration's average sensors)
-    const averageKind =
-      this._config.average === "auto" ? (days[0] && days[0].reference) || "mean" : this._config.average;
+    const averageKind = averageKindOf(this._config, days);
     const average = averageOf(t, averageKind);
     // Now: the price of the hour running now, until the price sensor's own value is read below
     const currentHour = hours.find((b) => Date.parse(b.start) <= now && now < Date.parse(b.end));
     let nowPrice = currentHour ? currentHour[average.key] : undefined;
     // The day's average of the same kind by date: drawn as a dashed line, so every hour and part
-    // of the day reads as above or below its day. Yesterday's too: after midnight its last hour
-    // is still in the hour strip
-    const yesterday = stateObj.attributes.outlook_yesterday;
-    const references = Object.fromEntries(
-      [...(yesterday ? scalePrices([yesterday], factor) : []), ...days].map((d) => [d.date, d[average.key]])
-    );
-    // Calendar date (YYYY-MM-DD) of a moment, in the home's time zone
-    const dateOf = (time) => dayFormat.format(new Date(time));
+    // of the day reads as above or below its day
+    const references = dayReferences(stateObj, factor, days, average.key);
     // When each day's lowest and highest price occur, marked under the hour / part they fall in
     const extremes = days
       .flatMap((d) => [
@@ -3725,12 +4885,6 @@ class TibberPricesForecastCard extends HTMLElement {
         d.price_max_at && { at: Date.parse(d.price_max_at), kind: "high", price: d.price_max },
       ])
       .filter(Boolean);
-    const clock = new Intl.DateTimeFormat(this._hass.language, {
-      hour: "2-digit",
-      minute: "2-digit",
-      hourCycle: "h23",
-      timeZone: zone,
-    });
     // Facts behind each column and day row, for their details windows (indexed by data-detail
     // and data-day), and what all of them share
     this._details = [];
@@ -3742,16 +4896,7 @@ class TibberPricesForecastCard extends HTMLElement {
     // over redraws (new prices while a detail is open), emptied when the window closes
     if (!this._detailBack) this._detailBack = [];
     // Every quarter hour from last night on, for zooming into a time in its details
-    const series = stateObj.attributes.outlook_quarters;
-    const quarters =
-      series && Array.isArray(series.prices)
-        ? {
-            start: Date.parse(series.start),
-            step: (series.minutes || 15) * 60000,
-            prices: series.prices.map((price) => (typeof price === "number" ? price * factor : null)),
-            levels: series.levels || [],
-          }
-        : undefined;
+    const quarters = quarterSeries(stateObj, factor);
     // The quarter hour running now: its own price, the next one's, and where it ranks among
     // today's quarter hours, for "now" in the details
     let currentQuarter;
@@ -4055,10 +5200,10 @@ class TibberPricesForecastCard extends HTMLElement {
     const hide = () => {
       clearTimeout(timer);
       hovered = undefined;
-      strip.classList.remove("steps-on");
-      for (const svg of strip.querySelectorAll(".steps:not(.leaving)")) {
-        svg.classList.remove("shown");
-        svg.classList.add("leaving");
+      strip.classList.remove("has-steps");
+      for (const svg of strip.querySelectorAll(".steps:not(.is-leaving)")) {
+        svg.classList.remove("is-shown");
+        svg.classList.add("is-leaving");
         setTimeout(() => svg.remove(), 200);
       }
     };
@@ -4085,7 +5230,7 @@ class TibberPricesForecastCard extends HTMLElement {
           const rect = button.getBoundingClientRect();
           return side === "left" ? rect.right - box.left + 6 : box.right - rect.left + 6;
         }
-        return strip.classList.contains(side === "left" ? "more-left" : "more-right") ? fade : 0;
+        return strip.classList.contains(side === "left" ? "has-more-left" : "has-more-right") ? fade : 0;
       };
       const shownFrom = strip.scrollLeft + edge("left");
       const shownTo = strip.scrollLeft + strip.clientWidth - edge("right");
@@ -4171,8 +5316,8 @@ class TibberPricesForecastCard extends HTMLElement {
       );
       // Faded in (the class on the next frame, so the transition runs)
       const svg = strip.lastElementChild;
-      strip.classList.add("steps-on");
-      requestAnimationFrame(() => svg.classList.add("shown"));
+      strip.classList.add("has-steps");
+      requestAnimationFrame(() => svg.classList.add("is-shown"));
     };
     // Only once the mouse rests on an hour, like a tooltip: passing over the strip stays calm
     const later = (column, delay) => {
@@ -4257,7 +5402,7 @@ class TibberPricesForecastCard extends HTMLElement {
     const gap = parseFloat(style.getPropertyValue("--row-gap")) || 0;
     card.style.minHeight = "";
     card.style.removeProperty("--squeeze");
-    card.classList.remove("scroll-y");
+    card.classList.remove("is-scrollable");
     if (style.getPropertyValue("--row-size").trim()) {
       this._fitFixedHeight(card);
       return;
@@ -4301,13 +5446,13 @@ class TibberPricesForecastCard extends HTMLElement {
   _markWrapped() {
     // All reset first, then all measured, then all marked: one layout, not one per line
     const lines = [...this.shadowRoot.querySelectorAll(".day-info")].map((info) => {
-      info.classList.remove("wrapped");
+      info.classList.remove("is-wrapped");
       return [info, info.querySelector(".day-main"), info.querySelector(".extremes")];
     });
     const wrapped = lines.map(([, main, extremes]) =>
       Boolean(main && extremes && extremes.offsetTop > main.offsetTop + 2)
     );
-    lines.forEach(([info], i) => info.classList.toggle("wrapped", wrapped[i]));
+    lines.forEach(([info], i) => info.classList.toggle("is-wrapped", wrapped[i]));
   }
 
   /**
@@ -4322,7 +5467,7 @@ class TibberPricesForecastCard extends HTMLElement {
     if (natural <= 0.5 || this._squeeze(card, natural, over)) return;
     // Scrolling anyway: as tight as it goes, so there's least to scroll
     card.style.setProperty("--squeeze", "1");
-    card.classList.add("scroll-y");
+    card.classList.add("is-scrollable");
     this._fadeY(card);
     if (!card._scrollBound) {
       card._scrollBound = true;
@@ -4333,7 +5478,7 @@ class TibberPricesForecastCard extends HTMLElement {
   // A card scrolling inside: its bottom faded while there's more below
   _fadeY(card) {
     const below = card.scrollHeight - card.clientHeight - card.scrollTop;
-    card.classList.toggle("more-below", card.classList.contains("scroll-y") && below > 1);
+    card.classList.toggle("has-more-below", card.classList.contains("is-scrollable") && below > 1);
   }
 
   // Fade an edge with more behind it, and show its scroll button. Not on the left while the
@@ -4344,8 +5489,8 @@ class TibberPricesForecastCard extends HTMLElement {
     const rest = max - strip.scrollLeft;
     const atHome = Math.abs(strip.scrollLeft - Math.min(this._stripHome(strip), max)) < 2;
     for (const element of [strip, strip.parentElement]) {
-      element.classList.toggle("more-right", rest > 1);
-      element.classList.toggle("more-left", strip.scrollLeft > 1 && !atHome);
+      element.classList.toggle("has-more-right", rest > 1);
+      element.classList.toggle("has-more-left", strip.scrollLeft > 1 && !atHome);
     }
     this._stickDayNames(strip);
   }
@@ -4353,43 +5498,57 @@ class TibberPricesForecastCard extends HTMLElement {
   /**
    * Day names stay in view like a calendar's headings: a name sits at its day's divider, and
    * once that has scrolled out on the left, it waits at the strip's left edge until the next
-   * day's name pushes it out. All measured first, then all moved: one layout per scroll event
+   * day's name pushes it out. Where its day has too little room left for the whole name, only
+   * its first word stays ("Today"), so it isn't cut off. All measured first, then all moved: one
+   * layout per scroll event
    */
   _stickDayNames(strip) {
     const left = strip.getBoundingClientRect().left;
     // Past the faded left edge (while there's more on the left), so it reads in full
-    const edge = strip.classList.contains("more-left")
+    const edge = strip.classList.contains("has-more-left")
       ? Math.min(FADE.max, Math.max(FADE.min, FADE.share * strip.clientWidth)) - 6
       : 0;
     const labels = [...strip.querySelectorAll(":scope > .day.start")];
     // The column under each name (the columns come first among the strip's children)
+    // (Its widths whole and as the first word, measured once while it's whole and laid out: a
+    // label is new with each render, and has no width yet while the card isn't shown)
+    for (const label of labels) {
+      if (label._width) continue;
+      const first = label.firstElementChild;
+      label._width = label.scrollWidth;
+      label._shortWidth = first ? first.offsetLeft + first.offsetWidth : label._width;
+    }
     const places = labels.map((label) => ({
       start: strip.children[Number(label.dataset.col)].getBoundingClientRect().left - left,
-      width: label.scrollWidth,
     }));
     labels.forEach((label, i) => {
-      const { start, width } = places[i];
-      if (start >= edge) {
-        label.style.transform = "";
-        return;
-      }
-      // Up to the left edge, but always a little before the next day's divider
+      const { start } = places[i];
       const next = i + 1 < places.length ? places[i + 1].start : Infinity;
-      label.style.transform = `translateX(${Math.min(edge - start, next - start - width - 8)}px)`;
+      const at = Math.max(start, edge);
+      const short = next - at - 8 < label._width && label._shortWidth < label._width;
+      label.classList.toggle("is-short", short);
+      // Up to the left edge (where its day has scrolled out), but always a little before the
+      // next day's divider: pushed out over the edge by it, it fades instead of being cut off
+      const width = short ? label._shortWidth : label._width;
+      const shift = Math.min(Math.max(edge - start, 0), next - start - width - 8);
+      const over = edge - start - shift;
+      label.style.transform = shift ? `translateX(${shift}px)` : "";
+      if (over > 0) label.style.setProperty("--pushed-out", String(Math.max(0, 1 - over / (width / 2))));
+      else label.style.removeProperty("--pushed-out");
     });
   }
 
   connectedCallback() {
-    // The forecast card in a now card's window stands alone: no other card counts it, it counts none
-    if (!this._isolated) ATTACHED_CARDS.add(this);
+    // A card in another card's window stands alone: no other card counts it, it counts none
+    if (!inCardWindow(this)) ATTACHED_CARDS.add(this);
     if (this.shadowRoot) this._fadeAll();
     this._redrawDaysElsewhere();
   }
 
   // The other cards on the tab, which this one is drawn together with (shared day scale,
-  // legend); none for the forecast card in a now card's window
+  // legend); none for a card in another card's window
   _peers() {
-    return this._isolated ? [] : [...ATTACHED_CARDS].filter((card) => card !== this);
+    return inCardWindow(this) ? [] : [...ATTACHED_CARDS].filter((card) => card !== this);
   }
 
   // Whether this card shows the row of "today" or "tomorrow" (its days section, not limited
@@ -4711,11 +5870,11 @@ class TibberPricesForecastCard extends HTMLElement {
       </div>`;
     });
     const button = (direction, label, path) =>
-      `<button class="scroll ${direction}" data-scroll="${direction}" aria-label="${label}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"></path></svg></button>`;
+      `<button class="scroll ${direction}" data-scroll="${direction}" aria-label="${label}">${svgIcon(path)}</button>`;
     // Rows of details left out entirely collapse (by setting only, never by data, so the height
     // never changes on its own). The parts' day row stays: it also says how far a part is known
     const collapsed = [
-      !ranged && hide.has("tomorrow") && hide.has("weekday") && "--row-day:0px",
+      !ranged && hide.has("tomorrow") && hide.has("weekday") && "--row-day:0px;--day-gap:0px",
       hide.has("range") && "--row-range:0px",
       hide.has("low") && hide.has("high") && "--row-extreme:0px",
       hide.has("periods") && "--row-mark:0px",
@@ -4914,99 +6073,62 @@ class TibberPricesForecastCard extends HTMLElement {
 
   _selectView(view) {
     this._view = view;
-    try {
-      window.localStorage.setItem(this._storageKey, view);
-    } catch (err) {
-      // Private mode or blocked storage: the switch still works for this page
-    }
+    // (Private mode or blocked storage: the switch still works for this page)
+    storeValue(this._storageKey, view);
     this._render();
   }
 
-  // A period sensor's periods (today's and tomorrow's), after those that ended before today as
-  // far back as the strips reach (from the price sensor); none without the sensor
-  _periods(entity, past = []) {
-    const stateObj = entity && this._hass.states[entity];
-    if (!stateObj) return [];
-    return [...past, ...(stateObj.attributes.periods || [])].map((p) => [Date.parse(p.start), Date.parse(p.end)]);
-  }
-
   /**
-   * Tap, hold and double tap run the configured actions, like any HA card: the card only
-   * reports which gesture happened (hass-action), HA performs the action (more info,
-   * navigate, URL, perform action, assist, …). Without configuration nothing happens. The
-   * card's own controls (switch, page and legend buttons) and the details of hours, parts of
-   * the day and days are not part of the card's action area.
+   * The card's own controls (switch, page and legend buttons), the details of hours, parts of
+   * the day and days, and its gestures (see _bindGestures). Without configuration a gesture does
+   * nothing.
    */
   _bindActions(card) {
-    const configured = (gesture) => this._configured(gesture);
-    // The section switch and the page buttons are controls of their own, not the card's action
-    const outside = (event) =>
+    const control = (event) =>
       event.target.closest("button[data-view], button[data-scroll], button[data-legend], button[data-card-action]");
-    let holdTimer;
-    let held = false;
-    let tapTimer;
-
+    // An hour, part of the day or day opening its details (unless turned off for that section);
+    // in the action zone a tap action set wins over the details of now
+    const details = (event) => {
+      const zoneTap = this._actionZone() && this._configured("tap") && !this._config.action_button;
+      return (
+        event.target.closest(".col[data-detail], .day-row[data-day]") ||
+        (!zoneTap && event.target.closest(".now-block[data-detail]"))
+      );
+    };
+    // Where the card's gestures run: its surface, or with a now section shown that section only
+    // (its action zone, as the chart card's head); nowhere with its own button
+    const zone = (event) => {
+      if (control(event) || this._config.action_button) return null;
+      if (this._actionZone() && !event.target.closest(".now-block")) return null;
+      return details(event) || card;
+    };
     card.addEventListener("click", (event) => {
-      const button = outside(event);
+      const button = control(event);
       if (button && button.dataset.legend) {
         this._openLegend(button);
-        return;
-      }
-      if (button && button.dataset.cardAction !== undefined) {
+      } else if (button && button.dataset.cardAction !== undefined) {
         this._action("tap");
-        return;
-      }
-      if (button && button.dataset.scroll) {
+      } else if (button && button.dataset.scroll) {
         const strip = button.parentElement.querySelector(".strip");
         const page = strip.clientWidth * 0.8 * (button.dataset.scroll === "forward" ? 1 : -1);
         strip.scrollBy({ left: page, behavior: "smooth" });
-        return;
-      }
-      if (button) {
+      } else if (button) {
         this._selectView(button.dataset.view);
-        return;
-      }
-      if (held) {
-        held = false;
-        return;
-      }
-      // A tap on an hour, part of the day or day opens its details (unless turned off for that
-      // section); hold and double tap stay the card's everywhere
-      const column = event.target.closest(".col[data-detail], .day-row[data-day], .now-block[data-detail]");
-      // With its own button, the card's surface runs no action (only details open)
-      if (!column && this._config.action_button) return;
-      const tap = column ? () => this._openDetailsOf(column) : () => this._action("tap");
-      if (!configured("double_tap")) {
-        tap();
-      } else if (tapTimer) {
-        clearTimeout(tapTimer);
-        tapTimer = undefined;
-        this._action("double_tap");
-      } else {
-        tapTimer = setTimeout(() => {
-          tapTimer = undefined;
-          tap();
-        }, HOLD_DOUBLE_TAP.doubleTapMs);
+      } else if (!zone(event)) {
+        // Outside the gestures' zone a tap only opens details
+        const column = details(event);
+        if (column) this._openDetailsOf(column);
       }
     });
-    card.addEventListener("pointerdown", (event) => {
-      if (outside(event) || !configured("hold") || this._config.action_button) return;
-      held = false;
-      holdTimer = setTimeout(() => {
-        held = true;
-        this._action("hold");
-      }, HOLD_DOUBLE_TAP.holdMs);
-    });
-    for (const type of ["pointerup", "pointercancel", "pointerleave"]) {
-      card.addEventListener(type, () => clearTimeout(holdTimer));
-    }
-    // A long press shouldn't also open the browser's context menu
-    card.addEventListener("contextmenu", (event) => {
-      if (configured("hold")) event.preventDefault();
-    });
+    this._bindGestures(card, zone, (target) => (target === card ? this._action("tap") : this._openDetailsOf(target)));
     card.addEventListener("keydown", (event) => {
-      if ((event.key === "Enter" || event.key === " ") && !outside(event)) {
+      if ((event.key === "Enter" || event.key === " ") && !control(event)) {
         event.preventDefault();
+        // The action zone (the now section) runs the tap action where one is set
+        if (event.target.closest(".now-block[data-zone]") && this._configured("tap") && !this._config.action_button) {
+          this._action("tap");
+          return;
+        }
         const column = event.target.closest(".col[data-detail], .day-row[data-day], .now-block[data-detail]");
         if (column) {
           this._openDetailsOf(column);
@@ -5224,11 +6346,8 @@ class TibberPricesForecastCard extends HTMLElement {
     // more-info dialog
     const back = this._detailBack.length > 0;
     const close = back ? t.back : t.legend.close;
-    dialog.innerHTML = `<div class="dialog-head"><button class="close${back ? " back" : ""}" aria-label="${close}" title="${close}"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${
-      back ? BACK_PATH : CLOSE_PATH
-    }"></path></svg></button><div class="dialog-titles">${
-      subtitle ? `<div class="dialog-subtitle">${subtitle}</div>` : ""
-    }<h2 id="legend-title">${title}</h2></div>${headEnd}</div><div class="dialog-scroll">${body}</div>`;
+    const head = dialogHead({ id: "legend-title", title, label: close, back, subtitle, end: headEnd });
+    dialog.innerHTML = `${head}<div class="dialog-scroll">${body}</div>`;
     this._legendOpener = opener;
     if (!dialog.open) dialog.showModal();
   }
@@ -5292,7 +6411,7 @@ class TibberPricesForecastCard extends HTMLElement {
       ${prose.length ? `<p class="prose">${prose.join(" ")}</p>` : ""}
       ${
         Object.values(facts).some((group) => group.length)
-          ? `<button class="values-link" data-open-values><span>${t.detail.all_values}</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${CHEVRON_RIGHT}"></path></svg></button>`
+          ? `<button class="values-link" data-open-values><span>${t.detail.all_values}</span>${svgIcon(CHEVRON_RIGHT)}</button>`
           : ""
       }
       <button class="legend-link" data-open-legend><ha-icon icon="mdi:information-outline"></ha-icon><span>${t.detail.legend_link}</span></button>
@@ -5305,7 +6424,7 @@ class TibberPricesForecastCard extends HTMLElement {
     const step = (direction, label, path) =>
       `<button class="nav" data-nav="${direction}" aria-label="${label}" title="${label}"${
         this._navTarget(direction) === undefined ? " disabled" : ""
-      }><svg viewBox="0 0 24 24" aria-hidden="true"><path d="${path}"></path></svg></button>`;
+      }>${svgIcon(path)}</button>`;
     // Straight back to the time running now (today, for days), like a calendar's "Today". Not
     // shown while there; it keeps its room, so the title and arrows don't shift when stepping
     const nowTarget = this._nowTarget();
@@ -5471,15 +6590,21 @@ class TibberPricesForecastCard extends HTMLElement {
     // A tap opens the details of the hour running now, unless the card's own action is wanted
     const index = this._details.findIndex((d) => d.kind === "hours" && d.isNow);
     const opens = index >= 0 && this._tapDetails("now");
+    // The card's action zone: a button for its actions too
+    const zone = this._nowTakesActions();
     const trend = state.trend && !hide.has("trend") ? state.trend : undefined;
     const label = escapeHtml(trend ? `${state.label} ${trend.text}.` : state.label);
     // Subtle, top right: the direction prices move in now
     const trendHtml = trend
       ? `<span class="now-trend" title="${escapeHtml(trend.text)}" aria-hidden="true"><ha-icon icon="${trend.icon}"></ha-icon></span>`
       : "";
-    const attributes = opens
-      ? ` data-detail="${index}" role="button" tabindex="0" aria-label="${label}"`
-      : ` role="group" aria-label="${label}"`;
+    const attributes =
+      (zone ? " data-zone" : "") +
+      (opens
+        ? ` data-detail="${index}" role="button" tabindex="0" aria-label="${label}"`
+        : zone
+          ? ` role="button" tabindex="0" aria-label="${label}"`
+          : ` role="group" aria-label="${label}"`);
     const price = state.formatNow(state.price);
     const verdict = [state.headline && `<b>${state.headline}</b>`, ...state.lines].filter(Boolean);
     if (style === "tile") {
@@ -5735,7 +6860,7 @@ class TibberPricesForecastCard extends HTMLElement {
     this._picked = again ? undefined : { key: `${this._detailShown.kind}|${context.block.start}`, start };
     for (const column of dialog.querySelectorAll("[data-pick]")) {
       const on = !again && Number(column.dataset.pick) === start;
-      column.classList.toggle("picked", on);
+      column.classList.toggle("is-picked", on);
       column.setAttribute("aria-pressed", String(on));
     }
     const slot = again ? undefined : context.slots.find((s) => s.start === start);
@@ -5834,34 +6959,14 @@ class TibberPricesForecastCard extends HTMLElement {
   _slots(start, end, size, kind = this._renderInfo.averageKind) {
     const { quarters, hours } = this._renderInfo;
     const key = averageOf({}, kind).key;
-    const slots = [];
-    for (let at = start; at < end; at += size) {
-      const prices = [];
-      const levels = [];
-      if (quarters) {
-        for (let time = at; time < Math.min(at + size, end); time += quarters.step) {
-          const index = Math.round((time - quarters.start) / quarters.step);
-          if (typeof quarters.prices[index] !== "number") continue;
-          prices.push(quarters.prices[index]);
-          levels.push(quarters.levels[index]);
-        }
-      }
+    return quarterSlots(quarters, start, end, size, kind).map((slot) => {
+      if (slot.price !== null || size < HOUR_MS) return slot;
       // Before the quarter hours (an hour further back than they reach): the hour strip's value
-      if (!prices.length && size >= HOUR_MS) {
-        const hour = hours.find((block) => Date.parse(block.start) === at);
-        if (hour && typeof hour[key] === "number") {
-          prices.push(hour[key]);
-          levels.push(hour.level);
-        }
-      }
-      slots.push({
-        start: at,
-        end: Math.min(at + size, end),
-        price: prices.length ? aggregate(prices, kind) : null,
-        level: levelOfMany(levels),
-      });
-    }
-    return slots;
+      const hour = hours.find((block) => Date.parse(block.start) === slot.start);
+      return hour && typeof hour[key] === "number"
+        ? { ...slot, price: hour[key], level: levelOfMany([hour.level]) }
+        : slot;
+    });
   }
 
   /**
@@ -5946,7 +7051,7 @@ class TibberPricesForecastCard extends HTMLElement {
             : "";
       return `<div class="zcol${isNow ? " current" : ""}${slot.end <= now ? " past" : ""}${known ? "" : " missing"}${
         target !== undefined ? " drill" : ""
-      }${picked ? " picked" : ""}" title="${time} · ${value}"${open}${known && !dense ? ` data-value="${shown}"` : ""}>
+      }${picked ? " is-picked" : ""}" title="${time} · ${value}"${open}${known && !dense ? ` data-value="${shown}"` : ""}>
         ${active ? periodBadge(active.kind, active.title) : ""}${
           dense ? "" : `<span class="zvalue">${known ? format(slot.price) : "?"}</span>`
         }
@@ -6257,14 +7362,12 @@ class TibberPricesForecastCard extends HTMLElement {
    */
   _dayHead(date) {
     const { zone, hourName } = this._renderInfo;
-    const language = this._hass.language;
+    const calendar = homeCalendar(this._hass);
     const noon = new Date(`${date}T12:00:00Z`);
     const [start, end] = dayBounds(date, zone);
     return {
-      title: capitalize(
-        new Intl.DateTimeFormat(language, { day: "numeric", month: "long", timeZone: zone }).format(noon)
-      ),
-      weekday: capitalize(new Intl.DateTimeFormat(language, { weekday: "long", timeZone: zone }).format(noon)),
+      title: capitalize(calendar.dayMonth.format(noon)),
+      weekday: capitalize(calendar.weekday.format(noon)),
       start,
       end,
       label: (slot) => (Number(hourName(slot.start)) % 3 === 0 ? hourName(slot.start) : ""),
@@ -6355,7 +7458,7 @@ class TibberPricesForecastCard extends HTMLElement {
     const ranged = info.kind === "parts";
     const start = Date.parse(block.start);
     const end = Date.parse(block.end);
-    const dayName = new Intl.DateTimeFormat(language, { weekday: "long", timeZone: zone }).format(new Date(start));
+    const dayName = homeCalendar(this._hass).weekday.format(new Date(start));
     const when = ranged ? this._partName(block) : dayName;
     // A short title that fits one line next to ‹ ›: an hour's time, a part's name. The rest
     // (now, the weekday or the part's hours) goes in badges on top
@@ -6606,23 +7709,6 @@ class TibberPricesForecastCard extends HTMLElement {
     }</div>${notes.length ? `<div class="zpick-notes">${notes.join(" · ")}</div>` : ""}`;
   }
 
-  // Runs only what's configured: without a tap_action, HA would fall back to more info, but
-  // like hold and double tap, tapping does nothing unless set
-  _action(gesture) {
-    if (!this._configured(gesture)) return;
-    // "More info" and the like act on the entity set for it, else the home's price sensor
-    const config = { ...this._config, entity: this._config.entity || (this._entities || {}).price };
-    this.dispatchEvent(
-      new CustomEvent("hass-action", { bubbles: true, composed: true, detail: { config, action: gesture } })
-    );
-  }
-
-  // Whether a gesture (tap, hold, double_tap) has an action other than "none"
-  _configured(gesture) {
-    const action = this._config[`${gesture}_action`];
-    return Boolean(action) && action.action !== "none";
-  }
-
   // A card drawing something else from the same data (the now card) does so here and says true
   _renderStandalone() {
     return false;
@@ -6633,11 +7719,6 @@ class TibberPricesForecastCard extends HTMLElement {
     return !this._sections[section].hide_details;
   }
 
-  // Whether the card runs an action at all (tap, hold or double tap not set to "none")
-  _hasAction() {
-    return ["tap", "hold", "double_tap"].some((gesture) => this._configured(gesture));
-  }
-
   // A button can't contain buttons: with columns or days opening details, the card isn't one,
   // so keyboard and screen reader users get its action as a button of its own
   _focusActionNeeded() {
@@ -6646,20 +7727,24 @@ class TibberPricesForecastCard extends HTMLElement {
     );
   }
 
-  // Label of the card's action button: set in the config, or one that fits the tap action
-  _actionText(t) {
-    if (this._config.action_button_text) return this._config.action_button_text;
-    const action = (this._config.tap_action || { action: "none" }).action;
-    if (action === "more-info") return t.action_button["more-info"];
-    if (action === "navigate" || action === "url") return t.action_button.open;
-    return t.action_button.run;
+  // Whether the card's actions run in the now section only (its action zone, as the chart card's
+  // head): a now section beside others (not the now card, which is all now)
+  _actionZone() {
+    const { show } = this._config;
+    return show.includes("now") && show.length > 1;
+  }
+
+  // Whether the now section takes the card's actions (it's then a button, even without details)
+  _nowTakesActions() {
+    return this._actionZone() && !this._config.action_button && this._hasAction();
   }
 
   // The card's surface reacts (pointer, hover) while it runs an action and has no button for it;
-  // it's a button for screen readers only when nothing inside opens details
+  // it's a button for screen readers only when nothing inside opens details. With a now section
+  // that section is the button instead (see _actionZone)
   _updateInteractive(card) {
-    const interactive = !this._config.action_button && this._hasAction();
-    card.classList.toggle("interactive", interactive);
+    const interactive = !this._config.action_button && this._hasAction() && !this._nowTakesActions();
+    card.classList.toggle("is-interactive", interactive);
     if (interactive && !this._focusActionNeeded()) {
       card.setAttribute("role", "button");
       card.setAttribute("tabindex", "0");
@@ -6678,9 +7763,10 @@ class TibberPricesForecastCard extends HTMLElement {
  * action (e.g. navigate to a dashboard with more) and a tap runs that instead.
  */
 const NOW_STYLES = ["tile", "gauge", "clock"];
-// What a tap opens (without a tap action): the details of now, or the forecast card in a window,
-// set up under `forecast` like the card on its own (its home is the now card's)
-const NOW_TAP_OPENS = ["details", "forecast"];
+// What a tap opens (without a tap action): the details of now, or the forecast card or the chart
+// card in a window, set up under `forecast` or `chart` like the card on its own (its home is the
+// now card's)
+const NOW_TAP_OPENS = ["details", "forecast", "chart"];
 // What the now card can leave out (its scale and price are what it is)
 const NOW_CARD_HIDES = SECTION_HIDES.now.filter((value) => value === "verdict" || value === "trend");
 // How wide that window is (on phones it's full screen anyway): about HA's more-info dialog, a
@@ -6692,7 +7778,6 @@ const NOW_CARD_DEFAULTS = {
   average: "mean",
   appearance: "auto",
   tap_opens: "details",
-  window_width: "medium",
   now_decimals: "entity",
 };
 // Rows in a sections view: the tile is one row like HA's; the round ones need a square
@@ -6710,23 +7795,20 @@ function validateNowConfig(config) {
     throw new Error(`\`hide\` lists details to leave out: ${NOW_CARD_HIDES.join(", ")}`);
   }
   if (config.tap_opens && !NOW_TAP_OPENS.includes(config.tap_opens)) {
-    throw new Error("`tap_opens` is `details` (of now) or `forecast` (the forecast card in a window)");
-  }
-  if (config.window_width && !WINDOW_WIDTHS.includes(config.window_width)) {
-    throw new Error("`window_width` is `narrow`, `medium`, `wide` or `full`");
-  }
-  if (config.forecast !== undefined && (!config.forecast || typeof config.forecast !== "object")) {
-    throw new Error("`forecast` holds the forecast card's options, e.g. `show: [hours, days]`");
+    throw new Error("`tap_opens` is `details` (of now), `forecast` or `chart` (that card in a window)");
   }
   validateConfig(config);
-  if (config.forecast) validateConfig(config.forecast);
 }
 
 class TibberPricesNowCard extends TibberPricesForecastCard {
+  // What a tap opens (tap_opens), and the chart card from the icon top right
+  static windowCards = [
+    { key: "forecast", when: (config) => config.tap_opens === "forecast" },
+    { key: "chart", when: (config) => config.tap_opens === "chart" || Boolean(config.chart_button) },
+  ];
+
   setConfig(config) {
-    if (!config || !config.device_id) {
-      throw new Error("Pick your home (`device_id`)");
-    }
+    TibberPricesCardBase.requireHome(config);
     validateNowConfig(config);
     const options = { ...NOW_CARD_DEFAULTS, ...config };
     // The forecast card's engine with "now" as its only section
@@ -6750,7 +7832,7 @@ class TibberPricesNowCard extends TibberPricesForecastCard {
 
   _renderStandalone(card, hoursStrip) {
     hoursStrip();
-    card.classList.add("now-card");
+    card.classList.add("is-now-card");
     const html = this._nowHtml(this._config.style);
     this._setHidden(false);
     card.innerHTML = html || `<div class="empty">${stringsFor(this._hass).no_data}</div>`;
@@ -6765,41 +7847,9 @@ class TibberPricesNowCard extends TibberPricesForecastCard {
     return !this._configured("tap");
   }
 
-  set hass(hass) {
-    super.hass = hass;
-    if (this._forecastCard) this._forecastCard.hass = hass;
-  }
-
   _openDetailsOf(element) {
-    if (this._config.tap_opens === "forecast") this._openForecast(element);
+    if (this._opens(this._config.tap_opens)) this._openInWindow(this._config.tap_opens, element);
     else super._openDetailsOf(element);
-  }
-
-  /**
-   * The forecast card in the details window, set up as under `forecast` and used like the card
-   * on its own: its details and legend open above it, Escape and the close button lead back
-   */
-  _openForecast(opener) {
-    const options = this._config.forecast || {};
-    const t = stringsFor(this._hass);
-    const title = cardTitle(options, t);
-    this._showDialog(title, `<div class="dialog-body forecast-body ${this._config.window_width}"></div>`, opener);
-    const dialog = this.shadowRoot.querySelector("dialog");
-    if (!dialog._forecastBound) {
-      // Gone with the window: no card updating unseen
-      dialog._forecastBound = true;
-      dialog.addEventListener("close", () => {
-        if (this._forecastCard) this._forecastCard.remove();
-        this._forecastCard = undefined;
-      });
-    }
-    const card = document.createElement("tibber-prices-forecast-card");
-    card._isolated = true;
-    // The window has the title
-    card.setConfig({ ...options, device_id: this._config.device_id, show_title: false });
-    card.hass = this._hass;
-    this._forecastCard = card;
-    dialog.querySelector(".forecast-body").append(card);
   }
 
   // A fixed height (rows set in a sections view) is filled, the dial as large as it fits;
@@ -6807,8 +7857,8 @@ class TibberPricesNowCard extends TibberPricesForecastCard {
   _snapToGrid() {
     const card = this.shadowRoot && this.shadowRoot.querySelector("ha-card");
     if (!card) return;
-    card.classList.toggle("fixed", Boolean(getComputedStyle(this).getPropertyValue("--row-size").trim()));
-    if (this._config.style !== "tile" && !card.classList.contains("fixed")) super._snapToGrid();
+    card.classList.toggle("is-fixed", Boolean(getComputedStyle(this).getPropertyValue("--row-size").trim()));
+    if (this._config.style !== "tile" && !card.classList.contains("is-fixed")) super._snapToGrid();
   }
 
   static getConfigForm() {
@@ -6821,7 +7871,10 @@ class TibberPricesNowCard extends TibberPricesForecastCard {
           name: "style",
           required: true,
           selector: {
-            select: { mode: "box", options: NOW_STYLES.map((value) => ({ value, label: e[`style_${value}`] })) },
+            select: {
+              mode: "box",
+              options: marked(e, NOW_STYLES, (value) => e[`style_${value}`], NOW_CARD_DEFAULTS.style),
+            },
           },
         },
         {
@@ -6857,25 +7910,14 @@ class TibberPricesNowCard extends TibberPricesForecastCard {
               selector: {
                 select: {
                   mode: "box",
-                  options: NOW_TAP_OPENS.map((value) => ({ value, label: e[`tap_opens_${value}`] })),
+                  options: marked(e, NOW_TAP_OPENS, (value) => e[`tap_opens_${value}`], NOW_CARD_DEFAULTS.tap_opens),
                 },
               },
             },
-            {
-              name: "window_width",
-              visible: { field: "tap_opens", value: "forecast" },
-              selector: dropdown(WINDOW_WIDTHS.map((value) => ({ value, label: e[`window_width_${value}`] }))),
-            },
+            ...EDITOR_FIELDS.chartButton(),
+            EDITOR_FIELDS.windowWidth(e),
             ...EDITOR_FIELDS.gestures("now_tap_action_help"),
           ],
-        },
-        // The forecast card's own editor (its home is this card's), nested under `forecast`
-        {
-          name: "forecast",
-          type: "expandable",
-          icon: SECTION_ICONS.hours,
-          visible: { field: "tap_opens", value: "forecast" },
-          schema: TibberPricesForecastCard.getConfigForm().schema.filter((field) => field.name !== "device_id"),
         },
       ],
       computeLabel: (schema) => e[schema.name] || t[schema.name],
@@ -6885,10 +7927,3632 @@ class TibberPricesNowCard extends TibberPricesForecastCard {
   }
 
   static getStubConfig(hass) {
-    const entry = Object.values(hass.entities || {}).find(
-      (e) => e.platform === "tibber_prices" && e.translation_key === HOME_ENTITIES.price && e.device_id
+    return { device_id: firstHomeDevice(hass), style: NOW_CARD_DEFAULTS.style };
+  }
+
+  static getConfigElement() {
+    return document.createElement("tibber-prices-now-card-editor");
+  }
+
+  static configDefaults() {
+    return {
+      ...NOW_CARD_DEFAULTS,
+      hide: [],
+      chart_button: false,
+      chart_icon: DEFAULTS.chart_icon,
+      window_width: DEFAULTS.window_width,
+    };
+  }
+}
+
+/**
+ * tibber-prices-chart-card: the price curve of a stretch of time, read by moving a cursor over
+ * it. Views like the zoom levels of the ApexCharts dashboard (outlook, today, tomorrow, both
+ * days), each in quarter hours or hourly averages. Reads the `outlook_quarters` attribute of
+ * the Current Electricity Price sensor, so it draws without a fetch.
+ *
+ * The cursor is the point of the card. The value it points at sits above the curve, never under
+ * the finger. With a mouse it follows the pointer. On a phone a finger held still (or dragged
+ * sideways) grabs it like that pointer, ticking at each slot, and leaves it where it's let go;
+ * a vertical swipe scrolls the page (touch-action: pan-y), a tap sets it. Set by touch, it goes
+ * back to now by itself after a while. With the keyboard the arrow keys move it. It snaps to the
+ * quarter hour or hour.
+ */
+// The views a card can offer; yesterday only where asked for (in `views`, or in tomorrow's place
+// until its prices are in: `tomorrow_pending: yesterday`)
+const CHART_VIEWS = ["outlook", "yesterday", "today", "tomorrow", "two_days"];
+const CHART_DEFAULT_VIEWS = ["outlook", "today", "tomorrow", "two_days"];
+// Until tomorrow's prices are in, its tab says when they usually come, is left out, or makes way
+// for yesterday's (so the tabs stay as many and where they are)
+const CHART_TOMORROW_PENDING = [...TOMORROW_PENDING, "yesterday"];
+// Each view's options, in YAML under its name like the forecast card's sections, and those for all
+// views under `all_views` (a view's own win), e.g. `all_views: { resolution: switch_hour }` and
+// `today: { hide: [low] }`. The resolution: switchable, starting at 15 or at 60 minutes (the
+// choice then holding across the views until the page is loaded again), or one fixed
+const CHART_RESOLUTIONS = ["switch", "switch_hour", "quarter_hour", "hour"];
+// What a view can leave out; the curve always stays. The line of now separately at 15 and at
+// 60 minutes (at 15 it's where the point is anyway). The dashed line is a part of each style
+// The names above each day: "Today", "Tomorrow" or "Yesterday" (only where a view shows more than
+// one day: else its tab says it) and the weekday, as the forecast card names its days
+const CHART_HIDES = [
+  "day_word",
+  "day_weekday",
+  "day_shade",
+  "reference_label",
+  "header_average",
+  "low",
+  "high",
+  "periods",
+  "badge",
+  "now_line_quarter_hour",
+  "now_line_hour",
+];
+const CHART_SINGLE_DAY_VIEWS = ["yesterday", "today", "tomorrow"];
+// What's above the curve: a line with the price and chips, a ring with the price in it (where it
+// lies between the view's lowest and highest, in the area's color), or nothing
+const CHART_HEADERS = ["chips", "dial", "none"];
+// The unit with the prices, per place (`units: { header, tag, axis }`): the unit rate's (currency
+// per kWh, e.g. ct/kWh), the currency alone (ct), or none. In the top line and the cursor's tag
+// by default, at the price axis (small, above its numbers) only where asked for
+const CHART_UNIT_DISPLAYS = ["full", "currency", "none"];
+const CHART_UNIT_PLACES = { header: "full", tag: "full", axis: "none" };
+// The price lines: how thick (px; 0: none), and how strong (percent of the text color; unset:
+// the theme's divider color)
+const CHART_GRID_WIDTH = 0.75;
+// What a tap on the card's head opens (without a tap action): nothing, or the forecast card in a
+// window (set up under `forecast`, its home the chart card's), as on the now card
+const CHART_TAP_OPENS = ["nothing", "forecast"];
+// How long the line above the curve takes to change over: quick, but no hard cut
+const CHART_TWEEN_MS = 180;
+const REDUCED_MOTION = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : undefined;
+// The line where a day begins: a little thicker than the price lines
+const CHART_DAY_LINE_WIDTH = 1;
+// The shade off a day's line: how strong at the line (percent of the text color on light
+// themes; on dark ones a sixth more, where a light tint on a dark card shows less than a dark one
+// on light), and how far it reaches (hours of the view, 24 px at least)
+const CHART_DAY_SHADE = { strength: 6, width: 2.5, dark: 7 / 6 };
+// Decimals of the price axis: by the unit (one in €/kr, none in ct/øre), or fixed
+const CHART_AXIS_DECIMALS = ["auto", "0", "1", "2", "3"];
+/**
+ * How a view paints its curve: one or more styles (`styles`, the first is the default; with
+ * `style_switch`, a small switch in the chart changes between them, remembered per view). A style
+ * is { line, fill, reference }: the line in the price levels' colors, as the area (below and above
+ * its average), or one color; the area in the price levels' colors, or below and above the
+ * average of the prices shown (one level across the view, as in Tibber's app) or of each day; and
+ * whether the dashed line of each day's average shows
+ */
+const CHART_LINES = ["level", "average", "single"];
+const CHART_FILLS = ["level", "average_shown", "average_day"];
+const CHART_DEFAULT_STYLE = { line: "level", fill: "level", reference: true };
+// When the top line shows the price's level and how far it lies from the average: always, only
+// while prices are being read (the cursor moved off now at rest), or never; the level only at the
+// levels listed (none listed: at all), the gap only from so many percent on
+const CHART_CHIP_SHOWS = ["always", "reading", "never"];
+const CHART_VIEW_DEFAULTS = {
+  resolution: "switch",
+  styles: [CHART_DEFAULT_STYLE],
+  style_switch: false,
+  hide: [],
+  header_level: "always",
+  header_level_at: [],
+  header_delta: "always",
+  header_delta_from: 0,
+};
+// A view's field set to this is as for all views (the editor's choice for "not set")
+const CHART_INHERIT = "inherit";
+// A view's options in its editor panel (styles have their own block)
+const CHART_VIEW_FIELDS = [
+  "resolution",
+  "hide",
+  "header_level",
+  "header_level_at",
+  "header_delta",
+  "header_delta_from",
+];
+// The views' panels in the editor, with the icons of the dashboard's chart tabs
+const CHART_VIEW_ICONS = {
+  all_views: "mdi:layers-outline",
+  outlook: "mdi:chart-timeline-variant-shimmer",
+  yesterday: "mdi:calendar-arrow-left",
+  today: "mdi:calendar-today",
+  tomorrow: "mdi:calendar-arrow-right",
+  two_days: "mdi:calendar-range",
+};
+// Own colors per state and mode, for the line (`line_colors`) and the area (`fill_colors`), e.g.
+// `line_colors: { cheap_dark: "#2ecc71" }`. The line's: its one color, below and above the
+// average, each price level; unset, the theme's or the level's usual one. The area's: the same but
+// the one color; unset, as the line's
+const CHART_COLOR_STATES = {
+  line_colors: ["now", "single", "below", "above", ...LEVEL_STEPS],
+  fill_colors: ["below", "above", ...LEVEL_STEPS],
+  day_colors: ["yesterday", "today", "tomorrow"],
+};
+// The pills of the days (the one of now is in the color of now): yesterday faded, today neutral,
+// tomorrow a calm violet, apart from now's blue and the levels' and average's colors
+const CHART_DAY_COLORS = {
+  yesterday: "var(--disabled-text-color, #bdbdbd)",
+  today: "var(--secondary-text-color, #727272)",
+  tomorrow: "var(--purple-color, #926bc7)",
+};
+// From the theme, so a theme of one's own carries over. Not its primary color: that blue marks
+// now, here and in the other cards. One color: the text color (neutral, right in light and dark);
+// below the average a calm teal (apart from now's blue and the best price's green); above it the
+// warning color (apart from the peak price's red). The levels keep their colors, as in all cards
+const CHART_THEME_COLORS = {
+  // Now: the line, the label and the way back, in the blue of now in the other cards
+  now: "var(--primary-color, #03a9f4)",
+  single: "var(--primary-text-color, #212121)",
+  below: "var(--teal-color, #009688)",
+  above: "var(--warning-color, #ffa600)",
+};
+const CHART_MODES = ["light", "dark"];
+const CHART_DEFAULTS = {
+  views: [...CHART_DEFAULT_VIEWS],
+  price_unit: "auto",
+  average: "mean",
+  appearance: "auto",
+  tomorrow_pending: "placeholder",
+  show_title: false,
+  header: "chips",
+};
+// The outlook starts this long before now: what just happened, for comparison
+const CHART_BEFORE_NOW_MS = 2 * HOUR_MS;
+// A cursor set by touch or keyboard goes back to now after this long without use: time to read
+// and compare, not left standing for good
+const CHART_RETURN_MS = 30000;
+// How far a touch moves sideways before it's a drag of the cursor (not a tap or a scroll)
+const CHART_DRAG_PX = 6;
+// How long a finger rests before it holds the pointer (then it may move in any direction), and
+// how far it may wander meanwhile
+const CHART_HOLD_MS = 350;
+const CHART_HOLD_SLOP_PX = 8;
+// How near the mouse comes to the switches in the chart's corner before they take precedence over
+// the cursor's tag
+const CHART_SWITCH_ZONE_PX = 24;
+// mdi:restore, on the button back to now
+const RESTORE_PATH =
+  "M13,3A9,9 0 0,0 4,12H1L4.89,15.89L4.96,16.03L9,12H6A7,7 0 0,1 13,5A7,7 0 0,1 20,12A7,7 0 0,1 13,19C11.07,19 9.32,18.21 8.06,16.94L6.64,18.36C8.27,20 10.5,21 13,21A9,9 0 0,0 22,12A9,9 0 0,0 13,3Z";
+
+function validateChartConfig(config) {
+  if (config.tap_opens && !CHART_TAP_OPENS.includes(config.tap_opens)) {
+    throw new Error("`tap_opens` is `nothing` or `forecast` (the forecast card in a window)");
+  }
+  if (config.views && !(Array.isArray(config.views) && config.views.every((v) => CHART_VIEWS.includes(v)))) {
+    throw new Error(`\`views\` lists the views to offer: ${CHART_VIEWS.join(", ")}`);
+  }
+  for (const view of ["all_views", ...CHART_VIEWS]) validateChartView(view, config[view]);
+  if (config.tomorrow_pending && !CHART_TOMORROW_PENDING.includes(config.tomorrow_pending)) {
+    throw new Error(
+      "`tomorrow_pending` is `placeholder` (say when the prices come), `hide` or `yesterday` (yesterday in its place)"
     );
-    return { device_id: entry ? entry.device_id : "", ...NOW_CARD_DEFAULTS };
+  }
+  for (const [group, states] of Object.entries(CHART_COLOR_STATES)) {
+    const colors = config[group];
+    if (colors === undefined || colors === null) continue;
+    const keys = states.flatMap((state) => CHART_MODES.map((mode) => `${state}_${mode}`));
+    if (typeof colors !== "object" || Array.isArray(colors)) {
+      throw new Error(`\`${group}\` holds colors by state and mode, e.g. \`${keys[0]}: "#00b4d8"\``);
+    }
+    for (const [key, value] of Object.entries(colors)) {
+      if (!keys.includes(key)) throw new Error(`\`${group}.${key}\` is none of: ${keys.join(", ")}`);
+      if (value !== undefined && value !== null && cssColor(value) === undefined) {
+        throw new Error(`\`${group}.${key}\` is a color: [red, green, blue] or a CSS color like \`#00b4d8\``);
+      }
+    }
+  }
+  for (const [key, max, what] of [
+    ["grid_line_width", 4, "the price lines' thickness in px, 0 (none) to 4"],
+    ["day_line_width", 4, "the thickness in px of the line where a day begins, 0 (none) to 4"],
+    ["grid_line_strength", 100, "the price lines' strength in percent of the text color, 0 to 100"],
+    ["day_line_strength", 100, "the strength of the line where a day begins, in percent of the text color, 0 to 100"],
+    [
+      "day_shade_strength",
+      30,
+      "the strength of the shade off a day's line, in percent of the text color, 0 (none) to 30",
+    ],
+    ["day_shade_width", 6, "how far the shade off a day's line reaches, in hours, 0 to 6"],
+  ]) {
+    const value = config[key];
+    if (value !== undefined && !(typeof value === "number" && value >= 0 && value <= max)) {
+      throw new Error(`\`${key}\` is ${what}`);
+    }
+  }
+  if (config.axis_decimals !== undefined && !CHART_AXIS_DECIMALS.includes(String(config.axis_decimals))) {
+    throw new Error("`axis_decimals` is `auto` (one in €/kr, none in ct/øre) or 0 to 3");
+  }
+  for (const key of ["axis_title_x", "axis_title_y"]) {
+    if (config[key] !== undefined && typeof config[key] !== "boolean")
+      throw new Error(`\`${key}\` is \`true\` or \`false\``);
+  }
+  if (config.units !== undefined && config.units !== null) {
+    const units = config.units;
+    const valid =
+      typeof units === "object" &&
+      !Array.isArray(units) &&
+      Object.entries(units).every(([place, mode]) => place in CHART_UNIT_PLACES && CHART_UNIT_DISPLAYS.includes(mode));
+    if (!valid) {
+      throw new Error(
+        "`units` sets per place (`header`, `tag`, `axis`) `full` (e.g. ct/kWh), `currency` (e.g. ct) or `none`"
+      );
+    }
+  }
+  if (config.header && !CHART_HEADERS.includes(config.header)) {
+    throw new Error("`header` is `chips` (a line with chips), `dial` (a ring) or `none`");
+  }
+  validateConfig(config);
+}
+
+// Errors for a view's options (or those for all views) the card can't use
+function validateChartView(view, options) {
+  if (options === undefined || options === null) return;
+  if (typeof options !== "object" || Array.isArray(options)) {
+    throw new Error(`\`${view}\` holds the view's options, e.g. \`resolution: hour\``);
+  }
+  if (options.resolution && !CHART_RESOLUTIONS.includes(options.resolution)) {
+    throw new Error(
+      `\`${view}.resolution\` is \`switch\` (15 min / 60 min, from 15), \`switch_hour\` (from 60), \`quarter_hour\` or \`hour\``
+    );
+  }
+  if (options.hide && !(Array.isArray(options.hide) && options.hide.every((x) => CHART_HIDES.includes(x)))) {
+    throw new Error(`\`${view}.hide\` lists details to leave out: ${CHART_HIDES.join(", ")}`);
+  }
+  if (options.styles !== undefined && options.styles !== null) {
+    const valid = (style) =>
+      style &&
+      typeof style === "object" &&
+      (style.line === undefined || CHART_LINES.includes(style.line)) &&
+      (style.fill === undefined || CHART_FILLS.includes(style.fill)) &&
+      (style.reference === undefined || typeof style.reference === "boolean") &&
+      (style.name === undefined || typeof style.name === "string");
+    if (!(Array.isArray(options.styles) && options.styles.every(valid))) {
+      throw new Error(
+        `\`${view}.styles\` lists styles like \`{ line: level, fill: average_shown, reference: true }\`: line ${CHART_LINES.join(" / ")}, fill ${CHART_FILLS.join(" / ")}`
+      );
+    }
+  }
+  for (const key of ["header_level", "header_delta"]) {
+    if (options[key] !== undefined && !CHART_CHIP_SHOWS.includes(options[key])) {
+      throw new Error(`\`${view}.${key}\` is \`always\`, \`reading\` (only while the cursor is moved) or \`never\``);
+    }
+  }
+  if (
+    options.header_level_at !== undefined &&
+    !(Array.isArray(options.header_level_at) && options.header_level_at.every((x) => LEVEL_STEPS.includes(x)))
+  ) {
+    throw new Error(`\`${view}.header_level_at\` lists the levels to show it at: ${LEVEL_STEPS.join(", ")}`);
+  }
+  if (
+    options.header_delta_from !== undefined &&
+    !(typeof options.header_delta_from === "number" && options.header_delta_from >= 0)
+  ) {
+    throw new Error(`\`${view}.header_delta_from\` is a percentage, e.g. \`10\` (only from 10 % above or below on)`);
+  }
+  if (options.style_switch !== undefined && typeof options.style_switch !== "boolean") {
+    throw new Error(`\`${view}.style_switch\` is \`true\` (a switch in the chart) or \`false\``);
+  }
+}
+
+/**
+ * The line above the curve, changed in place instead of rebuilt: elements that stay (matched by
+ * `data-key`, else by tag and class) keep their identity, so their colors and the ring's arc ease
+ * over (CSS transitions) and numbers marked `data-tween` count over to the new value; what's new
+ * fades in. Rebuilding it from scratch would make every move of the cursor a hard cut
+ */
+function morphInto(target, html, tween) {
+  const next = document.createElement("template");
+  next.innerHTML = html;
+  morphChildren(target, next.content, tween);
+}
+
+function nodeKey(node) {
+  if (node.nodeType !== 1) return `#${node.nodeType}`;
+  return node.getAttribute("data-key") || `${node.tagName}.${node.getAttribute("class") || ""}`;
+}
+
+function morphChildren(old, next, tween) {
+  const pool = [...old.childNodes];
+  const kept = [...next.childNodes].map((node) => {
+    const index = pool.findIndex((candidate) => candidate && nodeKey(candidate) === nodeKey(node));
+    if (index < 0) return node;
+    const match = pool[index];
+    pool[index] = null;
+    morphNode(match, node, tween);
+    return match;
+  });
+  for (const node of pool) if (node) node.remove();
+  kept.forEach((node, i) => {
+    if (old.childNodes[i] !== node) old.insertBefore(node, old.childNodes[i] || null);
+  });
+}
+
+function morphNode(old, next, tween) {
+  if (old.nodeType !== 1) {
+    if (old.nodeValue !== next.nodeValue) old.nodeValue = next.nodeValue;
+    return;
+  }
+  const before = old.getAttribute("data-value");
+  for (const { name } of [...old.attributes]) if (!next.hasAttribute(name)) old.removeAttribute(name);
+  for (const { name, value } of [...next.attributes])
+    if (old.getAttribute(name) !== value) old.setAttribute(name, value);
+  if (old.hasAttribute("data-tween")) {
+    tween(old, next.textContent, Number(before));
+    return;
+  }
+  morphChildren(old, next, tween);
+}
+
+// Text as wide as the room text at least (both in one cell, the room unseen), aligned to its end
+// (or start)
+function steadyText(room, text, align = "end") {
+  return `<span class="steady${align === "end" ? "" : ` ${align}`}"><span class="room" aria-hidden="true">${room}</span><span>${text}</span></span>`;
+}
+
+/**
+ * The best or peak price period a slot falls in: its kind, its parts within the slot (more than
+ * one period of a kind can touch an hour), whether it covers only part of the slot (an hour of
+ * which a period holds a quarter or two), and where the whole period starts and ends
+ */
+function slotPeriod(periods, start, end) {
+  const touching = periodsTouching(periods, start, end);
+  if (!touching.length) return undefined;
+  const { k } = touching[0];
+  const own = touching.filter((p) => p.k === k);
+  const parts = own.map((p) => [Math.max(start, p.a), Math.min(end, p.b)]).sort((a, b) => a[0] - b[0]);
+  const covered = parts.reduce((sum, [a, b]) => sum + (b - a), 0);
+  return {
+    k,
+    parts,
+    partial: covered < end - start - 1000,
+    // The whole period, beyond the slot too (the hours next to it may share it)
+    start: Math.min(...own.map((p) => p.a)),
+    end: Math.max(...own.map((p) => p.b)),
+  };
+}
+
+// A style with its defaults, and a key for it (to remember the one picked)
+function chartStyle(style) {
+  return { ...CHART_DEFAULT_STYLE, ...(style || {}) };
+}
+
+// Whether a view's option is set: a list left empty counts as not set
+function isSet(value) {
+  return value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && !value.length);
+}
+
+/**
+ * A view's options, for the card and its editor alike: its own, else those for all views, else
+ * the defaults (`all_views`: what a view without its own gets). A list left empty counts as not
+ * set; the styles and their switch go together (a view with styles of its own switches between
+ * those as it says)
+ */
+function chartViewOptions(config, view) {
+  const own = view === "all_views" ? {} : config[view] || {};
+  const all = config.all_views || {};
+  const pick = (key) => (isSet(own[key]) ? own[key] : isSet(all[key]) ? all[key] : CHART_VIEW_DEFAULTS[key]);
+  const stylesFrom = isSet(own.styles) ? own : isSet(all.styles) ? all : CHART_VIEW_DEFAULTS;
+  return {
+    ...Object.fromEntries(CHART_VIEW_FIELDS.map((key) => [key, pick(key)])),
+    styles: stylesFrom.styles.map(chartStyle),
+    style_switch: Boolean(stylesFrom.style_switch),
+  };
+}
+
+function chartStyleId(style) {
+  return `${style.line}.${style.fill}.${style.reference ? 1 : 0}`;
+}
+
+/**
+ * The colors of lines and areas in light or dark: own ones from the config, else the theme's (one
+ * color, below and above the average) or the level's usual one; the area's, unset, as the line's
+ */
+function chartColors(config, dark) {
+  const mode = dark ? "dark" : "light";
+  const own = (group, state) => cssColor((config[group] || {})[`${state}_${mode}`]);
+  const line = Object.fromEntries(
+    CHART_COLOR_STATES.line_colors.map((state) => [
+      state,
+      own("line_colors", state) || CHART_THEME_COLORS[state] || LEVEL_COLORS[state],
+    ])
+  );
+  const fill = Object.fromEntries(
+    CHART_COLOR_STATES.fill_colors.map((state) => [state, own("fill_colors", state) || line[state]])
+  );
+  const days = Object.fromEntries(
+    CHART_COLOR_STATES.day_colors.map((state) => [state, own("day_colors", state) || CHART_DAY_COLORS[state]])
+  );
+  return { line, fill, days };
+}
+
+// The line and the dashed average of a style's icon (see chartStyleIcon), wherever it shows
+const STYLE_ICON_STYLE = `
+  .icon-line path { fill: none; stroke-width: 1.6; stroke-linejoin: round; }
+  .icon-reference { stroke: var(--secondary-text-color); stroke-width: 1; stroke-dasharray: 2 1.5; }
+`;
+
+// A style as a small curve: four steps, two of them above the average, in its colors
+function chartStyleIcon(style, colors) {
+  const ref = 6.5;
+  const steps = [
+    { x: 0, w: 6, y: 9.5, level: "cheap" },
+    { x: 6, w: 5, y: 5.5, level: "normal" },
+    { x: 11, w: 5, y: 2, level: "very_expensive" },
+    { x: 16, w: 6, y: 10.5, level: "very_cheap" },
+  ];
+  const above = (step) => step.y < ref;
+  const area = steps
+    .map((step) => {
+      if (style.fill === "level") {
+        return `<rect x="${step.x}" y="${step.y}" width="${step.w}" height="${14 - step.y}" style="fill:${colors.fill[step.level]};opacity:0.4"></rect>`;
+      }
+      const top = above(step)
+        ? `<rect x="${step.x}" y="${step.y}" width="${step.w}" height="${ref - step.y}" style="fill:${colors.fill.above};opacity:0.45"></rect>`
+        : "";
+      const lowest = Math.max(step.y, ref);
+      return `${top}<rect x="${step.x}" y="${lowest}" width="${step.w}" height="${14 - lowest}" style="fill:${colors.fill.below};opacity:0.4"></rect>`;
+    })
+    .join("");
+  const stroke = (step) =>
+    style.line === "level"
+      ? colors.line[step.level]
+      : style.line === "single"
+        ? colors.line.single
+        : above(step)
+          ? colors.line.above
+          : colors.line.below;
+  const path = steps
+    .map((step, i) => {
+      const from = i ? `M${step.x},${steps[i - 1].y}V${step.y}` : `M${step.x},${step.y}`;
+      return `<path d="${from}H${step.x + step.w}" style="stroke:${stroke(step)}"></path>`;
+    })
+    .join("");
+  const reference = style.reference
+    ? `<line class="icon-reference" x1="0" x2="22" y1="${ref}" y2="${ref}"></line>`
+    : "";
+  return `<svg viewBox="0 0 22 14" aria-hidden="true">${area}${reference}<g class="icon-line">${path}</g></svg>`;
+}
+
+// A color from the config: [r, g, b] from the color picker, or any CSS color written in YAML
+function cssColor(value) {
+  if (Array.isArray(value) && value.length === 3 && value.every((n) => Number.isFinite(Number(n)))) {
+    return `rgb(${value.map(Number).join(" ")})`;
+  }
+  return typeof value === "string" && value.trim() ? value.trim() : undefined;
+}
+
+// Browser storage that may be missing (private mode, blocked site data): never fails
+function storedValue(key) {
+  try {
+    return window.localStorage.getItem(key) || undefined;
+  } catch (err) {
+    return undefined;
+  }
+}
+
+function storeValue(key, value) {
+  try {
+    window.localStorage.setItem(key, value);
+  } catch (err) {
+    // Only a convenience: the choice is just not remembered
+  }
+}
+
+// A short fingerprint of a text (a card's config), for keys in browser storage
+function hashText(text) {
+  let hash = 5381;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 33 + text.charCodeAt(i)) | 0;
+  return (hash >>> 0).toString(36);
+}
+
+// The start of the local hour (or quarter hour) a moment falls in, in the home's time zone
+function localFloor(time, size, zone) {
+  const local = time + zoneOffset(time, zone);
+  return time - (((local % size) + size) % size);
+}
+
+/**
+ * The price axis of a plot `span` pixels high: the prices fill it, with just the room their marks
+ * need (`headroom` pixels above the highest price for its number, `footroom` below the lowest).
+ * The range is not widened to whole steps, which would leave up to a step empty; the lines go at
+ * the multiples of a step of 1, 2, 2.5 or 5 times a power of ten that fall inside, about `count`
+ * of them and at least two. Negative prices are just lower values: zero is a line like any other
+ * (drawn stronger where the prices cross it)
+ */
+function fitScale(min, max, span, headroom, footroom, count, decimals) {
+  const flat = max === min;
+  // All prices equal: the line in the middle, with a range around it
+  const spread = flat ? Math.abs(max) * 0.2 || 1 : max - min;
+  const usable = Math.max(span - headroom - footroom, span * 0.5, 1);
+  const perPixel = spread / usable;
+  const high = flat ? max + spread / 2 : max + headroom * perPixel;
+  const low = flat ? min - spread / 2 : min - footroom * perPixel;
+  const steps = (magnitude) => [1, 2, 2.5, 5].map((m) => m * magnitude);
+  const raw = (high - low) / Math.max(count, 1);
+  const magnitude = 10 ** Math.floor(Math.log10(raw));
+  // With a fixed number of decimals only steps those can show (one decimal: 0.1, 0.2, 0.5, not
+  // 0.25, whose lines would round to the same numbers)
+  const all = [...steps(magnitude / 100), ...steps(magnitude / 10), ...steps(magnitude), ...steps(magnitude * 10)];
+  const shown = (step) =>
+    decimals === undefined || Math.abs(step * 10 ** decimals - Math.round(step * 10 ** decimals)) < 1e-9;
+  const candidates = all.filter(shown).length ? all.filter(shown) : all;
+  const ticksOf = (step) => {
+    const ticks = [];
+    for (let v = Math.ceil(low / step) * step; v <= high + step / 1000; v += step) ticks.push(Number(v.toFixed(10)));
+    return ticks;
+  };
+  // The smallest step not denser than asked, finer again where fewer than two lines fall inside
+  let index = candidates.findIndex((s) => s >= raw * 0.999);
+  while (index > 0 && ticksOf(candidates[index]).length < 2) index -= 1;
+  const step = candidates[index];
+  return { low, high, step, ticks: ticksOf(step) };
+}
+
+// What a day's low or high takes beside its dot on the price axis: the gap and the pill (8 + 16
+// px), and a little air to the plot's edge
+const EXTREME_ROOM = 28;
+
+const CHART_STYLE = `
+  ${BASE_STYLE}
+  :host { display: block; height: 100%; }
+  ha-card { padding: 12px 12px 10px; height: 100%; box-sizing: border-box; display: flex; flex-direction: column;
+            container: chart / inline-size; transition: none; overflow: hidden; }
+  .card-title { margin: 0 4px 2px; font-size: var(--ha-font-size-l, 16px); font-weight: var(--ha-font-weight-medium, 500);
+                line-height: 24px; color: var(--primary-text-color); }
+  /* What the cursor points at: always in the same place, out of the finger's way */
+  .readout { flex: none; display: flex; align-items: flex-start; gap: 8px; padding: 0 4px; min-height: 52px; }
+  .readout .main { flex: 1; min-width: 0; }
+  /* "Now" as on the other cards: a pill in the color of now, its dot pulsing like a live broadcast */
+  .day-pill { display: inline-flex; align-items: center; gap: 6px; height: 20px; padding: 0 8px; border-radius: 10px;
+              font-size: 12px; font-weight: var(--ha-font-weight-bold, 600); color: var(--primary-text-color); vertical-align: middle;
+              white-space: nowrap; background: color-mix(in srgb, var(--pill, var(--secondary-text-color)) 20%, transparent); }
+  .day-pill.now { --pill: var(--now-color, var(--primary-color, #03a9f4)); }
+  .day-pill b { font-weight: var(--ha-font-weight-bold, 600); font-variant-numeric: tabular-nums; }
+  ${LIVE_DOT_STYLE}
+  .live-dot { --live-dot-size: 7px; --live-dot-color: var(--now-color, var(--primary-color, #03a9f4)); }
+  .when-line { height: 20px; font-size: 13px; line-height: 20px; color: var(--secondary-text-color); white-space: nowrap; overflow: hidden;
+               text-overflow: ellipsis; }
+  .value-line { display: flex; align-items: center; gap: 6px; height: 34px; white-space: nowrap; overflow: hidden; }
+  /* The price's box as high as its digits (line height 1), so the line centers the digits
+     themselves, the chips and the average's sign beside them; the unit on the price's baseline */
+  .price { font-size: 28px; line-height: 1; font-weight: var(--ha-font-weight-bold, 600); font-variant-numeric: tabular-nums;
+           letter-spacing: -0.01em; color: var(--primary-text-color); }
+  .amount { display: inline-flex; align-items: baseline; gap: 6px; }
+  .unit { font-size: 13px; color: var(--secondary-text-color); }
+  .avg-mark { margin-right: -2px; font-size: 16px; line-height: 1; color: var(--secondary-text-color); }
+  .pending { font-size: 18px; color: var(--primary-text-color); }
+  /* The chips: small, tinted in their color, in a row that never wraps (the line keeps its
+     height while the cursor moves); the last ones give way on narrow cards */
+  .chips { display: flex; gap: 6px; margin-left: 6px; min-width: 0; overflow: hidden; }
+  .chip { flex: none; display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 9px; border-radius: 12px;
+          font-size: 13px; color: var(--primary-text-color); font-variant-numeric: tabular-nums;
+          background: color-mix(in srgb, var(--chip, var(--secondary-text-color)) 16%, transparent); }
+  .chip b { font-weight: var(--ha-font-weight-medium, 500); }
+  .chip-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--chip); }
+  .chip svg { width: 14px; height: 14px; fill: var(--chip, currentColor); }
+  /* A day's low and high: the forecast card's arrows (drawn as lines), green and red */
+  .chip .extreme-icon { width: 12px; height: 12px; fill: none; stroke-width: 1.6; stroke-linecap: round;
+                        stroke-linejoin: round; }
+  .chip.extreme-low .extreme-icon { stroke: var(--success-color, #43a047); }
+  .chip.extreme-high .extreme-icon { stroke: var(--error-color, #db4437); }
+  .chip.delta { color: var(--primary-text-color); font-variant-numeric: tabular-nums; }
+  /* Text that keeps the width of its widest usual value (the gap's "↑ 100 %") */
+  .steady { display: inline-grid; justify-items: end; }
+  .steady > * { grid-area: 1 / 1; }
+  .steady > .room { visibility: hidden; }
+  .steady.start { justify-items: start; }
+  .steady.center { justify-items: center; }
+  .when-line .steady, .dial-day .steady { font-variant-numeric: tabular-nums; }
+  /* Price and unit in the top line: laid out as they were on the line itself */
+  .value-line .steady { align-self: stretch; }
+  .value-line .steady > span { display: flex; align-items: center; gap: 6px; }
+  .chip.plain { background: none; padding: 0 2px; color: var(--secondary-text-color); }
+  /* The ring: on the left with the day, time and chips beside it; centered with them below it
+     where the card has a lot of height. Its size from the card's room (see _dialLayout) */
+  .readout.has-dial { position: relative; min-height: 0; align-items: center; }
+  .readout.has-dial .main { flex: 1; display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .readout.has-dial.is-dial-centered { justify-content: center; }
+  .readout.has-dial.is-dial-centered .main { flex: none; flex-direction: column; gap: 4px; max-width: 100%; }
+  .readout.has-dial.is-dial-centered .to-now, .readout.has-dial.is-dial-centered .head-action { position: absolute; top: 0; }
+  .readout.has-dial.is-dial-centered .to-now { right: 0; }
+  .readout.has-dial.is-dial-centered .head-action { left: 0; }
+  .readout.has-dial.is-dial-centered .dial-side { flex-direction: row; align-items: center; max-width: 100%; }
+  .readout.has-dial .to-now, .readout.has-dial .head-action { align-self: flex-start; }
+  .dial { position: relative; flex: none; width: var(--dial-size, 100px); height: var(--dial-size, 100px); }
+  .dial svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .dial-track { fill: none; stroke: rgba(127, 127, 127, 0.18); stroke-width: 5; }
+  .dial.small .dial-track, .dial.small .dial-arc { stroke-width: 6.5; }
+  .dial-arc { fill: none; stroke-width: 5; stroke-linecap: round; }
+  /* The line above the curve changes over softly: the ring's arc and the colors ease, what's new
+     fades in (numbers count over, see _tween) */
+  @media (prefers-reduced-motion: no-preference) {
+    .dial-arc { transition: stroke-dasharray 0.18s ease-out, stroke 0.18s ease-out; }
+    .readout .chip, .readout .day-pill { transition: background-color 0.18s ease-out, color 0.18s ease-out; }
+    .readout .chip-dot, .readout .chip svg { transition: background-color 0.18s ease-out, fill 0.18s ease-out; }
+    .readout .chip, .readout .day-pill { animation: readout-in 0.18s ease-out; }
+    @keyframes readout-in { from { opacity: 0; } }
+  }
+  /* In the ring, centered as a group: the price (its box as high as its digits), the unit and, in
+     a large ring, the time span below it; sizes and gaps all in proportion to the ring, so it
+     looks the same at every size */
+  .dial-center { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+                 gap: calc(var(--dial-size, 100px) * 0.045); }
+  /* The price centered in the ring, the average's sign hung before it (not counted in) */
+  .dial-value { position: relative; display: flex; align-items: center; white-space: nowrap; }
+  .dial .price { font-size: calc(var(--dial-size, 100px) * 0.22); }
+  .dial.small .price { font-size: calc(var(--dial-size, 100px) * 0.25); }
+  .dial .avg-mark { position: absolute; right: 100%; margin-right: calc(var(--dial-size, 100px) * 0.025);
+                   font-size: calc(var(--dial-size, 100px) * 0.11); }
+  .dial-unit { font-size: clamp(10px, calc(var(--dial-size, 100px) * 0.1), 13px); line-height: 1; color: var(--secondary-text-color); }
+  .dial.small .dial-unit { font-size: calc(var(--dial-size, 100px) * 0.15); }
+  .dial-range { font-size: clamp(11px, calc(var(--dial-size, 100px) * 0.09), 13px); line-height: 1; color: var(--secondary-text-color);
+                font-variant-numeric: tabular-nums; }
+  .dial-side { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+  .dial-day { font-size: 14px; color: var(--primary-text-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .dial-side .chips { margin-left: 0; }
+  .chip.level.compact { padding: 0 8px; }
+  .chip.level.compact .chip-text { display: none; }
+  .to-now { flex: none; display: inline-flex; align-items: center; gap: 4px; height: 30px; margin-top: 2px; padding: 0 12px 0 8px;
+            border: 0; border-radius: 15px; font: inherit; font-size: 13px; cursor: pointer; color: var(--primary-text-color);
+            background: color-mix(in srgb, var(--now-color, var(--primary-color, #03a9f4)) 16%, transparent); }
+  .to-now svg { width: 16px; height: 16px; fill: currentColor; }
+  .overlay .to-now { height: 26px; margin-top: 0; padding: 0 10px 0 6px; border-radius: 13px; font-size: 12px; }
+  .overlay .to-now svg { width: 14px; height: 14px; }
+  /* The head running the card's action: a hint on hover, as HA's own cards */
+  .readout.is-interactive { cursor: pointer; border-radius: 8px; }
+  @media (hover: hover) { .readout.is-interactive:hover { background: rgba(127, 127, 127, 0.06); } }
+  .readout.is-interactive:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+  ${ACTION_BUTTON_STYLE}
+  .action-button { padding: 0 10px; }
+  .head-action { flex: none; margin-top: 2px; }
+  .card-footer { flex: none; display: flex; justify-content: flex-end; margin-top: 6px; }
+  /* The curve: as high as the card leaves (rows in a sections view), else from its width */
+  .chart { position: relative; flex: 1 1 clamp(150px, 46cqw, 320px); min-height: 96px; margin: 4px 0 2px; }
+  .plot { position: absolute; inset: 0; touch-action: pan-y; user-select: none; -webkit-user-select: none; -webkit-tap-highlight-color: transparent;
+          cursor: crosshair; border-radius: 8px; }
+  .plot:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  .plot svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .plot svg text { font-family: inherit; font-size: 11px; fill: var(--secondary-text-color); font-variant-numeric: tabular-nums; }
+  /* The price lines: thin, in the theme's divider color; or as strong as set, a share of the text
+     color, which is dark on light themes and light on dark ones, so one value suits both */
+  .plot .grid { stroke: var(--grid-color, var(--divider-color, rgba(127, 127, 127, 0.2))); stroke-width: var(--grid-width, 0.75px); }
+  /* The line where a day begins: as strong as the price lines unless set, twice as thick */
+  .plot .divider { stroke: var(--day-line-color, var(--grid-color, var(--divider-color, rgba(127, 127, 127, 0.3))));
+                   stroke-width: var(--day-line-width, 1.5px); }
+  /* Midnight on the time axis: its hour in the text's color and bold, its tick longer */
+  .plot text.midnight { fill: var(--primary-text-color); font-weight: var(--ha-font-weight-bold, 600); }
+  .plot .zero { stroke: var(--secondary-text-color); stroke-width: 1; opacity: 0.5; }
+  .plot .reference { stroke: var(--secondary-text-color); stroke-width: 1.25; stroke-dasharray: 4 4; opacity: 0.7; fill: none; }
+  .plot .line { fill: none; stroke-width: 2.25; stroke-linejoin: round; stroke-linecap: round; }
+  .plot .past { opacity: 0.4; }
+  .plot .period-track { fill: rgba(127, 127, 127, 0.2); }
+  .plot .reference-label rect { fill: var(--ha-card-background, var(--card-background-color, #fff)); opacity: 0.85; }
+  .plot .reference-label text { font-size: 11px; fill: var(--secondary-text-color); }
+  .plot .reference-label { transition: transform 0.12s ease-out, opacity 0.12s; }
+  .plot .reference-label.is-yielding { opacity: 0.12; }
+  @media (prefers-reduced-motion: reduce) { .plot .reference-label { transition: none; } }
+  .plot .now-line { stroke: var(--now-color, var(--primary-color, #03a9f4)); stroke-width: 1.5; opacity: 0.8; }
+  /* At 15 min the line of now shows only while prices are read (at rest the cursor is on now) */
+  .plot .now-line.while-reading { transition: opacity 0.18s ease-out; }
+  .plot:not(.is-reading) .now-line.while-reading { opacity: 0; }
+  /* In the numbers' color, not fainter: it's text to read, and lighter grey than this falls below
+     a readable contrast on light themes */
+  .plot text.axis-title { font-size: 11px; fill: var(--secondary-text-color); letter-spacing: 0.02em; }
+  .plot text.day { font-size: 12px; fill: var(--primary-text-color); opacity: 0.75; }
+  .plot text.day.inside { font-size: 11px; paint-order: stroke; stroke: var(--ha-card-background, var(--card-background-color, #fff));
+                          stroke-width: 3px; stroke-linejoin: round; }
+  /* A day's low and high: a pill like the averages' numbers, its arrow in green and red as on
+     the forecast card */
+  .plot .extreme-label rect { fill: var(--ha-card-background, var(--card-background-color, #fff)); opacity: 0.85; }
+  .plot .extreme-label text { font-size: 11px; font-weight: var(--ha-font-weight-medium, 500); fill: var(--primary-text-color); }
+  .plot .extreme-label path { fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .plot .extreme-label.low path { stroke: var(--success-color, #43a047); }
+  .plot .extreme-label.high path { stroke: var(--error-color, #db4437); }
+  .plot .extreme-dot { stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 1.5; }
+  /* The cursor: the slot it points at, a line and a dot on the curve, its time above */
+  .plot .cursor-band { fill: rgba(var(--rgb-primary-text-color, 33, 33, 33), 0.07); }
+  .plot .cursor-line { stroke: var(--secondary-text-color); stroke-width: 1; stroke-dasharray: 2 3; }
+  .plot .cursor-halo { opacity: 0.22; transition: r 0.12s ease-out; }
+  .plot.is-dragging .cursor-halo { r: 16px; }
+  .plot .cursor-halo.live { transform-box: fill-box; transform-origin: center; animation: halo-breathe 2.4s ease-in-out infinite; }
+  @keyframes halo-breathe {
+    0%, 100% { transform: scale(1); opacity: 0.22; }
+    50% { transform: scale(1.4); opacity: 0.1; }
+  }
+  .plot .cursor-dot { stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 2.5; }
+  .plot .cursor-pill { fill: var(--primary-text-color); }
+  .plot text.cursor-price { fill: var(--ha-card-background, var(--card-background-color, #fff)); font-size: 14px;
+                            font-weight: var(--ha-font-weight-bold, 600); }
+  .plot .tag-badge circle { stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 2; }
+  .plot .tag-badge path { fill: #fff; }
+  .plot .tag-badge.partial circle { fill: var(--ha-card-background, var(--card-background-color, #fff)); }
+  .plot .tag-badge.partial .track { fill: none; stroke-width: 2.5; opacity: 0.25; }
+  .plot .tag-badge.partial .part { fill: none; stroke-width: 2.5; }
+  .plot tspan.cursor-avg { font-size: 11px; font-weight: var(--ha-font-weight-normal, 400); opacity: 0.8; }
+  .plot tspan.cursor-day { opacity: 0.8; }
+  .plot tspan.cursor-unit { font-size: 10.5px; font-weight: var(--ha-font-weight-normal, 400); opacity: 0.8; }
+  .plot .cursor-swatch { stroke: var(--ha-card-background, var(--card-background-color, #fff)); stroke-width: 1.5; }
+  @media (prefers-reduced-motion: no-preference) {
+    .plot .cursor-swatch.changed { animation: swatch-over 0.18s ease-out; }
+    @keyframes swatch-over { from { fill: var(--from); } }
+    .plot .tag-badge.is-appearing { animation: readout-in 0.18s ease-out; }
+  }
+  .plot text.cursor-time { fill: var(--ha-card-background, var(--card-background-color, #fff)); font-size: 10.5px;
+                           font-weight: var(--ha-font-weight-medium, 500); font-variant-numeric: tabular-nums; }
+  .plot .base { animation: chart-in 0.18s ease-out; }
+  @keyframes chart-in { from { opacity: 0; } to { opacity: 1; } }
+  @media (prefers-reduced-motion: reduce) { .plot .base { animation: none; } .plot .cursor-halo { transition: none; } .plot .cursor-halo.live { animation: none; } }
+  .placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 16px;
+                 text-align: center; font-size: 14px; line-height: 20px; color: var(--secondary-text-color); }
+  /* The resolution switch, small in the top right corner of the chart (in the row of the day
+     names, which make room for it); its buttons reach a little beyond it for a finger */
+  .overlay { position: absolute; top: 0; right: 0; display: flex; gap: 6px; transition: opacity 0.12s; }
+  .overlay.is-yielding { opacity: 0; pointer-events: none; }
+  .resolution, .styles { display: flex; padding: 2px; border-radius: 13px; background: rgba(127, 127, 127, 0.15); }
+  .styles button { position: relative; display: flex; align-items: center; height: 22px; padding: 0 6px; border: 0;
+                   border-radius: 11px; background: none; cursor: pointer; opacity: 0.6; transition: background-color 0.15s, opacity 0.15s; }
+  .styles button::after { content: ""; position: absolute; inset: -9px -1px; }
+  .styles button svg { width: 22px; height: 14px; overflow: hidden; border-radius: 2px; }
+  ${STYLE_ICON_STYLE}
+  .styles button[aria-pressed="true"] { opacity: 1; background: var(--ha-card-background, var(--card-background-color, #fff));
+                                        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18); }
+  .styles button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  .style-pick { position: relative; display: flex; align-items: center; gap: 1px; height: 22px; padding: 0 2px 0 6px;
+                border: 0; border-radius: 11px; cursor: pointer; background: var(--ha-card-background, var(--card-background-color, #fff));
+                box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18); }
+  .style-pick::after { content: ""; position: absolute; inset: -9px -2px; }
+  .style-pick > svg:first-child { width: 22px; height: 14px; overflow: hidden; border-radius: 2px; }
+  .style-pick .chevron { width: 16px; height: 16px; fill: var(--secondary-text-color); }
+  .style-pick:focus-visible { outline: var(--focus-ring); outline-offset: 1px; }
+  /* The menu of styles: in the top layer, below its button */
+  .style-menu { position: fixed; inset: auto; margin: 0; padding: 4px; min-width: 180px; max-width: calc(100vw - 16px);
+                border: 0; border-radius: 12px; color: var(--primary-text-color);
+                background: var(--ha-card-background, var(--card-background-color, #fff));
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.24); }
+  .style-menu:not(:popover-open):not(.is-open) { display: none; }
+  .style-menu button { display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 0 12px 0 8px; border: 0;
+                       border-radius: 8px; background: none; font: inherit; font-size: 14px; color: inherit; cursor: pointer; text-align: left; }
+  .style-menu button:hover, .style-menu button:focus-visible { background: rgba(127, 127, 127, 0.12); outline: none; }
+  .style-menu button[aria-checked="true"] { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.14); font-weight: var(--ha-font-weight-medium, 500); }
+  .style-menu button svg { width: 33px; height: 21px; flex: none; border-radius: 3px; overflow: hidden; }
+  @media (any-pointer: coarse) { .style-menu button { min-height: 48px; font-size: 15px; } }
+  .resolution button { position: relative; height: 22px; padding: 0 9px; border: 0; border-radius: 11px; background: none;
+                       font: inherit; font-size: 12px; line-height: 22px; color: var(--secondary-text-color); cursor: pointer;
+                       white-space: nowrap; transition: background-color 0.15s, color 0.15s; }
+  .resolution button::after { content: ""; position: absolute; inset: -9px -2px; }
+  .resolution button[aria-pressed="true"] { background: var(--ha-card-background, var(--card-background-color, #fff));
+                                           color: var(--primary-text-color); font-weight: var(--ha-font-weight-medium, 500);
+                                           box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18); }
+  .resolution button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  /* The views, like a segmented control */
+  .controls { flex: none; display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .segments { display: flex; padding: 2px; border-radius: 18px; background: rgba(127, 127, 127, 0.15); min-width: 0; }
+  /* The views: spread over the width, or scrolled sideways where their names don't fit (never cut
+     off); a soft edge shows there's more */
+  .segments.views { flex: 1; overflow-x: auto; scrollbar-width: none; overscroll-behavior-x: contain; }
+  .segments.views::-webkit-scrollbar { display: none; }
+  .segments.views button { flex: 1 0 auto; overflow: visible; text-overflow: clip; }
+  .segments.views.has-more-right { mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent); }
+  .segments.views.has-more-left { mask-image: linear-gradient(to left, #000 calc(100% - 28px), transparent); }
+  .segments.views.has-more-left.has-more-right {
+    mask-image: linear-gradient(to right, transparent, #000 28px, #000 calc(100% - 28px), transparent); }
+  .segments button { flex: 1 1 0; min-width: 0; min-height: 32px; padding: 0 8px; border: 0; border-radius: 16px; background: none;
+                     font: inherit; font-size: 13px; color: var(--secondary-text-color); cursor: pointer; white-space: nowrap;
+                     overflow: hidden; text-overflow: ellipsis; transition: background-color 0.15s, color 0.15s; }
+  .segments button[aria-selected="true"], .segments button[aria-pressed="true"] {
+    background: var(--ha-card-background, var(--card-background-color, #fff)); color: var(--primary-text-color);
+    font-weight: var(--ha-font-weight-medium, 500); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18); }
+  .segments button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  .empty { padding: 16px; color: var(--secondary-text-color); }
+  /* Fingers: 44 px to hit, the controls looking as they do (their hit areas reach beyond them) */
+  @media (any-pointer: coarse) {
+    .resolution button::after, .styles button::after, .style-pick::after { inset: -11px -2px; }
+    .styles button { padding: 0 10px; }
+    .to-now { position: relative; }
+    .to-now::after { content: ""; position: absolute; inset: -7px -2px; }
+    .overlay .to-now::after { inset: -9px -2px; }
+    /* (The views scroll sideways, which cuts off any hit area beyond them: they grow instead) */
+    .segments button { min-height: 40px; }
+  }
+  @container chart (max-width: 360px) {
+    .price { font-size: 24px; }
+    .chip { padding: 0 7px; font-size: 12px; }
+    .segments button { font-size: 12px; padding: 0 10px; }
+  }
+`;
+
+// A view's name, as on its tab
+function chartViewName(t, view) {
+  return t[view] || t.chart[view];
+}
+
+/**
+ * The views a card shows: those listed (else the default ones), tomorrow before its prices are
+ * in as set: with a note on when they come, not at all, or with yesterday standing in (unless
+ * yesterday has a tab of its own), in time's order: before today, else where tomorrow was. With
+ * `all`, everything the card can show (tomorrow and its stand-in: the editor's panels)
+ */
+function chartViews(config, { tomorrowKnown = false, all = false }) {
+  const listed = Array.isArray(config.views) && config.views.length ? config.views : CHART_DEFAULT_VIEWS;
+  const pending = config.tomorrow_pending;
+  const waiting = listed.includes("tomorrow") && !tomorrowKnown && Boolean(pending) && pending !== "placeholder";
+  const views = waiting && !all ? listed.filter((view) => view !== "tomorrow") : [...listed];
+  if (waiting && pending === "yesterday" && !listed.includes("yesterday")) {
+    views.splice(views.includes("today") ? views.indexOf("today") : listed.indexOf("tomorrow"), 0, "yesterday");
+  }
+  return views;
+}
+
+// A style's name: "Line price level · area below/above ⌀ of the view · ⌀ line"
+function chartStyleName(e, style) {
+  const name = fill(e.style_name, { line: e[`style_line_${style.line}`], fill: e[`style_fill_${style.fill}`] });
+  return style.reference ? `${name}${e.style_name_reference}` : name;
+}
+
+// What a style is called in the chart: its own name, else "Style 2" by its place
+function chartStyleLabel(e, style, index) {
+  const own = typeof style.name === "string" ? style.name.trim() : "";
+  return own ? escapeHtml(own) : fill(e.style_number, { n: index + 1 });
+}
+
+class TibberPricesChartCard extends TibberPricesCardBase {
+  // The forecast card, from a tap (tap_opens)
+  static windowCards = [{ key: "forecast", when: (config) => config.tap_opens === "forecast" }];
+
+  setConfig(config) {
+    TibberPricesCardBase.requireHome(config);
+    validateChartConfig(config);
+    this._config = { ...CHART_DEFAULTS, ...config };
+    // The view and style picked last, remembered per browser and card (by its config): each chart
+    // card on a dashboard switches on its own
+    const key = `tibber-prices-chart:${hashText(JSON.stringify(config))}`;
+    this._viewKey = `${key}:view`;
+    this._styleKey = `${key}:style`;
+    this._view = storedValue(this._viewKey);
+    this._cursor = undefined;
+    this._viewCache = new Map();
+    this._configApplied();
+  }
+
+  connectedCallback() {
+    // The line of now moves on, and the outlook with it, also while the prices stay the same
+    clearInterval(this._ticker);
+    this._ticker = setInterval(() => this._data && this._draw(), 60000);
+    if (this._config && this._hass) this._scheduleRender();
+  }
+
+  disconnectedCallback() {
+    clearInterval(this._ticker);
+    clearTimeout(this._returnTimer);
+    if (this._resizeObserver) this._resizeObserver.disconnect();
+    this._observed = false;
+  }
+
+  getCardSize() {
+    return 6;
+  }
+
+  getGridOptions() {
+    return { columns: "full", rows: 6, min_columns: 6, min_rows: 4 };
+  }
+
+  // How a view's resolution is set: its own setting, else the card's
+  _resolutionMode(view = this._view) {
+    return this._viewOptions(view).resolution;
+  }
+
+  _styleIcon(style) {
+    return chartStyleIcon(style, this._colors());
+  }
+
+  // The styles a view offers (the first is its default)
+  _styles(view = this._view) {
+    return this._viewOptions(view).styles;
+  }
+
+  // Whether the chart shows a switch between them
+  _styleSwitch(view = this._view) {
+    return this._viewOptions(view).style_switch && this._styles(view).length > 1;
+  }
+
+  // The style a view is painted in: the one picked last (with a switch), else its first
+  _style(view = this._view) {
+    return this._styles(view)[this._styleIndex(view)];
+  }
+
+  // Its place among the view's styles (compared by place: the styles are built anew each time)
+  _styleIndex(view = this._view) {
+    const picked = this._styleSwitch(view) && storedValue(`${this._styleKey}:${view}`);
+    return Math.max(
+      0,
+      this._styles(view).findIndex((style) => chartStyleId(style) === picked)
+    );
+  }
+
+  // The forecast card in a window counts as an action
+  _hasAction() {
+    return this._opensForecast() || super._hasAction();
+  }
+
+  _actionText(t) {
+    return this._opensForecast() && !this._config.action_button_text ? t.action_button.open : super._actionText(t);
+  }
+
+  // Whether a tap opens the forecast card: set so, and no tap action of its own
+  _opensForecast() {
+    return this._opens("forecast") && !this._configured("tap");
+  }
+
+  // A tap on the head or the card's button: the forecast card in a window, or the tap action
+  _tap(opener) {
+    if (this._opensForecast()) this._openInWindow("forecast", opener);
+    else this._action("tap");
+  }
+
+  /**
+   * Tap, hold and double tap on the card's head (price and time, the title) run its actions, as
+   * on the other cards; the curve is the cursor's, the switches and tabs are their own. With its
+   * own button, only that button runs the action
+   */
+  _bindCardActions(card) {
+    card.addEventListener("click", (event) => {
+      const button = event.target.closest("button[data-card-action]");
+      if (button) this._tap(button);
+    });
+    const head = (event) =>
+      this._config.action_button || event.target.closest("button, .chart, .controls, .style-menu")
+        ? null
+        : event.target.closest(".readout, .card-title");
+    this._bindGestures(card, head, (target) => this._tap(target));
+    card.addEventListener("keydown", (event) => {
+      if ((event.key === "Enter" || event.key === " ") && event.target.classList.contains("readout")) {
+        event.preventDefault();
+        this._tap(event.target);
+      }
+    });
+  }
+
+  // The head as a button where it runs an action; the card's own button where one is set
+  _updateActions() {
+    const root = this.shadowRoot;
+    const t = this._t;
+    const readout = this._els.readout;
+    const interactive = !this._config.action_button && this._hasAction();
+    readout.classList.toggle("is-interactive", interactive);
+    if (interactive) {
+      readout.setAttribute("role", "button");
+      readout.setAttribute("tabindex", "0");
+    } else {
+      readout.removeAttribute("role");
+      readout.removeAttribute("tabindex");
+    }
+    const footer = root.querySelector(".card-footer");
+    const button = this._config.action_button
+      ? `<button type="button" class="action-button" data-card-action>${escapeHtml(this._actionText(t))} ›</button>`
+      : "";
+    const top = this._config.action_button_position === "top" && this._config.header !== "none";
+    footer.hidden = !button || top;
+    footer.innerHTML = top ? "" : button;
+    root.querySelector(".head-action").innerHTML = top ? button : "";
+  }
+
+  // A style picked with the switch or the menu (kept per view)
+  _pickStyle(index) {
+    const style = this._styles()[index];
+    if (!style || index === this._styleIndex()) return;
+    storeValue(`${this._styleKey}:${this._view}`, chartStyleId(style));
+    this._render();
+  }
+
+  /**
+   * The menu of styles under its button: a row each in their fixed order (the one shown checked),
+   * as large as a finger needs. In the top layer (popover), so the card doesn't cut it off; it
+   * closes on a pick, a tap outside or Escape, and the arrow keys move through it
+   */
+  _openStyleMenu(button) {
+    const menu = this.shadowRoot.querySelector(".style-menu");
+    const e = languageStrings(EDITOR_STRINGS);
+    const current = this._styleIndex();
+    menu.setAttribute("aria-label", this._t.chart.styles);
+    menu.innerHTML = this._styles()
+      .map(
+        (style, i) =>
+          `<button type="button" role="menuitemradio" data-style="${i}" aria-checked="${i === current}" title="${chartStyleName(e, style)}">${this._styleIcon(style)}<span>${chartStyleLabel(e, style, i)}</span></button>`
+      )
+      .join("");
+    this._styleMenuButton = button;
+    if (menu.showPopover) menu.showPopover();
+    else menu.classList.add("is-open");
+    button.setAttribute("aria-expanded", "true");
+    // Below the button, its right edges aligned, kept within the window
+    const box = button.getBoundingClientRect();
+    const width = menu.offsetWidth;
+    const left = Math.max(8, Math.min(box.right - width, window.innerWidth - width - 8));
+    const below = box.bottom + 6 + menu.offsetHeight <= window.innerHeight;
+    menu.style.left = `${left}px`;
+    menu.style.top = `${below ? box.bottom + 6 : Math.max(8, box.top - 6 - menu.offsetHeight)}px`;
+    const checked = menu.querySelector('[aria-checked="true"]') || menu.querySelector("button");
+    if (checked) checked.focus();
+  }
+
+  _closeStyleMenu() {
+    const menu = this.shadowRoot.querySelector(".style-menu");
+    if (menu.hidePopover && menu.matches(":popover-open")) menu.hidePopover();
+    menu.classList.remove("is-open");
+  }
+
+  _bindStyleMenu(menu) {
+    menu.addEventListener("click", (ev) => {
+      const item = ev.target.closest("button[data-style]");
+      if (!item) return;
+      this._closeStyleMenu();
+      this._pickStyle(Number(item.dataset.style));
+    });
+    menu.addEventListener("keydown", (ev) => {
+      const items = [...menu.querySelectorAll("button")];
+      const at = items.indexOf(this.shadowRoot.activeElement);
+      const to = { ArrowDown: at + 1, ArrowUp: at - 1, Home: 0, End: items.length - 1 }[ev.key];
+      if (to !== undefined) {
+        ev.preventDefault();
+        items[(to + items.length) % items.length].focus();
+      } else if (ev.key === "Escape" || ev.key === "Tab") {
+        this._closeStyleMenu();
+      }
+    });
+    // Closed (also by a tap outside or Escape): the focus back on its button
+    menu.addEventListener("toggle", (ev) => {
+      if (ev.newState !== "closed" || !this._styleMenuButton) return;
+      this._styleMenuButton.setAttribute("aria-expanded", "false");
+      if (this.shadowRoot.activeElement === null || menu.contains(this.shadowRoot.activeElement)) {
+        this._styleMenuButton.focus();
+      }
+    });
+  }
+
+  // A view's options (see chartViewOptions), built once per config
+  _viewOptions(view = this._view) {
+    if (!this._viewCache.has(view)) this._viewCache.set(view, chartViewOptions(this._config, view));
+    return this._viewCache.get(view);
+  }
+
+  // What the view shown leaves out
+  get _hide() {
+    return this._viewOptions().hide;
+  }
+
+  /**
+   * The resolution a view shows: a fixed one; else the one picked with the switch, in whichever
+   * view (it holds across the views, so they don't jump between resolutions, until the page is
+   * left or loaded again: kept with the card, not stored); else the one the view starts at
+   */
+  _resolution(view = this._view) {
+    const mode = this._resolutionMode(view);
+    if (mode === "quarter_hour" || mode === "hour") return mode;
+    if (this._pickedResolution) return this._pickedResolution;
+    return mode === "switch_hour" ? "hour" : "quarter_hour";
+  }
+
+  _build() {
+    this.attachShadow({ mode: "open" });
+    trackKeyboard(this);
+    this.shadowRoot.innerHTML = `<style>${CHART_STYLE}</style><ha-card>
+      <div class="card-title" hidden></div>
+      <div class="readout"><div class="main"></div>
+        <span class="head-action"></span>
+        <button type="button" class="to-now" hidden>${svgIcon(RESTORE_PATH)}<span></span></button>
+      </div>
+      <div class="chart"><div class="plot" tabindex="0" role="slider"></div><div class="overlay"><div class="styles" role="group" hidden></div><div class="resolution" role="group" hidden></div></div></div>
+      <div class="controls"></div>
+      <div class="card-footer" hidden></div>
+    </ha-card><div class="style-menu" role="menu" popover></div>`;
+    const root = this.shadowRoot;
+    // The nodes that stay (the plot's content is drawn anew)
+    this._els = {
+      plot: root.querySelector(".plot"),
+      main: root.querySelector(".readout .main"),
+      readout: root.querySelector(".readout"),
+      toNow: root.querySelector(".to-now"),
+      overlay: root.querySelector(".overlay"),
+    };
+    const choose = (ev) => {
+      const button = ev.target.closest("button");
+      if (!button) return;
+      if (button.dataset.view && button.dataset.view !== this._view) {
+        this._view = button.dataset.view;
+        storeValue(this._viewKey, this._view);
+        this._cursor = undefined;
+        this._render();
+      } else if (button.dataset.styleMenu !== undefined) {
+        this._openStyleMenu(button);
+      } else if (button.dataset.style !== undefined) {
+        this._pickStyle(Number(button.dataset.style));
+      } else if (button.dataset.resolution && button.dataset.resolution !== this._resolution()) {
+        this._pickedResolution = button.dataset.resolution;
+        this._render();
+      }
+    };
+    root.querySelector(".controls").addEventListener("click", choose);
+    this._els.overlay.addEventListener("click", choose);
+    this._bindStyleMenu(root.querySelector(".style-menu"));
+    this._bindCardActions(root.querySelector("ha-card"));
+    this._els.toNow.addEventListener("click", () => this._backToNow());
+    this._bindPlot(this._els.plot);
+  }
+
+  _observe() {
+    if (this._observed) return;
+    this._observed = true;
+    if (!this._resizeObserver) {
+      this._resizeObserver = new ResizeObserver(() => {
+        if (this._drawPending) return;
+        this._drawPending = true;
+        requestAnimationFrame(() => {
+          this._drawPending = false;
+          if (this._data) this._draw();
+          const tabs = this.shadowRoot.querySelector(".controls .views");
+          if (tabs) this._showSelectedView(tabs);
+        });
+      });
+    }
+    this._resizeObserver.observe(this._els.plot);
+    this._resizeObserver.observe(this.shadowRoot.querySelector(".controls"));
+  }
+
+  _render() {
+    if (!this._config || !this._hass) return;
+    if (!this.shadowRoot) this._build();
+    this._observe();
+    const t = stringsFor(this._hass);
+    this._t = t;
+    const root = this.shadowRoot;
+    const title = root.querySelector(".card-title");
+    title.hidden = !this._config.show_title;
+    title.innerHTML = this._config.show_title ? cardTitle(this._config, t) : "";
+    this._data = this._collect(t);
+    const controls = root.querySelector(".controls");
+    if (!this._data) {
+      this._els.main.innerHTML = "";
+      this._els.plot.innerHTML = `<div class="placeholder">${t.no_data}</div>`;
+      controls.hidden = true;
+      root.querySelector(".resolution").hidden = true;
+      root.querySelector(".styles").hidden = true;
+      return;
+    }
+    const views = chartViews(this._config, { tomorrowKnown: this._data.tomorrowKnown });
+    this._views = views;
+    if (!views.includes(this._view)) this._view = views[0];
+    const resolution = this._resolution();
+    const viewButtons =
+      views.length > 1
+        ? `<div class="segments views" role="tablist" aria-label="${t.chart.views}">${views
+            .map(
+              (view) =>
+                `<button type="button" role="tab" data-view="${view}" aria-selected="${view === this._view}">${this._viewName(view)}</button>`
+            )
+            .join("")}</div>`
+        : "";
+    const switcher = root.querySelector(".resolution");
+    switcher.hidden = !this._resolutionMode().startsWith("switch");
+    switcher.setAttribute("aria-label", t.chart.resolution);
+    switcher.innerHTML = switcher.hidden
+      ? ""
+      : ["quarter_hour", "hour"]
+          .map(
+            (value) =>
+              `<button type="button" data-resolution="${value}" aria-pressed="${value === resolution}">${t.chart[value]}</button>`
+          )
+          .join("");
+    // The styles to switch between: two side by side, each a small curve in its colors; more as
+    // one button with the current one's curve, opening a menu of them in their fixed order (in
+    // the top layer, so the card never cuts it off)
+    const styles = root.querySelector(".styles");
+    styles.hidden = !this._styleSwitch();
+    styles.setAttribute("aria-label", t.chart.styles);
+    const current = this._style();
+    const e = languageStrings(EDITOR_STRINGS);
+    const offered = this._styles();
+    if (styles.hidden) {
+      styles.innerHTML = "";
+    } else if (offered.length > 2) {
+      const index = this._styleIndex();
+      const label = chartStyleLabel(e, offered[index], index);
+      styles.innerHTML = `<button type="button" class="style-pick" data-style-menu aria-haspopup="menu" aria-expanded="false" title="${label}" aria-label="${t.chart.styles}: ${label}">${this._styleIcon(current)}<svg class="chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="${MENU_DOWN}"></path></svg></button>`;
+    } else {
+      styles.innerHTML = offered
+        .map((style, i) => {
+          const label = chartStyleLabel(e, style, i);
+          return `<button type="button" data-style="${i}" aria-pressed="${i === this._styleIndex()}" title="${label}" aria-label="${label}">${this._styleIcon(style)}</button>`;
+        })
+        .join("");
+    }
+    controls.innerHTML = viewButtons;
+    controls.hidden = !viewButtons;
+    const tabs = controls.querySelector(".views");
+    if (tabs) {
+      tabs.addEventListener("scroll", () => this._markScrolled(tabs), { passive: true });
+      this._showSelectedView(tabs);
+    }
+    // Without the line above the curve, the way back to now joins the switches in its corner
+    const headless = this._config.header === "none";
+    const readout = this._els.readout;
+    readout.hidden = headless;
+    readout.classList.toggle("has-dial", this._config.header === "dial");
+    const toNow = this._els.toNow;
+    if (headless) this._els.overlay.prepend(toNow);
+    else readout.append(toNow);
+    this._updateActions();
+    root.querySelector(".to-now span").textContent = t.now;
+    this._els.toNow.setAttribute("aria-label", t.chart.back_to_now);
+    this._els.plot.setAttribute("aria-label", t.chart.label);
+    this._draw();
+  }
+
+  // The picked view in sight in a scrolled row of views (without scrolling the page)
+  _showSelectedView(tabs) {
+    const selected = tabs.querySelector('[aria-selected="true"]');
+    if (selected) {
+      const start = selected.offsetLeft - tabs.offsetLeft;
+      if (start < tabs.scrollLeft) tabs.scrollLeft = start - 8;
+      else if (start + selected.offsetWidth > tabs.scrollLeft + tabs.clientWidth) {
+        tabs.scrollLeft = start + selected.offsetWidth - tabs.clientWidth + 8;
+      }
+    }
+    this._markScrolled(tabs);
+  }
+
+  // Soft edges where more views lie beyond
+  _markScrolled(tabs) {
+    const end = tabs.scrollWidth - tabs.clientWidth;
+    tabs.classList.toggle("has-more-left", tabs.scrollLeft > 1);
+    tabs.classList.toggle("has-more-right", tabs.scrollLeft < end - 1);
+  }
+
+  _viewName(view) {
+    const t = this._t;
+    return chartViewName(t, view);
+  }
+
+  // Everything a view is drawn from, once per update of the sensors
+  _collect(t) {
+    const entities = this._entities || homeEntities(this._hass, this._config);
+    const stateObj = entities.price && this._hass.states[entities.price];
+    const { factor, unit } = stateObj ? priceUnit(stateObj, this._config.price_unit) : {};
+    const quarters = stateObj && quarterSeries(stateObj, factor);
+    if (!quarters || !quarters.prices.length) return undefined;
+    const { start, step, prices } = quarters;
+    let last = prices.length - 1;
+    while (last >= 0 && prices[last] === null) last -= 1;
+    if (last < 0) return undefined;
+    const units = stateObj.attributes.outlook_units;
+    const calendar = homeCalendar(this._hass);
+    const { zone, dateOf } = calendar;
+    const now = Date.now();
+    const today = dateOf(now);
+    const [todayStart, tomorrowStart] = dayBounds(today, zone);
+    const tomorrow = dateOf(tomorrowStart);
+    const dayAfter = dayBounds(tomorrow, zone)[1];
+    const yesterday = dateOf(todayStart - 1);
+    const yesterdayStart = dayBounds(yesterday, zone)[0];
+    const end = start + (last + 1) * step;
+    const days = scalePrices(stateObj.attributes.outlook_days || [], factor);
+    const averageKind = averageKindOf(this._config, days);
+    const average = averageOf(t, averageKind);
+    return {
+      ...calendar,
+      // The quarter hours (start, step, prices, levels) on the data itself
+      ...quarters,
+      unit,
+      // Prices in the subunit (ct, øre), not the base currency (€, kr)
+      subunit: units ? unit === units.subunit : false,
+      end,
+      yesterday,
+      today,
+      tomorrow,
+      todayStart,
+      tomorrowStart,
+      dayAfter,
+      yesterdayStart,
+      tomorrowKnown: end > tomorrowStart,
+      averageKind,
+      averageLabel: average.label,
+      references: dayReferences(stateObj, factor, days, average.key),
+      // Each day's lowest and highest price and when (the whole day's, from the sensor: a view
+      // may show only part of a day), yesterday's too
+      extremes: [
+        ...scalePrices(stateObj.attributes.outlook_yesterday ? [stateObj.attributes.outlook_yesterday] : [], factor),
+        ...days,
+      ].flatMap((day) =>
+        [
+          ["low", day.price_min, day.price_min_at],
+          ["high", day.price_max, day.price_max_at],
+        ]
+          .filter(([, price, at]) => typeof price === "number" && at)
+          .map(([kind, price, at]) => ({ kind, price, at: Date.parse(at) }))
+      ),
+      periods: homePeriods(this._hass, entities, stateObj),
+    };
+  }
+
+  // The stretch of time a view shows, [from, to)
+  _span(view, resolution, now) {
+    const d = this._data;
+    if (view === "yesterday") return [d.yesterdayStart, d.todayStart];
+    if (view === "today") return [d.todayStart, d.tomorrowStart];
+    if (view === "tomorrow") return [d.tomorrowStart, d.dayAfter];
+    // Both days: today and tomorrow, until tomorrow's prices are in yesterday and today
+    if (view === "two_days") return d.tomorrowKnown ? [d.todayStart, d.dayAfter] : [d.yesterdayStart, d.tomorrowStart];
+    // Outlook: from shortly before now to the last price known (at least the end of today)
+    const size = resolution === "hour" ? HOUR_MS : d.step;
+    const from = Math.max(localFloor(now, size, d.zone) - CHART_BEFORE_NOW_MS, d.start);
+    return [from, Math.max(d.end, d.tomorrowStart)];
+  }
+
+  // A day's cheapest and dearest clock hour (their quarters' average), of the whole day
+  _hourExtremes(date) {
+    const d = this._data;
+    const [start, end] = dayBounds(date, d.zone);
+    const hours = quarterSlots(d, start, end, HOUR_MS, d.averageKind).filter((slot) => slot.price !== null);
+    if (hours.length < 2) return [];
+    return [
+      { kind: "low", slot: hours.reduce((a, b) => (b.price < a.price ? b : a)) },
+      { kind: "high", slot: hours.reduce((a, b) => (b.price > a.price ? b : a)) },
+    ];
+  }
+
+  // The quarter hours of a stretch, or its clock hours (whole) with their quarters' average and level
+  _slots(from, to, resolution) {
+    const d = this._data;
+    if (resolution !== "hour") return quarterSlots(d, from, to, d.step, d.averageKind);
+    const start = localFloor(from, HOUR_MS, d.zone);
+    return quarterSlots(d, start, localFloor(to - 1, HOUR_MS, d.zone) + HOUR_MS, HOUR_MS, d.averageKind);
+  }
+
+  _dayWord(date, time) {
+    const d = this._data;
+    const t = this._t;
+    if (date === d.today) return t.today;
+    if (date === d.tomorrow) return t.tomorrow;
+    if (date === d.yesterday) return t.yesterday;
+    return capitalize(d.weekday.format(new Date(time)));
+  }
+
+  /** The curve of the view in the plot's size; the cursor goes on top (see _drawCursor) */
+  _draw() {
+    const root = this.shadowRoot;
+    const plot = this._els.plot;
+    const width = plot.clientWidth;
+    const height = plot.clientHeight;
+    if (!width || !height) return;
+    this._dialMemo = undefined;
+    const d = this._data;
+    const t = this._t;
+    const now = Date.now();
+    const view = this._view;
+    const resolution = this._resolution();
+    if (view === "tomorrow" && !d.tomorrowKnown) {
+      this._geo = undefined;
+      plot.innerHTML = `<div class="placeholder">${t.tomorrow_pending}</div>`;
+      plot.removeAttribute("aria-valuetext");
+      if (this._config.header === "dial") {
+        // (The tab says it's tomorrow)
+        this._setReadout("", "–", [this._chip(t.detail.pending.title)]);
+      } else {
+        this._els.main.innerHTML = `<div class="when-line"></div><div class="value-line"><span class="pending">${t.detail.pending.title}</span></div>`;
+      }
+      this._els.toNow.hidden = true;
+      return;
+    }
+    const [from, to] = this._span(view, resolution, now);
+    const slots = this._slots(from, to, resolution);
+    const known = slots.filter((slot) => slot.price !== null);
+    // What's over is paled where the view reaches from the past to now; a view all past
+    // (yesterday) stays as clear as the others
+    const isPast = (end) => from <= now && now < to && end <= now;
+    if (!known.length) {
+      this._geo = undefined;
+      plot.innerHTML = `<div class="placeholder">${t.no_data}</div>`;
+      return;
+    }
+    const values = known.map((slot) => slot.price);
+    // The scale of the quarter hours in both resolutions (an hour's average lies within its
+    // quarter hours'), over the stretch either shows (the outlook starts at the hour in hours):
+    // switching between them leaves the axis where it is
+    const scaleFrom = Math.min(this._span(view, "quarter_hour", now)[0], this._span(view, "hour", now)[0]);
+    const scaleValues = this._slots(scaleFrom, to, "quarter_hour")
+      .filter((slot) => slot.price !== null)
+      .map((slot) => slot.price);
+    const min = Math.min(...scaleValues);
+    const max = Math.max(...scaleValues);
+    // The top row holds the day names, and the switches at its right end (taller then)
+    const switchWidth = this._els.overlay.offsetWidth;
+    const top = switchWidth ? 32 : 20;
+    const rowMiddle = switchWidth ? 13 : 8.5;
+    // Where the switch begins: the day names and the cursor's time keep clear of it
+    const clearOf = width - switchWidth - 6;
+    const periodsShown = !this._hide.includes("periods");
+    // Axis titles, where asked for: "Time" under the hours, "Price" up the price axis
+    const xTitle = Boolean(this._config.axis_title_x);
+    const yTitle = Boolean(this._config.axis_title_y);
+    const bottomRoom = 18 + (periodsShown ? 6 : 0) + (xTitle ? 14 : 0);
+    // Room for the high's pill above the curve and the low's below it (their dot, a gap and the
+    // pill: EXTREME_ROOM), else a little below the lowest price: the area under the line (and the
+    // shade of the slot pointed at, a pointer of its own) stays visible at the day's low too. A
+    // line of the axis per 40 px or so
+    const span = height - bottomRoom - top;
+    // The axis's decimals: as set, else one in the base currency (€, kr) and none in its subunit
+    // (ct, øre)
+    const setting = this._config.axis_decimals;
+    const decimals = setting === undefined || setting === "auto" ? (d.subunit ? 0 : 1) : Number(setting);
+    const scale = fitScale(
+      min,
+      max,
+      span,
+      this._hide.includes("high") ? 8 : EXTREME_ROOM,
+      Math.max(this._hide.includes("low") ? 18 : EXTREME_ROOM, span * 0.1),
+      Math.max(2, Math.floor(span / 40)),
+      decimals
+    );
+    const axisFormat = fixedPriceFormat(this._hass, decimals);
+    const tickLabels = scale.ticks.map((v) => axisFormat(v));
+    // Up the price axis, left of its numbers and read from the bottom up: its title and unit,
+    // "Price (ct/kWh)", or either alone (where asked for)
+    const axisUnit = this._unitShown("axis");
+    const yLabel = yTitle && axisUnit ? `${t.chart.axis_price} (${axisUnit})` : yTitle ? t.chart.axis_price : axisUnit;
+    // (Its line 11 px high around x = 8, then 8 px to the numbers, as between them and the plot)
+    const gutter = yLabel ? 22 : 0;
+    const left = gutter + Math.max(...tickLabels.map((label) => label.length)) * 6.5 + 8;
+    const right = width - 2;
+    const bottom = height - bottomRoom;
+    const plotWidth = right - left;
+    const x = (time) => left + ((time - from) / (to - from)) * plotWidth;
+    const y = (value) => top + ((scale.high - value) / (scale.high - scale.low)) * (bottom - top);
+    const parts = [];
+    // Gradients per level, from the top of the plot to its bottom (the per-day ones of the
+    // average style join them below)
+    const colors = this._colors();
+    const card = root.querySelector("ha-card");
+    card.style.setProperty("--now-color", colors.line.now);
+    // The price lines and the line where a day begins: as thick as set, as strong as set (a share
+    // of the text color, one value for light and dark themes; unset: the theme's divider color,
+    // the day's line the price lines')
+    const strength = (value) =>
+      typeof value === "number" ? `color-mix(in srgb, var(--primary-text-color, #212121) ${value}%, transparent)` : "";
+    const gridWidth =
+      typeof this._config.grid_line_width === "number" ? this._config.grid_line_width : CHART_GRID_WIDTH;
+    const dayWidth =
+      typeof this._config.day_line_width === "number" ? this._config.day_line_width : CHART_DAY_LINE_WIDTH;
+    card.style.setProperty("--grid-width", `${gridWidth}px`);
+    card.style.setProperty("--day-line-width", `${dayWidth}px`);
+    card.style.setProperty(
+      "--day-shade",
+      `color-mix(in srgb, var(--primary-text-color, #212121) ${(this._shadeStrength() * (this._dark() ? CHART_DAY_SHADE.dark : 1)).toFixed(1)}%, transparent)`
+    );
+    for (const [property, value] of [
+      ["--grid-color", this._config.grid_line_strength],
+      ["--day-line-color", this._config.day_line_strength],
+    ]) {
+      if (strength(value)) card.style.setProperty(property, strength(value));
+      else card.style.removeProperty(property);
+    }
+    const defs = LEVEL_STEPS.map(
+      (level) =>
+        `<linearGradient id="fill-${level}" gradientUnits="userSpaceOnUse" x1="0" y1="${top}" x2="0" y2="${bottom}"><stop offset="0" style="stop-color:${colors.fill[level]};stop-opacity:0.34"></stop><stop offset="1" style="stop-color:${colors.fill[level]};stop-opacity:0.02"></stop></linearGradient>`
+    );
+    if (yLabel) {
+      parts.push(
+        `<text class="axis-title" transform="translate(8 ${(top + bottom) / 2}) rotate(-90)" text-anchor="middle" dominant-baseline="central">${yLabel}</text>`
+      );
+    }
+    if (xTitle) {
+      parts.push(
+        `<text class="axis-title" x="${(left + right) / 2}" y="${height - 2}" text-anchor="middle">${t.chart.axis_time}</text>`
+      );
+    }
+    // Price lines with their numbers in the gutter
+    scale.ticks.forEach((value, i) => {
+      const ty = y(value);
+      parts.push(`<line class="grid" x1="${left}" x2="${right}" y1="${ty}" y2="${ty}"></line>`);
+      parts.push(`<text x="${gutter}" y="${ty}" dominant-baseline="middle">${tickLabels[i]}</text>`);
+    });
+    if (scale.low < 0 && scale.high > 0) {
+      parts.push(`<line class="zero" x1="${left}" x2="${right}" y1="${y(0)}" y2="${y(0)}"></line>`);
+    }
+    // The days in the view: a divider where one begins, its name above its part
+    const dayParts = [];
+    for (let start = from; start < to;) {
+      const date = d.dateOf(start);
+      const end = Math.min(dayBounds(date, d.zone)[1], to);
+      dayParts.push({ date, start, end });
+      start = end;
+    }
+    const multiDay = dayParts.length > 1;
+    // The style painted, whether it colors below and above an average, and where that average is:
+    // of the prices shown (one level across the view) or each day's
+    const style = this._style(view);
+    const shownBasis = style.fill === "average_shown";
+    const shownAverage = aggregate(values, d.averageKind);
+    const referenceShown = style.reference !== false;
+    // A soft shade off each day's line, away from today (right into tomorrow, left into
+    // yesterday): half an ellipse on the line, fading out every way (no edge anywhere), about two
+    // to three hours wide (24 to 80 px). A share of the text color, a little more on dark themes:
+    // a light tint on a dark card shows less than a dark one on light
+    const shades = [];
+    const shaded = multiDay && !this._hide.includes("day_shade") && this._shadeStrength() > 0;
+    if (shaded) {
+      const hoursWide =
+        typeof this._config.day_shade_width === "number" ? this._config.day_shade_width : CHART_DAY_SHADE.width;
+      const reach = Math.min(Math.max((plotWidth / ((to - from) / HOUR_MS)) * hoursWide, 24), hoursWide * 32);
+      // Its middle 30 % down; upwards it fades out into the row of the day names, downwards
+      // further, by the plot's bottom (two halves, alike along their seam)
+      const cy = top + (bottom - top) * 0.3;
+      const halves = [
+        ["up", 0, cy, (bottom - top) * 0.5],
+        ["down", cy, bottom, (bottom - top) * 0.7],
+      ];
+      // Eased: most of it near its middle, a long soft tail
+      const stops = [
+        [0, 1],
+        [0.3, 0.7],
+        [0.6, 0.3],
+        [0.85, 0.08],
+        [1, 0],
+      ]
+        .map(([o, a]) => `<stop offset="${o}" style="stop-color:var(--day-shade);stop-opacity:${a}"></stop>`)
+        .join("");
+      dayParts.slice(1).forEach((day, i) => {
+        const lx = x(day.start);
+        // At or before today's start the other day lies to the left, else to the right
+        const sign = day.start > d.todayStart ? 1 : -1;
+        const a = sign > 0 ? lx : Math.max(lx - reach, left);
+        const b = sign > 0 ? Math.min(lx + reach, right) : lx;
+        for (const [half, y1, y2, ry] of halves) {
+          defs.push(
+            `<radialGradient id="shade-${i}-${half}" gradientUnits="userSpaceOnUse" cx="${lx}" cy="${cy}" r="${reach}" gradientTransform="translate(${lx} ${cy}) scale(1 ${ry / reach}) translate(${-lx} ${-cy})">${stops}</radialGradient>`
+          );
+          shades.push(
+            `<rect class="day-shade" x="${a}" y="${y1}" width="${b - a}" height="${y2 - y1}" fill="url(#shade-${i}-${half})"></rect>`
+          );
+        }
+      });
+    }
+    dayParts.forEach((day, i) => {
+      if (i > 0)
+        parts.push(
+          `<line class="divider" x1="${x(day.start)}" x2="${x(day.start)}" y1="${top - 4}" y2="${bottom}"></line>`
+        );
+      // Its name centered over its part ("Today · Friday"; a view of one day only its weekday, its
+      // tab says the rest), moved left of the switch where they'd meet. Where that's too long for
+      // its part: one of the words, then the short weekday; else none
+      const date = new Date(day.start);
+      const word =
+        !CHART_SINGLE_DAY_VIEWS.includes(view) &&
+        !this._hide.includes("day_word") &&
+        this._dayWord(day.date, day.start);
+      const weekday = !this._hide.includes("day_weekday") && capitalize(d.weekday.format(date));
+      const words = [...new Set([word, weekday].filter(Boolean))];
+      const names = [words.join(" · "), ...words, weekday && capitalize(d.weekdayShort.format(date))].filter(Boolean);
+      const limit = switchWidth ? clearOf : right;
+      const placed = names.some((name) => {
+        const half = (name.length * 7) / 2;
+        const center = Math.min((x(day.start) + x(day.end)) / 2, limit - half);
+        if (center - half < x(day.start) + 4) return false;
+        parts.push(
+          `<text class="day" x="${center}" y="${rowMiddle}" dominant-baseline="central" text-anchor="middle">${name}</text>`
+        );
+        return true;
+      });
+      // The switches take the top row above it (a phone): just below, at the start of its day
+      const inside = !placed && names.find((name) => x(day.start) + 6 + name.length * 6.5 <= x(day.end) - 4);
+      if (inside) {
+        parts.push(
+          `<text class="day inside" x="${x(day.start) + 6}" y="${top + 9}" dominant-baseline="central">${inside}</text>`
+        );
+      }
+      // The average the day's part is measured against (where the average style changes color)
+      if (shownBasis) {
+        day.reference = shownAverage;
+      } else {
+        const inDay = known.filter((slot) => slot.start >= day.start && slot.start < day.end).map((slot) => slot.price);
+        const reference = d.references[day.date];
+        day.reference =
+          typeof reference === "number" ? reference : inDay.length ? aggregate(inDay, d.averageKind) : undefined;
+      }
+    });
+    // The dashed line: over each day's part at that day's average (with its number on it, see
+    // below), in the styles that show it
+    const averageSpans = dayParts.map((day) => ({ start: day.start, end: day.end, reference: d.references[day.date] }));
+    if (referenceShown) {
+      for (const span of averageSpans) {
+        if (typeof span.reference !== "number") continue;
+        const ry = y(span.reference);
+        parts.push(`<line class="reference" x1="${x(span.start)}" x2="${x(span.end)}" y1="${ry}" y2="${ry}"></line>`);
+      }
+    }
+    // The average style per day: below the day's average a calm color fading to the bottom, a
+    // quick change at the average, above it the signal color without further fading (so the
+    // dearer part stands out as one); the line in the same colors, changing sharply
+    const plotHeight = bottom - top;
+    dayParts.forEach((day, i) => {
+      if (day.reference === undefined) return;
+      const at = Math.min(Math.max((y(day.reference) - top) / plotHeight, 0), 1);
+      const blend = 3 / plotHeight;
+      const stop = (offset, color, opacity) =>
+        `<stop offset="${Math.min(Math.max(offset, 0), 1)}" style="stop-color:${color};stop-opacity:${opacity}"></stop>`;
+      defs.push(
+        `<linearGradient id="avg-fill-${i}" gradientUnits="userSpaceOnUse" x1="0" y1="${top}" x2="0" y2="${bottom}">${stop(0, colors.fill.above, 0.3)}${stop(at - blend, colors.fill.above, 0.3)}${stop(at + blend, colors.fill.below, 0.32)}${stop(1, colors.fill.below, 0.03)}</linearGradient>`,
+        `<linearGradient id="avg-line-${i}" gradientUnits="userSpaceOnUse" x1="0" y1="${top}" x2="0" y2="${bottom}">${stop(0, colors.line.above, 1)}${stop(at, colors.line.above, 1)}${stop(at, colors.line.below, 1)}${stop(1, colors.line.below, 1)}</linearGradient>`
+      );
+    });
+    const dayOf = (slot) => dayParts.findIndex((day) => slot.start >= day.start && slot.start < day.end);
+    // The curve: the area to the bottom, then the step line over it, each in runs of one paint
+    // (a price level, or a day in the average style), past runs paled
+    const lineMode = style.line;
+    const fillMode = style.fill === "level" ? "level" : "average";
+    const level = (slot) => (LEVEL_COLORS[slot.level] ? slot.level : "normal");
+    const runsOf = (paint) => {
+      const runs = [];
+      let run;
+      slots.forEach((slot, i) => {
+        if (slot.price === null) {
+          run = undefined;
+          return;
+        }
+        const past = isPast(slot.end);
+        const key = `${paint(slot)}|${past}`;
+        if (!run || run.key !== key) {
+          const before = slots[i - 1];
+          run = {
+            key,
+            paint: paint(slot),
+            past,
+            items: [],
+            from: before && before.price !== null ? before.price : undefined,
+          };
+          runs.push(run);
+        }
+        run.items.push(slot);
+      });
+      return runs;
+    };
+    const paintOf = (mode) =>
+      mode === "level" ? (slot) => `url(#fill-${level(slot)})` : (slot) => `url(#avg-fill-${dayOf(slot)})`;
+    const strokeOf = {
+      level: (slot) => colors.line[level(slot)],
+      average: (slot) => `url(#avg-line-${dayOf(slot)})`,
+      single: () => colors.line.single,
+    }[lineMode];
+    const pastClass = (r) => (r.past ? ' class="past"' : "");
+    // Where prices cross zero the area starts at zero: negative prices hang below it, so they
+    // read as below zero, not as a lower floor
+    const base = scale.low < 0 && scale.high > 0 ? y(0) : bottom;
+    for (const r of runsOf(paintOf(fillMode))) {
+      const first = r.items[0];
+      let area = `M${x(first.start)},${base}V${y(first.price)}`;
+      r.items.forEach((slot, i) => {
+        area += `H${x(slot.end)}`;
+        if (r.items[i + 1]) area += `V${y(r.items[i + 1].price)}`;
+      });
+      area += `V${base}H${x(first.start)}Z`;
+      parts.push(`<path${pastClass(r)} d="${area}" style="fill:${r.paint}"></path>`);
+    }
+    // The step between two runs goes with the higher price: where the price falls, the run that
+    // ends draws it down in its color; where it rises, the next run draws it up in its own
+    const lineRuns = runsOf(strokeOf);
+    lineRuns.forEach((r, n) => {
+      const first = r.items[0];
+      const last = r.items[r.items.length - 1];
+      const next = lineRuns[n + 1];
+      const rises = r.from !== undefined && first.price > r.from;
+      let line = rises ? `M${x(first.start)},${y(r.from)}V${y(first.price)}` : `M${x(first.start)},${y(first.price)}`;
+      r.items.forEach((slot, i) => {
+        line += `H${x(slot.end)}`;
+        if (r.items[i + 1]) line += `V${y(r.items[i + 1].price)}`;
+      });
+      if (next && next.from !== undefined && next.items[0].start === last.end && next.items[0].price < last.price) {
+        line += `V${y(next.items[0].price)}`;
+      }
+      parts.push(`<path class="line${r.past ? " past" : ""}" d="${line}" style="stroke:${r.paint}"></path>`);
+    });
+    // The area's color at a slot (the ring above the curve takes it: it stays the level's or the
+    // average's also with a line of one color)
+    const fillColorAt = (slot) => {
+      if (fillMode === "level") return colors.fill[level(slot)];
+      const day = dayParts[dayOf(slot)];
+      return day && day.reference !== undefined && slot.price > day.reference ? colors.fill.above : colors.fill.below;
+    };
+    // The color a point of the line has (its marks take it): its level's, the average style's
+    // above or below the day's average, or the one color
+    const colorAt = (slot) => {
+      if (lineMode === "level") return colors.line[level(slot)];
+      if (lineMode === "single") return colors.line.single;
+      const day = dayParts[dayOf(slot)];
+      return day && day.reference !== undefined && slot.price > day.reference ? colors.line.above : colors.line.below;
+    };
+    // Best and peak price periods: as in the forecast card, a grey track under each hour a
+    // period falls in (joined where such hours follow each other), the periods colored on it
+    if (periodsShown) {
+      const touched = periodsTouching(d.periods, from, to);
+      const tracks = [];
+      for (const { a, b } of [...touched].sort((p, q) => p.a - q.a)) {
+        const start = Math.max(localFloor(Math.max(a, from), HOUR_MS, d.zone), from);
+        const end = Math.min(localFloor(Math.min(b, to) - 1, HOUR_MS, d.zone) + HOUR_MS, to);
+        const last = tracks[tracks.length - 1];
+        if (last && start <= last[1]) last[1] = Math.max(last[1], end);
+        else tracks.push([start, end]);
+      }
+      for (const [start, end] of tracks) {
+        parts.push(
+          `<rect class="period-track" x="${x(start)}" y="${bottom + 3}" width="${x(end) - x(start)}" height="3" rx="1.5"></rect>`
+        );
+      }
+      for (const p of touched) {
+        const a = x(Math.max(p.a, from));
+        const b = x(Math.min(p.b, to));
+        parts.push(
+          `<rect x="${a}" y="${bottom + 3}" width="${Math.max(b - a, 2)}" height="3" rx="1.5" fill="${MARK_COLORS[p.k]}"${isPast(p.b) ? ' opacity="0.45"' : ""}></rect>`
+        );
+      }
+    }
+    // Each day's lowest and highest price, of the whole day (a view may show only part of it),
+    // labelled where it falls in view: in quarter hours the sensor's, in hours the day's cheapest
+    // and dearest hour (on the curve, as its average)
+    const format = this._readoutFormat(values);
+    const extremes =
+      resolution === "hour"
+        ? dayParts.flatMap((day) => this._hourExtremes(day.date))
+        : d.extremes.map(({ kind, price, at }) => ({
+            kind,
+            slot: { ...quarterSlots(d, at, at + d.step, d.step, d.averageKind)[0], price },
+          }));
+    for (const { kind, slot } of extremes) {
+      if (this._hide.includes(kind) || slot.start < from || slot.start >= to) continue;
+      const cx = (x(slot.start) + x(slot.end)) / 2;
+      const cy = y(slot.price);
+      // A pill like the averages' numbers, with the arrow the forecast card marks a day's low and
+      // high with: the low's under its dot, the high's above it (the scale leaves room for them,
+      // see EXTREME_ROOM), centered on the dot within the plot
+      const text = format(slot.price);
+      const w = 4 + 10 + 3 + text.length * 6.2 + 6;
+      const lx = Math.min(Math.max(cx - w / 2, left), right - w);
+      const ly = kind === "low" ? Math.min(cy + 8, bottom - 16) : Math.max(cy - 8 - 16, top - 4);
+      parts.push(
+        `<g${isPast(slot.end) ? ' class="past"' : ""}><circle class="extreme-dot" cx="${cx}" cy="${cy}" r="3.5" style="fill:${colorAt(slot)}"></circle><g class="extreme-label ${kind}"><rect x="${lx}" y="${ly}" width="${w}" height="16" rx="8"></rect><path d="${EXTREME_PATHS[kind]}" transform="translate(${lx + 4} ${ly + 3}) scale(${10 / 12})"></path><text x="${lx + 17}" y="${ly + 11.5}">${text}</text></g></g>`
+      );
+    }
+    // The day's average in numbers at the right end of its dashed line, always in view; below
+    // the line where it runs close to the top. Kept with their room, so they make way for the
+    // cursor's dot (see _clearLabels): their box, the other place they may go to, and how far
+    // they may move sideways
+    const labels = [];
+    if (referenceShown && !this._hide.includes("reference_label")) {
+      for (const span of averageSpans) {
+        const { reference } = span;
+        if (typeof reference !== "number") continue;
+        const label = `${d.averageLabel} ${format(reference)}`;
+        const w = label.length * 6.2 + 10;
+        const end = x(span.end) - 4;
+        if (end - w < x(span.start) + 2) continue;
+        const ry = y(reference);
+        const py = ry - 19 < top - 4 ? ry + 3 : ry - 19;
+        labels.push({ x: end - w, y: py, w, other: py < ry ? ry + 3 : ry - 19, min: x(span.start) + 2, max: end });
+        parts.push(
+          `<g class="reference-label" data-label="${labels.length - 1}"><rect x="${end - w}" y="${py}" width="${w}" height="16" rx="8"></rect><text x="${end - w / 2}" y="${py + 11.5}" text-anchor="middle">${label}</text></g>`
+        );
+      }
+    }
+    // Hours along the bottom, as many as fit
+    const hours = (to - from) / HOUR_MS;
+    const every = [1, 2, 3, 4, 6, 12].find((n) => (plotWidth / hours) * n >= 34) || 24;
+    for (let time = localFloor(from, HOUR_MS, d.zone); time <= to; time += HOUR_MS) {
+      if (time < from) continue;
+      const hour = Math.floor(((time + zoneOffset(time, d.zone)) % (24 * HOUR_MS)) / HOUR_MS);
+      if (hour % every) continue;
+      const tx = x(time);
+      if (tx < left + 6 || tx > right - 6) continue;
+      // Under the periods' track where it's shown
+      const tick = bottom + (periodsShown ? 7 : 0);
+      // Midnight stands out, as the next step up on a time axis: a new day begins
+      const midnight = hour === 0;
+      parts.push(`<line class="grid" x1="${tx}" x2="${tx}" y1="${tick}" y2="${tick + (midnight ? 5 : 3)}"></line>`);
+      parts.push(
+        `<text${midnight ? ' class="midnight"' : ""} x="${tx}" y="${height - 3 - (xTitle ? 14 : 0)}" text-anchor="middle">${d.hourLabel.format(new Date(time)).replace(/\D+$/, "")}</text>`
+      );
+    }
+    // Now: in the middle of the quarter hour running, also in hours (where it's more precise than
+    // the hour's point); left out in the views set for the resolution
+    const nowHidden = this._hide.includes(`now_line_${resolution}`);
+    const nowAt = localFloor(now, d.step, d.zone) + d.step / 2;
+    if (!nowHidden && from <= nowAt && nowAt < to) {
+      // At 15 min only while prices are read: at rest the cursor marks now already (at 60 min
+      // it marks the hour, the line the quarter hour in it)
+      parts.push(
+        `<line class="now-line${resolution === "quarter_hour" ? " while-reading" : ""}" x1="${x(nowAt)}" x2="${x(nowAt)}" y1="${top - 4}" y2="${bottom}"></line>`
+      );
+    }
+    const animate = this._drawnView !== `${view}|${resolution}`;
+    this._drawnView = `${view}|${resolution}`;
+    plot.innerHTML = `<svg aria-hidden="true" viewBox="0 0 ${width} ${height}"><defs>${defs.join("")}</defs><g class="${animate ? "base" : ""}">${shades.join("")}${parts.join("")}</g><g class="cursor"></g></svg>`;
+    const nowIndex = slots.findIndex((slot) => slot.start <= now && now < slot.end);
+    this._geo = {
+      // The cursor's layer and the averages' numbers, as drawn
+      layer: plot.querySelector(".cursor"),
+      labelEls: [...plot.querySelectorAll("[data-label]")].sort((a, b) => a.dataset.label - b.dataset.label),
+      slots,
+      from,
+      to,
+      left,
+      right,
+      top,
+      bottom,
+      x,
+      y,
+      nowIndex,
+      format,
+      colorAt,
+      fillColorAt,
+      valueMin: min,
+      valueMax: max,
+      // An hour's price is its quarter hours' average: marked so wherever it's shown
+      averaged: resolution === "hour",
+      labels,
+      // The average of the prices shown, where the view is measured against it
+      viewAverage: shownBasis ? shownAverage : undefined,
+      referenceShown,
+      rowMiddle,
+      clearOf: switchWidth ? clearOf : right,
+      // Fixed per draw, read on every move of the cursor: the colors, the view's options, the
+      // widest price (the top line keeps its width) and the widest time span (12-hour clocks)
+      colors,
+      view: this._viewOptions(view),
+      priceRoom: [format(min), format(max)].reduce((a, b) => (b.length > a.length ? b : a)),
+      widestRange: [10, 11, 22, 23]
+        .map((hour) => {
+          const at = new Date(from).setHours(hour, 45, 0, 0);
+          return timeRange(d.clock, at, at + QUARTER_MS);
+        })
+        .reduce((a, b) => (b.length > a.length ? b : a)),
+    };
+    plot.setAttribute("aria-valuemin", "0");
+    plot.setAttribute("aria-valuemax", String(slots.length - 1));
+    // A cursor outside the view (another day) is let go
+    if (this._cursor !== undefined && !(from <= this._cursor && this._cursor < to)) this._cursor = undefined;
+    this._drawCursor();
+  }
+
+  // The colors of the line and of the average style, as set for the mode the card shows in
+  _colors() {
+    return chartColors(this._config, this._dark());
+  }
+
+  // How strong the shade off a day's line is, as set (0: none), in percent on light themes
+  _shadeStrength() {
+    const value = this._config.day_shade_strength;
+    return typeof value === "number" ? value : CHART_DAY_SHADE.strength;
+  }
+
+  // Whether the card shows in dark: as set, else as the theme
+  _dark() {
+    const appearance = this._config.appearance;
+    return (
+      appearance === "dark" || (appearance !== "light" && Boolean(this._hass.themes && this._hass.themes.darkMode))
+    );
+  }
+
+  // Prices in the line above: one decimal in ct and øre, two in € and kr
+  _readoutFormat(values) {
+    const format = fixedPriceFormat(this._hass, Math.max(...values.map(Math.abs)) >= 10 ? 1 : 2);
+    // Negative prices with a real minus sign
+    return Object.assign((value) => format(value).replace("-", "\u2212"), { decimals: format.decimals });
+  }
+
+  // The slot the cursor points at: hovered, set, or now (undefined: none, e.g. tomorrow)
+  _shownIndex() {
+    const g = this._geo;
+    if (!g) return -1;
+    const time = this._hover !== undefined ? this._hover : this._cursor;
+    if (time !== undefined) return g.slots.findIndex((slot) => slot.start <= time && time < slot.end);
+    return g.nowIndex;
+  }
+
+  _drawCursor() {
+    const g = this._geo;
+    if (!g) return;
+    const { layer } = g;
+    const index = this._shownIndex();
+    const slot = g.slots[index];
+    const pinned = this._cursor !== undefined || this._hover !== undefined;
+    this._els.plot.classList.toggle("is-reading", pinned);
+    this._els.toNow.hidden = !(this._cursor !== undefined && g.nowIndex >= 0);
+    // The switches back in view, unless the tag drawn below needs their place again (also in a
+    // view without now, like tomorrow, where nothing is drawn once the pointer has gone)
+    this._yieldSwitch(false);
+    if (!slot) {
+      layer.innerHTML = "";
+      this._clearLabels();
+      this._readoutSummary();
+      return;
+    }
+    const d = this._data;
+    const a = g.x(slot.start);
+    const b = g.x(slot.end);
+    const cx = (a + b) / 2;
+    this._clearLabels(cx, slot.price !== null ? g.y(slot.price) : undefined);
+    // The slot shaded from the bottom up to the underside of the price line; above the line, up
+    // to the tag, a dashed line while prices are being read (not for now at rest)
+    let marks = "";
+    if (slot.price !== null) {
+      const color = g.colorAt(slot);
+      const cy = g.y(slot.price);
+      const under = Math.min(cy + 1.5, g.bottom);
+      marks += `<rect class="cursor-band" x="${a}" y="${under}" width="${Math.max(b - a, 1)}" height="${g.bottom - under}"></rect>`;
+      if (pinned) marks += `<line class="cursor-line" x1="${cx}" x2="${cx}" y1="${g.top - 4}" y2="${cy}"></line>`;
+      // At rest on now, where neither the pill nor the line of now says so (15 min), the halo
+      // breathes softly: the card shows the price live. Still while prices are read
+      const live = !pinned && index === g.nowIndex && !g.averaged;
+      marks += `<circle class="cursor-halo${live ? " live" : ""}" cx="${cx}" cy="${cy}" r="11" style="fill:${color}"></circle><circle class="cursor-dot" cx="${cx}" cy="${cy}" r="5" style="fill:${color}"></circle>`;
+    }
+    layer.innerHTML = marks;
+    // A best or peak price period the slot is in (or part of it)
+    const period = slotPeriod(d.periods, slot.start, slot.end);
+    if (pinned) this._drawCursorTag(layer, slot, cx, period);
+    else this._tagShown = undefined;
+    this._readout(slot, index, { live: index === g.nowIndex && !pinned, reading: pinned, period });
+  }
+
+  // The price of the quarter hour a moment falls in (null: not known)
+  _quarterPrice(time) {
+    const d = this._data;
+    const i = Math.floor((time - d.start) / d.step);
+    return i >= 0 && i < d.prices.length ? d.prices[i] : null;
+  }
+
+  // The resolution switch out of the way of the cursor's tag, for as long as the mouse reads the
+  // prices under it
+  _yieldSwitch(yields) {
+    this._els.overlay.classList.toggle("is-yielding", yields);
+  }
+
+  /**
+   * The averages' numbers make way for the cursor's dot at (cx, cy): to the other side of their
+   * line, else beside the cursor within their day, else nearly out of sight; back in place once
+   * the dot has moved on
+   */
+  _clearLabels(cx, cy) {
+    const g = this._geo;
+    const room = 14; // The dot's halo and a little air
+    const hits = (x, y, w) =>
+      cy !== undefined && cx > x - room && cx < x + w + room && cy > y - room && cy < y + 16 + room;
+    g.labels.forEach((label, i) => {
+      const el = g.labelEls[i];
+      if (!el) return;
+      let dx = 0;
+      let dy = 0;
+      let hidden = false;
+      if (hits(label.x, label.y, label.w)) {
+        if (!hits(label.x, label.other, label.w)) dy = label.other - label.y;
+        else if (cx - room - label.w >= label.min) dx = cx - room - label.w - label.x;
+        else if (cx + room + label.w <= label.max) dx = cx + room - label.x;
+        else hidden = true;
+      }
+      // (Written only where it changes: most moves leave the numbers be)
+      const transform = dx || dy ? `translate(${dx}px, ${dy}px)` : "";
+      if (el.style.transform !== transform) el.style.transform = transform;
+      if (el.classList.contains("is-yielding") !== hidden) el.classList.toggle("is-yielding", hidden);
+    });
+  }
+
+  /**
+   * What the cursor points at, in a tag above the curve on its line: day, time span and price,
+   * with a dot in the color of the point on the curve. Up there, not beside the point: a finger
+   * on the curve covers its surroundings, and the tag stays in one row, over nothing the curve
+   * shows. Laid out from the text's measured width
+   */
+  _drawCursorTag(layer, slot, cx, inPeriod) {
+    const g = this._geo;
+    const d = this._data;
+    // The time first, as in the top line, then the day, set apart by a dot (it's no pill here)
+    const when = `${timeRange(d.clock, slot.start, slot.end)}<tspan class="cursor-day"> · ${this._dayWord(d.dateOf(slot.start), slot.start)}</tspan>`;
+    const priced = slot.price !== null;
+    // Price and time change at once (they belong to the slot under the finger); the swatch's
+    // color eases over from the last slot's, a period's badge fades in where it comes up
+    const color = priced ? g.colorAt(slot) : "";
+    const last = this._tagShown || {};
+    const swatchFrom = last.color && color && last.color !== color ? last.color : "";
+    const unit = this._unitShown("tag");
+    const tag = document.createElementNS("http://www.w3.org/2000/svg", "g");
+    tag.setAttribute("class", "cursor-tag");
+    tag.innerHTML = `<rect class="cursor-pill" rx="8"></rect><text class="cursor-time" text-anchor="middle">${when}</text>${
+      priced
+        ? `<circle class="cursor-swatch${swatchFrom ? " changed" : ""}" r="3.5" style="fill:${color}${swatchFrom ? `;--from:${swatchFrom}` : ""}"></circle><text class="cursor-price">${g.averaged ? `<tspan class="cursor-avg">${d.averageLabel} </tspan>` : ""}${g.format(slot.price)}${unit ? `<tspan class="cursor-unit"> ${unit}</tspan>` : ""}</text>`
+        : ""
+    }`;
+    layer.append(tag);
+    const [time, price] = tag.querySelectorAll("text");
+    const widthOf = (text, perChar) => text.getComputedTextLength() || text.textContent.length * perChar;
+    // Two lines: day and time span small, the price below it large; as wide as the wider one
+    const timeWidth = widthOf(time, 6);
+    const priceWidth = price ? 7 + 5 + widthOf(price, 7) : 0;
+    // In a best or peak price period: its badge centered on the tag's top right corner, as on
+    // the columns of the forecast card (the tag a little wider, so it covers no text)
+    const period = !g.view.hide.includes("badge") && inPeriod;
+    const w = Math.max(timeWidth, priceWidth) + 16 + (period ? 6 : 0);
+    const h = price ? 32 : 18;
+    // Centered on the cursor's line in the top row, below it where the resolution switch is;
+    // while the mouse reads the prices, the switch makes way instead (see _yieldSwitch). Beside
+    // the line where the point on the curve would be under the tag
+    const mouse = this._hover !== undefined;
+    let px = cx - w / 2;
+    let py = !mouse && px + w > g.clearOf ? g.top - 2 : 1;
+    const dot = priced ? g.y(slot.price) : undefined;
+    if (dot !== undefined && dot < py + h + 10) {
+      px = cx - 14 - w >= g.left ? cx - 14 - w : cx + 14;
+      py = Math.min(py, 1);
+    }
+    px = Math.min(Math.max(px, g.left), g.right - w - (period ? 9 : 0));
+    this._yieldSwitch(mouse && px + w + (period ? 9 : 0) > g.clearOf);
+    const rect = tag.querySelector("rect");
+    rect.setAttribute("x", px);
+    rect.setAttribute("y", py);
+    rect.setAttribute("width", w);
+    rect.setAttribute("height", h);
+    if (period) {
+      const bx = px + w;
+      const by = py;
+      const nudge = PERIOD_NUDGE[period.k] ? ` ${PERIOD_NUDGE[period.k]}` : "";
+      // A part of the slot only: a ring like a dial, the hour from the top round, colored where
+      // the period lies (the 15 min view shows it exactly), the sign inside in its color
+      const ring = (a, b) => {
+        const share = (time) => ((time - slot.start) / (slot.end - slot.start)) * 360;
+        return `<path class="part" d="${arcPath(9, 7, share(a), Math.min(share(b), 359.9))}" style="stroke:${MARK_COLORS[period.k]}"></path>`;
+      };
+      const badge = period.partial
+        ? `<g class="tag-badge partial" transform="translate(${bx - 9} ${by - 9})"><circle cx="9" cy="9" r="8.5"></circle><circle class="track" cx="9" cy="9" r="7" style="stroke:${MARK_COLORS[period.k]}"></circle>${period.parts
+            .map(([a, b]) => ring(a, b))
+            .join(
+              ""
+            )}<path class="sign" d="${PERIOD_PATHS[period.k]}" transform="translate(4.5 4.5) scale(0.375)${nudge}" style="fill:${MARK_COLORS[period.k]}"></path></g>`
+        : `<g class="tag-badge"><circle cx="${bx}" cy="${by}" r="8.5" style="fill:${MARK_COLORS[period.k]}"></circle><path d="${PERIOD_PATHS[period.k]}" transform="translate(${bx - 6} ${by - 6}) scale(0.5)${nudge}"></path></g>`;
+      tag.insertAdjacentHTML("beforeend", badge);
+      if (last.badge !== `${period.k}${period.partial}`) tag.lastElementChild.classList.add("is-appearing");
+    }
+    this._tagShown = { color, badge: period ? `${period.k}${period.partial}` : "" };
+    time.setAttribute("x", px + (w - (period ? 6 : 0)) / 2);
+    time.setAttribute("y", py + 12.5);
+    if (price) {
+      const start = px + (w - (period ? 6 : 0) - priceWidth) / 2;
+      const swatch = tag.querySelector("circle");
+      swatch.setAttribute("cx", start + 3.5);
+      swatch.setAttribute("cy", py + 22.5);
+      price.setAttribute("x", start + 12);
+      price.setAttribute("y", py + 27);
+    }
+  }
+
+  /**
+   * The line above the curve: when, small on top; below it the price, large, and beside it the
+   * rest as small chips to take in at a glance (the full sentences in their tooltips and for
+   * screen readers): the price level in its color, a best or peak price period (with its times
+   * where it covers part of the slot), how far off the average (an arrow, tinted as below and
+   * above the average are), and in hours the quarter hour's price now
+   */
+  _readout(slot, index, { live, reading, period }) {
+    const d = this._data;
+    const t = this._t;
+    const g = this._geo;
+    const plot = this._els.plot;
+    const date = d.dateOf(slot.start);
+    const range = timeRange(d.clock, slot.start, slot.end);
+    // The slot running now is "now" (also with the cursor on it), in hours with the quarter
+    // hour's price in its pill: the large price there is the hour's average
+    const now = Date.now();
+    const holdsNow = slot.start <= now && now < slot.end;
+    const nowPrice = g.averaged && holdsNow && slot.price !== null ? this._quarterPrice(now) : null;
+    const when = holdsNow ? `${t.now} · ${range}` : `${this._dayWord(date, slot.start)} · ${range}`;
+    // At rest in quarter hours the price shown is the one now, plainly: no pill then. While prices
+    // are read it tells now apart, and in hours it carries the quarter hour's price
+    // In a view of one day its tab names the day: no pill for it (now's still tells now apart)
+    const oneDay = CHART_SINGLE_DAY_VIEWS.includes(this._view);
+    const pill =
+      live && !g.averaged
+        ? ""
+        : holdsNow
+          ? this._dayPill(null, slot.start, nowPrice)
+          : oneDay
+            ? ""
+            : this._dayPill(date, slot.start);
+    // The time first, at the width of the widest (digits of one width, the longest hours of a
+    // 12-hour clock), then the day: the pills differ in width (now, today, a weekday), so the time
+    // after one would jump from slot to slot
+    const steadyRange = steadyText(g.widestRange, range, "start");
+    const whenHtml = pill ? `${steadyRange} ${pill}` : steadyRange;
+    if (slot.price === null) {
+      this._setReadout(whenHtml, "–", [this._chip(t.detail.unknown)], "", {
+        day: pill,
+        range,
+      });
+      plot.setAttribute("aria-valuetext", `${when}, ${t.detail.unknown}`);
+      return;
+    }
+    // Against the average the dashed line shows: the view's where it spans more than a day (the
+    // outlook, both days), else the day's
+    const viewWide = g.viewAverage !== undefined && t.chart.vs_view[this._view];
+    const reference = viewWide ? g.viewAverage : d.references[date];
+    const change = typeof reference === "number" ? shownChange(slot.price, reference, g.format) : undefined;
+    const percent = change !== undefined ? formatPercent(this._hass.language, change, "always") : "";
+    const delta = percent
+      ? fill((viewWide ? t.chart.vs_view[this._view] : t.detail.pick.vs_day)[d.averageKind], { percent })
+      : "";
+    // Over part of the slot only (an hour): when exactly
+    const periodName =
+      period && (period.partial ? `${t[period.k]} ${timeRange(d.clock, period.start, period.end)}` : t[period.k]);
+    const level = slot.level && t.levels[slot.level];
+    const colors = g.colors;
+    // Level and gap as the view wants them: always, only while reading prices, never; the level
+    // only at some levels, the gap only from some size on (as shown, in whole percent)
+    const view = g.view;
+    const shows = (mode) => mode === "always" || (mode === "reading" && reading);
+    const levelShown =
+      shows(view.header_level) && (!view.header_level_at.length || view.header_level_at.includes(slot.level));
+    const deltaShown =
+      shows(view.header_delta) &&
+      change !== undefined &&
+      Math.round(Math.abs(change) * 100) >= (Number(view.header_delta_from) || 0);
+    // The average itself where the chart doesn't show it as its dashed line (unless left out)
+    const averageChip =
+      typeof reference === "number" &&
+      !g.referenceShown &&
+      !view.hide.includes("header_average") &&
+      this._chip(`${d.averageLabel} ${g.format(reference)}`, {
+        title: viewWide ? delta : t.day_reference[d.averageKind],
+        cls: "plain",
+      });
+    const levelChip =
+      level &&
+      levelShown &&
+      this._chip(`<span class="chip-text">${level}</span>`, {
+        color: levelColor(slot.level),
+        dot: true,
+        title: level,
+        cls: "level",
+      });
+    const periodChip =
+      period &&
+      this._chip(period.partial ? timeRange(d.clock, period.start, period.end) : t[period.k], {
+        color: MARK_COLORS[period.k],
+        icon: PERIOD_PATHS[period.k],
+        title: periodName,
+        cls: `period ${period.k}`,
+      });
+    const gapChip =
+      delta &&
+      deltaShown &&
+      this._chip(
+        // As wide as for three digits whatever it holds, the arrow in front and the percent
+        // sign at fixed places, so moving the cursor doesn't shake the line (wider only from
+        // 1000 % on)
+        `${steadyText("↑", change > 0 ? "↑" : change < 0 ? "↓" : "=", "center")} ${steadyText(
+          formatPercent(this._hass.language, 1),
+          `<span data-tween="percent" data-value="${Math.abs(change)}">${formatPercent(this._hass.language, Math.abs(change))}</span>`
+        )} ${d.averageLabel}`,
+        { color: change > 0 ? colors.line.above : colors.line.below, title: delta, cls: "delta" }
+      );
+    // The gap first, at a steady width, then the average; the level and the period last: the
+    // level's names differ in length and the period comes and goes, so what followed them would
+    // jump from slot to slot (the line and the ring alike)
+    const chips = [gapChip, averageChip, levelChip, periodChip];
+    // The ring: the price where it lies between the view's lowest and highest, in the area's
+    // color; below it the day (or now), the average it's measured against, how far off, a period
+    const span = g.valueMax - g.valueMin;
+    const dial = {
+      day: pill,
+      range,
+      steadyRange,
+      share: span > 0 ? (slot.price - g.valueMin) / span : 0.5,
+      color: g.fillColorAt(slot),
+      title: [level, periodName].filter(Boolean).join(", "),
+    };
+    this._setReadout(whenHtml, slot.price, chips, g.averaged ? d.averageLabel : "", dial);
+    plot.setAttribute("aria-valuenow", String(index));
+    plot.setAttribute(
+      "aria-valuetext",
+      [
+        when,
+        `${g.averaged ? `${d.averageLabel} ` : ""}${g.format(slot.price)} ${d.unit}`,
+        nowPrice !== null && `${t.now} ${g.format(nowPrice)} ${d.unit}`,
+        level,
+        periodName,
+        delta,
+      ]
+        .filter(Boolean)
+        .join(", ")
+    );
+  }
+
+  /**
+   * The unit as the card is set to show it at a place (header, tag, axis): the unit rate's whole
+   * (ct/kWh), the currency alone (ct; also where `short`, e.g. a small ring), or none. Read out
+   * whole for screen readers anyway
+   */
+  _unitShown(place, short = false) {
+    const unit = this._data ? this._data.unit : "";
+    const mode = (this._config.units || {})[place] || CHART_UNIT_PLACES[place];
+    if (mode === "none") return "";
+    return mode === "currency" || short ? unit.split("/")[0] : unit;
+  }
+
+  /**
+   * The day as a pill: "now" in the color of now, its dot pulsing (in hours with the price of the
+   * quarter hour now), yesterday, today, tomorrow in theirs (a weekday further off as today's)
+   */
+  _dayPill(date, time, price = null) {
+    const t = this._t;
+    if (date === null) {
+      const now = price !== null ? ` <b>${this._geo.format(price)}</b>` : "";
+      return `<span class="day-pill now"><span class="live-dot" aria-hidden="true"></span>${t.now}${now}</span>`;
+    }
+    const d = this._data;
+    const kind =
+      date === d.today ? "today" : date === d.tomorrow ? "tomorrow" : date === d.yesterday ? "yesterday" : "today";
+    const colors = this._geo ? this._geo.colors : this._colors();
+    return `<span class="day-pill" style="--pill:${colors.days[kind]}">${this._dayWord(date, time)}</span>`;
+  }
+
+  // A chip of the line above the curve: tinted in its color, with a dot or a sign in front
+  _chip(html, { color, dot = false, icon, title, cls = "" } = {}) {
+    const lead = icon ? `${svgIcon(icon)}` : dot ? '<span class="chip-dot"></span>' : "";
+    return `<span class="chip ${cls}" data-key="chip-${cls.split(" ")[0] || "plain"}"${color ? ` style="--chip:${color}"` : ""}${title ? ` title="${title}"` : ""}>${lead}${html}</span>`;
+  }
+
+  // The line above the curve: when, then the price (an average marked as such) and its chips
+  _setReadout(when, price, chips = [], mark = "", dial = {}) {
+    const d = this._data;
+    // A price as a number counts over to the next one; text ("–") is set as it is
+    const priceHtml =
+      typeof price === "number"
+        ? `<span data-tween="price" data-value="${price}">${this._geo.format(price)}</span>`
+        : price;
+    if (this._config.header === "dial") {
+      this._setDial(priceHtml, mark, chips, dial);
+      return;
+    }
+    // Price and unit as wide as with the view's widest price (its lowest or highest, as shown), the
+    // unit right after the price: the chips after them stay put while the cursor moves (a wider
+    // price than those pushes them on)
+    const g = this._geo;
+    const room = g ? g.priceRoom : "";
+    const headerUnit = d ? this._unitShown("header") : "";
+    const unit = headerUnit ? `<span class="unit">${headerUnit}</span>` : "";
+    const value = (text) => `<span class="amount"><span class="price">${text}</span>${unit}</span>`;
+    this._morph(`<div class="when-line">${when}</div>
+      <div class="value-line">${mark ? `<span class="avg-mark">${mark}</span>` : ""}${
+        room ? steadyText(value(room), value(priceHtml), "start") : value(priceHtml)
+      }<span class="chips">${chips.filter(Boolean).join("")}</span></div>`);
+    this._fitChips();
+  }
+
+  // The line above the curve changed in place, its numbers counting over (see morphInto)
+  _morph(html) {
+    morphInto(this._els.main, html, (el, text, before) => this._tween(el, text, before));
+  }
+
+  /**
+   * A number counting over to its new value, quick and easing out (about a fifth of a second), as
+   * Tibber's app does; at once where motion is reduced. From what it shows right now, so moving
+   * on before it's done carries on smoothly
+   */
+  _tween(el, text, before) {
+    const to = Number(el.dataset.value);
+    const from = el._running ? el._shown : before;
+    const format =
+      el.dataset.tween === "percent"
+        ? (value) => formatPercent(this._hass.language, value)
+        : (value) => (this._geo ? this._geo.format(value) : text);
+    cancelAnimationFrame(el._frame);
+    el._running = false;
+    const still = REDUCED_MOTION && REDUCED_MOTION.matches;
+    if (still || from === to || !Number.isFinite(from) || !Number.isFinite(to)) {
+      el.textContent = text;
+      return;
+    }
+    const start = performance.now();
+    const step = (now) => {
+      // (A frame's time can lie just before the start: its frame began earlier)
+      const t = Math.min(Math.max((now - start) / CHART_TWEEN_MS, 0), 1);
+      const eased = 1 - (1 - t) ** 3;
+      el._shown = from + (to - from) * eased;
+      el.textContent = t < 1 ? format(el._shown) : text;
+      el._running = t < 1;
+      if (t < 1) el._frame = requestAnimationFrame(step);
+    };
+    el._running = true;
+    el._shown = from;
+    el._frame = requestAnimationFrame(step);
+  }
+
+  /**
+   * How large the ring is, and what goes in it, from the card's room: about a fifth of its
+   * height (with a height set in a sections view; else from its width), 60 to 140 px, at most a
+   * third of its width. Large: price, unit and time span in the ring; medium: price and unit,
+   * the time beside it; small: the price alone. On the left with the rest beside it, so the curve
+   * keeps its height and the width is used; centered (as in Tibber's app) only where a card is
+   * narrow and tall (a phone): beside it there'd be no room
+   */
+  _dialLayout() {
+    // Once per draw (a resize draws anew), not on every move of the cursor: it reads the layout
+    if (this._dialMemo) return this._dialMemo;
+    const card = this.shadowRoot.querySelector("ha-card");
+    const width = Math.max(card.clientWidth - 24, 0);
+    const fixed = Boolean(getComputedStyle(this).getPropertyValue("--row-size").trim());
+    const height = fixed ? card.clientHeight : width * 0.5 + 140;
+    const size = Math.round(Math.max(60, Math.min(140, height * 0.21, width * 0.33)));
+    const center = size >= 124 && height >= 520 && width < 480;
+    const detail = center || size >= 104 ? "large" : size >= 80 ? "medium" : "small";
+    this._dialMemo = { size, center, detail };
+    return this._dialMemo;
+  }
+
+  /**
+   * The ring above the curve: a track round, colored from the top clockwise as far as the price
+   * lies between the view's lowest and highest (in the area's color there); in it the price (and
+   * as room allows its unit and time span); beside it (below it, centered) the day and the time,
+   * and the chips
+   */
+  _setDial(price, mark, chips, { day = "", range = "", steadyRange = "", share, color, title = "" }) {
+    const d = this._data;
+    const { size, center, detail } = this._dialLayout();
+    const box = 100;
+    const radius = 46;
+    // The arc: a circle drawn as far as the share, from the top clockwise (a dash, so its length
+    // and color ease over to the next)
+    const arc =
+      typeof share === "number"
+        ? `<circle class="dial-arc" cx="${box / 2}" cy="${box / 2}" r="${radius}" pathLength="100" transform="rotate(-90 ${box / 2} ${box / 2})" style="stroke:${color};stroke-dasharray:${(Math.max(4 / 360, Math.min(share, 0.999)) * 100).toFixed(2)} 100"></circle>`
+        : "";
+    // The unit in the ring under the price: whole, or where the ring is small its first part ("ct"
+    // of "ct/kWh"), in proportion
+    const unit = d ? this._unitShown("header", detail === "small") : "";
+    const rangeInside = detail === "large" && range;
+    // (After a pill no dot: it stands apart by itself)
+    // Beside the ring the time first (at a steady width), then the day, as in the line with chips
+    const rest = rangeInside ? "" : steadyRange || range;
+    const when = day && rest ? `${rest}${day.includes("day-pill") ? " " : " · "}${day}` : day || rest;
+    const readout = this._els.readout;
+    readout.classList.toggle("is-dial-centered", center);
+    readout.style.setProperty("--dial-size", `${size}px`);
+    this._morph(
+      `<div class="dial ${detail}"${title ? ` title="${title}"` : ""}>
+        <svg viewBox="0 0 ${box} ${box}" aria-hidden="true"><circle class="dial-track" cx="${box / 2}" cy="${box / 2}" r="${radius}"></circle>${arc}</svg>
+        <div class="dial-center"><div class="dial-value">${mark ? `<span class="avg-mark">${mark}</span>` : ""}<span class="price">${price}</span></div>${
+          unit ? `<div class="dial-unit">${unit}</div>` : ""
+        }${rangeInside ? `<div class="dial-range">${range}</div>` : ""}</div>
+      </div>
+      <div class="dial-side"><div class="dial-day">${when}</div><span class="chips">${chips.filter(Boolean).join("")}</span></div>`
+    );
+    this._fitChips();
+  }
+
+  // Chips that don't fit aren't cut in half: the level's goes down to its dot first, then the
+  // last ones give way, whole
+  _fitChips() {
+    const row = this.shadowRoot.querySelector(".readout .chips");
+    if (!row || !row.clientWidth) return;
+    const chips = [...row.children];
+    // Measured once each way (a chip hidden never moves those before it), not in a loop
+    const right = row.getBoundingClientRect().right + 1;
+    const ends = () => chips.map((chip) => chip.getBoundingClientRect().right);
+    if (ends().every((end) => end <= right)) return;
+    const level = row.querySelector(".chip.level");
+    if (level) level.classList.add("compact");
+    ends().forEach((end, i) => {
+      if (i > 0 && end > right) chips[i].hidden = true;
+    });
+  }
+
+  // Without a slot to point at (a view without now): the day's average, its low and high
+  _readoutSummary() {
+    const d = this._data;
+    const t = this._t;
+    const g = this._geo;
+    const known = g.slots.filter((slot) => slot.price !== null);
+    const date = d.dateOf(g.from);
+    const reference = d.references[date];
+    const values = known.map((slot) => slot.price);
+    const average = typeof reference === "number" ? reference : aggregate(values, d.averageKind);
+    const name = `${this._dayWord(date, g.from)} · ${t.day_reference[d.averageKind]}`;
+    // Shown as the price with ⌀ before it, the day named by the view's tab: the line above stays
+    // empty (no "daily average" label, which nothing else has)
+    const label = CHART_SINGLE_DAY_VIEWS.includes(this._view) ? "" : this._dayPill(date, g.from);
+    const low = Math.min(...values);
+    const high = Math.max(...values);
+    const extreme = (kind, value) =>
+      this._chip(`${extremeIcon(kind)}${g.format(value)}`, {
+        title: `${t[`day_${kind}`]} ${g.format(value)} ${d.unit}`,
+        cls: `extreme-${kind}`,
+      });
+    const span = g.valueMax - g.valueMin;
+    this._setReadout(label, average, [extreme("low", low), extreme("high", high)], d.averageLabel, {
+      day: label,
+      share: span > 0 ? (average - g.valueMin) / span : 0.5,
+      color: "var(--secondary-text-color)",
+    });
+    this._els.plot.setAttribute(
+      "aria-valuetext",
+      `${name}, ${g.format(average)} ${d.unit}, ${t.day_low} ${g.format(low)}, ${t.day_high} ${g.format(high)}`
+    );
+  }
+
+  _indexAt(clientX) {
+    const g = this._geo;
+    const box = this._els.plot.getBoundingClientRect();
+    const share = (clientX - box.left - g.left) / (g.right - g.left);
+    return Math.min(Math.max(Math.floor(share * g.slots.length), 0), g.slots.length - 1);
+  }
+
+  _setCursor(index, { haptic = false } = {}) {
+    const g = this._geo;
+    if (!g) return;
+    const slot = g.slots[index];
+    if (!slot) return;
+    const changed = this._cursor !== slot.start;
+    // (A drag within the same slot changes nothing)
+    if (!changed && this._hover === undefined) return;
+    this._cursor = slot.start;
+    this._hover = undefined;
+    if (haptic && changed) this._haptic("selection");
+    this._drawCursor();
+  }
+
+  // The pointer over a slot, as a mouse hovering (ticking at each new slot where asked)
+  _hoverAt(clientX, haptic) {
+    const slot = this._geo && this._geo.slots[this._indexAt(clientX)];
+    if (!slot || slot.start === this._hover) return;
+    this._hover = slot.start;
+    if (haptic) this._haptic("selection");
+    this._drawCursor();
+  }
+
+  /**
+   * A short buzz: in Home Assistant's apps through their haptics (they listen for this event,
+   * the iPhone's Taptic Engine included), in a browser through the vibration API where there is
+   * one (Android; Safari has none)
+   */
+  _haptic(kind) {
+    const app =
+      window.externalApp ||
+      (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.externalBus);
+    if (app) window.dispatchEvent(new CustomEvent("haptic", { detail: kind }));
+    // As the profile says ("Vibrate on interaction"), which the apps' haptics follow by themselves
+    else if (navigator.vibrate && this._hass.vibrate !== false) navigator.vibrate(kind === "selection" ? 6 : 12);
+  }
+
+  _backToNow() {
+    clearTimeout(this._returnTimer);
+    this._cursor = undefined;
+    this._hover = undefined;
+    this._drawCursor();
+  }
+
+  _scheduleReturn() {
+    clearTimeout(this._returnTimer);
+    if (this._cursor === undefined) return;
+    this._returnTimer = setTimeout(() => this._backToNow(), CHART_RETURN_MS);
+  }
+
+  /**
+   * Touch, like the pointer of a mouse: a finger held still for a moment grabs it (a short buzz),
+   * then it follows the finger in any direction (the page doesn't scroll meanwhile), ticking at
+   * each slot; a sideways drag grabs it at once. Let go, it stays there; a vertical swipe
+   * scrolls the page as usual, a tap sets the cursor (either goes back to now by itself). Mouse: it follows the pointer and a click keeps it there. Keyboard:
+   * arrows by one slot, Page Up/Down by an hour or six, Home/End, Escape for now
+   */
+  _bindPlot(plot) {
+    let gesture;
+    const grab = (clientX) => {
+      gesture.dragging = true;
+      try {
+        plot.setPointerCapture(gesture.id);
+      } catch (err) {
+        // Pointer already gone
+      }
+      plot.classList.add("is-dragging");
+      this._haptic("light");
+      this._hoverAt(clientX, false);
+    };
+    plot.addEventListener("pointerdown", (ev) => {
+      if (!this._geo || ev.button > 0) return;
+      clearTimeout(this._returnTimer);
+      gesture = { id: ev.pointerId, x: ev.clientX, y: ev.clientY, touch: ev.pointerType !== "mouse", dragging: false };
+      if (!gesture.touch) {
+        gesture.dragging = true;
+        this._setCursor(this._indexAt(ev.clientX));
+        return;
+      }
+      const held = gesture;
+      held.timer = setTimeout(() => gesture === held && !held.dragging && grab(held.lastX ?? held.x), CHART_HOLD_MS);
+    });
+    // Once held, the finger's moves are the pointer's, not the page's: stopped before the page
+    // scrolls (only possible before it began, which a finger held still hasn't)
+    plot.addEventListener(
+      "touchmove",
+      (ev) => {
+        if (gesture && gesture.touch && gesture.dragging && ev.cancelable) ev.preventDefault();
+      },
+      { passive: false }
+    );
+    // A long press would open the context menu or the text selection
+    plot.addEventListener("contextmenu", (ev) => ev.preventDefault());
+    plot.addEventListener("pointermove", (ev) => {
+      if (!this._geo) return;
+      if (gesture && gesture.id === ev.pointerId) {
+        if (!gesture.touch) {
+          this._setCursor(this._indexAt(ev.clientX));
+          return;
+        }
+        gesture.lastX = ev.clientX;
+        const dx = Math.abs(ev.clientX - gesture.x);
+        const dy = Math.abs(ev.clientY - gesture.y);
+        if (!gesture.dragging) {
+          // Moving before the hold: sideways grabs at once; anything else is no hold any more
+          if (dx > CHART_DRAG_PX && dx > dy) {
+            clearTimeout(gesture.timer);
+            grab(ev.clientX);
+          } else if (Math.hypot(dx, dy) > CHART_HOLD_SLOP_PX) {
+            clearTimeout(gesture.timer);
+          }
+          return;
+        }
+        this._hoverAt(ev.clientX, true);
+        return;
+      }
+      if (ev.pointerType === "mouse") {
+        // Near the (hidden) switches, not only on them: they come back to be clicked before the
+        // pointer reaches them, the cursor goes
+        const box = this._els.overlay.getBoundingClientRect();
+        const near = CHART_SWITCH_ZONE_PX;
+        if (
+          box.width &&
+          ev.clientX >= box.left - near &&
+          ev.clientX <= box.right + near &&
+          ev.clientY >= box.top - near &&
+          ev.clientY <= box.bottom + near
+        ) {
+          if (this._hover !== undefined) {
+            this._hover = undefined;
+            this._drawCursor();
+          }
+          return;
+        }
+        this._hoverAt(ev.clientX, false);
+      }
+    });
+    const end = (ev, cancelled) => {
+      if (!gesture || gesture.id !== ev.pointerId) return;
+      const { touch, dragging, timer } = gesture;
+      clearTimeout(timer);
+      gesture = undefined;
+      plot.classList.remove("is-dragging");
+      if (!touch) return; // A click keeps the cursor until the pointer leaves
+      if (dragging) {
+        // Let go: the cursor stays where the finger left it, like after a tap
+        if (this._hover !== undefined) this._cursor = this._hover;
+        this._hover = undefined;
+        this._drawCursor();
+      } else if (!cancelled) {
+        // A tap sets the cursor until the timer runs out
+        this._setCursor(this._indexAt(ev.clientX));
+      }
+      this._scheduleReturn();
+    };
+    plot.addEventListener("pointerup", (ev) => end(ev, false));
+    plot.addEventListener("pointercancel", (ev) => end(ev, true));
+    plot.addEventListener("pointerleave", (ev) => {
+      if (ev.pointerType !== "mouse" || gesture) return;
+      this._hover = undefined;
+      this._drawCursor();
+      this._scheduleReturn();
+    });
+    plot.addEventListener("keydown", (ev) => {
+      const g = this._geo;
+      if (!g) return;
+      const hourly = this._resolution() === "hour";
+      const current = this._shownIndex() >= 0 ? this._shownIndex() : 0;
+      const jump = hourly ? 6 : 4;
+      const target = {
+        ArrowLeft: current - 1,
+        ArrowRight: current + 1,
+        PageUp: current - jump,
+        PageDown: current + jump,
+        Home: 0,
+        End: g.slots.length - 1,
+      }[ev.key];
+      if (ev.key === "Escape" && this._cursor !== undefined) {
+        ev.preventDefault();
+        this._backToNow();
+        return;
+      }
+      if (target === undefined) return;
+      ev.preventDefault();
+      this._setCursor(Math.min(Math.max(target, 0), g.slots.length - 1));
+      this._scheduleReturn();
+    });
+  }
+
+  // The editor's form for the card as a whole; each view's panel has a form of its own (viewSchema)
+  static getConfigForm() {
+    const e = languageStrings(EDITOR_STRINGS);
+    const t = languageStrings(STRINGS);
+    return {
+      schema: [
+        EDITOR_FIELDS.device(),
+        {
+          name: "views",
+          selector: {
+            select: {
+              multiple: true,
+              reorder: true,
+              options: CHART_VIEWS.map((value) => ({ value, label: chartViewName(t, value) })),
+            },
+          },
+        },
+        // Right under the views: what Tomorrow does until its prices are in (Yesterday in its
+        // place, say), a setting of the card's, not of one view
+        {
+          name: "tomorrow_pending",
+          required: true,
+          helper: "chart_tomorrow_pending_help",
+          selector: dropdown(
+            marked(
+              e,
+              CHART_TOMORROW_PENDING,
+              (value) => e[`tomorrow_pending_${value}`],
+              CHART_DEFAULTS.tomorrow_pending
+            )
+          ),
+        },
+        {
+          name: "content",
+          type: "expandable",
+          flatten: true,
+          iconPath: CONTENT_PATH,
+          schema: [
+            { name: "show_title", selector: { boolean: {} } },
+            { name: "title", visible: { field: "show_title", value: true }, selector: { text: {} } },
+            EDITOR_FIELDS.priceUnit(e),
+            // Where the unit shows, and how much of it (nested under units)
+            {
+              name: "units",
+              type: "expandable",
+              icon: "mdi:currency-eur",
+              schema: Object.entries(CHART_UNIT_PLACES).map(([place, fallback]) => ({
+                name: place,
+                label: e[`unit_place_${place}`],
+                helper: place === "header" ? "unit_display_help" : undefined,
+                selector: dropdown(marked(e, CHART_UNIT_DISPLAYS, (value) => e[`unit_display_${value}`], fallback)),
+              })),
+            },
+            { ...EDITOR_FIELDS.average(e), helper: "chart_average_help" },
+            EDITOR_FIELDS.appearance(e),
+            {
+              name: "header",
+              selector: dropdown(marked(e, CHART_HEADERS, (value) => e[`header_${value}`], CHART_DEFAULTS.header)),
+            },
+            {
+              name: "axis_decimals",
+              selector: dropdown(
+                marked(e, CHART_AXIS_DECIMALS, (value) => (value === "auto" ? e.axis_decimals_auto : value), "auto")
+              ),
+            },
+            // The price lines: thickness and strength (one value for light and dark themes)
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                {
+                  name: "grid_line_width",
+                  selector: { number: { min: 0, max: 4, step: 0.25, mode: "box", unit_of_measurement: "px" } },
+                },
+                {
+                  name: "grid_line_strength",
+                  selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } },
+                },
+                {
+                  name: "day_line_width",
+                  selector: { number: { min: 0, max: 4, step: 0.25, mode: "box", unit_of_measurement: "px" } },
+                },
+                {
+                  name: "day_line_strength",
+                  selector: { number: { min: 0, max: 100, step: 1, mode: "box", unit_of_measurement: "%" } },
+                },
+                {
+                  name: "day_shade_strength",
+                  selector: { number: { min: 0, max: 30, step: 0.5, mode: "box", unit_of_measurement: "%" } },
+                },
+                {
+                  name: "day_shade_width",
+                  selector: { number: { min: 0.5, max: 6, step: 0.5, mode: "box", unit_of_measurement: "h" } },
+                },
+              ],
+            },
+            // Axis titles, off unless asked for
+            {
+              name: "",
+              type: "grid",
+              schema: [
+                { name: "axis_title_x", selector: { boolean: {} } },
+                { name: "axis_title_y", selector: { boolean: {} } },
+              ],
+            },
+          ],
+        },
+        // As the other cards: the card's actions (on its head; the curve is the cursor's)
+        {
+          name: "interactions",
+          type: "expandable",
+          flatten: true,
+          iconPath: GESTURE_TAP_PATH,
+          schema: [
+            {
+              name: "tap_opens",
+              selector: {
+                select: {
+                  mode: "box",
+                  options: marked(e, CHART_TAP_OPENS, (value) => e[`tap_opens_${value}`], "nothing"),
+                },
+              },
+            },
+            { ...EDITOR_FIELDS.windowWidth(e), visible: { field: "tap_opens", value: "forecast" } },
+            { name: "action_button", selector: { boolean: {} } },
+            {
+              name: "action_button_text",
+              visible: { field: "action_button", value: true },
+              selector: { text: {} },
+            },
+            {
+              name: "action_button_position",
+              visible: { field: "action_button", value: true },
+              selector: {
+                select: {
+                  mode: "box",
+                  options: marked(
+                    e,
+                    ACTION_BUTTON_POSITIONS,
+                    (value) => e[`action_button_position_${value}`],
+                    DEFAULTS.action_button_position
+                  ),
+                },
+              },
+            },
+            ...EDITOR_FIELDS.gestures("chart_tap_action_help"),
+          ],
+        },
+      ],
+      computeLabel: (schema) => schema.label || e[schema.name] || t[schema.name],
+      computeHelper: (schema) => e[schema.helper || `${schema.name}_help`],
+      assertConfig: validateChartConfig,
+    };
+  }
+
+  // The form of a view's panel (or the one for all views): its resolution and what it leaves
+  // out; a view's fields left empty are as for all views
+  static viewSchema(target, inherited = CHART_VIEW_DEFAULTS) {
+    const e = languageStrings(EDITOR_STRINGS);
+    const own = target !== "all_views";
+    const label = (value) => e[`resolution_${value}`];
+    // A view: "as for all views" first (what that is, in brackets); all views: the default marked
+    const resolutions = own
+      ? [
+          { value: CHART_INHERIT, label: fill(e.view_inherit_option, { value: label(inherited.resolution) }) },
+          ...CHART_RESOLUTIONS.map((value) => ({ value, label: label(value) })),
+        ]
+      : marked(e, CHART_RESOLUTIONS, label, CHART_VIEW_DEFAULTS.resolution);
+    const schema = [
+      {
+        name: "resolution",
+        required: true,
+        selector: dropdown(resolutions),
+      },
+      {
+        name: "hide",
+        helper: own ? "view_inherit_help" : "chart_hide_help",
+        selector: {
+          select: {
+            multiple: true,
+            mode: "list",
+            options: CHART_HIDES.map((value) => ({ value, label: e.hide_option[value] })),
+          },
+        },
+      },
+    ];
+    // When the top line shows the level and the gap: in a view "as for all views" first
+    const shows = (name) =>
+      own
+        ? [
+            {
+              value: CHART_INHERIT,
+              label: fill(e.view_inherit_option, { value: e[`chip_show_${inherited[name]}`] }),
+            },
+            ...CHART_CHIP_SHOWS.map((value) => ({ value, label: e[`chip_show_${value}`] })),
+          ]
+        : marked(e, CHART_CHIP_SHOWS, (value) => e[`chip_show_${value}`], CHART_VIEW_DEFAULTS[name]);
+    schema.push({
+      name: "header_details",
+      type: "expandable",
+      flatten: true,
+      icon: "mdi:tag-text-outline",
+      schema: [
+        { name: "header_level", required: true, selector: dropdown(shows("header_level")) },
+        {
+          name: "header_level_at",
+          helper: own ? "view_inherit_help" : "header_level_at_help",
+          selector: {
+            select: {
+              multiple: true,
+              mode: "list",
+              options: LEVEL_STEPS.map((value) => ({ value, label: languageStrings(STRINGS).levels[value] })),
+            },
+          },
+        },
+        { name: "header_delta", required: true, selector: dropdown(shows("header_delta")) },
+        {
+          name: "header_delta_from",
+          helper: own ? "view_inherit_help" : "header_delta_from_help",
+          selector: { number: { min: 0, max: 200, step: 1, mode: "box", unit_of_measurement: "%" } },
+        },
+      ],
+    });
+    return schema;
+  }
+
+  // The form above plus a table of own colors (HA's color selector shows an empty color as black
+  // with its label on top of it)
+  static getConfigElement() {
+    return document.createElement("tibber-prices-chart-card-editor");
+  }
+
+  static getStubConfig(hass) {
+    return { device_id: firstHomeDevice(hass), views: [...CHART_DEFAULT_VIEWS] };
+  }
+
+  static configDefaults() {
+    return {
+      ...CHART_DEFAULTS,
+      units: { ...CHART_UNIT_PLACES },
+      axis_title_x: false,
+      axis_title_y: false,
+      axis_decimals: "auto",
+      grid_line_width: CHART_GRID_WIDTH,
+      day_line_width: CHART_DAY_LINE_WIDTH,
+      day_shade_strength: CHART_DAY_SHADE.strength,
+      day_shade_width: CHART_DAY_SHADE.width,
+      action_button: false,
+      action_button_position: DEFAULTS.action_button_position,
+      tap_opens: "nothing",
+      window_width: DEFAULTS.window_width,
+    };
+  }
+}
+
+/**
+ * The cards' editors: Home Assistant's form for their options, showing the value that applies where
+ * the config sets nothing (HA's own cards do, an empty field there means "none"), and saving only
+ * what's changed: a value shown but never touched stays out of the config, so a better default
+ * later reaches the card too. (HA's form hands back all values it shows, so the change is worked
+ * out against what it showed.)
+ */
+function isPlainObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+// The config with `value` under `key`, or without the key where `value` is empty
+function withKey(config, key, value) {
+  const result = { ...config };
+  if (value && Object.keys(value).length) result[key] = value;
+  else delete result[key];
+  return result;
+}
+
+// The defaults with the config over them, objects merged key by key (lists as a whole)
+function withDefaults(defaults, config) {
+  const merged = { ...defaults };
+  for (const [key, value] of Object.entries(config || {})) {
+    merged[key] = isPlainObject(value) && isPlainObject(defaults[key]) ? withDefaults(defaults[key], value) : value;
+  }
+  return merged;
+}
+
+// The config with what the form changed (next against what it showed); cleared fields go
+function withChanges(config, shown, next) {
+  const result = { ...(config || {}) };
+  const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  for (const key of new Set([...Object.keys(shown || {}), ...Object.keys(next || {})])) {
+    const before = (shown || {})[key];
+    const after = (next || {})[key];
+    if (same(before, after)) continue;
+    if (isPlainObject(after) && isPlainObject(before)) {
+      const nested = withChanges(result[key], before, after);
+      if (Object.keys(nested).length) result[key] = nested;
+      else delete result[key];
+    } else if (after === undefined || after === null || after === "") {
+      delete result[key];
+    } else {
+      result[key] = after;
+    }
+  }
+  return result;
+}
+
+// The editors' way a level down, into a card this one holds (and back), as HA's own stack editors
+const NESTED_EDITOR_STYLE = `
+  .nested { display: flex; flex-direction: column; gap: 8px; margin-top: 24px; }
+  .nested:empty { display: none; }
+  .nested-row { display: flex; align-items: center; gap: 16px; width: 100%; min-height: 56px; padding: 8px 12px 8px 16px;
+                box-sizing: border-box; border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
+                border-radius: var(--ha-border-radius-md, 6px); background: none; font: inherit; text-align: left;
+                color: var(--primary-text-color); cursor: pointer; }
+  .nested-row:hover { background: rgba(127, 127, 127, 0.06); }
+  .nested-row:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
+  .nested-row ha-icon { color: var(--secondary-text-color); }
+  .nested-row span { flex: 1; min-width: 0; }
+  .nested-row b { display: block; font-size: 14px; font-weight: var(--ha-font-weight-medium, 500); }
+  .nested-row small { display: block; font-size: 12px; line-height: 16px; color: var(--secondary-text-color); }
+  .nested-row svg, .sub-head svg { width: 24px; height: 24px; flex: none; fill: currentColor; }
+  .nested-row > svg { color: var(--secondary-text-color); }
+  .sub-head { display: flex; align-items: center; gap: 8px; margin: -4px 0 16px -8px; }
+  .sub-head button { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0;
+                     border: 0; border-radius: 50%; background: none; cursor: pointer; color: var(--primary-text-color); }
+  .sub-head button:hover { background: rgba(127, 127, 127, 0.12); }
+  .sub-head button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
+  .sub-title { font-size: 16px; font-weight: var(--ha-font-weight-medium, 500); color: var(--primary-text-color); }
+`;
+
+class TibberPricesFormEditor extends HTMLElement {
+  // The card this edits (getConfigForm, configDefaults); set by each editor
+  get _card() {
+    return TibberPricesForecastCard;
+  }
+
+  setConfig(config) {
+    this._config = config;
+    // A level down: the card held there follows a change made elsewhere (the code editor)
+    if (this._sub) {
+      const options = { ...(config[this._sub.key] || {}), device_id: config.device_id };
+      const { device_id: _device, ...shown } = this._sub.editor._config || {};
+      const { device_id: _home, ...wanted } = options;
+      if (JSON.stringify(shown) !== JSON.stringify(wanted)) this._sub.editor.setConfig(options);
+    }
+    this._render();
+  }
+
+  set hass(hass) {
+    this._hass = hass;
+    if (this._sub) this._sub.editor.hass = hass;
+    if (!this._form) this._render();
+    else this._hassChanged(hass);
+  }
+
+  _hassChanged(hass) {
+    this._form.hass = hass;
+  }
+
+  async _ensureForm() {
+    // HA loads its form with its own editors; the tile card's brings it along
+    if (!customElements.get("ha-form")) {
+      const tile = customElements.get("hui-tile-card");
+      if (tile && tile.getConfigElement) await tile.getConfigElement();
+      await customElements.whenDefined("ha-form");
+    }
+  }
+
+  // A form set up before it's in the page: it draws at once, and without a schema it fails
+  _newForm(schema, data, onChange) {
+    const form = document.createElement("ha-form");
+    // (Built once per editor: the whole translated schema, for two functions)
+    if (!this._formBase) this._formBase = this._card.getConfigForm();
+    const base = this._formBase;
+    form.schema = schema;
+    form.computeLabel = base.computeLabel;
+    form.computeHelper = base.computeHelper;
+    form.hass = this._hass;
+    form.data = data;
+    form.addEventListener("value-changed", (ev) => {
+      ev.stopPropagation();
+      onChange(ev.detail.value);
+    });
+    return form;
+  }
+
+  // What the form shows: the defaults with the config over them
+  _shown() {
+    return withDefaults(this._card.configDefaults(), this._config);
+  }
+
+  async _render() {
+    if (!this._hass || !this._config) return;
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: "open" });
+      trackKeyboard(this);
+      this.shadowRoot.innerHTML = `<style>${BASE_STYLE}${this._style()}${NESTED_EDITOR_STYLE}</style><div class="editor-main">${this._skeleton()}<div class="nested"></div></div><div class="editor-sub" hidden></div>`;
+      this._bindNested();
+      await this._ensureForm();
+      this._shownData = this._shown();
+      this._form = this._newForm(this._formSchema(), this._shownData, (value) =>
+        this._changed(withChanges(this._config, this._shownData, value))
+      );
+      const after = this.shadowRoot.querySelector(".after-form");
+      after.parentNode.insertBefore(this._form, after);
+      this._setUp();
+    }
+    // (A call while the form is still loading: the first one sets it up with the latest values)
+    if (!this._form) return;
+    this._form.hass = this._hass;
+    this._shownData = this._shown();
+    this._form.data = this._shownData;
+    this._update();
+    this._renderNested();
+  }
+
+  // The fields of the form on top (an editor with panels of its own may keep some for the end);
+  // a level down, without the home: it's the outer card's
+  _formSchema() {
+    const schema = this._card.getConfigForm().schema;
+    return this._nested ? schema.filter((field) => field.name !== "device_id") : schema;
+  }
+
+  // ---- A level down: the editor of a card this one holds, in place of this one's
+
+  // The cards held (not a level further down), a row each that opens its editor
+  _renderNested() {
+    const box = this.shadowRoot.querySelector(".nested");
+    const e = languageStrings(EDITOR_STRINGS);
+    const cards = this._nested || !this._card.nestedCards ? [] : this._card.nestedCards(this._config);
+    const key = cards.map((card) => card.key).join(",");
+    if (box.dataset.key === key) return;
+    box.dataset.key = key;
+    box.innerHTML = cards
+      .map(
+        (card) =>
+          `<button type="button" class="nested-row" data-nested="${card.key}"><ha-icon icon="${card.icon}"></ha-icon><span><b>${e[`nested_${card.key}`]}</b><small>${e.nested_help}</small></span>${svgIcon(CHEVRON_RIGHT)}</button>`
+      )
+      .join("");
+  }
+
+  _bindNested() {
+    this.shadowRoot.querySelector(".nested").addEventListener("click", (event) => {
+      const row = event.target.closest("[data-nested]");
+      if (row) this._openNested(row.dataset.nested);
+    });
+    this.shadowRoot.querySelector(".editor-sub").addEventListener("click", (event) => {
+      if (event.target.closest(".sub-back")) this._closeNested();
+    });
+  }
+
+  _openNested(key) {
+    const card = (this._card.nestedCards(this._config) || []).find((item) => item.key === key);
+    if (!card) return;
+    const e = languageStrings(EDITOR_STRINGS);
+    const sub = this.shadowRoot.querySelector(".editor-sub");
+    sub.innerHTML = `<div class="sub-head"><button type="button" class="sub-back" aria-label="${e.nested_back}" title="${e.nested_back}">${svgIcon(BACK_PATH)}</button><span class="sub-title">${e[`nested_${key}`]}</span></div>`;
+    const editor = document.createElement(card.editor);
+    editor._nested = true;
+    editor.addEventListener("config-changed", (event) => {
+      // Its options go under its key, without the home (that's this card's)
+      event.stopPropagation();
+      const { device_id: _device, type: _type, ...options } = event.detail.config;
+      this._changed(withKey(this._config, key, options), false);
+    });
+    editor.hass = this._hass;
+    editor.setConfig({ ...(this._config[key] || {}), device_id: this._config.device_id });
+    sub.append(editor);
+    this._sub = { key, editor };
+    this.shadowRoot.querySelector(".editor-main").hidden = true;
+    sub.hidden = false;
+    sub.querySelector(".sub-back").focus();
+  }
+
+  _closeNested() {
+    const key = this._sub && this._sub.key;
+    this._sub = undefined;
+    const sub = this.shadowRoot.querySelector(".editor-sub");
+    sub.hidden = true;
+    sub.innerHTML = "";
+    this.shadowRoot.querySelector(".editor-main").hidden = false;
+    this._render();
+    const row = key && this.shadowRoot.querySelector(`[data-nested="${key}"]`);
+    if (row) row.focus();
+  }
+
+  _style() {
+    return ":host { display: block; }";
+  }
+
+  _skeleton() {
+    return '<div class="after-form"></div>';
+  }
+
+  // Hooks of an editor with more than the form
+  _setUp() {}
+
+  _update() {}
+
+  _changed(config, redraw = true) {
+    this._config = config;
+    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config }, bubbles: true, composed: true }));
+    if (redraw) this._render();
+  }
+}
+
+class TibberPricesForecastCardEditor extends TibberPricesFormEditor {}
+
+class TibberPricesNowCardEditor extends TibberPricesFormEditor {
+  get _card() {
+    return TibberPricesNowCard;
+  }
+}
+
+/**
+ * The chart card's editor: Home Assistant's form for its options (the schema of getConfigForm),
+ * then the own colors as a table, a row per state with a swatch for light and one for dark. A
+ * swatch without an own color shows the one that applies, dashed; a click opens the system's
+ * color picker, ✕ goes back to that color. Colors are written as hex (`#00b4d8`).
+ */
+const CHART_EDITOR_STYLE = `
+  :host { display: block; }
+  /* As HA's own panels of the form above (ha-form-expandable): 24 px apart, icon and padding alike */
+  .views-panels, .colors { display: flex; flex-direction: column; gap: 24px; margin-top: 24px; }
+  .end-form { display: block; margin-top: 24px; }
+  ha-expansion-panel { display: block; --expansion-panel-content-padding: 0; border-radius: var(--ha-border-radius-md, 6px);
+                       --ha-card-border-radius: var(--ha-border-radius-md, 6px); }
+  ha-icon { color: var(--secondary-text-color); }
+  .content { padding: 12px; }
+  .help { margin: 0 0 12px; font-size: 13px; line-height: 18px; color: var(--secondary-text-color); }
+  .text-button, .reset-all { display: inline-flex; align-items: center; gap: 4px; padding: 6px 12px; border: 0; border-radius: 16px;
+                             background: none; font: inherit; font-size: 14px; font-weight: var(--ha-font-weight-medium, 500);
+                             cursor: pointer; color: var(--primary-color, #03a9f4); }
+  .text-button:hover, .reset-all:hover { background: rgba(var(--rgb-primary-color, 3, 169, 244), 0.08); }
+  .reset-all { display: block; margin: 12px 0 0 auto; }
+  /* The styles of a view: a row each, as the views' own form looks */
+  .styles-block { container-type: inline-size; margin-top: 24px; }
+  .styles-head { margin-bottom: 4px; font-size: 14px; font-weight: var(--ha-font-weight-medium, 500); color: var(--primary-text-color); }
+  .inherited { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px 4px 6px; border-radius: 14px; font-size: 13px;
+          background: rgba(127, 127, 127, 0.12); color: var(--primary-text-color); }
+  .chip svg, .preview svg { width: 33px; height: 21px; border-radius: 3px; overflow: hidden; flex: none; }
+  ${STYLE_ICON_STYLE}
+  .style-row { display: grid; grid-template-columns: auto 1fr 1fr auto; grid-template-areas: "preview line fill actions" ". name ref ref";
+               gap: 8px 12px; align-items: end; padding: 12px 0; border-bottom: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2)); }
+  .style-row .preview { grid-area: preview; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .style-row .default { font-size: 11px; color: var(--secondary-text-color); }
+  .style-row .line { grid-area: line; }
+  .style-row .fill { grid-area: fill; }
+  .style-row .ref { grid-area: ref; align-self: center; }
+  .style-row .style-name { grid-area: name; }
+  .style-row .actions { grid-area: actions; display: flex; align-self: center; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 12px; color: var(--secondary-text-color); }
+  .field input[type="text"] { box-sizing: border-box; width: 100%; height: 40px; padding: 0 10px; border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
+                               border-radius: 8px; font: inherit; font-size: 14px; color: var(--primary-text-color);
+                               background: var(--card-background-color, #fff); }
+  .field select { width: 100%; height: 40px; padding: 0 8px; border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.3));
+                  border-radius: 8px; font: inherit; font-size: 14px; color: var(--primary-text-color);
+                  background: var(--card-background-color, #fff); }
+  .check { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; color: var(--primary-text-color); cursor: pointer; }
+  .check input, .switch-row input { width: 18px; height: 18px; margin: 0; accent-color: var(--primary-color, #03a9f4); }
+  .icon-button { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; padding: 0; border: 0;
+                 border-radius: 50%; background: none; cursor: pointer; color: var(--secondary-text-color); }
+  .icon-button:hover:not(:disabled) { background: rgba(127, 127, 127, 0.12); }
+  .icon-button:disabled { opacity: 0.3; cursor: default; }
+  .icon-button svg { width: 20px; height: 20px; fill: currentColor; }
+  .styles-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 8px; }
+  .switch-row { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; cursor: pointer; }
+  .switch-row b { display: block; font-size: 14px; font-weight: var(--ha-font-weight-normal, 400); color: var(--primary-text-color); }
+  .switch-row small { display: block; font-size: 12px; line-height: 16px; color: var(--secondary-text-color); }
+  .switch-row input { margin-top: 2px; }
+  /* Narrower (the editor's dialog): line and area one below the other beside the preview; a phone:
+     every field a row of its own */
+  @container (max-width: 600px) {
+    .style-row { grid-template-columns: auto 1fr auto; grid-template-areas: "preview line actions" ". fill ." ". name ." ". ref ."; }
+  }
+  @container (max-width: 380px) {
+    .style-row { grid-template-areas: "preview . actions" "line line line" "fill fill fill" "name name name" "ref ref ref"; }
+  }
+  /* The colors: a table, a row per state */
+  .table { display: grid; grid-template-columns: 1fr repeat(2, 56px); align-items: center; gap: 6px 12px; }
+  .head { font-size: 12px; color: var(--secondary-text-color); text-align: center; }
+  .name { font-size: 14px; color: var(--primary-text-color); }
+  .cell { position: relative; justify-self: center; width: 40px; height: 28px; }
+  .cell label { display: block; width: 100%; height: 100%; border-radius: 8px; cursor: pointer; box-sizing: border-box;
+                border: 2px solid var(--divider-color, rgba(127, 127, 127, 0.3)); }
+  .cell.is-default label { border-style: dashed; opacity: 0.75; }
+  .cell input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+  .cell label:has(input:focus-visible) { outline: var(--focus-ring); outline-offset: 2px; }
+  .cell button { position: absolute; top: -8px; right: -10px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%;
+                 font-size: 12px; line-height: 20px; cursor: pointer; color: var(--text-primary-color, #fff);
+                 background: var(--secondary-text-color, #727272); box-shadow: 0 0 0 2px var(--card-background-color, #fff); }
+  .cell button::after { content: ""; position: absolute; inset: -6px; }
+  .cell.is-default button { display: none; }
+  /* Fingers: larger targets (44 px with the gap), 16 px text in selects (iOS doesn't zoom in) */
+  @media (any-pointer: coarse) {
+    .table { grid-template-columns: 1fr repeat(2, 64px); gap: 10px 8px; }
+    .cell { width: 52px; height: 40px; }
+    .cell button { top: -9px; right: -9px; width: 22px; height: 22px; line-height: 22px; }
+    .reset-all, .text-button { padding: 10px 14px; }
+    .icon-button { width: 44px; height: 44px; }
+    .field select, .field input[type="text"] { height: 44px; font-size: 16px; }
+    .check input, .switch-row input { width: 22px; height: 22px; }
+  }
+`;
+
+// A CSS color (a theme variable too) as #rrggbb, as the element shows it: what a color input takes
+function hexColor(element, color) {
+  const probe = document.createElement("span");
+  probe.style.color = color;
+  probe.style.display = "none";
+  element.append(probe);
+  const rgb = getComputedStyle(probe).color.match(/\d+(\.\d+)?/g) || ["0", "0", "0"];
+  probe.remove();
+  return `#${rgb
+    .slice(0, 3)
+    .map((n) => Math.round(Number(n)).toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+class TibberPricesChartCardEditor extends TibberPricesFormEditor {
+  get _card() {
+    return TibberPricesChartCard;
+  }
+
+  _style() {
+    return CHART_EDITOR_STYLE;
+  }
+
+  _skeleton() {
+    return '<div class="after-form views-panels"></div><div class="colors"></div><div class="end-form"></div>';
+  }
+
+  // Interactions at the end, as in HA's own card editors: after the views and the colors
+  _formSchema() {
+    return super._formSchema().filter((field) => field.name !== "interactions");
+  }
+
+  _endSchema() {
+    return this._card.getConfigForm().schema.filter((field) => field.name === "interactions");
+  }
+
+  _hassChanged(hass) {
+    super._hassChanged(hass);
+    for (const form of this._viewForms.values()) form.hass = hass;
+    if (this._endForm) this._endForm.hass = hass;
+  }
+
+  _setUp() {
+    this._viewForms = new Map();
+    this._bindStyles(this.shadowRoot.querySelector(".views-panels"));
+    this._bindColors(this.shadowRoot.querySelector(".colors"));
+  }
+
+  _update() {
+    this._renderViews();
+    this._renderColors();
+    if (!this._endForm) {
+      this._endForm = this._newForm(this._endSchema(), this._shownData, (value) =>
+        this._changed(withChanges(this._config, this._shownData, value))
+      );
+      this.shadowRoot.querySelector(".end-form").append(this._endForm);
+    }
+    this._endForm.hass = this._hass;
+    this._endForm.data = this._shownData;
+  }
+
+  // ---- Views: a panel for all views, then one per view the card offers
+
+  _renderViews() {
+    const e = languageStrings(EDITOR_STRINGS);
+    const t = languageStrings(STRINGS);
+    const root = this.shadowRoot.querySelector(".views-panels");
+    const targets = ["all_views", ...chartViews(this._config, { all: true })];
+    const key = targets.join(",");
+    if (root.dataset.key !== key) {
+      // Panels for another set of views; those open stay open
+      const open = new Set(
+        [...root.querySelectorAll("ha-expansion-panel")].filter((p) => p.expanded).map((p) => p.dataset.target)
+      );
+      root.innerHTML = "";
+      this._viewForms = new Map();
+      for (const target of targets) {
+        const panel = document.createElement("ha-expansion-panel");
+        panel.setAttribute("outlined", "");
+        panel.dataset.target = target;
+        const title = target === "all_views" ? e.all_views : chartViewName(t, target);
+        panel.innerHTML = `<ha-icon slot="leading-icon" icon="${CHART_VIEW_ICONS[target]}"></ha-icon><div slot="header" role="heading" aria-level="3">${title}</div><div class="content">${
+          target === "all_views" ? `<p class="help">${e.all_views_help}</p>` : ""
+        }<div class="form-slot"></div><div class="styles-block" data-target="${target}"></div></div>`;
+        const form = this._newForm(
+          TibberPricesChartCard.viewSchema(target, this._inherited()),
+          this._viewData(target),
+          (value) => this._setView(target, value)
+        );
+        panel.querySelector(".form-slot").append(form);
+        root.append(panel);
+        panel.expanded = open.has(target);
+        this._viewForms.set(target, form);
+      }
+      root.dataset.key = key;
+    } else {
+      // A new schema redraws every field: only where what the views inherit has changed
+      const inherited = this._inherited();
+      const inheritedKey = JSON.stringify(inherited);
+      const schemaChanged = root.dataset.inherited !== inheritedKey;
+      for (const [target, form] of this._viewForms) {
+        if (schemaChanged) form.schema = TibberPricesChartCard.viewSchema(target, inherited);
+        form.data = this._viewData(target);
+      }
+    }
+    root.dataset.inherited = JSON.stringify(this._inherited());
+    for (const target of targets) this._renderStyles(target);
+  }
+
+  // A panel's form values: for all views as they apply, for a view its own (empty: as for all)
+  _viewData(target) {
+    const own = this._config[target] || {};
+    if (target === "all_views") {
+      const options = this._inherited();
+      return Object.fromEntries(CHART_VIEW_FIELDS.map((key) => [key, options[key]]));
+    }
+    const data = {
+      resolution: own.resolution || CHART_INHERIT,
+      hide: own.hide || [],
+      header_level: own.header_level || CHART_INHERIT,
+      header_level_at: own.header_level_at || [],
+      header_delta: own.header_delta || CHART_INHERIT,
+      header_delta_from: own.header_delta_from,
+    };
+    return data;
+  }
+
+  _setView(target, value) {
+    const config = { ...this._config };
+    const own = { ...(config[target] || {}) };
+    for (const key of CHART_VIEW_FIELDS) {
+      const item = value[key];
+      // For all views a value as the default isn't saved either: a better default reaches it
+      const standard = target === "all_views" && JSON.stringify(item) === JSON.stringify(CHART_VIEW_DEFAULTS[key]);
+      if (!isSet(item) || item === CHART_INHERIT || standard) delete own[key];
+      else own[key] = item;
+    }
+    this._changed(withKey(config, target, own));
+  }
+
+  // ---- Styles: a row each (preview, line, area, dashed line; the first is the default)
+
+  // What applies to a view without options of its own: those for all views, else the defaults
+  _inherited() {
+    return chartViewOptions(this._config, "all_views");
+  }
+
+  _renderStyles(target) {
+    const e = languageStrings(EDITOR_STRINGS);
+    const block = this.shadowRoot.querySelector(`.styles-block[data-target="${target}"]`);
+    if (!block) return;
+    const own = this._config[target] || {};
+    const ownStyles = Array.isArray(own.styles) && own.styles.length;
+    const applying = chartViewOptions(this._config, target);
+    const colors = chartColors(this._config, Boolean(this._hass.themes && this._hass.themes.darkMode));
+    let html = `<div class="styles-head">${e.styles}</div>`;
+    if (target !== "all_views" && !ownStyles) {
+      const inherited = applying.styles;
+      html += `<p class="help">${e.styles_inherited}</p><div class="inherited">${inherited
+        .map(
+          (style, i) =>
+            `<span class="chip" title="${chartStyleName(e, style)}">${chartStyleIcon(style, colors)}<span>${chartStyleLabel(e, style, i)}</span></span>`
+        )
+        .join("")}</div><button type="button" class="text-button" data-act="customize">${e.styles_customize}</button>`;
+    } else {
+      const { styles } = applying;
+      const options = (values, prefix, current) =>
+        values
+          .map(
+            (value) =>
+              `<option value="${value}"${value === current ? " selected" : ""}>${capitalize(e[`${prefix}${value}`])}</option>`
+          )
+          .join("");
+      const rows = styles
+        .map((style, i) => {
+          const name = chartStyleName(e, style);
+          return `<div class="style-row" data-i="${i}" role="group" aria-label="${name}">
+            <span class="preview" title="${name}">${chartStyleIcon(style, colors)}${i ? "" : `<span class="default">${e.default_mark}</span>`}</span>
+            <label class="field line"><span>${e.style_line}</span><select data-field="line">${options(CHART_LINES, "style_line_", style.line)}</select></label>
+            <label class="field fill"><span>${e.style_fill}</span><select data-field="fill">${options(CHART_FILLS, "style_fill_", style.fill)}</select></label>
+            <label class="field style-name"><span>${e.style_label}</span><input type="text" data-field="name" value="${escapeHtml(style.name || "")}" placeholder="${fill(e.style_number, { n: i + 1 })}"></label>
+            <label class="check ref"><input type="checkbox" data-field="reference"${style.reference ? " checked" : ""}>${e.style_reference}</label>
+            <span class="actions">
+              <button type="button" class="icon-button" data-act="up" title="${e.style_up}" aria-label="${e.style_up}"${i ? "" : " disabled"}>${svgIcon(CHEVRON_UP)}</button>
+              <button type="button" class="icon-button" data-act="down" title="${e.style_down}" aria-label="${e.style_down}"${i < styles.length - 1 ? "" : " disabled"}>${svgIcon(CHEVRON_DOWN)}</button>
+              <button type="button" class="icon-button" data-act="remove" title="${e.style_remove}" aria-label="${e.style_remove}"${styles.length > 1 ? "" : " disabled"}>${svgIcon(CLOSE_PATH)}</button>
+            </span>
+          </div>`;
+        })
+        .join("");
+      const switchOn = applying.style_switch;
+      html += `<div class="style-rows">${rows}</div>`;
+      if (styles.length > 1) {
+        html += `<label class="switch-row"><input type="checkbox" data-act="switch"${switchOn ? " checked" : ""}><span><b>${e.style_switch}</b><small>${e.style_switch_help}</small></span></label>`;
+      }
+      html += `<div class="styles-foot"><button type="button" class="text-button" data-act="add">+ ${e.style_add}</button>${
+        target === "all_views"
+          ? ""
+          : `<button type="button" class="text-button" data-act="inherit">${e.styles_inherit}</button>`
+      }</div>`;
+    }
+    if (block.dataset.html === html) return;
+    block.dataset.html = html;
+    block.innerHTML = html;
+  }
+
+  _bindStyles(root) {
+    root.addEventListener("change", (ev) => {
+      const block = ev.target.closest(".styles-block");
+      if (!block) return;
+      const { target } = block.dataset;
+      if (ev.target.dataset.act === "switch") {
+        this._editStyles(target, (styles, own) => {
+          own.style_switch = ev.target.checked;
+          return styles;
+        });
+        return;
+      }
+      const field = ev.target.dataset.field;
+      const row = ev.target.closest(".style-row");
+      if (!field || !row) return;
+      const value = field === "reference" ? ev.target.checked : ev.target.value;
+      this._editStyles(target, (styles) =>
+        styles.map((style, i) => {
+          if (i !== Number(row.dataset.i)) return style;
+          const changed = { ...style, [field]: value };
+          // An empty name: called by its place again
+          if (field === "name" && !String(value).trim()) delete changed.name;
+          return changed;
+        })
+      );
+    });
+    root.addEventListener("click", (ev) => {
+      const button = ev.target.closest("button[data-act]");
+      const block = button && button.closest(".styles-block");
+      if (!block) return;
+      const { target } = block.dataset;
+      const row = button.closest(".style-row");
+      const i = row ? Number(row.dataset.i) : -1;
+      const act = button.dataset.act;
+      if (act === "inherit") {
+        const own = { ...(this._config[target] || {}) };
+        delete own.styles;
+        delete own.style_switch;
+        this._changed(withKey(this._config, target, own));
+        return;
+      }
+      this._editStyles(target, (styles, own) => {
+        if (act === "customize") {
+          own.style_switch = this._inherited().style_switch;
+          return styles;
+        }
+        if (act === "add") {
+          // The most useful combination not offered yet: the simple style first, as in Tibber's app
+          const ids = new Set(styles.map(chartStyleId));
+          const next = [
+            { line: "average", fill: "average_shown" },
+            { line: "level", fill: "average_shown" },
+            { line: "single", fill: "average_shown", reference: false },
+            { line: "level", fill: "level" },
+            { line: "single", fill: "level" },
+            { line: "average", fill: "average_day", reference: false },
+          ]
+            .map(chartStyle)
+            .find((style) => !ids.has(chartStyleId(style)));
+          return [...styles, next || chartStyle({ line: "average", fill: "average_shown" })];
+        }
+        if (act === "remove") return styles.filter((_, k) => k !== i);
+        const to = act === "up" ? i - 1 : i + 1;
+        if (to < 0 || to >= styles.length) return styles;
+        const moved = styles.slice();
+        [moved[i], moved[to]] = [moved[to], moved[i]];
+        return moved;
+      });
+    });
+  }
+
+  // Changes a panel's styles (a view without its own starts from those it inherits)
+  _editStyles(target, change) {
+    const config = { ...this._config };
+    const own = { ...(config[target] || {}) };
+    own.styles = change(chartViewOptions(this._config, target).styles, own).map(chartStyle);
+    if (own.styles.length < 2) delete own.style_switch;
+    config[target] = own;
+    this._changed(config);
+  }
+
+  // ---- Colors
+
+  _bindColors(colors) {
+    // While the picker is open only its swatch follows (redrawing would close the picker);
+    // the table follows when it closes (the area's colors follow the line's)
+    colors.addEventListener("input", (ev) => {
+      const input = ev.target.closest("input[type=color]");
+      if (!input) return;
+      input.parentElement.style.background = input.value;
+      input.closest(".cell").classList.remove("is-default");
+      this._setColor(input.dataset.group, input.dataset.key, input.value, false);
+    });
+    colors.addEventListener("change", (ev) => {
+      if (ev.target.closest("input[type=color]")) this._changed(this._config);
+    });
+    colors.addEventListener("click", (ev) => {
+      const button = ev.target.closest("button[data-key]");
+      if (button) this._setColor(button.dataset.group, button.dataset.key, undefined);
+      // All of a panel's own colors at once: the standard ones apply again
+      const all = ev.target.closest("button[data-reset]");
+      if (all) {
+        const config = { ...this._config };
+        delete config[all.dataset.reset];
+        this._changed(config);
+      }
+    });
+  }
+
+  _setColor(group, key, value, redraw = true) {
+    const colors = { ...(this._config[group] || {}) };
+    if (value === undefined) delete colors[key];
+    else colors[key] = value;
+    this._changed(withKey(this._config, group, colors), redraw);
+  }
+
+  // The table of colors; kept while a picker is open (redrawn only where values differ)
+  _renderColors() {
+    const e = languageStrings(EDITOR_STRINGS);
+    const t = languageStrings(STRINGS);
+    const root = this.shadowRoot.querySelector(".colors");
+    // Unchanged colors and theme: nothing to do (each swatch reads its color from the page)
+    const themes = (this._hass && this._hass.themes) || {};
+    const key = JSON.stringify([
+      this._config.line_colors,
+      this._config.fill_colors,
+      this._config.day_colors,
+      themes.theme,
+      themes.darkMode,
+      document.documentElement.lang,
+    ]);
+    if (root.dataset.key === key) return;
+    root.dataset.key = key;
+    const name = (state) =>
+      CHART_DAY_COLORS[state] ? t[state] : CHART_THEME_COLORS[state] ? e[`color_${state}`] : t.levels[state];
+    // What applies, as the card works it out (an own color, else the theme's or the level's for
+    // the line, the line's for the area), in the mode of that column
+    const applying = { light: chartColors(this._config, false), dark: chartColors(this._config, true) };
+    const part = { line_colors: "line", fill_colors: "fill", day_colors: "days" };
+    const applies = (group, state, mode) => applying[mode][part[group]][state];
+    const html = Object.entries(CHART_COLOR_STATES)
+      .map(([group, states]) => {
+        const rows = states
+          .map((state) => {
+            const cells = CHART_MODES.map((mode) => {
+              const key = `${state}_${mode}`;
+              const own = cssColor((this._config[group] || {})[key]);
+              const color = hexColor(root, applies(group, state, mode));
+              const title = `${name(state)} (${e[`mode_${mode}`]})`;
+              return `<div class="cell${own ? "" : " is-default"}"><label style="background:${color}" title="${title}"><input type="color" value="${color}" data-group="${group}" data-key="${key}" aria-label="${title}"></label><button type="button" data-group="${group}" data-key="${key}" title="${e.color_reset}" aria-label="${e.color_reset}: ${title}">✕</button></div>`;
+            }).join("");
+            return `<span class="name">${name(state)}</span>${cells}`;
+          })
+          .join("");
+        const own = Object.keys(this._config[group] || {}).length > 0;
+        const icon =
+          { line_colors: "mdi:chart-line-variant", fill_colors: "mdi:texture-box" }[group] || "mdi:calendar-blank";
+        return `<ha-expansion-panel outlined data-group="${group}"><ha-icon slot="leading-icon" icon="${icon}"></ha-icon><div slot="header" role="heading" aria-level="3">${e[group]}</div><div class="content"><p class="help">${e[`${group}_help`]}</p><div class="table"><span></span><span class="head">${e.mode_light}</span><span class="head">${e.mode_dark}</span>${rows}</div><button type="button" class="reset-all" data-reset="${group}"${own ? "" : " hidden"}>${e.color_reset_all}</button></div></ha-expansion-panel>`;
+      })
+      .join("");
+    if (root.dataset.html === html) return;
+    // Keep panels open across redraws
+    const open = new Set(
+      [...root.querySelectorAll("ha-expansion-panel")].filter((p) => p.expanded).map((p) => p.dataset.group)
+    );
+    root.dataset.html = html;
+    root.innerHTML = html;
+    for (const panel of root.querySelectorAll("ha-expansion-panel")) panel.expanded = open.has(panel.dataset.group);
   }
 }
 
@@ -6966,11 +11630,7 @@ class TibberPricesOutlookFeature extends HTMLElement {
     const low = barBaseline(prices);
     const high = Math.max(...prices);
     const format = priceFormatter(this._hass, prices);
-    const hourFormat = new Intl.DateTimeFormat(this._hass.language, {
-      hour: "2-digit",
-      hourCycle: "h23",
-      timeZone: timeZone(this._hass),
-    });
+    const hourFormat = homeCalendar(this._hass).hourLabel;
     const unit = this._stateObj.attributes.unit_of_measurement || "";
     const columns = hours.map((h) => {
       const current = Date.parse(h.start) <= now;
@@ -7001,6 +11661,21 @@ function registerElements() {
   if (!customElements.get("tibber-prices-now-card")) {
     customElements.define("tibber-prices-now-card", TibberPricesNowCard);
   }
+  if (!customElements.get("tibber-prices-chart-card")) {
+    customElements.define("tibber-prices-chart-card", TibberPricesChartCard);
+  }
+  if (!customElements.get("tibber-prices-card-window")) {
+    customElements.define("tibber-prices-card-window", TibberPricesCardWindow);
+  }
+  for (const [name, element] of [
+    ["tibber-prices-forecast-card-editor", TibberPricesForecastCardEditor],
+    ["tibber-prices-now-card-editor", TibberPricesNowCardEditor],
+  ]) {
+    if (!customElements.get(name)) customElements.define(name, element);
+  }
+  if (!customElements.get("tibber-prices-chart-card-editor")) {
+    customElements.define("tibber-prices-chart-card-editor", TibberPricesChartCardEditor);
+  }
   if (!customElements.get("tibber-prices-outlook-feature")) {
     customElements.define("tibber-prices-outlook-feature", TibberPricesOutlookFeature);
   }
@@ -7022,6 +11697,16 @@ function registerElements() {
         "The current price on the day's scale and what to make of it: as a tile, a gauge or a clock of the coming twelve hours.",
       preview: true,
       documentationURL: "https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards#now-card",
+    });
+  }
+  if (!window.customCards.some((card) => card.type === "tibber-prices-chart-card")) {
+    window.customCards.push({
+      type: "tibber-prices-chart-card",
+      name: "Tibber Prices Chart",
+      description:
+        "The price curve of the outlook, today, tomorrow or both days, in quarter hours or hours: drag across it to read every price.",
+      preview: true,
+      documentationURL: "https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards#chart-card",
     });
   }
   window.customCardFeatures = window.customCardFeatures || [];

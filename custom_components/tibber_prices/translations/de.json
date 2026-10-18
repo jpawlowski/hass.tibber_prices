@@ -1504,7 +1504,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Dashboard-YAML abrufen",
-      "description": "Liefert eine Dashboard-Ansicht für ein Zuhause als Startpunkt: die Preisempfehlung für jetzt, Charts und den Tagesverlauf mit Tageszeiten, heute und morgen. Kopiere die Antwort unter `views:` in den Rohkonfigurations-Editor eines deiner Dashboards und passe sie dann an. Es wird in kein Dashboard geschrieben, und spätere Updates ändern deine Kopie nicht. Nutzt ApexCharts Card, Config Template Card und TabDeck Card aus HACS; fehlen sie, zeigt die Antwort an Stelle der Charts einen Hinweis und von jeder Tab-Gruppe nur den ersten Tab.",
+      "description": "Liefert eine Dashboard-Ansicht für ein Zuhause als Startpunkt: die Preisempfehlung für jetzt, Charts und den Tagesverlauf mit Tageszeiten, heute und morgen. Kopiere die Antwort unter `views:` in den Rohkonfigurations-Editor eines deiner Dashboards und passe sie dann an. Es wird in kein Dashboard geschrieben, und spätere Updates ändern deine Kopie nicht. Die Charts zeichnet standardmäßig die Chart-Karte der Integration, ohne dass etwas zu installieren ist. Mit ApexCharts als Chart-Karte nutzen sie ApexCharts Card, Config Template Card und TabDeck Card aus HACS; fehlen sie, zeigt die Antwort an Stelle der Charts einen Hinweis und von jeder Tab-Gruppe nur den ersten Tab.",
       "fields": {
         "entry_id": {
           "name": "Eintrags-ID",
@@ -1521,6 +1521,10 @@
         "chart_resolutions": {
           "name": "Chart-Auflösungen",
           "description": "15-Minuten-Intervalle, Stundenmittel pro Uhrstunde oder beides. Mit beidem (Standard) hat jeder Chart einen Umschalter."
+        },
+        "chart_card": {
+          "name": "Chart-Karte",
+          "description": "Was die Charts zeichnet: die eigene Chart-Karte der Integration (Standard: nichts zu installieren, ein Cursor über der Kurve zeigt jeden Preis) oder ApexCharts-Charts in Tabs (ApexCharts Card, Config Template Card und TabDeck Card aus HACS)."
         },
         "language": {
           "name": "Sprache",
@@ -2671,6 +2675,12 @@
         "today": "Heute",
         "tomorrow": "Morgen",
         "two_days": "2 Tage"
+      }
+    },
+    "dashboard_chart_card": {
+      "options": {
+        "tibber_prices": "Chart-Karte von Tibber Prices",
+        "apexcharts": "ApexCharts"
       }
     }
   }

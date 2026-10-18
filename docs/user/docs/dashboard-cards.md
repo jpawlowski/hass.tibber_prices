@@ -3,8 +3,11 @@
 The integration brings its own cards for your dashboards. There's nothing to install: they come with the integration, appear in the card picker with a preview and a visual editor (YAML works as well), and you only pick your home.
 
 - **[Forecast Card](#forecast-card)**: the price now, the coming hours, the parts of the day and today and tomorrow, like a weather forecast. Tap anything for its details.
-- **[Now Card](#now-card)**: only the price now and what to make of it, as a tile, a gauge or a clock of the coming twelve hours. Made for a main dashboard; a tap can open the forecast card in a window.
+- **[Now Card](#now-card)**: only the price now and what to make of it, as a tile, a gauge or a clock of the coming twelve hours. Made for a main dashboard; a tap can open the forecast card or the chart card in a window.
+- **[Chart Card](#chart-card)**: the price curve, read by moving a cursor across it: outlook, today, tomorrow and both days, in 15 or 60 minutes, with the price in a line or a ring on top.
 - **[Price Outlook Tile Feature](#price-outlook-tile-feature)**: the coming hours as small bars in a tile you already have.
+
+The cards also open each other in a window (see **[Cards inside cards](#cards-inside-cards)**): a now tile on your main dashboard can open the whole forecast with a tap and the price chart from a small icon.
 
 For a complete dashboard built around them, with price charts, see **[Dashboard Examples](dashboard-examples.md#complete-dashboard-as-a-starting-point)**.
 
@@ -54,6 +57,11 @@ days: # Optional: options of the day rows
   now_decimals: entity # Optional: for the price now in today's details
   hide: [] # Optional: compare, pointer, now, level, volatility, badge, low, high
   hide_details: false
+chart_button: false # Optional: true shows an icon top right that opens the chart card in a window
+chart_icon: mdi:chart-line # Optional: that icon
+window_width: medium # Optional: how wide that window is: narrow, medium (default), wide or full (on phones always full screen)
+chart: # Optional, with chart_button: the chart card's options, exactly as for the card on its own (its home is this card's)
+  views: [outlook, today, tomorrow, two_days]
 action_button: false # Optional: true runs the card's actions only from a button in the footer
 action_button_text: "" # Optional: its label; empty fits the action (e.g. More info)
 action_button_position: bottom # Optional: bottom (default) or top
@@ -86,7 +94,9 @@ Every percentage the card shows next to prices (tiles, chips, comparisons, price
 
 **Now** gets more: the big number is the **current price** of the quarter hour running now, with how long it applies and what the next quarter hour costs. The hour's (or part of the day's) average and the day's average sit below in tiles of their own, so the two can't be mistaken for each other. **Today** leads the same way with the current price; its tiles show the day's average and the cheapest hour still to come today. Until tomorrow's prices are in, **Tomorrow** opens too: it says when they usually come, and shows its tiles and hours as empty placeholders. Once the prices arrive, the open window fills in by itself. A highlighted line says whether a best or peak price period is running (and until when) or when the next best price period begins, a sentence ranks the price among today's quarter hours ("more expensive than 85 % of today's quarter hours"), and the facts add what the price is made of (energy price, taxes and fees). Left open, the window follows the price as the quarter hours change. The current price has as many decimals as **Current Electricity Price** (`current_interval_price`) shows in Home Assistant (set under the entity's display precision); **Decimals of the current price** (`now_decimals`) in a section's panel sets a fixed number instead. Hovering over the **Now** column shows the current price too. **What do the marks mean?** at the bottom opens the legend, also when the card's own legend button is hidden. With the mouse, hovering over a bar, span, chip, arrow, period line or day span always shows a one-line hint with its values. To have taps run the card's action instead in a section, switch on **Turn off details on tap** in its panel (`hide_details` under `hours`, `day_parts` or `days`).
 
-**The card's action as a button:** by default, tapping anywhere outside the details runs `tap_action`. Switch on **Card action via its own button** (`action_button`) for a small text button instead, with a label of your own (`action_button_text`) or one that fits the action. It sits at the bottom right of the card, in the footer line when that is the last one, or at the top right (`action_button_position: top`; in the compact layout left of the section switch). Then only that button runs the card's actions, so tapping the card never takes you somewhere by accident. Keyboard and screen reader users reach the action either way: when the card's details are buttons themselves, a button for the card's action appears as soon as it gets keyboard focus.
+**Where the card's actions run:** with a **Now** section on the card, that section is where your tap, hold and double tap actions run, like the top line of the chart card: a tap there runs `tap_action` (instead of the details of now, as long as a tap action is set), while the hours, parts of the day and days keep opening their details and the rest of the card does nothing. Without a **Now** section, tapping anywhere outside the details runs `tap_action`, as on other cards.
+
+**The card's action as a button:** instead of running on the card, switch on **Card action via its own button** (`action_button`) for a small text button, with a label of your own (`action_button_text`) or one that fits the action. It sits at the bottom right of the card, in the footer line when that is the last one, or at the top right (`action_button_position: top`; in the compact layout left of the section switch). Then only that button runs the card's actions, so tapping the card never takes you somewhere by accident. Keyboard and screen reader users reach the action either way: when the card's details are buttons themselves, a button for the card's action appears as soon as it gets keyboard focus.
 
 `tap_action`, `hold_action` and `double_tap_action` work like on any Home Assistant card (more info, navigate, URL, perform action, assist, none); the visual editor offers them under **Interactions**. Hold and double tap run the card's actions on hours, parts of the day and days too. As on Home Assistant's own cards, a card with an action lightens or darkens slightly under the mouse.
 
@@ -127,12 +137,16 @@ average: mean # Optional: the day's average on the scale: auto, mean (default) o
 now_decimals: entity # Optional: decimals of the current price: entity (default) or 0–4
 hide: [] # Optional: verdict (what to make of it), trend (the icon top right)
 appearance: auto # Optional: auto, light or dark
-tap_opens: details # Optional, what a tap opens without a tap action: details (of now, default) or forecast (the forecast card in a window)
-window_width: medium # Optional, with tap_opens: forecast: narrow (like More info), medium (default), wide or full (on phones always full screen)
+tap_opens: details # Optional, what a tap opens without a tap action: details (of now, default), forecast or chart (that card in a window)
+window_width: medium # Optional, for every window this card opens: narrow (like More info), medium (default), wide or full (on phones always full screen)
 forecast: # Optional, with tap_opens: forecast: the forecast card's options, exactly as for the card on its own (its home is this card's)
   show: [now, hours, day_parts, days]
   layout: detailed
   title: Strompreise # The window's title
+chart_button: false # Optional: true shows an icon top right (on the tile at its right end) that opens the chart card in a window
+chart_icon: mdi:chart-line # Optional: that icon
+chart: # Optional, with tap_opens: chart or chart_button: the chart card's options
+  views: [outlook, today, tomorrow]
 tap_action: # Optional, default: none (a tap opens what tap_opens says)
   action: navigate
   navigation_path: /dashboard-prices # e.g. a dashboard with the forecast card and charts
@@ -144,10 +158,96 @@ tap_action: # Optional, default: none (a tap opens what tap_opens says)
 
 All three show the trend as a small icon at the top right, like the forecast card's **Now**; leave it out with `hide: [trend]`, and what to make of it with `hide: [verdict]`.
 
-In a sections view the tile takes one row and the gauge and clock four and five, all half a section wide; the dial grows with the space you give it. A tap opens the details of now. Set **Tap opens** (`tap_opens`) to **Forecast card in a window** (`forecast`) and a tap opens the whole [Forecast Card](#forecast-card) in a window instead: medium wide on a computer by default (**Window width**, `window_width`: narrow like Home Assistant's **More info**, medium, wide or the full screen width), full screen on a phone, and used exactly like the card on its own (its details, legend, scrolling and switch work the same; Escape or the close button lead back). Set it up in the **Forecast card** panel of the editor, which is the forecast card's own editor (under `forecast` in YAML; the home is the now card's, the window shows the title). The card in the window stands on its own: it doesn't share the day scale or legend with the cards on the dashboard. Set a tap action (e.g. **Navigate** to a dashboard with more) and a tap runs that instead of either.
+In a sections view the tile takes one row and the gauge and clock four and five, all half a section wide; the dial grows with the space you give it. A tap opens the details of now. Set **Tap opens** (`tap_opens`) to **Forecast card in a window** (`forecast`) or **Chart card in a window** (`chart`) and a tap opens that card instead; **Icon for the chart card** (`chart_button`) adds a small icon at the right that opens the chart card, so one tile gives you the forecast with a tap and the curve from its icon. How the windows work and how you set up the cards in them is described under **[Cards inside cards](#cards-inside-cards)**. Set a tap action (e.g. **Navigate** to a dashboard with more) and a tap runs that instead.
 
 ![The forecast card opened in a window from a now card](/img/cards/now-window.jpg#gh-light-mode-only)
 ![The forecast card opened in a window from a now card](/img/cards/now-window-dark.jpg#gh-dark-mode-only)
+
+## Chart Card
+
+**Tibber Prices Chart** draws the price curve, and you read it by moving a cursor across it: the price, its time and how it relates to the average appear in the line on top, never under your finger. It reads the prices the integration already has, so it draws at once, and like the other cards it comes with the integration. It's the integration's own answer to the ApexCharts dashboard: the same zoom levels as tabs, without anything to install (ApexCharts stays available, see **[Charts](chart-examples.md)**).
+
+![Chart card: the price curve with the price in the line on top, a style switch, and below one card with the price in a ring and one with only the outlook](/img/cards/chart.jpg#gh-light-mode-only)
+![Chart card: the price curve with the price in the line on top, a style switch, and below one card with the price in a ring and one with only the outlook](/img/cards/chart-dark.jpg#gh-dark-mode-only)
+
+```yaml
+type: custom:tibber-prices-chart-card
+device_id: YOUR_HOME_DEVICE_ID
+views: [outlook, today, tomorrow, two_days] # Optional, default: these four, in this order (also: yesterday); the first one opens first
+header: chips # Optional: chips (the price with its chips in a line, default), dial (the price in a ring) or none
+price_unit: auto # Optional: auto, base (€/kWh) or subunit (ct/kWh)
+average: mean # Optional: what the 60-minute prices and the dashed line are: mean (default), median or auto
+appearance: auto # Optional: auto, light or dark
+tomorrow_pending: placeholder # Optional: until tomorrow's prices are in, the tomorrow view says when they come (placeholder), stays away (hide) or shows yesterday instead (yesterday)
+all_views: # Optional: what every view does, unless its own options say otherwise
+  resolution: switch # switch (15 / 60 min, starts at 15), switch_hour (starts at 60), quarter_hour or hour
+  styles: # One or more ways to draw the curve; the first is the default
+    - { line: level, fill: level, reference: true } # line: level, average or single; fill: level, average_shown or average_day; reference: the dashed average line
+    - { line: average, fill: average_shown, reference: true, name: Simple }
+  style_switch: true # Optional: a small switch in the chart changes between the styles
+  hide: [] # Optional: day_word, day_weekday, day_shade, reference_label, header_average, low, high, periods, badge, now_line_quarter_hour, now_line_hour
+  header_level: always # Optional: the price level in the top line: always, reading (only while the cursor is moved) or never
+  header_level_at: [] # Optional: only at these levels, e.g. [very_cheap, very_expensive]
+  header_delta: always # Optional: the gap from the average: always, reading or never
+  header_delta_from: 0 # Optional: only from a gap of this many percent
+today: # Optional: a view's own options, the same keys as all_views
+  resolution: quarter_hour
+units: { header: full, tag: full, axis: none } # Optional, per place: full (ct/kWh), currency (ct) or none
+axis_decimals: auto # Optional: decimals of the price axis: auto (one in €/kr, none in ct/øre) or 0–3
+axis_title_x: false # Optional: "Time" under the hours
+axis_title_y: false # Optional: "Price" up the price axis
+grid_line_width: 0.75 # Optional: the price lines, in px (0: none)
+grid_line_strength: 12 # Optional: their strength in percent of the text color (empty: the theme's divider color)
+day_line_width: 1 # Optional: the line where a day begins, in px (0: none)
+day_line_strength: 20 # Optional: its strength (empty: as the price lines)
+day_shade_strength: 6 # Optional: the soft shade off that line, towards the other day (0: none)
+day_shade_width: 2.5 # Optional: how far it reaches, in hours
+line_colors: { cheap_light: "#2e7d32", cheap_dark: "#66bb6a" } # Optional: own colors, per state and mode (now, single, below, above and the five levels)
+fill_colors: {} # Optional: the same for the area (unset: the line's)
+day_colors: {} # Optional: the pills of yesterday, today and tomorrow
+tap_opens: nothing # Optional: nothing (default) or forecast (the forecast card in a window)
+window_width: medium # Optional: narrow, medium, wide or full
+forecast: # Optional, with tap_opens: forecast: the forecast card's options
+  show: [now, hours, day_parts, days]
+tap_action: # Optional, on the card's top line (the curve is the cursor's)
+  action: more-info
+```
+
+**Reading the curve:** with a mouse the cursor follows the pointer. On a phone, hold your finger on the curve for a moment (it ticks), then drag sideways: the cursor follows it, slot by slot, and stays where you let go, so you can read in peace. It goes back to now by itself after 30 seconds. A tap sets it at once; a vertical swipe scrolls the page as usual. With the keyboard, the arrow keys move it. The cursor's tag above the curve shows the time and price, with a badge on its corner in a best or peak price period (a ring when the period covers only part of an hour). At rest the cursor sits on the price now; in 15-minute views its halo breathes gently, a quiet sign that the card shows the live price (while you read prices, a line marks now instead).
+
+**The top line** shows the time, then the day as a pill (Now in its own color, with the quarter hour's price in 60-minute views; in a view of one day its tab names the day, so there's no pill), and below it the price with chips for how far it lies from the average, the average itself (where the chart has no dashed line), the price level and a best or peak price period. Everything has a fixed place, so the line stays calm while you move the cursor; changes ease over in a fraction of a second. **Top line** (`header`) can show the price in a **ring** instead (`dial`), filled as far as the price lies between the view's low and high, in the area's color, or nothing at all (`none`). Under **Level and gap in the top line** you decide per view whether the level and the gap show always, only while you read prices, or never, and only at certain levels or from a certain gap on.
+
+**Views and resolution:** each view is a tab under the curve. **Outlook** starts two hours before now and runs to the end of the known prices, **Today**, **Tomorrow** and **Yesterday** show one day, **2 days** today and tomorrow. Each shows 15-minute prices or hourly averages, or offers a **15 min | 60 min** switch in the chart (`resolution`). The resolution you pick holds for all views until you reload the page, and both share one scale, so switching never makes the curve jump.
+
+**Until tomorrow's prices are in** (`tomorrow_pending`, right under the views in the editor): the **Tomorrow** tab says when they usually come, stays away, or makes way for **Yesterday** until then. You don't need to list Yesterday in the views for that: it shows up before Today (in order of time) and goes again once tomorrow's prices arrive.
+
+**Styles:** a style is a line color (`level`: the price level's colors; `average`: like the area; `single`: one color) and an area (`level`, or below and above an average: of all prices shown, `average_shown`, as in Tibber's app, or of each day, `average_day`), with or without the dashed average line. List several under `styles` and switch on **Switchable in the card** (`style_switch`): two styles get small buttons in the chart, more a menu. The editor shows a preview of each.
+
+**Every view its own:** **All views** sets what every view does; each view's panel can override it (empty fields follow **All views**). The editor shows the values in effect and saves only what you change.
+
+**Lines, axes and colors:** the price lines and the day line are thin and grey by default; their thickness and strength are a share of the text color, so one value suits light and dark themes. Midnight on the time axis is bold, and a soft shade off the day line falls towards the other day. The axes can carry titles and the unit; the price axis has as many decimals as fit the unit unless you set them. **Line colors**, **Area colors** and **Day colors** take colors of your own per state, for light and dark separately; empty means the theme's.
+
+**Tap and windows:** the card's actions run on its top line (the curve is the cursor's). **Tap opens** (`tap_opens: forecast`) opens the forecast card in a window; see **[Cards inside cards](#cards-inside-cards)**.
+
+![On a phone: the chart card](/img/cards/chart-phone.jpg#gh-light-mode-only)
+![On a phone: the chart card](/img/cards/chart-phone-dark.jpg#gh-dark-mode-only)
+
+## Cards inside cards
+
+The cards can open each other in a window, which is handy on a main dashboard with little room:
+
+| Card     | Opens in a window                                                                                     |
+| -------- | ----------------------------------------------------------------------------------------------------- |
+| Now      | the forecast card or the chart card on a tap (`tap_opens`), and the chart card from its icon (`chart_button`) |
+| Forecast | the chart card from its icon (`chart_button`)                                                         |
+| Chart    | the forecast card on a tap on its top line (`tap_opens: forecast`)                                    |
+
+The card in the window is set up exactly like the card on its own, under its key in the outer card (`forecast:` or `chart:`); the home is the outer card's and the window shows the title. **Window width** (`window_width`) sets how wide the window is on a computer: narrow like Home Assistant's **More info**, medium (default), wide or the full screen width; on a phone it's full screen. It works like the card on its own (its details, legend, cursor and switches), Escape or the close button lead back. A card in a window stands on its own: it doesn't share the day scale or legend with the cards on the dashboard, and it opens no further windows.
+
+**In the visual editor**, each card held this way gets a row at the end of the editor, such as **Chart card in a window ›**. It opens that card's own editor one level down, with an arrow back to the outer card, as Home Assistant's own stack cards do; what you change there is saved under the outer card's `chart:` or `forecast:`.
+
+![The chart card opened in a window from the forecast card's icon](/img/cards/chart-window.jpg#gh-light-mode-only)
+![The chart card opened in a window from the forecast card's icon](/img/cards/chart-window-dark.jpg#gh-dark-mode-only)
 
 ## Price Outlook Tile Feature
 

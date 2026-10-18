@@ -9,7 +9,8 @@ action again gives the current version.
 The view comes from dashboard_template.yaml; its placeholders are resolved here:
 entities by translation key (so the template works in any language), the device of such an
 entity (`device:<key>`, for cards set up by the home, like the forecast card), labels from the
-`dashboard` area of custom_translations, chart cards from get_apexcharts_yaml.
+`dashboard` area of custom_translations, the charts from the integration's chart card or
+(`chart_card: apexcharts`) from get_apexcharts_yaml.
 
 Service: tibber_prices.get_dashboard_yaml
 Response: {"views": [...]} plus, where something is missing, `missing_entities` (disabled sensors
@@ -63,6 +64,16 @@ CHARTS: Final = {
 
 RESOLUTIONS: Final = ("interval", "hourly")
 
+# What draws the price curve: the integration's own chart card (default: nothing to install), or
+# ApexCharts charts in TabDeck tabs
+CHART_CARDS: Final = ("tibber_prices", "apexcharts")
+# The chart card's resolution (for all its views) for the resolutions asked for (both: switchable)
+CHART_CARD_RESOLUTIONS: Final = {
+    frozenset(RESOLUTIONS): "switch",
+    frozenset({"interval"}): "quarter_hour",
+    frozenset({"hourly"}): "hour",
+}
+
 DASHBOARD_SERVICE_SCHEMA = vol.Schema(
     {
         vol.Optional("entry_id", default=""): cv.string,
@@ -72,6 +83,7 @@ DASHBOARD_SERVICE_SCHEMA = vol.Schema(
         vol.Optional("chart_resolutions", default=list(RESOLUTIONS)): vol.All(
             cv.ensure_list, [vol.In(list(RESOLUTIONS))]
         ),
+        vol.Optional("chart_card", default=CHART_CARDS[0]): vol.In(CHART_CARDS),
         vol.Optional("language"): vol.In(TRANSLATION_LANGUAGES),
     }
 )
@@ -106,6 +118,7 @@ class _Resolver:
         devices: dict[str, str],
         charts: frozenset[str] = frozenset(CHARTS),
         resolutions: frozenset[str] = frozenset(RESOLUTIONS),
+        chart_card: str = CHART_CARDS[0],
         target: ServiceTarget | None = None,
     ) -> None:
         self.hass = hass
@@ -113,6 +126,7 @@ class _Resolver:
         self.target = target
         self.charts = charts
         self.resolutions = resolutions
+        self.chart_card = chart_card
         self.chart_data = chart_data
         self.entities = entities
         self.devices = devices
@@ -149,6 +163,10 @@ class _Resolver:
         if isinstance(node, dict):
             if "$chart" in node:
                 return await self.chart(node)
+            if "$chart_card" in node:
+                return await self.chart_card_node(node)
+            if "$chart_into" in node:
+                return await self.chart_into_node(node)
             if node.get("type") == "custom:tabdeck-card":
                 return await self.tabdeck(node)
             resolved = {name: await self.resolve(value, name) for name, value in node.items()}
@@ -168,6 +186,43 @@ class _Resolver:
         if isinstance(node, str):
             return self.string(node)
         return node
+
+    async def chart_card_node(self, node: dict[str, Any]) -> dict[str, Any]:
+        """Keep the way of drawing the charts that was asked for; the chart card gets its views."""
+        if node["$chart_card"] != self.chart_card:
+            raise _DroppedError
+        node = {name: value for name, value in node.items() if name != "$chart_card"}
+        if self.chart_card == "apexcharts":
+            return await self.resolve(node)
+        chart = self.chart_card_options()
+        if chart is None:
+            raise _DroppedError
+        return _merged(await self.resolve(node), chart)
+
+    async def chart_into_node(self, node: dict[str, Any]) -> dict[str, Any]:
+        """
+        A card opening the chart card in a window: that one gets the charts asked for.
+
+        The marker names the key the chart card's options go under and, in "with", the card's
+        options that open it (its way in). With ApexCharts for the charts, or none asked for,
+        those are left out and the card stays without that way in.
+        """
+        marker = node["$chart_into"]
+        resolved = await self.resolve({name: value for name, value in node.items() if name != "$chart_into"})
+        chart = self.chart_card_options()
+        if chart is None:
+            return resolved
+        return _merged(_merged(resolved, marker.get("with", {})), {marker["key"]: chart})
+
+    def chart_card_options(self) -> dict[str, Any] | None:
+        """The chart card's views and resolution asked for (None: no chart card, or ApexCharts instead)."""
+        if self.chart_card == "apexcharts":
+            return None
+        views = [chart for chart in CHARTS if chart in self.charts]
+        resolution = CHART_CARD_RESOLUTIONS.get(self.resolutions)
+        if not views or not resolution:
+            return None
+        return {"views": views, "all_views": {"resolution": resolution}}
 
     async def tabdeck(self, node: dict[str, Any]) -> dict[str, Any]:
         """
@@ -291,6 +346,7 @@ async def handle_dashboard_yaml(call: ServiceCall) -> dict[str, Any]:
         devices=devices,
         charts=frozenset(call.data.get("charts", list(CHARTS))),
         resolutions=frozenset(call.data.get("chart_resolutions", list(RESOLUTIONS))),
+        chart_card=call.data.get("chart_card", CHART_CARDS[0]),
         target=target,
     )
     views = [await resolver.resolve(view) for view in template["views"]]

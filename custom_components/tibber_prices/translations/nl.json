@@ -1504,7 +1504,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Dashboard-YAML ophalen",
-      "description": "Geeft een dashboardweergave voor één woning als startpunt: het prijsadvies voor nu, grafieken en het dagverloop met dagdelen, vandaag en morgen. Kopieer het antwoord onder `views:` naar de ruwe configuratie-editor van een van je dashboards en pas het daarna aan. Er wordt niets naar een dashboard geschreven, en latere updates veranderen je kopie niet. Gebruikt ApexCharts Card, Config Template Card en TabDeck Card uit HACS; zonder deze toont het antwoord een hint in plaats van de grafieken en alleen het eerste tabblad van elke tabgroep.",
+      "description": "Geeft een dashboardweergave voor één woning als startpunt: het prijsadvies voor nu, grafieken en het dagverloop met dagdelen, vandaag en morgen. Kopieer het antwoord onder `views:` naar de ruwe configuratie-editor van een van je dashboards en pas het daarna aan. Er wordt niets naar een dashboard geschreven, en latere updates veranderen je kopie niet. De grafieken komen standaard van de eigen grafiekkaart van de integratie, zonder dat je iets hoeft te installeren. Met ApexCharts als grafiekkaart gebruiken ze ApexCharts Card, Config Template Card en TabDeck Card uit HACS; zonder deze toont het antwoord een hint in plaats van de grafieken en alleen het eerste tabblad van elke tabgroep.",
       "fields": {
         "entry_id": {
           "name": "Invoer-ID",
@@ -1521,6 +1521,10 @@
         "chart_resolutions": {
           "name": "Grafiekresoluties",
           "description": "Kwartierintervallen, uurgemiddelden per klokuur of beide. Met beide (standaard) heeft elke grafiek een schakelaar ertussen."
+        },
+        "chart_card": {
+          "name": "Grafiekkaart",
+          "description": "Wat de grafieken tekent: de eigen grafiekkaart van de integratie (standaard: niets te installeren, een cursor over de curve toont elke prijs) of ApexCharts-grafieken in tabbladen (ApexCharts Card, Config Template Card en TabDeck Card uit HACS)."
         },
         "language": {
           "name": "Taal",
@@ -2671,6 +2675,12 @@
         "today": "Vandaag",
         "tomorrow": "Morgen",
         "two_days": "2 dagen"
+      }
+    },
+    "dashboard_chart_card": {
+      "options": {
+        "tibber_prices": "Grafiekkaart van Tibber Prices",
+        "apexcharts": "ApexCharts"
       }
     }
   }

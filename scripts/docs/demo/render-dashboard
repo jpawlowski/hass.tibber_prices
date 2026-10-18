@@ -24,6 +24,12 @@ import yaml
 
 ROOT = Path(__file__).resolve().parents[3]
 DASHBOARD = {"url_path": "tibber-demo", "title": "Tibber Demo", "icon": "mdi:flash", "show_in_sidebar": True}
+APEX_DASHBOARD = {
+    "url_path": "tibber-demo-apex",
+    "title": "Tibber Demo (ApexCharts)",
+    "icon": "mdi:chart-bell-curve",
+    "show_in_sidebar": False,
+}
 CARDS_DASHBOARD = {"url_path": "tibber-cards", "title": "Tibber Cards", "icon": "mdi:cards", "show_in_sidebar": True}
 CARDS_TEMPLATE = Path(__file__).resolve().parent / "cards.yaml"
 
@@ -76,6 +82,19 @@ async def render(url: str, token: str, entry_title: str, language: str | None) -
                 sys.stderr.write(f"Warning: {key}: {response[key]}\n")
 
         await save(ha, DASHBOARD, response["views"])
+        # The same with ApexCharts for the charts, for the screenshots of the chart alternative
+        result = await ha.command(
+            "call_service",
+            domain="tibber_prices",
+            service="get_dashboard_yaml",
+            service_data={
+                "entry_id": entry_id,
+                "chart_card": "apexcharts",
+                **({"language": language} if language else {}),
+            },
+            return_response=True,
+        )
+        await save(ha, APEX_DASHBOARD, result["response"]["views"])
         # The home's own entities (not a time-travel view's), by translation key
         registry = await ha.command("config/entity_registry/list")
         home = {
@@ -88,7 +107,7 @@ async def render(url: str, token: str, entry_title: str, language: str | None) -
         }
         views = resolve(yaml.safe_load(CARDS_TEMPLATE.read_text(encoding="utf-8"))["views"], home)
         await save(ha, CARDS_DASHBOARD, views)
-    for dashboard in (DASHBOARD, CARDS_DASHBOARD):
+    for dashboard in (DASHBOARD, APEX_DASHBOARD, CARDS_DASHBOARD):
         sys.stdout.write(f"Saved {url}/{dashboard['url_path']}\n")
 
 

@@ -2,6 +2,8 @@
 
 This guide showcases the different chart configurations available through the `tibber_prices.get_apexcharts_yaml` action.
 
+> **Looking for the simplest way?** The integration's own **[Chart Card](dashboard-cards.md#chart-card)** draws the price curve with nothing to install. ApexCharts stays the choice when you already use it a lot and want your price charts to look like your other charts.
+
 > **Quick Start:** Call the action with your desired parameters, copy the generated YAML, and paste it into your Lovelace dashboard!
 
 > **Using another card or integration?** See **[Third-Party Cards & Integrations](chart-third-party.md)**.

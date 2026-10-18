@@ -26,7 +26,7 @@
 - **[🔧 Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/)** — Architecture, contributing, development
 
 **Quick Links:**
-[Installation](https://jpawlowski.github.io/hass.tibber_prices/user/installation) · [Sensor Reference](https://jpawlowski.github.io/hass.tibber_prices/user/sensor-reference) · [Dashboard Cards](https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards) · [Charts](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples) · [Automations](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) · [FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq) · [Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)
+[Installation](https://jpawlowski.github.io/hass.tibber_prices/user/installation) · [Sensor Reference](https://jpawlowski.github.io/hass.tibber_prices/user/sensor-reference) · [Dashboard Cards](https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards) · [ApexCharts](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples) · [Automations](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) · [FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq) · [Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)
 
 ## ✨ Why This Integration?
 
@@ -50,10 +50,10 @@ Most Tibber integrations give you a single price sensor. This one gives you a **
 
 ### 📊 Visualize Beautifully
 
-- **Dashboard cards of its own** — Nothing to install, a visual editor, and you only pick your home: the **Forecast Card** shows the price now, the coming hours, the parts of the day and today and tomorrow like a weather forecast, with details on every tap; the **Now Card** puts the price now on today's scale as a tile, a gauge or a 12-hour clock ([see the cards](https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards))
-- **Auto-generated ApexCharts** — For the full price curve, one action call generates a complete chart configuration with dynamic Y-axis scaling and color-coded price levels ([see examples](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples))
+- **Dashboard cards of its own** — Nothing to install, a visual editor, and you only pick your home: the **Forecast Card** shows the price now, the coming hours, the parts of the day and today and tomorrow like a weather forecast, with details on every tap; the **Now Card** puts the price now on today's scale as a tile, a gauge or a 12-hour clock; the **Chart Card** draws the price curve, read by sliding a cursor across it. They open each other in windows ([see the cards](https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards))
 - **Dynamic icons & colors** — Every sensor adapts its icon and color to the current price state — cheap prices glow green, expensive ones turn red ([icon guide](https://jpawlowski.github.io/hass.tibber_prices/user/dynamic-icons))
 - **Chart data export** — Flexible data API with filtering, resolution control, and multiple output formats for any visualization card
+- **ApexCharts as an alternative** — Already using ApexCharts everywhere? One action call generates complete charts in the same look as your others ([see examples](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples))
 
 ### 📈 Understand Your Market
 
@@ -116,6 +116,15 @@ The integration brings its own cards. Add them from the card picker, pick your h
 </picture>
 
 **Forecast Card** — the coming hours and parts of the day like a weather forecast, in the price level's colors, with best and peak price periods underlined, and today and tomorrow on one scale. Tap any hour, part of the day or day for its details.
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/cards/chart-dark.jpg">
+  <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/cards/chart.jpg" width="800" alt="Chart card: the price curve in the price level's colors, with the price at the cursor in the line on top">
+</picture>
+
+**Chart Card** — the price curve for the outlook, today, tomorrow or both days, in 15 or 60 minutes. Slide across it (or hold and drag on a phone) to read each price, its level and how far it lies from the average, in a line or a ring on top. Several styles to switch between, including the simple one of Tibber's app.
+
+**Cards inside cards** — a now tile on your main dashboard opens the whole forecast with a tap and the price chart from a small icon; the editor shows each card held this way one level down, as Home Assistant's own stack cards do.
 
 📖 **[Dashboard Cards →](https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards)** — every option, the tile feature, and how to read the cards
 
@@ -185,9 +194,9 @@ automation:
 
 📖 **[More automations →](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples)** — EV charging, heat pump control, price notifications, and more
 
-## 📈 Chart Visualizations
+## 📈 ApexCharts as an Alternative
 
-For the full price curve, generate [ApexCharts](https://github.com/RomRider/apexcharts-card) cards with a single action call — dynamic Y-axis, color-coded price levels, and multiple chart modes included.
+The chart card covers the price curve with nothing to install. If you use [ApexCharts](https://github.com/RomRider/apexcharts-card) a lot and want your price charts to look like the others on your dashboards, generate them with a single action call — dynamic Y-axis, color-coded price levels, and multiple chart modes included. `get_dashboard_yaml` builds the whole dashboard with them, too (`chart_card: apexcharts`).
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/docs/user/static/img/charts/two-days-dark.jpg">

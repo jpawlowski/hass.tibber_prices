@@ -152,6 +152,15 @@ get_dashboard_yaml:
             - interval
             - hourly
           translation_key: resolution
+    chart_card:
+      required: false
+      default: tibber_prices
+      selector:
+        select:
+          options:
+            - tibber_prices
+            - apexcharts
+          translation_key: dashboard_chart_card
     language:
       required: false
       example: de

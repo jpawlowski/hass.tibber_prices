@@ -18,6 +18,7 @@
   },
   "dashboard": {
     "overview": "Elpriser",
+    "compact": "Kompakt",
     "missing_card": "Det här kortet behöver {card} från HACS.",
     "today": "Idag",
     "tomorrow": "Imorgon",
@@ -25,7 +26,7 @@
     "two_days": "2 dagar",
     "outlook": "Framåt",
     "resolution_15min": "15 min",
-    "resolution_hourly": "1 h",
+    "resolution_hourly": "60 min",
     "notification": {
       "title": "Tibber Prices: dashboardvyer ofullständiga",
       "intro": "Du har just skapat dashboardvyer med åtgärden ”Hämta dashboard-YAML”. Vissa delar kunde inte tas med:",

@@ -1504,7 +1504,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Hämta dashboard-YAML",
-      "description": "Ger en dashboardvy för ett hem som en startpunkt: prisbedömningen för nu, diagram och dagens förlopp med tider på dygnet, idag och imorgon. Kopiera svaret under `views:` till råkonfigurationsredigeraren för en av dina dashboards och anpassa det sedan. Inget skrivs till någon dashboard, och senare uppdateringar ändrar inte kopian. Använder ApexCharts Card, Config Template Card och TabDeck Card från HACS; utan dem visar svaret en hint i stället för diagrammen och bara den första fliken i varje flikgrupp.",
+      "description": "Ger en dashboardvy för ett hem som en startpunkt: prisbedömningen för nu, diagram och dagens förlopp med tider på dygnet, idag och imorgon. Kopiera svaret under `views:` till råkonfigurationsredigeraren för en av dina dashboards och anpassa det sedan. Inget skrivs till någon dashboard, och senare uppdateringar ändrar inte kopian. Diagrammen ritas som standard av integrationens eget diagramkort, utan att något behöver installeras. Med ApexCharts som diagramkort använder de ApexCharts Card, Config Template Card och TabDeck Card från HACS; utan dem visar svaret en hint i stället för diagrammen och bara den första fliken i varje flikgrupp.",
       "fields": {
         "entry_id": {
           "name": "Entry-ID",
@@ -1521,6 +1521,10 @@
         "chart_resolutions": {
           "name": "Diagramupplösningar",
           "description": "15-minutersintervall, timmedel per klocktimme eller båda. Med båda (standard) har varje diagram en växel mellan dem."
+        },
+        "chart_card": {
+          "name": "Diagramkort",
+          "description": "Vad som ritar diagrammen: integrationens eget diagramkort (standard: inget att installera, en markör över kurvan visar varje pris) eller ApexCharts-diagram i flikar (ApexCharts Card, Config Template Card och TabDeck Card från HACS)."
         },
         "language": {
           "name": "Språk",
@@ -2671,6 +2675,12 @@
         "today": "Idag",
         "tomorrow": "Imorgon",
         "two_days": "2 dagar"
+      }
+    },
+    "dashboard_chart_card": {
+      "options": {
+        "tibber_prices": "Diagramkortet från Tibber Prices",
+        "apexcharts": "ApexCharts"
       }
     }
   }

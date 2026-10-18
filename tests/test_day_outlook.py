@@ -226,18 +226,24 @@ def test_outlook_attributes_carry_mean_spread_and_level_in_display_unit(berlin: 
         "2026-10-16T00:45:00+02:00",
     )
     assert attributes["outlook_units"] == {"display": "subunit", "base": "€/kWh", "subunit": "ct/kWh"}
-    # Yesterday's averages, for the dashed line over yesterday's last hour after midnight
+    # Yesterday's averages, for the dashed line over yesterday's last hour after midnight, and
+    # its extremes over the whole day (a chart marks them where they fall in view)
     assert attributes["outlook_yesterday"] == {
         "date": "2026-10-15",
         "price_mean": 11.5,
         "price_median": 11.5,
         "price_reference": 11.5,
+        "price_min": 10.0,
+        "price_max": 13.0,
+        "price_min_at": "2026-10-15T00:00:00+02:00",
+        "price_max_at": "2026-10-15T00:45:00+02:00",
     }
-    # Every quarter hour from 22:00 last night on, in the display unit, for zooming in
+    # Every quarter hour from yesterday's midnight on, in the display unit, for zooming in and
+    # for the chart card
     quarters = attributes["outlook_quarters"]
-    assert quarters["start"] == "2026-10-15T22:00:00+02:00"
+    assert quarters["start"] == "2026-10-15T00:00:00+02:00"
     assert quarters["minutes"] == 15
-    assert len(quarters["prices"]) == len(quarters["levels"]) == (2 + 48) * 4  # until tomorrow 23:45
+    assert len(quarters["prices"]) == len(quarters["levels"]) == (24 + 48) * 4  # until tomorrow 23:45
     assert quarters["prices"][:4] == [10.0, 11.0, 12.0, 13.0]
     assert quarters["levels"][0] == "cheap"
     # Part boundaries for cards, wrapping around midnight for the night
@@ -344,8 +350,8 @@ def test_quarter_series_counts_real_time_over_a_clock_change(berlin: ZoneInfo) -
     series = _quarter_series(known_starts(intervals, time.get_interval_time), now, time, 100, 1)
 
     assert series is not None
-    assert series["start"] == "2026-10-24T22:00:00+02:00"
-    assert len(series["prices"]) == 8 + 100  # 22:00-24:00, then a 25-hour day
+    assert series["start"] == "2026-10-24T00:00:00+02:00"
+    assert len(series["prices"]) == 96 + 100  # yesterday, then a 25-hour day
     assert series["prices"][-8] is None
     assert series["levels"][-8] is None
     assert series["prices"][0] == 20.0

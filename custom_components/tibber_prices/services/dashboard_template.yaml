@@ -9,6 +9,12 @@
 #   "label:<key>"                whole string -> custom_translations/<lang>.json "dashboard.<key>"
 #   [[entity:<key>]] [[label:<key>]]   same, inline inside longer strings (templates)
 #   {"$chart": <name>, "hide_title": true}   card from get_apexcharts_yaml (names in CHARTS)
+#   {"$chart_card": tibber_prices|apexcharts, ...}   kept only for the action's chart_card; with
+#                                tibber_prices it gets the views and resolution asked for
+#   {"$chart_into": {key: <key>, with: {...}}, ...}   a card opening the chart card in a window:
+#                                the views and resolution go under <key>, the options in "with"
+#                                (its way in, like chart_button) only where there is a chart card
+#                                (not with ApexCharts or no charts)
 # A card whose entity is disabled or missing is left out.
 #
 # Naming rule: a name only says what its heading does not already say.
@@ -77,10 +83,27 @@ views:
       # manual zooming. "Outlook" (auto-zoom) is the default: it hides the past and stays
       # forward-looking. Charts use the price level, so their colors match the verdict above.
       # Each zoom level offers 15-minute intervals or hourly averages.
+      # Two ways to draw it, picked by the action's chart_card ($chart_card: the other is left
+      # out): the integration's chart card (views and resolution from charts and
+      # chart_resolutions), or ApexCharts charts in TabDeck tabs
       - type: grid
         column_span: 2
         cards:
-          - type: custom:tabdeck-card
+          # Two styles to switch between in the chart: the price levels, and below/above the
+          # day's average as in Tibber's app. Until tomorrow's prices are in, Yesterday stands in
+          # for Tomorrow
+          - $chart_card: tibber_prices
+            type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            tomorrow_pending: yesterday
+            all_views:
+              style_switch: true
+              styles:
+                - { line: level, fill: level, reference: true }
+                - { line: average, fill: average_shown, reference: true }
+            grid_options: { columns: full, rows: 7 }
+          - $chart_card: apexcharts
+            type: custom:tabdeck-card
             # Build a tab when it is opened and drop it when it is left: ApexCharts hides the peak
             # price overlay (hidden_by_default) only once, right after the chart's first data load
             lazy: true
@@ -89,7 +112,7 @@ views:
               - name: "label:outlook"
                 icon: mdi:chart-timeline-variant-shimmer
                 card:
-                  # 15 min / 1 h switch, remembered per browser (no helper) under one key for all zoom
+                  # 15 min / 60 min switch, remembered per browser (no helper) under one key for all zoom
                   # levels. TabDeck reads the stored tab only on page load, so after a reload every
                   # chart opens in the resolution chosen last; a switch doesn't reach the other charts live.
                   # The same for every zoom level (the anchor), only the charts differ
@@ -130,3 +153,30 @@ views:
                   tabs:
                     - { name: "label:resolution_15min", card: { "$chart": two_days, "hide_title": true } }
                     - { name: "label:resolution_hourly", card: { "$chart": two_days_hourly, "hide_title": true } }
+  # For the main dashboard, where room is short: the price now in one row, the rest a tap away.
+  # A tap opens the forecast card in a window, the icon top right the chart card (with ApexCharts
+  # chosen for the charts, the tap only). Below it the periods as tiles of their own. Copy the
+  # cards over to the main dashboard
+  - title: "label:compact"
+    path: tibber-prices-compact
+    icon: mdi:view-dashboard-outline
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: markdown
+            text_only: true
+            visibility: [{ condition: state, entity: "entity:connection", state: "off" }]
+            content: <ha-alert alert-type="error">[[label:connection_lost]]</ha-alert>
+          - $chart_into: { key: chart, with: { chart_button: true, chart: { tomorrow_pending: yesterday } } }
+            type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: tile
+            tap_opens: forecast
+            window_width: wide
+            grid_options: { columns: full }
+          - type: tile
+            entity: "entity:best_price_period"
+          - type: tile
+            entity: "entity:peak_price_period"

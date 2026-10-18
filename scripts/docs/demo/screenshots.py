@@ -24,6 +24,7 @@ ROOT = Path(__file__).resolve().parents[3]
 BASE = os.environ.get("HA_URL", "http://localhost:8123")
 DASHBOARD = "tibber-demo"
 CARDS = "tibber-cards"  # The integration's own cards (cards.yaml), for the Dashboard Cards page
+APEX = "tibber-demo-apex"  # The demo with ApexCharts for the charts (chart_card: apexcharts)
 
 
 class Shot(NamedTuple):
@@ -43,11 +44,13 @@ class Shot(NamedTuple):
 SHOTS: dict[str, Shot] = {
     "overview": Shot("tibber-prices", 1400, "content"),
     "overview-mobile": Shot("tibber-prices", 400, "content"),
-    # Chart tabs on the overview (its tabdeck-card), at desktop width
-    "chart-outlook": Shot("tibber-prices", 1400, "chart", (0, "Outlook")),
-    "chart-today": Shot("tibber-prices", 1400, "chart", (0, "Today")),
-    "chart-tomorrow": Shot("tibber-prices", 1400, "chart", (0, "Tomorrow")),
-    "chart-two-days": Shot("tibber-prices", 1400, "chart", (0, "2 days")),
+    # Chart tabs on the overview of the ApexCharts demo (its tabdeck-card), at desktop width
+    "chart-outlook": Shot("tibber-prices", 1400, "chart", (0, "Outlook"), dashboard=APEX),
+    "chart-today": Shot("tibber-prices", 1400, "chart", (0, "Today"), dashboard=APEX),
+    "chart-tomorrow": Shot("tibber-prices", 1400, "chart", (0, "Tomorrow"), dashboard=APEX),
+    "chart-two-days": Shot("tibber-prices", 1400, "chart", (0, "2 days"), dashboard=APEX),
+    # The compact view for the main dashboard
+    "compact": Shot("tibber-prices-compact", 1000, "content"),
     # Dashboard Cards page
     "card-forecast": Shot("forecast", 1400, "element", dashboard=CARDS, selector="tibber-prices-forecast-card"),
     "card-forecast-mobile": Shot("forecast", 400, "element", dashboard=CARDS, selector="tibber-prices-forecast-card"),
@@ -65,9 +68,21 @@ SHOTS: dict[str, Shot] = {
         1400,
         "element",
         dashboard=CARDS,
-        selector="tibber-prices-now-card dialog",
+        selector="tibber-prices-now-card tibber-prices-card-window dialog",
         click="tibber-prices-now-card .now-block",
     ),
+    "card-chart": Shot("chart", 1400, "content", dashboard=CARDS),
+    "card-chart-mobile": Shot("chart", 400, "element", dashboard=CARDS, selector="tibber-prices-chart-card"),
+    # The chart card in a window, from the forecast card's icon
+    "card-chart-window": Shot(
+        "window",
+        1400,
+        "element",
+        dashboard=CARDS,
+        selector="tibber-prices-forecast-card tibber-prices-card-window dialog",
+        click="tibber-prices-forecast-card .chart-open",
+    ),
+    "card-window": Shot("window", 1400, "content", dashboard=CARDS),
     "card-feature": Shot("feature", 1000, "content", dashboard=CARDS),
 }
 

@@ -47,9 +47,10 @@ from .helpers import add_alternate_average_attribute
 from .metadata import get_current_interval_data
 
 QUARTER = timedelta(minutes=15)
-# The quarter-hour series starts this long before today's midnight: where a night that is still
-# running began (22:00), so its details can show it whole
-OUTLOOK_QUARTERS_BEFORE_MIDNIGHT = timedelta(hours=24 - DAY_PART_HOURS["night"][0])
+# The quarter-hour series starts at the latest at yesterday's midnight: a night still running
+# (from 22:00) shows whole in its details, and the chart card's two days without tomorrow's
+# prices are yesterday and today
+OUTLOOK_QUARTERS_DAYS_BACK = timedelta(days=1)
 
 
 def _get_interval_data_for_attributes(
@@ -310,29 +311,39 @@ def _build_outlook_attributes(
         all_prices, now, time.get_interval_time, since=hour_blocks[0].start if hour_blocks else None, known=known
     )
     attributes["outlook_day_parts"] = [entry(b) for b in part_blocks]
-    # Yesterday's averages: after midnight the hour strip still shows the last hour of yesterday,
-    # and its dashed line is yesterday's (the part of the day strip starts with a night that
-    # began yesterday, too)
+    # Yesterday's averages and extremes: after midnight the hour strip still shows the last hour
+    # of yesterday, and its dashed line is yesterday's (the part of the day strip starts with a
+    # night that began yesterday, too); a chart reaching back into it marks yesterday's lowest
+    # and highest price where they fall in view, of the whole day, not of the piece shown
     yesterday = (now - timedelta(days=1)).date()
-    mean, median = aggregate_average_data(get_intervals_for_day_offsets(coordinator.data, [-1]), config_entry)
+    yesterday_intervals = get_intervals_for_day_offsets(coordinator.data, [-1])
+    mean, median = aggregate_average_data(yesterday_intervals, config_entry)
+    priced = [interval for interval in yesterday_intervals if "total" in interval]
+    lowest = min(priced, key=lambda interval: float(interval["total"])) if priced else None
+    highest = max(priced, key=lambda interval: float(interval["total"])) if priced else None
     attributes["outlook_yesterday"] = (
         {
             "date": yesterday.isoformat(),
             "price_mean": mean,
             "price_median": median,
             "price_reference": reference_of(mean, median),
+            "price_min": round(float(lowest["total"]) * factor, precision) if lowest else None,
+            "price_max": round(float(highest["total"]) * factor, precision) if highest else None,
+            "price_min_at": _interval_start_iso(lowest, time) if lowest else None,
+            "price_max_at": _interval_start_iso(highest, time) if highest else None,
         }
         if mean is not None
         else None
     )
-    # Every quarter hour from where the strips begin (at the latest the start of last night), for
-    # zooming into an hour, a part of the day or a day: compact (start, then one price and level
+    # Every quarter hour from where the strips begin (at the latest yesterday's midnight), for
+    # zooming into an hour, a part of the day or a day, and for the chart card: compact (start, then one price and level
     # per quarter hour, None where unknown), so it costs little next to the other attributes
     # (The first part of the day may begin before the first hour: a night from 22:00)
     starts = [blocks[0].start.astimezone(UTC) for blocks in (hour_blocks, part_blocks) if blocks]
-    since = min(starts) if starts else None
+    starts.append((time.start_of_local_day(now) - OUTLOOK_QUARTERS_DAYS_BACK).astimezone(UTC))
+    since = min(starts)
     attributes["outlook_quarters"] = _quarter_series(known, now, time, factor, precision, since=since)
-    # The best and peak price periods that ended before today, as far back as the strips reach:
+    # The best and peak price periods that ended before today, as far back as the quarters reach:
     # the period sensors list only today's and tomorrow's, so cards can mark yesterday's too
     attributes["outlook_past_periods"] = _past_periods(coordinator.data, time, since=since)
     return attributes
@@ -348,18 +359,19 @@ def _quarter_series(
     since: datetime | None = None,
 ) -> dict[str, Any] | None:
     """
-    Return the quarter-hour prices from `since` on, at the latest from 22:00 last night.
+    Return the quarter-hour prices from `since` on.
 
-    `since` is where the strips begin (they reach back into yesterday), so each hour and part
-    of the day they show can be zoomed into.
+    `since` is where the strips begin (they reach back into yesterday), at the latest
+    yesterday's midnight: each hour and part of the day they show can be zoomed into, and the
+    chart card can draw yesterday.
 
     {"start": ISO time, "minutes": 15, "prices": [...], "levels": [...]}; position i is
     start + i * 15 minutes (counted in real time, so clock changes need no special case).
     `sorted_known` is known_starts() of the prices: sorted in UTC like the parts of the day (the
     repeated hour when clocks go back would collide in local time).
     """
-    night = time.start_of_local_day(now) - OUTLOOK_QUARTERS_BEFORE_MIDNIGHT
-    since = min(since, night) if since is not None else night
+    if since is None:
+        since = time.start_of_local_day(now) - OUTLOOK_QUARTERS_DAYS_BACK
     known = [(start, interval) for start, interval in (sorted_known[0] if sorted_known else []) if start >= since]
     if not known:
         return None

@@ -8,16 +8,19 @@ Beautiful dashboard layouts using Tibber Prices sensors.
 
 ## Complete Dashboard as a Starting Point
 
-The `tibber_prices.get_dashboard_yaml` action builds a dashboard view for your home: should I use electricity now and when is the next cheap window (the [Now Card](dashboard-cards.md#now-card) as a gauge, readable without a tap), and what do the coming hours look like, as a price chart and as the course of the day shaped like a weather forecast (the [Forecast Card](dashboard-cards.md#forecast-card)). Tap an hour, a part of the day or a day in that card for its details, including best and peak price periods. You paste the view into one of your own dashboards and change whatever you like from there.
+The `tibber_prices.get_dashboard_yaml` action builds a dashboard view for your home: should I use electricity now and when is the next cheap window (the [Now Card](dashboard-cards.md#now-card) as a gauge, readable without a tap), and what do the coming hours look like, as a price chart and as the course of the day shaped like a weather forecast (the [Forecast Card](dashboard-cards.md#forecast-card)). Tap an hour, a part of the day or a day in that card for its details, including best and peak price periods. The price curve is the [Chart Card](dashboard-cards.md#chart-card), with a switch between the price levels and the simple style of Tibber's app. A second, small view, **Compact**, is made for your main dashboard: the price now as a tile that opens the whole forecast on a tap and the chart from its icon (see [Cards inside cards](dashboard-cards.md#cards-inside-cards)), with the best and peak price periods as tiles below. You paste the views into one of your own dashboards and change whatever you like from there.
 
 ![Overview: the price now on today's scale with its trend and verdict, price chart, course of the day](/img/dashboard-overview.jpg#gh-light-mode-only)
 ![Overview: the price now on today's scale with its trend and verdict, price chart, course of the day](/img/dashboard-overview-dark.jpg#gh-dark-mode-only)
+
+![Compact view: the price now as a tile with the chart icon, the best and peak price periods below](/img/dashboard-compact.jpg#gh-light-mode-only)
+![Compact view: the price now as a tile with the chart icon, the best and peak price periods below](/img/dashboard-compact-dark.jpg#gh-dark-mode-only)
 
 **Add it to your dashboard:**
 
 1. Go to **Developer Tools → Actions**, pick **Get dashboard YAML**, select your home and click **Perform action**.
 2. Open the dashboard you want the view in, click **✏️ Edit**, then **⋮ → Raw configuration editor**.
-3. Paste the view from the response under `views:`, after your existing views, and save.
+3. Paste the views from the response under `views:`, after your existing views, and save. To put the compact cards on your main dashboard instead, copy them from the **Compact** view.
 
 <details>
 <summary>Show YAML: Action call</summary>
@@ -31,9 +34,10 @@ data:
     - today
     - tomorrow
     - two_days
-  chart_resolutions: # Optional, default: both, with a 15 min / 1 h switch in each chart
+  chart_resolutions: # Optional, default: both, with a 15 min / 60 min switch in each chart
     - interval
     - hourly
+  chart_card: tibber_prices # Optional, default; or apexcharts
   language: de # Optional, default: system language
 ```
 
@@ -41,16 +45,17 @@ data:
 
 **Good to know:**
 
-- **Pick your charts:** `charts` chooses the chart tabs, `chart_resolutions` whether you get 15-minute intervals, hourly averages or a switch between both. With a single chart there are no tabs at all.
+- **Pick your charts:** `charts` chooses the chart views, `chart_resolutions` whether you get 15-minute intervals, hourly averages or a switch between both. With a single chart there are no tabs at all.
+- **Chart card or ApexCharts:** by default the integration's own chart card draws the price curve (nothing to install; drag across it to read each price). With `chart_card: apexcharts` you get ApexCharts charts in tabs instead, and the compact view's tile opens only the forecast card.
 - **It's your copy.** The action writes to no dashboard, and updates of the integration don't change what you pasted. Call the action again to see what's new.
-- **Labels are in your Home Assistant system language** unless you pick another one with `language` (de, en, nb, nl, sv), for example when your profile uses a different language than the system. Entity IDs are the ones of the home you picked. With several homes, call it once per home and rename the view path (`tibber-prices`), which must be unique within a dashboard.
-- **Custom cards:** the views use [ApexCharts Card](https://github.com/RomRider/apexcharts-card), [Config Template Card](https://github.com/iantrich/config-template-card) and [TabDeck Card](https://github.com/tempus2016/tabdeck-card) from HACS. Without them you still get a valid view: a hint replaces each chart that can't work, and each tab group shows only its first tab. A notification lists what's missing, with links to HACS (the response also has it under `missing_cards`).
+- **Labels are in your Home Assistant system language** unless you pick another one with `language` (de, en, nb, nl, sv), for example when your profile uses a different language than the system. Entity IDs are the ones of the home you picked. With several homes, call it once per home and rename the view paths (`tibber-prices`, `tibber-prices-compact`), which must be unique within a dashboard.
+- **Custom cards** (only with `chart_card: apexcharts`): the views use [ApexCharts Card](https://github.com/RomRider/apexcharts-card), [Config Template Card](https://github.com/iantrich/config-template-card) and [TabDeck Card](https://github.com/tempus2016/tabdeck-card) from HACS. Without them you still get a valid view: a hint replaces each chart that can't work, and each tab group shows only its first tab. A notification lists what's missing, with links to HACS (the response also has it under `missing_cards`).
 - **Disabled sensors** leave out the cards that show them; the notification and the response (`missing_entities`) name them. Enable them and call the action again if you want those cards; once nothing is missing, the notification disappears.
 - **Removed sensors** (deleted from the entity list) also leave out their cards; they're named under `removed_entities` and come back when you reload the integration. **Optional sensors** leave out nothing: without **Chart Metadata** the charts still come, they only scale better with it (`optional_entities`).
 
 ## Tibber Prices Cards
 
-The integration brings its own cards: the **Forecast Card** (hours, parts of the day and days like a weather forecast), the **Now Card** (the price now as a tile, gauge or clock) and the **Price outlook** tile feature. They're described on a page of their own: **[Dashboard Cards](dashboard-cards.md)**.
+The integration brings its own cards: the **Forecast Card** (hours, parts of the day and days like a weather forecast), the **Now Card** (the price now as a tile, gauge or clock), the **Chart Card** (the price curve, read with a cursor) and the **Price outlook** tile feature. They open each other in windows, too. They're described on a page of their own: **[Dashboard Cards](dashboard-cards.md)**.
 
 ## Basic Price Display Card
 

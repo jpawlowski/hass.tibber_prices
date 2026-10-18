@@ -1504,7 +1504,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Get dashboard YAML",
-      "description": "Returns a dashboard view for one home as a starting point: the price verdict for now, charts, and the course of the day with its parts, today and tomorrow. Copy the response under `views:` into the raw configuration editor of one of your dashboards, then adapt it. Nothing is written to any dashboard, and later updates don't change the copy. Uses ApexCharts Card, Config Template Card and TabDeck Card from HACS; without them, the response shows a hint in place of the charts and the first tab of each tab group.",
+      "description": "Returns a dashboard view for one home as a starting point: the price verdict for now, charts, and the course of the day with its parts, today and tomorrow. Copy the response under `views:` into the raw configuration editor of one of your dashboards, then adapt it. Nothing is written to any dashboard, and later updates don't change the copy. The charts come from the integration's own chart card by default, with nothing to install. With ApexCharts as the chart card, they use ApexCharts Card, Config Template Card and TabDeck Card from HACS; without them, the response shows a hint in place of the charts and the first tab of each tab group.",
       "fields": {
         "entry_id": {
           "name": "Entry ID",
@@ -1521,6 +1521,10 @@
         "chart_resolutions": {
           "name": "Chart resolutions",
           "description": "15-minute intervals, hourly averages per clock hour, or both. With both (default), each chart has a switch between them."
+        },
+        "chart_card": {
+          "name": "Chart card",
+          "description": "What draws the charts: the integration's own chart card (default: nothing to install, move a cursor across the curve to read each price) or ApexCharts charts in tabs (ApexCharts Card, Config Template Card and TabDeck Card from HACS)."
         },
         "language": {
           "name": "Language",
@@ -2671,6 +2675,12 @@
         "today": "Today",
         "tomorrow": "Tomorrow",
         "two_days": "2 days"
+      }
+    },
+    "dashboard_chart_card": {
+      "options": {
+        "tibber_prices": "Tibber Prices chart card",
+        "apexcharts": "ApexCharts"
       }
     }
   }

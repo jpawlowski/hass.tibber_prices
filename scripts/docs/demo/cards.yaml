@@ -28,6 +28,40 @@ views:
               hours: { now_decimals: 2 }
               day_parts: { now_decimals: 2 }
               days: { now_decimals: 2 }
+  # The chart card: as wide as two columns, then one column at the default height and a low one
+  - title: Chart
+    path: chart
+    icon: mdi:chart-timeline-variant
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            # Three styles to switch between in every view, price levels first
+            all_views:
+              style_switch: true
+              styles:
+                - { line: level, fill: level, reference: true }
+                - { line: average, fill: average_shown, reference: true }
+                - { line: single, fill: average_shown, reference: false }
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            views: [today, tomorrow, two_days]
+            # The price in a ring above the curve
+            header: dial
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            views: [outlook]
+            # The simple style: below and above the day's average, as in Tibber's app
+            outlook: { resolution: hour, styles: [{ line: average, fill: average_shown }] }
+            grid_options: { rows: 4 }
   # The now card's three styles side by side; the tile among Home Assistant's own tiles
   - title: Now
     path: now
@@ -62,7 +96,8 @@ views:
             style: clock
             now_decimals: 2
             grid_options: { columns: full, rows: 5 }
-  # The now card opening the forecast card in a window
+  # Cards opening each other in a window: the now card's tap the forecast card, its icon top
+  # right and the forecast card's the chart card, the chart card's head the forecast card
   - title: Window
     path: window
     icon: mdi:open-in-new
@@ -77,6 +112,30 @@ views:
             now_decimals: 2
             tap_opens: forecast
             forecast: *forecast
+            chart_button: true
+            window_width: wide
+            chart: &chart
+              views: [outlook, today, tomorrow, two_days]
+              all_views: { resolution: switch }
+            grid_options: { columns: full }
+          - type: custom:tibber-prices-forecast-card
+            device_id: "device:current_interval_price"
+            show: [now, days]
+            now: { now_decimals: 2 }
+            days: { now_decimals: 2 }
+            chart_button: true
+            window_width: wide
+            chart: *chart
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            views: [today, tomorrow]
+            header: dial
+            tap_opens: forecast
+            window_width: wide
+            forecast: *forecast
+            grid_options: { rows: 5 }
   # The tile feature below a tile and inline next to its name
   - title: Feature
     path: feature

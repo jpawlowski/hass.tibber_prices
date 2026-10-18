@@ -15,7 +15,7 @@ Add the integration in the dev instance with this token. Screenshots must only e
 
 ## Setup (once)
 
-1. Install **ApexCharts Card**, **Config Template Card** and **TabDeck Card** from HACS in the dev instance.
+1. Install **ApexCharts Card**, **Config Template Card** and **TabDeck Card** from HACS in the dev instance (only `tibber-demo-apex` uses them).
 2. Create a long-lived access token (profile → Security) and store it in `config/.ha_token` (git-ignored), or export it as `HA_TOKEN`.
 
 ## Render the dashboard
@@ -24,7 +24,7 @@ Add the integration in the dev instance with this token. Screenshots must only e
 ./scripts/docs/demo/render-dashboard
 ```
 
-The script calls `tibber_prices.get_dashboard_yaml` for the demo home and saves the views as the UI dashboard `tibber-demo` (created on the first run). The demo is therefore exactly what users get from the action. It also saves `tibber-cards`: the integration's own cards, one view each, from `cards.yaml` next to the script (placeholders `entity:<key>` and `device:<key>` resolve to the demo home), for the screenshots of the Dashboard Cards page. Run it again after changing the template, the labels or the chart generator, then reload the page.
+The script calls `tibber_prices.get_dashboard_yaml` for the demo home and saves the views as the UI dashboard `tibber-demo` (created on the first run). The demo is therefore exactly what users get from the action. A second call with `chart_card: apexcharts` saves `tibber-demo-apex` (not in the sidebar), for the screenshots of the ApexCharts alternative. It also saves `tibber-cards`: the integration's own cards, one view each, from `cards.yaml` next to the script (placeholders `entity:<key>` and `device:<key>` resolve to the demo home), for the screenshots of the Dashboard Cards page. Run it again after changing the template, the labels or the chart generator, then reload the page.
 
 - Template: `custom_components/tibber_prices/services/dashboard_template.yaml` (placeholders are explained at its top).
 - Labels: the `dashboard` area of `custom_components/tibber_prices/custom_translations/<lang>.json`. Names are short because the heading already gives the context ("Lowest price" under "Today", not "Today's Lowest Price").
@@ -43,4 +43,4 @@ uv venv /tmp/pw && uv pip install --python /tmp/pw/bin/python playwright
 
 The script clicks the tabs before each shot and crops to the dashboard content (no sidebar, no user name), or to one card or the window a click opens (`card-*` shots). The frontend is shown in English whatever the token user's profile language is (the script answers the frontend's language lookup in the browser; the profile stays as it is).
 
-Shots go to the docs as JPG (quality 85, at most 1600 px wide), light as `<name>.jpg`, dark as `<name>-dark.jpg`: the overview as `docs/user/static/img/dashboard-overview*.jpg`, the cards under `docs/user/static/img/cards/` (`forecast-phone` puts `card-forecast-mobile` and `card-forecast-details` side by side). Shots of the Tomorrow tab are skipped while tomorrow's prices are not available yet.
+Shots go to the docs as JPG (quality 85, at most 1600 px wide), light as `<name>.jpg`, dark as `<name>-dark.jpg`: the overview as `docs/user/static/img/dashboard-overview*.jpg`, the ApexCharts tabs (`chart-*`, from `tibber-demo-apex`) under `docs/user/static/img/charts/`, the cards under `docs/user/static/img/cards/` without the `card-` prefix (`forecast-phone` puts `card-forecast-mobile` and `card-forecast-details` side by side; `chart-phone` is `card-chart-mobile`). Shots of the Tomorrow tab are skipped while tomorrow's prices are not available yet.

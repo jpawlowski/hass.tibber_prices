@@ -1504,7 +1504,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Hent dashbord-YAML",
-      "description": "Gir en dashbordvisning for ett hjem som et utgangspunkt: prisvurderingen for nå, diagrammer og dagsforløpet med tider på døgnet, i dag og i morgen. Kopier svaret under `views:` inn i rå konfigurasjonsredigering for et av dashbordene dine, og tilpass det deretter. Ingenting skrives til noe dashbord, og senere oppdateringer endrer ikke kopien. Bruker ApexCharts Card, Config Template Card og TabDeck Card fra HACS; uten dem viser svaret et hint i stedet for diagrammene og bare den første fanen i hver fanegruppe.",
+      "description": "Gir en dashbordvisning for ett hjem som et utgangspunkt: prisvurderingen for nå, diagrammer og dagsforløpet med tider på døgnet, i dag og i morgen. Kopier svaret under `views:` inn i rå konfigurasjonsredigering for et av dashbordene dine, og tilpass det deretter. Ingenting skrives til noe dashbord, og senere oppdateringer endrer ikke kopien. Diagrammene tegnes som standard av integrasjonens eget diagramkort, uten at noe må installeres. Med ApexCharts som diagramkort bruker de ApexCharts Card, Config Template Card og TabDeck Card fra HACS; uten dem viser svaret et hint i stedet for diagrammene og bare den første fanen i hver fanegruppe.",
       "fields": {
         "entry_id": {
           "name": "Oppførings-ID",
@@ -1521,6 +1521,10 @@
         "chart_resolutions": {
           "name": "Diagramoppløsninger",
           "description": "15-minuttersintervaller, timesnitt per klokketime eller begge. Med begge (standard) har hvert diagram en bryter mellom dem."
+        },
+        "chart_card": {
+          "name": "Diagramkort",
+          "description": "Hva som tegner diagrammene: integrasjonens eget diagramkort (standard: ingenting å installere, en markør over kurven viser hver pris) eller ApexCharts-diagrammer i faner (ApexCharts Card, Config Template Card og TabDeck Card fra HACS)."
         },
         "language": {
           "name": "Språk",
@@ -2671,6 +2675,12 @@
         "today": "I dag",
         "tomorrow": "I morgen",
         "two_days": "2 dager"
+      }
+    },
+    "dashboard_chart_card": {
+      "options": {
+        "tibber_prices": "Diagramkortet til Tibber Prices",
+        "apexcharts": "ApexCharts"
       }
     }
   }
