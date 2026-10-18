@@ -53,7 +53,7 @@ mkdir -p "$(dirname "$STORE_FILE")"
 python3 - "$STORE_FILE" "$PORT" <<'EOF'
 import json
 import sys
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 path, port = sys.argv[1], int(sys.argv[2])
 data = {
@@ -70,7 +70,7 @@ data = {
             "use_x_frame_options": True,
             "ssl_profile": "modern",
             "login_attempts_threshold": -1,
-            "created_at": datetime.now(UTC).isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "error": None,
             "error_message": None,
         },
