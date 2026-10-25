@@ -2779,17 +2779,24 @@ function priceFormatter(hass, numbers) {
   return fixedPriceFormat(hass, Math.max(...numbers.map(Math.abs)) >= 10 ? 0 : 2);
 }
 
-// Prices with a fixed number of decimals ("–" for none); the format carries its decimals, which
+// Prices with a fixed number of decimals ("–" for none), or from `decimals` up to `maxDecimals`
+// (the quarter hours of an hour's details: as the data has them, see EXACT_DECIMALS); the format carries its decimals, which
 // percentages between shown prices are rounded to (see shownPrice). Kept per locale and decimals:
 // building an Intl format is the costly part
 const PRICE_FORMATS = new Map();
-function fixedPriceFormat(hass, decimals) {
+// A price as the data has it: two decimals, as many more as it carries up to four (unrounded for
+// all practical purposes). Used where small differences are the point and rounding would hide them
+const EXACT_DECIMALS = [2, 4];
+function fixedPriceFormat(hass, decimals, maxDecimals = decimals) {
   const locale = numberLocale(hass);
-  const key = `${locale}|${decimals}`;
+  const key = `${locale}|${decimals}|${maxDecimals}`;
   if (!PRICE_FORMATS.has(key)) {
-    const number = new Intl.NumberFormat(locale, { minimumFractionDigits: decimals, maximumFractionDigits: decimals });
+    const number = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: maxDecimals,
+    });
     const format = (value) => (typeof value === "number" ? number.format(value) : "–");
-    format.decimals = decimals;
+    format.decimals = maxDecimals;
     PRICE_FORMATS.set(key, format);
   }
   return PRICE_FORMATS.get(key);
@@ -6865,14 +6872,18 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     return `<svg viewBox="0 0 120 120" aria-hidden="true" focusable="false">${parts.join("")}</svg>`;
   }
 
-  _nowView(live, { format, block, ranged, reference, sub, section = ranged ? "day_parts" : "hours" }) {
+  _nowView(
+    live,
+    { format, block, ranged, reference, sub, section = ranged ? "day_parts" : "hours", formatNow: givenFormatNow }
+  ) {
     const { t, unit, clock, now, periods, average, averageKind, today, days, at } = this._renderInfo;
     // Each level beside the price it belongs to: the chip on top is this quarter hour's, the
     // tiles name the hour's (or part's) and the day's
     const day = days.find((d) => d.date === today);
     const language = this._hass.language;
     const n = t.detail.now;
-    const formatNow = this._renderInfo.formatNowFor(section, format);
+    // (An hour's details pass theirs: the quarter hours there are shown unrounded)
+    const formatNow = givenFormatNow || this._renderInfo.formatNowFor(section, format);
     const parts = [fill(n.valid_until, { time: clock.format(new Date(live.end)) })];
     // The next quarter hour, with the change in percent (meaningless around a price of zero)
     if (typeof live.next === "number" && live.price > 0) {
@@ -7604,13 +7615,19 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     // moves to a tile below, so the two can't be mistaken for each other
     const live = info.isNow && currentQuarter ? currentQuarter : undefined;
     const { format, current } = strip;
+    const ranged = info.kind === "parts";
+    // An hour's quarter hours (and the price of the one running) are shown as they are, not
+    // rounded: their small differences are what the chart and the percentages are about. The
+    // hour's own figures (average, range, day) keep the section's rounding
+    const quarterFormat = fixedPriceFormat(this._hass, ...EXACT_DECIMALS);
+    // The format of what is a quarter hour there: exact, in an hour's details
+    const slotFormat = ranged ? format : quarterFormat;
     // The current price as this section shows it (its own decimals)
-    const formatNow = formatNowFor(info.kind === "parts" ? "day_parts" : "hours", format);
+    const formatNow = ranged ? formatNowFor("day_parts", format) : slotFormat;
     const language = this._hass.language;
     const d = t.details;
     const x = t.detail;
     const p = x.prose;
-    const ranged = info.kind === "parts";
     const start = Date.parse(block.start);
     const end = Date.parse(block.end);
     const dayName = homeCalendar(this._hass).weekday.format(new Date(start));
@@ -7636,7 +7653,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     const picked = this._picked && this._picked.start;
     const shortClock = homeCalendar(this._hass).clock;
     const chart = this._zoomChart(slots, {
-      format,
+      format: slotFormat,
       reference: info.reference,
       label: (slot, i, isNow) =>
         ranged ? hourTag(slot.start) : isNow ? t.now : shortClock.format(new Date(slot.start)),
@@ -7645,7 +7662,9 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       pick: ranged ? undefined : { selected: picked },
     });
     // The pick changes only the chart's columns and this line, in place (see _pick)
-    this._pickContext = ranged ? undefined : { slots, format, block, reference: info.reference, current };
+    this._pickContext = ranged
+      ? undefined
+      : { slots, format: slotFormat, baseFormat: format, block, reference: info.reference, current };
     const pickedSlot = slots.find((slot) => slot.start === picked && typeof slot.price === "number");
     if (!ranged) chart.html += `<div class="zpick" aria-live="polite">${this._pickLine(pickedSlot)}</div>`;
 
@@ -7674,7 +7693,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
         "mean"
       );
       const change = mean ? (last - first) / Math.abs(mean) : 0;
-      const values = { first: format(first), last: format(last), unit };
+      const values = { first: quarterFormat(first), last: quarterFormat(last), unit };
       prose.push(change > 0.03 ? fill(p.rises, values) : change < -0.03 ? fill(p.falls, values) : p.steady);
       const cheapest = cheapestOf(ahead, "price");
       // Not when the cheapest is the one running now: that's what the price on top says
@@ -7759,7 +7778,16 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       live && typeof block[key] === "number" && block[key] !== 0
         ? `${t.now} ${percentFrom(language, live.price, block[key], formatNow, format)}`
         : "";
-    const nowView = live ? this._nowView(live, { format, block, ranged, reference, sub: nowNote }) : {};
+    const nowView = live
+      ? this._nowView(live, {
+          format,
+          block,
+          ranged,
+          reference,
+          sub: nowNote,
+          formatNow,
+        })
+      : {};
     if (!live) {
       // Like "now": what the big number is compared with in tiles of their own (the day's
       // average, the price now), each saying how far this hour or part lies from it; under the
@@ -7821,13 +7849,13 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
    * it compares with the hour, the day and now, its rank in the day, and the day's low or high
    * or a period it falls in
    */
-  _quarterLine(slot, { format, block, reference, current }) {
+  _quarterLine(slot, { format, baseFormat, block, reference, current }) {
     const { t, unit, clock, now, average, averageKind, periods, extremes, quarters, dateOf, zone, nowPrice } =
       this._renderInfo;
     const language = this._hass.language;
     const pk = t.detail.pick;
-    const vs = (template, base, baseFormat = format) => {
-      const percent = percentFrom(language, slot.price, base, format, baseFormat);
+    const vs = (template, base, againstFormat = baseFormat) => {
+      const percent = percentFrom(language, slot.price, base, format, againstFormat);
       return percent ? fill(template, { percent }) : "";
     };
     // Its rank among the day's quarter hours, whichever way says more
@@ -7853,7 +7881,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       vs(pk.vs_day[averageKind], reference),
       !isNow &&
         (typeof nowPrice === "number"
-          ? vs(pk.vs_now, nowPrice, this._renderInfo.formatNowFor("hours", format))
+          ? vs(pk.vs_now, nowPrice, format)
           : vs(pk.vs_now, current && current[average.key])),
       rank,
       ...extremesIn(extremes, slot.start, slot.end).map((e) => t[`day_${e.kind}`]),
