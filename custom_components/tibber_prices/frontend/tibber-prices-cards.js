@@ -4032,8 +4032,11 @@ const STYLE = `
                         font-variant-numeric: tabular-nums; color: var(--primary-text-color); background: var(--fade-bg);
                         box-shadow: 0 0 0 1px var(--divider-color, rgba(127, 127, 127, 0.3)); pointer-events: none; visibility: hidden; }
   .dense .zbar.tall::after { bottom: auto; top: 4px; }
-  .dense .zcol:hover .zbar::after, .dense .zcol:focus-visible .zbar::after { visibility: visible; }
-  .dense .zcol:hover, .dense .zcol:focus-visible { z-index: 2; }
+  .dense .zcol:hover .zbar::after, .dense .zcol:focus-visible .zbar::after, .dense .zcol.is-scrubbed .zbar::after { visibility: visible; }
+  .dense .zcol:hover, .dense .zcol:focus-visible, .dense .zcol.is-scrubbed { z-index: 2; }
+  .dense .zcol.is-scrubbed { background: rgba(127, 127, 127, 0.12); }
+  /* A finger held on the chart reads it: no text selection, no callout */
+  .zoom.dense { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
   .dense .zmark { font-size: var(--ha-font-size-xs, 10px); line-height: 12px; }
   .dense .zlabel { font-size: var(--ha-font-size-xs, 10px); line-height: 12px; overflow: visible; }
   .dense .mark { width: 100%; }
@@ -4497,6 +4500,20 @@ class TibberPricesCardBase extends HTMLElement {
       hass: this._hass,
       opener,
     });
+  }
+
+  /**
+   * A short buzz: in Home Assistant's apps through their haptics (they listen for this event,
+   * the iPhone's Taptic Engine included), in a browser through the vibration API where there is
+   * one (Android; Safari has none)
+   */
+  _haptic(kind) {
+    const app =
+      window.externalApp ||
+      (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.externalBus);
+    if (app) window.dispatchEvent(new CustomEvent("haptic", { detail: kind }));
+    // As the profile says ("Vibrate on interaction"), which the apps' haptics follow by themselves
+    else if (navigator.vibrate && this._hass.vibrate !== false) navigator.vibrate(kind === "selection" ? 6 : 12);
   }
 }
 
@@ -6447,6 +6464,91 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     // A picked quarter hour keeps its arrows (also when the card is drawn again)
     const picked = zoom && zoom.querySelector(".zcol.picked");
     if (picked) this._zoomSteps.pin(picked);
+    const day = this.shadowRoot.querySelector("dialog .zoom.dense");
+    if (day) this._bindScrub(day);
+  }
+
+  /**
+   * A whole day's chart on touch: what the mouse gets by hovering an hour (its price on top of
+   * its bar), a finger gets by resting on the chart for a moment and then moving over the hours
+   * (the page and the swipe to the next day wait meanwhile). A tap or a swipe before that is
+   * what it was: opening the hour, stepping to the day before or after.
+   */
+  _bindScrub(zoom) {
+    let gesture;
+    let shown;
+    const show = (column, haptic = false) => {
+      if (column === shown) return;
+      if (shown) shown.classList.remove("is-scrubbed");
+      shown = column;
+      if (column) column.classList.add("is-scrubbed");
+      if (column && haptic) this._haptic("selection");
+    };
+    const columnAt = (x, y) => {
+      const element = this.shadowRoot.elementFromPoint(x, y);
+      const column = element && element.closest(".zcol");
+      return column && zoom.contains(column) ? column : undefined;
+    };
+    zoom.addEventListener("pointerdown", (event) => {
+      if (event.pointerType === "mouse" || event.button > 0) return;
+      const held = (gesture = {
+        id: event.pointerId,
+        originX: event.clientX,
+        originY: event.clientY,
+        x: event.clientX,
+        y: event.clientY,
+        grabbed: false,
+      });
+      held.timer = setTimeout(() => {
+        if (gesture !== held) return;
+        held.grabbed = true;
+        try {
+          zoom.setPointerCapture(held.id);
+        } catch (err) {
+          // Pointer already gone
+        }
+        this._haptic("light");
+        show(columnAt(held.x, held.y));
+      }, CHART_HOLD_MS);
+    });
+    // Once held, the finger's moves are the chart's, not the page's
+    zoom.addEventListener(
+      "touchmove",
+      (event) => {
+        if (gesture && gesture.grabbed && event.cancelable) event.preventDefault();
+      },
+      { passive: false }
+    );
+    // A long press would open the context menu or select text
+    zoom.addEventListener("contextmenu", (event) => event.preventDefault());
+    zoom.addEventListener("pointermove", (event) => {
+      if (!gesture || gesture.id !== event.pointerId) return;
+      gesture.x = event.clientX;
+      gesture.y = event.clientY;
+      if (gesture.grabbed) {
+        // (Between two columns: the last one stays)
+        const column = columnAt(event.clientX, event.clientY);
+        if (column) show(column, true);
+      } else if (Math.hypot(event.clientX - gesture.originX, event.clientY - gesture.originY) > CHART_HOLD_SLOP_PX) {
+        // Moved before the hold: no hold any more, a swipe or a scroll
+        clearTimeout(gesture.timer);
+      }
+    });
+    const end = (event, cancelled) => {
+      if (!gesture || gesture.id !== event.pointerId) return;
+      if (gesture.grabbed && !cancelled) {
+        // Neither the swipe to another day nor the tap on an hour: this was reading
+        event.stopPropagation();
+        const swallow = (click) => click.stopPropagation();
+        zoom.addEventListener("click", swallow, { capture: true, once: true });
+        setTimeout(() => zoom.removeEventListener("click", swallow, true), 400);
+      }
+      clearTimeout(gesture.timer);
+      gesture = undefined;
+      show(undefined);
+    };
+    zoom.addEventListener("pointerup", (event) => end(event, false));
+    zoom.addEventListener("pointercancel", (event) => end(event, true));
   }
 
   /**
@@ -10413,20 +10515,6 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     this._hover = slot.start;
     if (haptic) this._haptic("selection");
     this._drawCursor();
-  }
-
-  /**
-   * A short buzz: in Home Assistant's apps through their haptics (they listen for this event,
-   * the iPhone's Taptic Engine included), in a browser through the vibration API where there is
-   * one (Android; Safari has none)
-   */
-  _haptic(kind) {
-    const app =
-      window.externalApp ||
-      (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.externalBus);
-    if (app) window.dispatchEvent(new CustomEvent("haptic", { detail: kind }));
-    // As the profile says ("Vibrate on interaction"), which the apps' haptics follow by themselves
-    else if (navigator.vibrate && this._hass.vibrate !== false) navigator.vibrate(kind === "selection" ? 6 : 12);
   }
 
   _backToNow() {
