@@ -3,8 +3,9 @@
 # scripts/setup/update-ha-version: Update Home Assistant version across dev environment
 #
 # Finds the pytest-homeassistant-custom-component version that matches the given
-# HA version (1:1 mapping on PyPI) and updates both scripts/setup/bootstrap and
-# requirements.txt atomically. This is the single command to run when upgrading
+# HA version (1:1 mapping on PyPI) and updates scripts/setup/bootstrap and
+# requirements.txt atomically, plus .python-version to the Python that HA version
+# is built on. This is the single command to run when upgrading
 # the development environment to a new Home Assistant version.
 #
 # Usage:
@@ -24,6 +25,7 @@ source "$SCRIPT_DIR/../.lib/output.sh"
 
 BOOTSTRAP_FILE="scripts/setup/bootstrap"
 REQUIREMENTS_FILE="requirements.txt"
+PYTHON_VERSION_FILE=".python-version"
 
 # --- Argument validation ---
 if [[ $# -ne 1 ]]; then
@@ -89,6 +91,31 @@ PYEOF
 log_result 0 "pytest-homeassistant-custom-component==${NEW_PHAC_VERSION}"
 echo
 
+# --- Find the Python version of that HA version ---
+log_step "Reading the Python version of Home Assistant ${NEW_HA_VERSION}..."
+HA_CORE_BASE_URL="https://raw.githubusercontent.com/home-assistant/core/${NEW_HA_VERSION}"
+# Major.minor only: any patch release of it will do
+if HA_PYTHON_VERSION=$(curl -fsSL "${HA_CORE_BASE_URL}/.python-version" 2>/dev/null); then
+    NEW_PYTHON_VERSION=$(echo "$HA_PYTHON_VERSION" | grep -oE '^[0-9]+\.[0-9]+' || true)
+else
+    # Older HA versions have no .python-version: newest Python they declare.
+    # Classifiers can run ahead of what the release supports, so say where it came from.
+    log_warning "No .python-version in Home Assistant ${NEW_HA_VERSION}, falling back to the classifiers in its pyproject.toml"
+    if ! HA_PYPROJECT=$(curl -fsSL "${HA_CORE_BASE_URL}/pyproject.toml" 2>/dev/null); then
+        log_error "Could not download ${HA_CORE_BASE_URL}/pyproject.toml"
+        exit 1
+    fi
+    NEW_PYTHON_VERSION=$(echo "$HA_PYPROJECT" |
+        grep -oP 'Programming Language :: Python :: \K[0-9]+\.[0-9]+' | sort -V | tail -n 1 || true)
+fi
+if [[ -z $NEW_PYTHON_VERSION ]]; then
+    log_error "Could not determine the Python version of Home Assistant ${NEW_HA_VERSION}"
+    exit 1
+fi
+CURRENT_PYTHON_VERSION=$(<"$PYTHON_VERSION_FILE")
+log_result 0 "Python ${NEW_PYTHON_VERSION}"
+echo
+
 # --- Apply changes ---
 log_step "Updating ${BOOTSTRAP_FILE}..."
 sed -i "s/HA_VERSION:-\"${CURRENT_HA_VERSION}\"/HA_VERSION:-\"${NEW_HA_VERSION}\"/" "$BOOTSTRAP_FILE"
@@ -96,11 +123,18 @@ sed -i "s/HA_VERSION:-\"${CURRENT_HA_VERSION}\"/HA_VERSION:-\"${NEW_HA_VERSION}\
 log_step "Updating ${REQUIREMENTS_FILE}..."
 sed -i "s/pytest-homeassistant-custom-component==${CURRENT_PHAC_VERSION}/pytest-homeassistant-custom-component==${NEW_PHAC_VERSION}/" "$REQUIREMENTS_FILE"
 
+log_step "Updating ${PYTHON_VERSION_FILE}..."
+echo "$NEW_PYTHON_VERSION" >"$PYTHON_VERSION_FILE"
+
 # --- Summary ---
 echo
 log_success "Done! Updated to:"
 log_info "  homeassistant==${NEW_HA_VERSION}  (in ${BOOTSTRAP_FILE})"
 log_info "  pytest-homeassistant-custom-component==${NEW_PHAC_VERSION}  (in ${REQUIREMENTS_FILE})"
+log_info "  Python ${NEW_PYTHON_VERSION}  (in ${PYTHON_VERSION_FILE})"
+if [[ "$NEW_PYTHON_VERSION" != "$CURRENT_PYTHON_VERSION" ]]; then
+    log_warning "Python changes from ${CURRENT_PYTHON_VERSION} to ${NEW_PYTHON_VERSION}: check requires-python in pyproject.toml"
+fi
 echo
 log_info "Next steps:"
 log_info "  1. Rebuild the DevContainer to apply the new environment"

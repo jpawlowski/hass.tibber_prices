@@ -30,19 +30,35 @@ if ! command -v curl >/dev/null 2>&1; then
     sudo apt-get install -y curl
 fi
 
-log_header "Checking for uv"
+# uv and Python come from mise (mise.toml, .python-version)
 if ! command -v uv >/dev/null 2>&1; then
-    log_info "UV not found, installing..."
-    pipx install uv
+    log_error "uv not found"
+    log_info "Install the development tools: ${BOLD}mise install${NC}"
+    exit 1
+fi
+
+# Python version: .python-version in the project root, the major.minor that the
+# configured Home Assistant version is built on (scripts/setup/update-ha-version
+# keeps it in step). uv venv reads it by itself; without it uv would pick the
+# newest Python that requires-python allows, for which many of HA's dependencies
+# have no wheels yet (they then fail to build from source).
+PYTHON_VERSION=$(<.python-version)
+
+# Recreate a venv that was built with another Python version
+if [[ -x $HOME/.venv/bin/python ]] &&
+    ! "$HOME/.venv/bin/python" -c "import sys; sys.exit(f'{sys.version_info[0]}.{sys.version_info[1]}' != '${PYTHON_VERSION}')"; then
+    log_info "Virtual environment uses another Python than ${PYTHON_VERSION}, recreating it"
+    rm -rf "$HOME/.venv"
 fi
 
 # if no venv, create one
 if [[ ! -d $HOME/.venv ]]; then
     log_header "Creating virtual environment"
-    # Use the Python interpreter from PATH (respects actions/setup-python or local pyenv)
-    uv venv --python "$(which python)" "$HOME/.venv"
-    ln -s "$HOME/.venv/" .venv
+    # Finds the interpreter of that version that mise put on PATH
+    uv venv "$HOME/.venv"
 fi
+# -n: replace a dangling symlink (the venv of a rebuilt container) instead of descending into it
+ln -sfn "$HOME/.venv/" .venv
 # shellcheck source=/dev/null
 source "$HOME/.venv/bin/activate"
 

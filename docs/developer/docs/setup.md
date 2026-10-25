@@ -26,11 +26,19 @@ code .
 
 The DevContainer includes:
 
-- Python 3.13 with `.venv` at `/home/vscode/.venv/`
+- Python (the version Home Assistant is built on, see `.python-version`) with `.venv` at `/home/vscode/.venv/`
 - `uv` package manager (fast, modern Python tooling)
 - Home Assistant development dependencies
 - Ruff linter/formatter
-- Git, GitHub CLI, Node.js, Rust toolchain
+- Git, GitHub CLI, Node.js, pyright, git-cliff, shellcheck, shfmt, yq
+
+### Tool Versions (mise)
+
+The development tools are managed by [mise](https://mise.jdx.dev): their versions are pinned in `mise.toml` in the project root, and the same file is used in the DevContainer, in CI and locally. The Python version is the exception: it lives in `.python-version`, which `./scripts/setup/update-ha-version` keeps at the version the configured Home Assistant release is built on.
+
+- **Update a tool**: change its version in `mise.toml`, then run `mise install`
+- **Outside the DevContainer**: [install mise](https://mise.jdx.dev/getting-started.html), then run `mise install` in the project root
+- Python packages (Home Assistant and its dependencies) are not managed by mise but by `uv` in `./scripts/setup/bootstrap`
 
 ## Running the Integration
 

@@ -1,11 +1,15 @@
 {
   "name": "jpawlowski/hass.tibber_prices",
   "image": "mcr.microsoft.com/devcontainers/base:debian",
-  "postCreateCommand": "bash .devcontainer/setup-git.sh && scripts/setup/setup",
+  "postCreateCommand": "{ sudo chown vscode:vscode /home/vscode/.claude /home/vscode/.codex || true; } && bash .devcontainer/setup-git.sh && scripts/setup/setup",
   "postStartCommand": "scripts/motd",
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1",
-    "TIBBER_PRICES_DEV": "1"
+    "TIBBER_PRICES_DEV": "1",
+    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+  },
+  "remoteEnv": {
+    "PATH": "/home/vscode/.local/share/mise/shims:${containerEnv:PATH}"
   },
   "forwardPorts": [8123, 3000, 3001],
   "portsAttributes": {
@@ -66,7 +70,6 @@
           "**/node_modules/**"
         ],
         "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-        "python.analysis.extraPaths": ["${workspaceFolder}/.venv/lib/python3.14/site-packages"],
         "python.terminal.activateEnvironment": true,
         "python.terminal.activateEnvInCurrentTerminal": true,
         "python.testing.pytestArgs": ["--no-cov"],
@@ -123,7 +126,9 @@
     }
   },
   "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached"
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached",
+    "source=tibber-prices-claude-${devcontainerId},target=/home/vscode/.claude,type=volume",
+    "source=tibber-prices-codex-${devcontainerId},target=/home/vscode/.codex,type=volume"
   ],
   "remoteUser": "vscode",
   "features": {
@@ -131,16 +136,7 @@
     "ghcr.io/flexwie/devcontainer-features/op:1": {
       "version": "latest"
     },
-    "ghcr.io/devcontainers/features/node:": {
-      "version": "24"
-    },
-    "ghcr.io/devcontainers/features/rust:1": {
-      "version": "latest",
-      "profile": "minimal"
-    },
-    "ghcr.io/devcontainer-community/devcontainer-features/yq:1": {
-      "version": "latest"
-    },
+    "ghcr.io/devcontainers-extra/features/mise:1": {},
     "ghcr.io/devcontainers-extra/features/apt-packages:1": {
       "packages": [
         "autoconf",
@@ -162,10 +158,7 @@
         "libturbojpeg0",
         "miller",
         "moreutils",
-        "pipx",
         "ripgrep",
-        "shellcheck",
-        "shfmt",
         "sqlite3",
         "tree",
         "yamllint"

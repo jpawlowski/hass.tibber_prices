@@ -2,8 +2,10 @@
 
 # script/setup: Setup script used by DevContainers to prepare the project
 #
-# Installs optional development tools (pyright, Claude Code CLI, GitHub Copilot CLI, git-cliff)
-# and configures the environment. Called automatically by DevContainer postStartCommand.
+# Installs the development tools pinned in mise.toml (Python, Node, uv,
+# pyright, prettier, git-cliff, shellcheck, shfmt, yq) via mise, plus the
+# optional AI release note backends (Claude Code CLI, GitHub Copilot CLI), then
+# runs bootstrap. Called automatically by DevContainer postCreateCommand.
 #
 # Usage:
 #   ./scripts/setup/setup
@@ -19,14 +21,17 @@ cd "$SCRIPT_DIR/../.."
 # shellcheck source=scripts/.lib/output.sh
 source "$SCRIPT_DIR/../.lib/output.sh"
 
-# Install optional pyright for type checking
-if command -v npm >/dev/null 2>&1 && ! command -v pyright >/dev/null 2>&1; then
-    log_header "Installing pyright for type checking"
-    npm install -g pyright 2>/dev/null || {
-        log_warning "pyright installation failed (optional)"
-        log_info "You can install it manually: ${BOLD}npm install -g pyright${NC}"
-    }
+# Install the development tools of mise.toml
+if ! command -v mise >/dev/null 2>&1; then
+    log_error "mise not found"
+    log_info "Install it: ${BOLD}https://mise.jdx.dev/getting-started.html${NC}"
+    exit 1
 fi
+log_header "Installing development tools (mise.toml)"
+mise trust --quiet
+mise install
+# The DevContainer puts the shims on PATH (remoteEnv); this makes sure of it here too
+export PATH="${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims:$PATH"
 
 # Install optional release note backend: Claude Code CLI (AI-powered, preferred)
 if command -v npm >/dev/null 2>&1 && ! command -v claude >/dev/null 2>&1; then
@@ -46,13 +51,8 @@ if command -v npm >/dev/null 2>&1 && ! command -v copilot >/dev/null 2>&1; then
     }
 fi
 
-# Install optional release note backend: git-cliff (template-based)
-if command -v cargo >/dev/null 2>&1 && ! command -v git-cliff >/dev/null 2>&1; then
-    log_header "Installing git-cliff for template-based release notes"
-    cargo install git-cliff || {
-        log_warning "git-cliff installation failed (optional)"
-    }
-fi
+# Global npm packages land in mise's Node: give their commands shims too
+mise reshim
 
 "$SCRIPT_DIR/bootstrap"
 

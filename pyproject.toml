@@ -13,6 +13,11 @@ requires-python = ">=3.14.2"
 [tool.setuptools]
 packages = ["custom_components.tibber_prices"]
 
+[tool.uv]
+# Python comes from mise (version in .python-version), never from uv's own downloads
+python-preference = "only-system"
+python-downloads = "never"
+
 [tool.pyright]
 include = ["custom_components/tibber_prices"]
 exclude = [

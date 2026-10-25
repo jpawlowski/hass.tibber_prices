@@ -111,30 +111,13 @@ In CI/CD (`$CI` or `$GITHUB_ACTIONS`), AI is automatically disabled.
 
 **In DevContainer (automatic):**
 
-git-cliff is automatically installed when the DevContainer is built:
-
-- **Rust toolchain**: Installed via `ghcr.io/devcontainers/features/rust:1` (minimal profile)
-- **git-cliff**: Installed via cargo in `scripts/setup/setup`
-
-Simply rebuild the container (VS Code: "Dev Containers: Rebuild Container") and git-cliff will be available.
+git-cliff is pinned in `mise.toml` and installed by mise when the DevContainer is built (`scripts/setup/setup`). CI installs the same version.
 
 **Manual installation (outside DevContainer):**
 
-**git-cliff** (template-based):
-
 ```bash
-# See: https://git-cliff.org/docs/installation
-
-# macOS
-brew install git-cliff
-
-# Cargo (all platforms)
-cargo install git-cliff
-
-# Manual binary download
-wget https://github.com/orhun/git-cliff/releases/latest/download/git-cliff-x86_64-unknown-linux-gnu.tar.gz
-tar -xzf git-cliff-*.tar.gz
-sudo mv git-cliff-*/git-cliff /usr/local/bin/
+# With mise installed (https://mise.jdx.dev), in the project root:
+mise install git-cliff
 ```
 
 ---

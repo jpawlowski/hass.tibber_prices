@@ -86,7 +86,7 @@ The project includes several helper scripts in `./scripts/`:
 - `lint` - Auto-fix code issues with ruff
 - `lint-check` - Check code without modifications (CI mode)
 - `hassfest` - Validate integration structure (JSON, Python syntax, required files)
-- `setup` - Install development tools (git-cliff, @github/copilot)
+- `setup` - Install development tools (via mise from `mise.toml`, plus Claude Code and Copilot CLI)
 - `prepare-release` - Prepare a new release (bump version, create tag)
 - `generate-release-notes` - Generate release notes from commits
 

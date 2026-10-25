@@ -4,7 +4,7 @@ This is a **Home Assistant custom component** for Tibber electricity price data,
 
 ## Documentation Metadata
 
-- **Last Major Update**: 2026-10-18 (Cards: shared `TibberPricesCardBase`, `tibber-prices-card-window`, `windowCards`/`WINDOW_CARDS`, CSS state class rule; cards in windows of other cards and nested editor pages via `nestedCards`; 2026-10-17: Repairs: `repairs.py` fix flows, notices confirmable via `fix_flow`, runtime issues cleared on start, config entry minor version migration; allowed `frontend/` in the integration root; 2026-10-16: rolling hour routing via ROLLING_HOUR_SENSOR_WINDOWS, removed core.py `_get_rolling_hour_value`, added utils/trend.py; 2026-10-13: rolling hour vs clock hour)
+- **Last Major Update**: 2026-10-25 (Dev environment: tool versions via mise (`mise.toml`), Python version in `.python-version` kept in step with HA by `update-ha-version`, uv uses only mise's Python; Renovate instead of Dependabot; 2026-10-18: Cards: shared `TibberPricesCardBase`, `tibber-prices-card-window`, `windowCards`/`WINDOW_CARDS`, CSS state class rule; cards in windows of other cards and nested editor pages via `nestedCards`; 2026-10-17: Repairs: `repairs.py` fix flows, notices confirmable via `fix_flow`, runtime issues cleared on start, config entry minor version migration; allowed `frontend/` in the integration root; 2026-10-16: rolling hour routing via ROLLING_HOUR_SENSOR_WINDOWS, removed core.py `_get_rolling_hour_value`, added utils/trend.py; 2026-10-13: rolling hour vs clock hour)
 - **Last Architecture Review**: 2025-01-21 (Phase 1: Added TypedDict documentation system, improved BaseCalculator with 8 helper methods. Phase 2: Documented Import Architecture - Hybrid Pattern (Trend/Volatility build own attributes), verified no circular dependencies, confirmed optimal TYPE_CHECKING usage across all 8 calculators.)
 - **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
 - **Documentation Status**: ✅ Current (verified against codebase)
@@ -772,6 +772,14 @@ When debugging period calculation issues:
 
 ## Development Environment Setup
 
+**Tool Versions: three places, three owners:**
+
+- **`mise.toml`** (mise): development tools with pinned versions — Node, uv, pyright, prettier, git-cliff, shellcheck, shfmt, yq. The same file serves the DevContainer (`scripts/setup/setup` runs `mise install`, shims on `PATH` via `remoteEnv`), CI (`jdx/mise-action` with `install_args` for just the tools a job needs) and local setups. Update a tool by changing its version there.
+- **`.python-version`**: the Python version (major.minor), the one the configured Home Assistant release is built on. Never edit by hand: `./scripts/setup/update-ha-version` writes it from HA's own `.python-version` of that release. mise and uv both read it. Never leave the choice to uv: `requires-python` has no upper bound, so uv would take the newest Python, for which HA's dependencies have no wheels yet (they then fail to build from source, e.g. `cffi` missing `ffi.h`).
+- **uv** (`scripts/setup/bootstrap`): Python packages, i.e. Home Assistant and its dependencies with HA's constraints. `[tool.uv]` in `pyproject.toml` makes uv use only mise's Python, never a download of its own. Bootstrap recreates the venv when its Python doesn't match `.python-version`.
+- System libraries and the convenience CLI tools stay apt packages in `.devcontainer/devcontainer.json`.
+- **Updates: Renovate** (`renovate.json`, replaced Dependabot, which can't read `mise.toml`). It never bumps Python (`.python-version`, `requires-python`) or pytest-homeassistant-custom-component; a new Home Assistant version (`HA_VERSION` in bootstrap, regex manager) only appears on the Dependency Dashboard, since it takes `update-ha-version`. Its commits are `chore(dev-deps)`, which `cliff.toml` leaves out of the release notes; only the integration's own requirements (`manifest.json`) get `chore(deps)` and are listed.
+
 **Python Virtual Environment:**
 
 - Project uses `.venv` located at `/home/vscode/.venv/` (outside workspace)
@@ -802,13 +810,12 @@ When debugging period calculation issues:
 
 **Release Note Backends (auto-installed in DevContainer):**
 
-- **Rust toolchain**: Minimal Rust installation via DevContainer feature
-- **git-cliff**: Template-based release notes (fast, reliable, installed via cargo in `scripts/setup/setup`)
+- **git-cliff**: Template-based release notes (fast, reliable, pinned in `mise.toml`, same version in CI)
 - Manual grep/awk parsing as fallback (always available)
 
 **Agent Productivity CLI Tools (DevContainer):**
 
-The devcontainer provides common agent-facing CLI tools: `bat`, `delta`/`git-delta`, `eza`, `fd`/`fdfind`, `fzf`, `http`/`httpie`, `hyperfine`, `ipython`, `jq`, `jo`, `mlr`/`miller`, `rg`/`ripgrep`, `shellcheck`, `shfmt`, `sponge`, `sqlite3`, `tree`, `yq`, and `yamllint`. Prefer these explicit container tools over assuming a VS Code extension exposes an equivalent CLI on `PATH`.
+The devcontainer provides common agent-facing CLI tools: `bat`, `delta`/`git-delta`, `eza`, `fd`/`fdfind`, `fzf`, `http`/`httpie`, `hyperfine`, `ipython`, `jq`, `jo`, `mlr`/`miller`, `rg`/`ripgrep`, `sponge`, `sqlite3`, `tree`, and `yamllint` (apt), plus `shellcheck`, `shfmt`, `yq` and `prettier` (mise). Prefer these explicit container tools over assuming a VS Code extension exposes an equivalent CLI on `PATH`.
 
 **CLI Compatibility Notes:**
 
@@ -831,8 +838,9 @@ Some commands are available via compatibility aliases because Debian package nam
 **Debugging Environment Issues:**
 
 - If `import homeassistant` fails: Check if `.venv` symlink exists and points to correct location
-- If packages missing: Run `uv sync` to install dependencies from `pyproject.toml`
-- If wrong Python version: Verify `.venv/bin/python --version` (should be 3.13+)
+- If packages missing: Run `./scripts/setup/bootstrap` (installs HA and its dependencies into the venv)
+- If wrong Python version: `.venv/bin/python --version` must match `.python-version`; `./scripts/setup/bootstrap` recreates a venv that doesn't
+- If a tool is missing (`uv`, `pyright`, `prettier`, `git-cliff`, …): Run `mise install`; check `mise ls --current`
 
 ## Development Workflow
 
@@ -1190,9 +1198,8 @@ All backends produce GitHub-flavored Markdown with consistent structure:
 
 ```bash
 # git-cliff (fast, reliable, used in CI/CD)
-# Auto-installed in DevContainer via scripts/setup/setup
-# See: https://git-cliff.org/docs/installation
-cargo install git-cliff  # or download binary from releases
+# Pinned in mise.toml, auto-installed in DevContainer via scripts/setup/setup
+mise install git-cliff
 ````
 
 **When to Use Which:**
