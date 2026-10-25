@@ -6360,9 +6360,10 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
   _showDialog(title, body, opener, headEnd = "", subtitle = "") {
     const dialog = this.shadowRoot.querySelector("dialog");
     const t = stringsFor(this._hass);
-    // Opened from another view in the window: the way back to it instead of closing, as in HA's
-    // more-info dialog
-    const back = this._detailBack.length > 0;
+    // Opened from another view in the window, or from a card's window beneath this one: the way
+    // back to it instead of closing, as in HA's more-info dialog (closing this dialog is that way
+    // back to the window)
+    const back = this._detailBack.length > 0 || inCardWindow(this);
     const close = back ? t.back : t.legend.close;
     const head = dialogHead({ id: "legend-title", title, label: close, back, subtitle, end: headEnd });
     dialog.innerHTML = `${head}<div class="dialog-scroll">${body}</div>`;
