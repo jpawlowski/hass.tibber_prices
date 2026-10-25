@@ -93,13 +93,16 @@ require_command "jq" "apt-get install jq (or brew install jq)"
 # Create backup
 cp "$MANIFEST" "$MANIFEST.backup"
 
-# Update version with jq
-if ! jq ".version = \"$VERSION\"" "$MANIFEST" >"$MANIFEST.tmp"; then
+# Replace only the version line: rewriting the file with jq would reformat it
+# (arrays one item per line), which Prettier then formats back. The top-level
+# key is the only one indented by two spaces; VERSION is validated above, so it
+# holds no sed metacharacters.
+sed -i -E "s/^(  \"version\": *\")[^\"]*\"/\1${VERSION}\"/" "$MANIFEST"
+if [[ "$(jq -r .version "$MANIFEST" 2>/dev/null)" != "$VERSION" ]]; then
     mv "$MANIFEST.backup" "$MANIFEST"
     die "Failed to update manifest.json"
 fi
 
-mv "$MANIFEST.tmp" "$MANIFEST"
 rm "$MANIFEST.backup"
 
 log_success "Updated manifest.json"
