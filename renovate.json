@@ -1,0 +1,57 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommitTypeAll(chore)", ":semanticCommitScope(dev-deps)"],
+  "timezone": "Europe/Berlin",
+  "labels": ["dependencies"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "description": "HA_VERSION in scripts/setup/bootstrap",
+      "managerFilePatterns": ["/^scripts/setup/bootstrap$/"],
+      "matchStrings": ["HA_VERSION=\\$\\{HA_VERSION:-\"(?<currentValue>[^\"]+)\"\\}"],
+      "depNameTemplate": "homeassistant",
+      "datasourceTemplate": "pypi"
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Python follows Home Assistant: .python-version is written by scripts/setup/update-ha-version, never bumped on its own (the newest Python lacks wheels for HA's dependencies)",
+      "matchDepNames": ["python"],
+      "enabled": false
+    },
+    {
+      "description": "A new Home Assistant version is only listed on the Dependency Dashboard: it takes scripts/setup/update-ha-version (HA_VERSION, the matching pytest-homeassistant-custom-component and .python-version together), a PR changing HA_VERSION alone would be incomplete",
+      "matchManagers": ["custom.regex"],
+      "matchDepNames": ["homeassistant"],
+      "dependencyDashboardApproval": true,
+      "prBodyNotes": [
+        "Don't merge this as is: run `./scripts/setup/update-ha-version {{{newVersion}}}` on this branch, it also updates pytest-homeassistant-custom-component and .python-version."
+      ]
+    },
+    {
+      "description": "Each pytest-homeassistant-custom-component version pins exactly one HA version: scripts/setup/update-ha-version updates it together with HA_VERSION",
+      "matchPackageNames": ["pytest-homeassistant-custom-component"],
+      "enabled": false
+    },
+    {
+      "description": "Requirements of the integration itself reach users: listed in the release notes (chore(deps)), unlike all other updates here",
+      "matchManagers": ["homeassistant-manifest"],
+      "semanticCommitScope": "deps"
+    },
+    {
+      "description": "Docs sites: weekly",
+      "matchManagers": ["npm"],
+      "schedule": ["* 0-5 * * 1"]
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["@docusaurus/**"],
+      "groupName": "docusaurus"
+    },
+    {
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["react", "react-dom"],
+      "groupName": "react"
+    }
+  ]
+}

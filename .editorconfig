@@ -66,9 +66,6 @@ indent_style = tab
 [.github/workflows/*.{yml,yaml}]
 indent_size = 2
 
-[.github/dependabot.{yml,yaml}]
-indent_size = 2
-
 # Docker files
 [Dockerfile*]
 indent_size = 2
