@@ -303,6 +303,8 @@ const STRINGS = {
     day_low: "Day low",
     day_high: "Day high",
     passed: "passed",
+    summer_time: "summer time",
+    standard_time: "standard time",
     legend: {
       best_now: [
         "Best price now",
@@ -549,6 +551,8 @@ const STRINGS = {
     day_low: "Tagestief",
     day_high: "Tageshoch",
     passed: "vorbei",
+    summer_time: "Sommerzeit",
+    standard_time: "Normalzeit",
     legend: {
       best_now: [
         "Bestpreis jetzt",
@@ -810,6 +814,8 @@ const STRINGS = {
     day_low: "Dagens laveste",
     day_high: "Dagens høyeste",
     passed: "passert",
+    summer_time: "sommertid",
+    standard_time: "normaltid",
     legend: {
       best_now: [
         "Beste pris nå",
@@ -1063,6 +1069,8 @@ const STRINGS = {
     day_low: "Dagdieptepunt",
     day_high: "Daghoogtepunt",
     passed: "voorbij",
+    summer_time: "zomertijd",
+    standard_time: "wintertijd",
     legend: {
       best_now: [
         "Beste prijs nu",
@@ -1317,6 +1325,8 @@ const STRINGS = {
     day_low: "Dagens lägsta",
     day_high: "Dagens högsta",
     passed: "passerat",
+    summer_time: "sommartid",
+    standard_time: "normaltid",
     legend: {
       best_now: [
         "Bästa pris nu",
@@ -2941,6 +2951,17 @@ function zoneOffset(time, zone) {
   return Date.UTC(v.year, v.month - 1, v.day, v.hour, v.minute, v.second) - (time - (time % 1000));
 }
 
+// The mark of a wall-clock hour that occurs twice (the clocks go back): "ᴬ" the first time, "ᴮ"
+// the second; "" at any other moment. The end of the first pass (the same moment as the start of
+// the second) is "ᴮ" too, so a range reads "02:00ᴬ–02:00ᴮ" rather than "02:00–02:00"
+const REPEAT_MARKS = { first: "\u1D2C", second: "\u1D2E" };
+function repeatMark(time, zone) {
+  const offset = zoneOffset(time, zone);
+  if (zoneOffset(time + HOUR_MS, zone) < offset) return REPEAT_MARKS.first;
+  if (zoneOffset(time - HOUR_MS, zone) > offset) return REPEAT_MARKS.second;
+  return "";
+}
+
 // Midnight starting a calendar date (YYYY-MM-DD) in the home's time zone, and the next one
 function dayBounds(date, zone) {
   const [year, month, day] = date.split("-").map(Number);
@@ -2978,6 +2999,15 @@ function homeCalendar(hass) {
   const key = `${hass.language}|${zone}`;
   if (!CALENDARS.has(key)) {
     const day = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: zone });
+    const clockFormat = new Intl.DateTimeFormat(hass.language, {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+      timeZone: zone,
+    });
+    const hourFormat = new Intl.DateTimeFormat(hass.language, { hour: "2-digit", hourCycle: "h23", timeZone: zone });
+    const hourName = (time) => hourFormat.format(new Date(time)).replace(/\D+$/, "");
+    const strings = stringsFor(hass);
     CALENDARS.set(key, {
       zone,
       // Calendar date (YYYY-MM-DD) of a moment, in the home's time zone
@@ -2985,13 +3015,21 @@ function homeCalendar(hass) {
       weekday: new Intl.DateTimeFormat(hass.language, { weekday: "long", timeZone: zone }),
       dayMonth: new Intl.DateTimeFormat(hass.language, { day: "numeric", month: "long", timeZone: zone }),
       weekdayShort: new Intl.DateTimeFormat(hass.language, { weekday: "short", timeZone: zone }),
-      clock: new Intl.DateTimeFormat(hass.language, {
-        hour: "2-digit",
-        minute: "2-digit",
-        hourCycle: "h23",
-        timeZone: zone,
-      }),
-      hourLabel: new Intl.DateTimeFormat(hass.language, { hour: "2-digit", hourCycle: "h23", timeZone: zone }),
+      // A time of day, marked where the clocks go back and it occurs twice (see repeatMark)
+      clock: {
+        format: (date) => clockFormat.format(date) + repeatMark(date.getTime(), zone),
+      },
+      // The same in words, for tooltips, the chart's cursor tag and dialogs: "02:15 (summer time)"
+      clockLong: {
+        format: (date) => {
+          const mark = repeatMark(date.getTime(), zone);
+          const word = mark === REPEAT_MARKS.first ? strings.summer_time : strings.standard_time;
+          return clockFormat.format(date) + (mark ? ` (${word})` : "");
+        },
+      },
+      // The number of an hour ("02"), and its label, marked like the clock
+      hourName,
+      hourTag: (time) => hourName(time) + repeatMark(time, zone),
     });
   }
   return CALENDARS.get(key);
@@ -4834,7 +4872,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
 
     const periods = homePeriods(this._hass, entities, stateObj);
     const now = Date.now();
-    const { zone, dateOf, weekday, clock, hourLabel: hourFormat } = homeCalendar(this._hass);
+    const { zone, dateOf, weekday, clock, clockLong, hourName: hourNumber, hourTag } = homeCalendar(this._hass);
     const today = dateOf(now);
     const yesterday = dateOf(dayBounds(today, zone)[0] - 1);
     // The parts of the day reach back as far as the hours (scroll back to see them); four show at
@@ -4958,7 +4996,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     this._renderInfo = {
       t,
       unit,
-      clock,
+      clock: clockLong,
       zone,
       averageKind,
       average,
@@ -4972,7 +5010,8 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       today,
       extremes,
       quarters,
-      hourName: (time) => hourFormat.format(new Date(time)).replace(/\D+$/, ""),
+      hourName: hourNumber,
+      hourTag,
       weekdayOf: (time) => weekday.format(new Date(time)),
       // A time, with its weekday when it isn't today ("Sunday 02:00")
       at: (time) => (dateOf(time) === today ? "" : `${weekday.format(new Date(time))} `) + clock.format(new Date(time)),
@@ -4988,14 +5027,14 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       .find((entry) => entry.span);
     this._renderInfo.activePeriod = running && {
       kind: running.kind,
-      title: periodLabel(t, clock, running.kind, running.span[0], running.span[1]),
+      title: periodLabel(t, clockLong, running.kind, running.span[0], running.span[1]),
     };
-    const context = { t, periods, now, nowPrice, today, unit, references, average, dateOf, extremes, clock };
+    const context = { t, periods, now, nowPrice, today, unit, references, average, dateOf, extremes, clock, clockLong };
     this._averageKind = averageKind;
     // What this card shows in its strips (all sections of a compact card), for the legends of
     // the other cards on the tab
     this._legendShows = { sections: [], marks: [] };
-    const hourName = (block) => hourFormat.format(new Date(block.start)).replace(/\D+$/, "");
+    const hourName = (block) => hourTag(Date.parse(block.start));
     // The hours' strip, built once: also where it isn't drawn, as "now" opens the details of the
     // hour running now
     let hoursHtml;
@@ -5670,7 +5709,12 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
    * dot at the average, on one scale for the whole strip. The cheapest block from now on gets
    * a chip with how much cheaper it is than the block running now.
    */
-  _strip(blocks, kind, naming, { t, periods, now, today, unit, references, average, dateOf, extremes, clock }) {
+  _strip(
+    blocks,
+    kind,
+    naming,
+    { t, periods, now, today, unit, references, average, dateOf, extremes, clock, clockLong }
+  ) {
     const { key } = average;
     const ranged = kind === "parts";
     // A block's day for the dashed line: the day it begins on, but the block running now belongs
@@ -5881,7 +5925,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
         <div class="mark${segments.length ? " has" : ""}" ${[...new Set(drawn.map((p) => p.k))]
           .map((k) => `data-${k}`)
           .join(" ")} aria-hidden="true"${
-          drawn.length ? ` title="${drawn.map((p) => periodLabel(t, clock, p.k, p.a, p.b)).join(" · ")}"` : ""
+          drawn.length ? ` title="${drawn.map((p) => periodLabel(t, clockLong, p.k, p.a, p.b)).join(" · ")}"` : ""
         }>${segments
           .map((sg) => `<span style="left:${sg.left}%;width:${sg.width}%;background:${MARK_COLORS[sg.k]}"></span>`)
           .join("")}</div>
@@ -7467,7 +7511,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
    * line next to "Today" and ‹ ›), its bounds, and the hour labels of its chart (every third)
    */
   _dayHead(date) {
-    const { zone, hourName } = this._renderInfo;
+    const { zone, hourName, hourTag } = this._renderInfo;
     const calendar = homeCalendar(this._hass);
     const noon = new Date(`${date}T12:00:00Z`);
     const [start, end] = dayBounds(date, zone);
@@ -7476,7 +7520,11 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       weekday: capitalize(calendar.weekday.format(noon)),
       start,
       end,
-      label: (slot) => (Number(hourName(slot.start)) % 3 === 0 ? hourName(slot.start) : ""),
+      label: (slot) => {
+        const tag = hourTag(slot.start);
+        // Every third hour, and both passes of a repeated one
+        return Number(hourName(slot.start)) % 3 === 0 || tag !== hourName(slot.start) ? tag : "";
+      },
     };
   }
 
@@ -7545,6 +7593,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       parts,
       days,
       hourName,
+      hourTag,
       nowPrice,
       currentQuarter,
       formatNowFor,
@@ -7585,10 +7634,12 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     const pickKey = `${info.kind}|${block.start}`;
     if (this._picked && this._picked.key !== pickKey) this._picked = undefined;
     const picked = this._picked && this._picked.start;
+    const shortClock = homeCalendar(this._hass).clock;
     const chart = this._zoomChart(slots, {
       format,
       reference: info.reference,
-      label: (slot, i, isNow) => (ranged ? hourName(slot.start) : isNow ? t.now : clock.format(new Date(slot.start))),
+      label: (slot, i, isNow) =>
+        ranged ? hourTag(slot.start) : isNow ? t.now : shortClock.format(new Date(slot.start)),
       drill: ranged ? (slot) => this._hourDetail(slot.start) : undefined,
       // A quarter hour of an hour can be picked: what it costs against the hour, the day and now
       pick: ranged ? undefined : { selected: picked },
@@ -9859,7 +9910,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
       const midnight = hour === 0;
       parts.push(`<line class="grid" x1="${tx}" x2="${tx}" y1="${tick}" y2="${tick + (midnight ? 5 : 3)}"></line>`);
       parts.push(
-        `<text${midnight ? ' class="midnight"' : ""} x="${tx}" y="${height - 3 - (xTitle ? 14 : 0)}" text-anchor="middle">${d.hourLabel.format(new Date(time)).replace(/\D+$/, "")}</text>`
+        `<text${midnight ? ' class="midnight"' : ""} x="${tx}" y="${height - 3 - (xTitle ? 14 : 0)}" text-anchor="middle">${d.hourTag(time)}</text>`
       );
     }
     // Now: in the middle of the quarter hour running, also in hours (where it's more precise than
@@ -9912,7 +9963,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
       widestRange: [10, 11, 22, 23]
         .map((hour) => {
           const at = new Date(from).setHours(hour, 45, 0, 0);
-          return timeRange(d.clock, at, at + QUARTER_MS);
+          return timeRange(d.clockLong, at, at + QUARTER_MS);
         })
         .reduce((a, b) => (b.length > a.length ? b : a)),
     };
@@ -10055,7 +10106,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     const g = this._geo;
     const d = this._data;
     // The time first, as in the top line, then the day, set apart by a dot (it's no pill here)
-    const when = `${timeRange(d.clock, slot.start, slot.end)}<tspan class="cursor-day"> · ${this._dayWord(d.dateOf(slot.start), slot.start)}</tspan>`;
+    const when = `${timeRange(d.clockLong, slot.start, slot.end)}<tspan class="cursor-day"> · ${this._dayWord(d.dateOf(slot.start), slot.start)}</tspan>`;
     const priced = slot.price !== null;
     // Price and time change at once (they belong to the slot under the finger); the swatch's
     // color eases over from the last slot's, a period's badge fades in where it comes up
@@ -10150,7 +10201,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     const g = this._geo;
     const plot = this._els.plot;
     const date = d.dateOf(slot.start);
-    const range = timeRange(d.clock, slot.start, slot.end);
+    const range = timeRange(d.clockLong, slot.start, slot.end);
     // The slot running now is "now" (also with the cursor on it), in hours with the quarter
     // hour's price in its pill: the large price there is the hour's average
     const now = Date.now();
@@ -10193,7 +10244,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
       : "";
     // Over part of the slot only (an hour): when exactly
     const periodName =
-      period && (period.partial ? `${t[period.k]} ${timeRange(d.clock, period.start, period.end)}` : t[period.k]);
+      period && (period.partial ? `${t[period.k]} ${timeRange(d.clockLong, period.start, period.end)}` : t[period.k]);
     const level = slot.level && t.levels[slot.level];
     const colors = g.colors;
     // Level and gap as the view wants them: always, only while reading prices, never; the level
@@ -10226,7 +10277,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
       });
     const periodChip =
       period &&
-      this._chip(period.partial ? timeRange(d.clock, period.start, period.end) : t[period.k], {
+      this._chip(period.partial ? timeRange(d.clockLong, period.start, period.end) : t[period.k], {
         color: MARK_COLORS[period.k],
         icon: PERIOD_PATHS[period.k],
         title: periodName,
@@ -11727,11 +11778,11 @@ class TibberPricesOutlookFeature extends HTMLElement {
     const low = barBaseline(prices);
     const high = Math.max(...prices);
     const format = priceFormatter(this._hass, prices);
-    const hourFormat = homeCalendar(this._hass).hourLabel;
+    const { hourTag } = homeCalendar(this._hass);
     const unit = this._stateObj.attributes.unit_of_measurement || "";
     const columns = hours.map((h) => {
       const current = Date.parse(h.start) <= now;
-      const label = current ? t.now : hourFormat.format(new Date(h.start)).replace(/\D+$/, "");
+      const label = current ? t.now : hourTag(Date.parse(h.start));
       const height = Math.max(((h[key] - low) / (high - low)) * 100, 6);
       const color = levelColor(h.level);
       const spoken = `${label}, ${t.levels[h.level] || h.level}, ${format(h[key])} ${unit}`;
