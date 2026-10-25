@@ -271,6 +271,11 @@ const STRINGS = {
         today_vs_tomorrow: "On average, today is {comparison}.",
         past_hour: "This hour is over.",
         past_part: "This part of the day is over.",
+        clocks_back_hour: "The clocks go back: this hour occurs twice, first in {first} (ᴬ), then in {second} (ᴮ).",
+        clocks_forward_hour: "The clocks go forward at the end of this hour: the next one starts at {time}.",
+        clocks_back_part:
+          "The clocks go back during this part of the day, so it lasts an hour longer and one hour occurs twice ({first}, then {second}).",
+        clocks_forward_part: "The clocks go forward during this part of the day, so it lasts an hour less.",
         rises: "Within the hour, the price rises from {first} to {last} {unit}.",
         falls: "Within the hour, the price falls from {first} to {last} {unit}.",
         steady: "The price stays about the same throughout the hour.",
@@ -519,6 +524,13 @@ const STRINGS = {
         today_vs_tomorrow: "Heute ist es im Schnitt {comparison}.",
         past_hour: "Diese Stunde ist vorbei.",
         past_part: "Diese Tageszeit ist vorbei.",
+        clocks_back_hour:
+          "Die Uhr wird zurückgestellt: Diese Stunde gibt es zweimal, erst in {first} (ᴬ), dann in {second} (ᴮ).",
+        clocks_forward_hour: "Am Ende dieser Stunde wird die Uhr vorgestellt: Die nächste beginnt um {time}.",
+        clocks_back_part:
+          "Während dieser Tageszeit wird die Uhr zurückgestellt, sie dauert deshalb eine Stunde länger und eine Stunde kommt zweimal vor ({first}, dann {second}).",
+        clocks_forward_part:
+          "Während dieser Tageszeit wird die Uhr vorgestellt, sie dauert deshalb eine Stunde weniger.",
         rises: "Im Lauf der Stunde steigt der Preis von {first} auf {last} {unit}.",
         falls: "Im Lauf der Stunde fällt der Preis von {first} auf {last} {unit}.",
         steady: "Der Preis bleibt die ganze Stunde über etwa gleich.",
@@ -782,6 +794,12 @@ const STRINGS = {
         today_vs_tomorrow: "I snitt er i dag {comparison}.",
         past_hour: "Denne timen er over.",
         past_part: "Denne delen av dagen er over.",
+        clocks_back_hour:
+          "Klokken stilles tilbake: Denne timen forekommer to ganger, først i {first} (ᴬ), så i {second} (ᴮ).",
+        clocks_forward_hour: "Klokken stilles fram ved slutten av denne timen: Den neste starter kl. {time}.",
+        clocks_back_part:
+          "Klokken stilles tilbake i løpet av denne delen av dagen, så den varer én time lenger og én time forekommer to ganger ({first}, så {second}).",
+        clocks_forward_part: "Klokken stilles fram i løpet av denne delen av dagen, så den varer én time mindre.",
         rises: "I løpet av timen stiger prisen fra {first} til {last} {unit}.",
         falls: "I løpet av timen faller prisen fra {first} til {last} {unit}.",
         steady: "Prisen holder seg omtrent lik hele timen.",
@@ -1037,6 +1055,11 @@ const STRINGS = {
         today_vs_tomorrow: "Gemiddeld is vandaag {comparison}.",
         past_hour: "Dit uur is voorbij.",
         past_part: "Dit dagdeel is voorbij.",
+        clocks_back_hour: "De klok gaat terug: dit uur komt twee keer voor, eerst in {first} (ᴬ), dan in {second} (ᴮ).",
+        clocks_forward_hour: "Aan het einde van dit uur gaat de klok vooruit: het volgende begint om {time}.",
+        clocks_back_part:
+          "Tijdens dit dagdeel gaat de klok terug, dus het duurt een uur langer en één uur komt twee keer voor ({first}, dan {second}).",
+        clocks_forward_part: "Tijdens dit dagdeel gaat de klok vooruit, dus het duurt een uur korter.",
         rises: "In de loop van het uur stijgt de prijs van {first} naar {last} {unit}.",
         falls: "In de loop van het uur daalt de prijs van {first} naar {last} {unit}.",
         steady: "De prijs blijft het hele uur ongeveer gelijk.",
@@ -1293,6 +1316,12 @@ const STRINGS = {
         today_vs_tomorrow: "I snitt är i dag {comparison}.",
         past_hour: "Den här timmen är över.",
         past_part: "Den här tiden på dagen är över.",
+        clocks_back_hour:
+          "Klockan ställs tillbaka: Den här timmen förekommer två gånger, först i {first} (ᴬ), sedan i {second} (ᴮ).",
+        clocks_forward_hour: "Klockan ställs fram i slutet av den här timmen: Nästa börjar kl. {time}.",
+        clocks_back_part:
+          "Klockan ställs tillbaka under den här tiden på dagen, så den varar en timme längre och en timme förekommer två gånger ({first}, sedan {second}).",
+        clocks_forward_part: "Klockan ställs fram under den här tiden på dagen, så den varar en timme mindre.",
         rises: "Under timmen stiger priset från {first} till {last} {unit}.",
         falls: "Under timmen sjunker priset från {first} till {last} {unit}.",
         steady: "Priset ligger ungefär lika hela timmen.",
@@ -2976,6 +3005,33 @@ function repeatMark(time, zone) {
   return "";
 }
 
+// The zone's abbreviation at a moment ("CEST", "CET"), as the language writes it. Some languages
+// (English) only know an offset ("GMT+2") for zones outside their region: then British English is
+// tried, and failing that the offset stays
+function zoneAbbreviation(date, language, zone) {
+  let name = "";
+  for (const locale of [language, "en-GB"]) {
+    const part = new Intl.DateTimeFormat(locale, { timeZone: zone, timeZoneName: "short" })
+      .formatToParts(date)
+      .find((p) => p.type === "timeZoneName");
+    name = part ? part.value : "";
+    if (name && !/^(GMT|UTC)[+\u2212-]/.test(name)) break;
+  }
+  return name.replace(/^GMT/, "UTC");
+}
+
+// Whether the clocks change within a block of hours: "back" (one of its hours occurs twice),
+// "forward" (an hour is skipped) or "". An hour that starts a repeated one is "back" itself, the
+// hour before a skipped one "forward" (it ends at the change)
+function clockChange(start, end, zone, isHour) {
+  if (isHour) {
+    if (repeatMark(start, zone)) return "back";
+    return zoneOffset(end, zone) > zoneOffset(start, zone) ? "forward" : "";
+  }
+  const delta = zoneOffset(end - 1, zone) - zoneOffset(start, zone);
+  return delta < 0 ? "back" : delta > 0 ? "forward" : "";
+}
+
 // Midnight starting a calendar date (YYYY-MM-DD) in the home's time zone, and the next one
 function dayBounds(date, zone) {
   const [year, month, day] = date.split("-").map(Number);
@@ -3021,7 +3077,6 @@ function homeCalendar(hass) {
     });
     const hourFormat = new Intl.DateTimeFormat(hass.language, { hour: "2-digit", hourCycle: "h23", timeZone: zone });
     const hourName = (time) => hourFormat.format(new Date(time)).replace(/\D+$/, "");
-    const strings = stringsFor(hass);
     CALENDARS.set(key, {
       zone,
       // Calendar date (YYYY-MM-DD) of a moment, in the home's time zone
@@ -3033,15 +3088,16 @@ function homeCalendar(hass) {
       clock: {
         format: (date) => clockFormat.format(date) + repeatMark(date.getTime(), zone),
       },
-      // The same in words, for tooltips, the chart's cursor tag and dialogs: "02:15 (summer time)"
+      // The same with the zone's own abbreviation, for tooltips, the chart's cursor tag and dialogs:
+      // "02:15 (CEST)", "02:15 (CET)"
       clockLong: {
         format: (date) => {
           const mark = repeatMark(date.getTime(), zone);
-          const word = mark === REPEAT_MARKS.first ? strings.summer_time : strings.standard_time;
-          return clockFormat.format(date) + (mark ? ` (${word})` : "");
+          return clockFormat.format(date) + (mark ? ` (${zoneAbbreviation(date, hass.language, zone)})` : "");
         },
       },
       // The number of an hour ("02"), and its label, marked like the clock
+      zoneName: (time) => zoneAbbreviation(new Date(time), hass.language, zone),
       hourName,
       hourTag: (time) => hourName(time) + repeatMark(time, zone),
     });
@@ -7185,7 +7241,10 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     const { t, unit, clock, now, periods, extremes } = this._renderInfo;
     // From the prices as shown (rounded): bars, baseline and span all follow the same numbers, so
     // a bar can't end up taller than the chart because its rounded price lies beyond the raw span
-    const values = slots.map((s) => s.price).filter((v) => typeof v === "number").map((v) => shownPrice(format, v));
+    const values = slots
+      .map((s) => s.price)
+      .filter((v) => typeof v === "number")
+      .map((v) => shownPrice(format, v));
     // The marks drawn, for the detail card's legend (returned with the chart)
     const marks = new Set();
     // Without any price only as empty slots, where asked for (a day still to come)
@@ -7676,7 +7735,8 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     const p = x.prose;
     const start = Date.parse(block.start);
     const end = Date.parse(block.end);
-    const dayName = homeCalendar(this._hass).weekday.format(new Date(start));
+    const calendar = homeCalendar(this._hass);
+    const dayName = calendar.weekday.format(new Date(start));
     const when = ranged ? this._partName(block) : dayName;
     // A short title that fits one line next to ‹ ›: an hour's time, a part's name. The rest
     // (now, the weekday or the part's hours) goes in badges on top
@@ -7697,7 +7757,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     const pickKey = `${info.kind}|${block.start}`;
     if (this._picked && this._picked.key !== pickKey) this._picked = undefined;
     const picked = this._picked && this._picked.start;
-    const shortClock = homeCalendar(this._hass).clock;
+    const shortClock = calendar.clock;
     const chart = this._zoomChart(slots, {
       format: slotFormat,
       reference: info.reference,
@@ -7724,6 +7784,22 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     // Still to come of a running hour or part: what the advice can be about
     const ahead = known.filter((s) => s.end > now);
     if (isPast) prose.push(ranged ? p.past_part : p.past_hour);
+    // The clocks change in it: an hour that occurs twice or is skipped
+    const change = clockChange(start, end, calendar.zone, !ranged);
+    if (change) {
+      // Summer time first, then standard time, each with its abbreviation: "summer time (CEST)".
+      // A repeated hour is one of the two passes, the other is an hour away
+      const second = !ranged && repeatMark(start, calendar.zone) === REPEAT_MARKS.second;
+      const before = ranged ? start : second ? start - HOUR_MS : start;
+      const after = ranged ? end - 1 : second ? start : start + HOUR_MS;
+      const names = {
+        first: `${t.summer_time} (${calendar.zoneName(before)})`,
+        second: `${t.standard_time} (${calendar.zoneName(after)})`,
+      };
+      prose.push(
+        fill(p[`clocks_${change}_${ranged ? "part" : "hour"}`], { ...names, time: clock.format(new Date(end)) })
+      );
+    }
     if (live) {
       // More expensive than the share of today's quarter hours that cost less, or cheaper than
       // those that cost more: whichever says more
