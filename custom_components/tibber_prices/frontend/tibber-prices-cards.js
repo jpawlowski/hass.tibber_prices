@@ -7082,7 +7082,9 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
    */
   _zoomChart(slots, { format, reference, label, dense = false, bands = "", drill, empty = false, pick }) {
     const { t, unit, clock, now, periods, extremes } = this._renderInfo;
-    const values = slots.map((s) => s.price).filter((v) => typeof v === "number");
+    // From the prices as shown (rounded): bars, baseline and span all follow the same numbers, so
+    // a bar can't end up taller than the chart because its rounded price lies beyond the raw span
+    const values = slots.map((s) => s.price).filter((v) => typeof v === "number").map((v) => shownPrice(format, v));
     // The marks drawn, for the detail card's legend (returned with the chart)
     const marks = new Set();
     // Without any price only as empty slots, where asked for (a day still to come)
@@ -7104,7 +7106,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
           reference
         )} ${unit}">${REF_OFF_ICONS[offDirection]}</span>`
       : "";
-    const scale = (value) => ((value - low) / span) * 100;
+    const scale = (value) => Math.min(100, Math.max(0, ((value - low) / span) * 100));
     const spoken = [];
     const columns = slots.map((slot, index) => {
       const known = typeof slot.price === "number";
