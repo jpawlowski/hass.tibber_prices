@@ -2905,6 +2905,13 @@ const LEVEL_STEPS = ["very_cheap", "cheap", "normal", "expensive", "very_expensi
 // How close (in % of a span's scale) the current price and the median count as one spot: their
 // lines would overlap there
 const NEAR_MEDIAN = 3;
+// The least height a span of a part of the day is drawn at (px): a range of a few cents is still a
+// span, not a dash
+const SPAN_MIN_PX = 8;
+// The pointers of a span (current price, median) closer than this (px, the graph at its least
+// height) count as one spot: their lines share the span's width, each on its own side
+const GRAPH_MIN_PX = 76;
+const NEAR_POINTERS_PX = 6;
 
 // Text from the user (a card title) as HTML text: never markup
 function escapeHtml(text) {
@@ -3460,7 +3467,7 @@ const STYLE = `
   /* What past things in a chart are paled toward */
   ha-card, dialog { --fade-bg: var(--ha-card-background, var(--card-background-color, #fff));
                     /* Sizes the wide steps below raise: bar and span widths, the strips' row heights */
-                    --bar-w: 20px; --span-w: 14px; --day-h: 12px; --day-gap: 6px; --name-h: 16px; --value-h: 20px; --label-h: 14px; }
+                    --bar-w: 20px; --span-w: 16px; --day-h: 12px; --day-gap: 6px; --name-h: 16px; --value-h: 20px; --label-h: 14px; }
   /* ha-card animates every change (transition: all 0.3s). This card renders as soon as it has
      data, often before Home Assistant has styled the page, and would visibly fade from a square
      card with a light border into its final look on every load. It doesn't animate */
@@ -3741,7 +3748,8 @@ const STYLE = `
               margin: 0 0 -5px calc(var(--span-w) / -2 - 6px);
               border-top: 5px solid transparent; border-bottom: 5px solid transparent;
               border-left: 6px solid var(--primary-color, #03a9f4); }
-  /* Current price and median at one spot: each pointer's line runs from its side to the middle */
+  /* Current price and median at one spot: each pointer's line runs from its side to the middle,
+     one line in two colors */
   .tick-now-line.meets { width: calc(var(--span-w) / 2); }
   .tick-line.meets { width: calc(var(--span-w) / 2); margin-left: 0; }
   .day-now-line.meets { bottom: 50%; }
@@ -3879,7 +3887,7 @@ const STYLE = `
     /* With the days beside them, the strips' labels a size up too, like the days (HA's sizes);
        columns as wide as their widest text (e.g. "↑ 17:00"), bars and spans a little wider */
     .strip.hours { --col-min: 52px; }
-    .strip { --bar-w: 24px; --span-w: 16px; --day-h: 20px; --name-h: 20px; --label-h: 16px; }
+    .strip { --bar-w: 24px; --span-w: 18px; --day-h: 20px; --name-h: 20px; --label-h: 16px; }
     .day { font-size: var(--ha-font-size-m, 14px); }
     .day.start { font-size: var(--ha-font-size-l, 16px); }
     .chip { font-size: var(--ha-font-size-s, 12px); line-height: 18px; }
@@ -3895,7 +3903,7 @@ const STYLE = `
      leave them no room for more (e.g. "29,12" in cents) */
   @container card (min-width: 1600px) {
     .strip.hours { --col-min: 60px; }
-    .strip { --bar-w: 28px; --span-w: 18px; --name-h: 22px; --label-h: 18px; }
+    .strip { --bar-w: 28px; --span-w: 20px; --name-h: 22px; --label-h: 18px; }
     .name { font-size: var(--ha-font-size-l, 16px); }
     .range, .extreme { font-size: var(--ha-font-size-m, 14px); }
   }
@@ -5713,7 +5721,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
   /**
    * One strip of columns. Hours show the average as a bar; parts of the day show their spread
    * like the low/high of a weather forecast day: a span from lowest to highest price with a
-   * dot at the average, on one scale for the whole strip. The cheapest block from now on gets
+   * dot at the average, each day on a scale of its own. The cheapest block from now on gets
    * a chip with how much cheaper it is than the block running now.
    */
   _strip(
@@ -5733,26 +5741,46 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       const end = Date.parse(block.end);
       return references[dateOf(start <= now && now < end ? now : start)] ?? references[dateOf(end - 1)];
     };
-    const values = blocks.flatMap((b) => (ranged ? [b.price_min, b.price_max] : [b[key]]).concat(referenceOf(b)));
-    const numbers = values.filter((v) => typeof v === "number");
-    // Spans use the strip's own range, bars start a little below the lowest price: both like
-    // temperatures in a weather forecast
-    const low = ranged ? Math.min(...numbers) : barBaseline(numbers);
-    // A few prices far above the rest (a spike tomorrow) would squash everything else flat: the
-    // scale then ends a little above most prices, and what reaches beyond is cut off at the top
-    // with a break mark (its number below says how high)
-    const top = scaleTop(
-      blocks.map((b) => (ranged ? b.price_max : b[key])),
-      low,
-      Math.max(...blocks.map(referenceOf).filter((v) => typeof v === "number"), low)
-    );
-    const span = top - low || 1;
+    const valuesOf = (list) =>
+      list.flatMap((b) => (ranged ? [b.price_min, b.price_max] : [b[key]]).concat(referenceOf(b)));
+    const numbers = valuesOf(blocks).filter((v) => typeof v === "number");
     const format = priceFormatter(this._hass, numbers);
-    const scale = (value) => Math.min(((value - low) / span) * 100, 100);
+    // One scale per day, not one for the strip: a day's own span fills the height of its columns
+    // instead of being squashed by a dearer day beside it (columns of different days aren't
+    // comparable by height, the numbers say how they differ). A night counts for the day it
+    // ends on, as everywhere (see dayOfBlock)
+    const dayBlocks = new Map();
+    for (const block of blocks) {
+      const day = dayOfBlock(dateOf, block);
+      if (!dayBlocks.has(day)) dayBlocks.set(day, []);
+      dayBlocks.get(day).push(block);
+    }
+    const scales = new Map(
+      [...dayBlocks].map(([day, list]) => {
+        const dayNumbers = valuesOf(list).filter((v) => typeof v === "number");
+        // Spans use the day's own range, bars start a little below its lowest price: both like
+        // temperatures in a weather forecast
+        const low = ranged ? Math.min(...dayNumbers) : barBaseline(dayNumbers);
+        // A few prices far above the rest (a spike in the evening) would squash everything else
+        // flat: the scale then ends a little above most prices, and what reaches beyond is cut
+        // off at the top with a break mark (its number below says how high)
+        const top = scaleTop(
+          list.map((b) => (ranged ? b.price_max : b[key])),
+          low,
+          Math.max(...list.map(referenceOf).filter((v) => typeof v === "number"), low)
+        );
+        return [day, { low, top, span: top - low || 1 }];
+      })
+    );
+    const scaleOf = (block) => scales.get(dayOfBlock(dateOf, block));
+    const scale = (block, value) => {
+      const { low, span } = scaleOf(block);
+      return Math.min(((value - low) / span) * 100, 100);
+    };
     // Bars and spans at the prices as shown: the same number, the same height (the price now and
     // the day's line keep their exact place)
-    const place = (value) => scale(shownPrice(format, value));
-    const cut = (value) => shownPrice(format, value) > top;
+    const place = (block, value) => scale(block, shownPrice(format, value));
+    const cut = (block, value) => shownPrice(format, value) > scaleOf(block).top;
     const language = this._hass.language;
     const section = ranged ? "day_parts" : "hours";
     const tappable = this._tapDetails(section);
@@ -5820,36 +5848,54 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       let graph = "";
       // The current price beside the median (running part only), see below
       let nearMedian = false;
+      // Where the chip floats: above the bar or span (a CSS length)
+      let chipAt = `${Math.max(place(block, block[key] ?? 0), 7)}%`;
       if (ranged && typeof block.price_min === "number") {
-        const bottom = place(block.price_min);
+        const bottom = place(block, block.price_min);
+        const spanHeight = place(block, block.price_max) - bottom;
+        // A narrow span is drawn at least SPAN_MIN_PX high (growing upward): the pointers sit at
+        // their share of the span as drawn, so one at its lower end stays at the span's lower
+        // edge and a price near the middle shows near the middle, whatever the span's height
+        const drawn = `max(${spanHeight}%, ${SPAN_MIN_PX}px)`;
+        const share = (at) => (spanHeight > 0 ? Math.min(1, Math.max(0, (at - bottom) / spanHeight)) : 0.5);
+        // Kept two pixels inside the span, pointer and line alike: the line (the current price's is
+        // 4 px with its halo) never hangs over an end of the span, and the pointer stays centered
+        // on it
+        const along = (at) => `calc(${bottom}% + clamp(2px, ${share(at)} * ${drawn}, ${drawn} - 2px))`;
+        chipAt = `calc(${bottom}% + ${drawn})`;
         graph = `
-          <div class="span${cut(block.price_max) ? " cut" : ""}" style="bottom:${bottom}%;height:${place(block.price_max) - bottom}%;--c:${color}"></div>`;
+          <div class="span${cut(block, block.price_max) ? " cut" : ""}" style="bottom:${bottom}%;height:${drawn};--c:${color}"></div>`;
         // The current price on the running part's span: a blue pointer on the left, facing the
         // median's on the right, kept on the span if the price lies just outside its range
         const nowPrice = this._renderInfo.nowPrice;
         const showNow = isNow && typeof nowPrice === "number" && !hide.has("now");
-        const nowAt = showNow ? scale(Math.min(block.price_max, Math.max(block.price_min, nowPrice))) : undefined;
-        const medianAt = place(block.price_median);
-        // Where both lines would lie on top of each other, each pointer keeps half of the line,
-        // on its own side, so the median's doesn't vanish under the current price's
-        nearMedian = showNow && Math.abs(nowAt - medianAt) < NEAR_MEDIAN;
+        const nowAt = showNow
+          ? scale(block, Math.min(block.price_max, Math.max(block.price_min, nowPrice)))
+          : undefined;
+        const medianAt = place(block, block.price_median);
+        // Where the pointers lie that close, they stand at one height, in the middle between them,
+        // their lines halved and meeting there (see .meets)
+        const drawnPx = Math.max((spanHeight / 100) * GRAPH_MIN_PX, SPAN_MIN_PX);
+        const apart = showNow ? Math.abs(share(nowAt) - share(medianAt)) * drawnPx : Infinity;
+        nearMedian = apart < NEAR_POINTERS_PX;
         const meets = nearMedian && !hide.has("pointer") ? " meets" : "";
+        const lineAt = nearMedian ? (nowAt + medianAt) / 2 : medianAt;
         if (!hide.has("pointer")) {
-          graph += `<div class="tick" style="bottom:${medianAt}%"></div>
-          <div class="tick-line${meets}" style="bottom:${medianAt}%"></div>`;
+          graph += `<div class="tick" style="bottom:${along(lineAt)}"></div>
+          <div class="tick-line${meets}" style="bottom:${along(lineAt)}"></div>`;
         }
         if (showNow) {
-          graph += `<div class="tick-now-line${meets}" style="bottom:${nowAt}%"></div><div class="tick-now" style="bottom:${nowAt}%"></div>`;
+          graph += `<div class="tick-now-line${meets}" style="bottom:${along(lineAt)}"></div><div class="tick-now" style="bottom:${along(lineAt)}"></div>`;
         }
       } else if (typeof block[key] === "number") {
-        graph = `<div class="bar${cut(block[key]) ? " cut" : ""}" style="height:${Math.max(place(block[key]), 7)}%;--c:${color}"></div>`;
+        graph = `<div class="bar${cut(block, block[key]) ? " cut" : ""}" style="height:${Math.max(place(block, block[key]), 7)}%;--c:${color}"></div>`;
       }
       // A period running now: its mark stuck to the top right corner of the highlighted column
       // of now, taking no room (left out with `badge`)
       const active = isNow && !hide.has("badge") && this._renderInfo.activePeriod;
       const reference = referenceOf(block);
       if (typeof reference === "number" && !hide.has("reference")) {
-        graph += `<div class="ref" style="bottom:${scale(reference)}%"></div>`;
+        graph += `<div class="ref" style="bottom:${scale(block, reference)}%"></div>`;
       }
       // The periods touching this block; the line under it is a small timeline of the block,
       // colored only where a period lies
@@ -5866,9 +5912,8 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
       // The chip floats in the graph just above the bar or span: the cheapest block's bar is
       // low, so there's room; a span reaching the top gets its upper end covered (its numbers
       // are below). It takes no row of its own, so the bars get that height
-      const chipAt = ranged ? place(block.price_max) : Math.max(place(block[key]), 7);
       const chipHtml = shownChip
-        ? `<span class="chip" title="${chip.text}" style="bottom:min(calc(${chipAt}% + 4px), calc(100% - 16px))">${chip.chip}</span>`
+        ? `<span class="chip" title="${chip.text}" style="bottom:min(calc(${chipAt} + 4px), calc(100% - 16px))">${chip.chip}</span>`
         : "";
       const range = ranged ? `${format(block.price_min)}–${format(block.price_max)}` : "";
       const here = extremesIn(extremes, start, end);
