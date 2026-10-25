@@ -48,6 +48,38 @@ def _normalize_starts_at(starts_at: datetime | str) -> str:
     return starts_at[:19]
 
 
+def _is_same_instant(first: datetime, second: datetime) -> bool:
+    """Return True if two aware datetimes are the same moment, within the re-fetch tolerance."""
+    return abs((first - second).total_seconds()) <= _DST_COLLISION_MAX_SAME_UTC_S
+
+
+def _clean_dst_extras(extras: list[Any], primary_start: datetime | None) -> list[dict[str, Any]]:
+    """
+    Clean the extras of one key of a stored pool.
+
+    Drops entries that cannot be read, that repeat the indexed interval, or that repeat an
+    earlier extra. A repeat replaces the earlier entry, so the most recently stored copy wins
+    - the same rule the runtime applies when an extra is fetched again.
+    """
+    result: list[dict[str, Any]] = []
+    starts: list[datetime] = []
+    for extra in extras:
+        try:
+            start = datetime.fromisoformat(extra["startsAt"])
+        except KeyError, TypeError, ValueError:
+            continue
+        if primary_start is not None and _is_same_instant(start, primary_start):
+            continue
+        for position, known in enumerate(starts):
+            if _is_same_instant(start, known):
+                result[position] = extra
+                break
+        else:
+            starts.append(start)
+            result.append(extra)
+    return result
+
+
 class TibberPricesIntervalPool:
     """
     High-performance interval cache manager for a single Tibber home.
@@ -791,24 +823,36 @@ class TibberPricesIntervalPool:
             ``False`` if this was a true duplicate (caller should touch existing entry).
 
         """
-        location = self._index.get(starts_at_normalized)
-        if location is None:
+        existing_interval = self._indexed_interval(starts_at_normalized)
+        if existing_interval is None:
             return False
-        fetch_groups = self._cache.get_fetch_groups()
-        existing_interval = fetch_groups[location["fetch_group_index"]]["intervals"][location["interval_index"]]
         existing_dt = datetime.fromisoformat(existing_interval["startsAt"])
         new_dt = datetime.fromisoformat(interval["startsAt"])
-        if abs((new_dt - existing_dt).total_seconds()) > _DST_COLLISION_MAX_SAME_UTC_S:
-            # Different UTC time → DST fall-back collision: preserve both
-            self._dst_extras.setdefault(starts_at_normalized, []).append(dict(interval))
-            _LOGGER.debug(
-                "DST fall-back: stored extra interval %s alongside %s for home %s",
-                interval["startsAt"],
-                existing_interval["startsAt"],
-                self._home_id,
-            )
-            return True
-        return False
+        if _is_same_instant(new_dt, existing_dt):
+            return False
+
+        # Different UTC time → DST fall-back collision: preserve both. Re-fetches deliver
+        # the same extra again and again: keep one per UTC time, refreshed with the latest data.
+        extras = self._dst_extras.setdefault(starts_at_normalized, [])
+        for position, extra in enumerate(extras):
+            if _is_same_instant(datetime.fromisoformat(extra["startsAt"]), new_dt):
+                extras[position] = dict(interval)
+                return True
+        extras.append(dict(interval))
+        _LOGGER.debug(
+            "DST fall-back: stored extra interval %s alongside %s for home %s",
+            interval["startsAt"],
+            existing_interval["startsAt"],
+            self._home_id,
+        )
+        return True
+
+    def _indexed_interval(self, starts_at_normalized: str) -> dict[str, Any] | None:
+        """Return the interval the index holds for a normalized timestamp, if any."""
+        location = self._index.get(starts_at_normalized)
+        if location is None:
+            return None
+        return self._cache.get_fetch_groups()[location["fetch_group_index"]]["intervals"][location["interval_index"]]
 
     def _add_intervals(
         self,
@@ -1142,7 +1186,12 @@ class TibberPricesIntervalPool:
 
         # Restore DST fall-back extras (CET duplicates of fall-back 02:xx intervals).
         # Typically empty ({}) except in the days following a fall-back night.
-        manager._dst_extras = data.get("dst_extras", {})
+        # Stored pools written by affected versions may hold many copies per key (#233): clean them.
+        for key, extras in data.get("dst_extras", {}).items():
+            primary = manager._indexed_interval(key)
+            primary_start = datetime.fromisoformat(primary["startsAt"]) if primary else None
+            if cleaned := _clean_dst_extras(extras, primary_start):
+                manager._dst_extras[key] = cleaned
         # Before the first fetch, so GC on the restored pool protects the home's days
         if data.get("home_timezone"):
             manager.set_home_timezone(data["home_timezone"])

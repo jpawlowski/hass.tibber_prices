@@ -34,6 +34,11 @@ MIN_GAP_QUARTER_HOURLY = 900  # 15 minutes
 TIME_TOLERANCE_MINUTES = 1
 
 
+def _as_aware(value: datetime) -> datetime:
+    """Return value timezone-aware; a naive datetime is read as UTC."""
+    return value if value.tzinfo is not None else value.replace(tzinfo=UTC)
+
+
 class TibberPricesIntervalPoolFetcher:
     """Fetch missing intervals from API based on coverage check."""
 
@@ -102,11 +107,19 @@ class TibberPricesIntervalPoolFetcher:
             # No cache → fetch entire range
             return [(start_time_iso, end_time_iso)]
 
-        # Filter and sort cached intervals within requested range
-        in_range_intervals = [
-            interval for interval in cached_intervals if start_time_iso <= interval["startsAt"] < end_time_iso
-        ]
-        sorted_intervals = sorted(in_range_intervals, key=lambda x: x["startsAt"])
+        # Filter and sort cached intervals within requested range.
+        # Compare real instants, not ISO strings: on a DST fall-back day 02:00+02:00 and
+        # 02:00+01:00 sort the wrong way round as text and fake gaps between them.
+        # A naive bound is read as UTC, like in the range handling further down.
+        start_time_dt = _as_aware(datetime.fromisoformat(start_time_iso))
+        end_time_dt = _as_aware(datetime.fromisoformat(end_time_iso))
+        parsed_intervals: list[tuple[datetime, dict[str, Any]]] = []
+        for interval in cached_intervals:
+            interval_dt = datetime.fromisoformat(interval["startsAt"])
+            if start_time_dt <= interval_dt < end_time_dt:
+                parsed_intervals.append((interval_dt, interval))
+        parsed_intervals.sort(key=lambda pair: pair[0])
+        sorted_intervals = [interval for _, interval in parsed_intervals]
 
         if not sorted_intervals:
             # All cached intervals are outside requested range
@@ -114,12 +127,8 @@ class TibberPricesIntervalPoolFetcher:
 
         missing_ranges = []
 
-        # Parse start/end times once
-        start_time_dt = datetime.fromisoformat(start_time_iso)
-        end_time_dt = datetime.fromisoformat(end_time_iso)
-
         # Get first cached interval datetime for resolution logic
-        first_cached_dt = datetime.fromisoformat(sorted_intervals[0]["startsAt"])
+        first_cached_dt = parsed_intervals[0][0]
         resolution_change_dt = RESOLUTION_CHANGE_DATETIME.replace(tzinfo=first_cached_dt.tzinfo)
 
         # Check gap before first cached interval.
@@ -144,15 +153,11 @@ class TibberPricesIntervalPoolFetcher:
 
         # Check gaps between consecutive cached intervals
         for i in range(len(sorted_intervals) - 1):
-            current_interval = sorted_intervals[i]
-            next_interval = sorted_intervals[i + 1]
+            current_dt, current_interval = parsed_intervals[i]
+            next_dt, next_interval = parsed_intervals[i + 1]
 
             current_start = current_interval["startsAt"]
             next_start = next_interval["startsAt"]
-
-            # Parse to datetime for accurate time difference
-            current_dt = datetime.fromisoformat(current_start)
-            next_dt = datetime.fromisoformat(next_start)
 
             # Calculate time difference in minutes
             time_diff_minutes = (next_dt - current_dt).total_seconds() / 60
@@ -181,7 +186,7 @@ class TibberPricesIntervalPoolFetcher:
         # An interval's startsAt time represents the START of that interval.
         # The interval covers [startsAt, startsAt + interval_length).
         # So the last interval ENDS at (startsAt + interval_length), not at startsAt!
-        last_cached_dt = datetime.fromisoformat(sorted_intervals[-1]["startsAt"])
+        last_cached_dt = parsed_intervals[-1][0]
 
         # Calculate when the last interval ENDS
         interval_minutes = INTERVAL_QUARTER_HOURLY if last_cached_dt >= resolution_change_dt else INTERVAL_HOURLY
