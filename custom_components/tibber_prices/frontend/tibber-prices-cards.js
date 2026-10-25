@@ -9978,17 +9978,22 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     const h = price ? 32 : 18;
     // Centered on the cursor's line in the top row, below it where the resolution switch is;
     // while the mouse reads the prices, the switch makes way instead (see _yieldSwitch). Beside
-    // the line where the point on the curve would be under the tag
+    // the line where the point on the curve would be under the tag, and there too below the
+    // switches where a finger has left the tag (a high peak is the case: the tag would else
+    // lie under them). Below, a period's badge on the tag's corner keeps clear of them too
     const mouse = this._hover !== undefined;
-    let px = cx - w / 2;
-    let py = !mouse && px + w > g.clearOf ? g.top - 2 : 1;
+    const badgeRoom = period ? 9 : 0;
+    const clamp = (x) => Math.min(Math.max(x, g.left), g.right - w - badgeRoom);
+    const belowSwitch = g.top - 2 + (period ? 8 : 0);
+    const rowFor = (x) => (!mouse && x + w + badgeRoom > g.clearOf ? belowSwitch : 1);
     const dot = priced ? g.y(slot.price) : undefined;
+    let px = clamp(cx - w / 2);
+    let py = rowFor(px);
     if (dot !== undefined && dot < py + h + 10) {
-      px = cx - 14 - w >= g.left ? cx - 14 - w : cx + 14;
-      py = Math.min(py, 1);
+      px = clamp(cx - 14 - w >= g.left ? cx - 14 - w : cx + 14);
+      py = rowFor(px);
     }
-    px = Math.min(Math.max(px, g.left), g.right - w - (period ? 9 : 0));
-    this._yieldSwitch(mouse && px + w + (period ? 9 : 0) > g.clearOf);
+    this._yieldSwitch(mouse && px + w + badgeRoom > g.clearOf);
     const rect = tag.querySelector("rect");
     rect.setAttribute("x", px);
     rect.setAttribute("y", py);
