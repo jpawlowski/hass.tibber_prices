@@ -29,7 +29,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # Needed for version timestamps
 
@@ -44,19 +44,19 @@ jobs:
             echo "Stable tag or branch: ${GITHUB_REF}"
           fi
 
-      - uses: actions/setup-node@v7
+      - name: Set up Node and Python (mise.toml, .python-version)
+        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
         with:
-          node-version: 24
-          cache: "npm"
-          cache-dependency-path: |
-            docs/user/package-lock.json
-            docs/developer/package-lock.json
+          install_args: "node python"
+
+      - name: Cache npm downloads
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ hashFiles('docs/user/package-lock.json', 'docs/developer/package-lock.json') }}
+          restore-keys: npm-${{ runner.os }}-
 
       # VERIFY GENERATED DOCS
-      - name: Set up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.14"
 
       - name: Verify sensor reference is up-to-date
         run: python3 scripts/docs/generate-sensor-reference --check
@@ -164,13 +164,13 @@ jobs:
 
       # DEPLOY TO GITHUB PAGES
       - name: Setup Pages
-        uses: actions/configure-pages@v6
+        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
+        uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: ./deploy-root
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v5
+        uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

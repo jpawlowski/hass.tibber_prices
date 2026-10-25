@@ -27,7 +27,7 @@ jobs:
       version: ${{ steps.tag.outputs.version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -106,7 +106,7 @@ jobs:
     needs: sync-manifest # Wait for manifest sync to complete
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v7.0.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0 # Fetch all history for git-cliff
           ref: main # Use updated main branch if manifest was synced
@@ -215,13 +215,11 @@ jobs:
           git push origin --delete "$TAG_NAME"
           exit 1
 
-      - name: Install git-cliff
+      - name: Install git-cliff (mise.toml)
         if: steps.version_check.outputs.warning == ''
-        run: |
-          wget https://github.com/orhun/git-cliff/releases/download/v2.4.0/git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz
-          tar -xzf git-cliff-2.4.0-x86_64-unknown-linux-gnu.tar.gz
-          sudo mv git-cliff-2.4.0/git-cliff /usr/local/bin/
-          git-cliff --version
+        uses: jdx/mise-action@82a612c5ab8bcda7cc5db6b7e81a8e7584c3dc6e # v5.2.3
+        with:
+          install_args: "git-cliff"
 
       - name: Generate release notes
         if: steps.version_check.outputs.warning == ''
@@ -255,7 +253,7 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.version_check.outputs.warning == ''
-        uses: softprops/action-gh-release@v3
+        uses: softprops/action-gh-release@efb35369e0ad2afab669f228072c1b0d510eae64 # v3
         with:
           name: ${{ steps.release_notes.outputs.title }}
           body: ${{ steps.release_notes.outputs.notes }}
