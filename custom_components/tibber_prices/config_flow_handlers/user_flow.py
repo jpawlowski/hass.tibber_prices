@@ -19,7 +19,13 @@ from custom_components.tibber_prices.config_flow_handlers.validators import (
     TibberPricesInvalidAuthError,
     validate_api_token,
 )
-from custom_components.tibber_prices.const import DOMAIN, LOGGER, get_default_options, get_translation
+from custom_components.tibber_prices.const import (
+    DOMAIN,
+    LOGGER,
+    get_default_currency_for_country,
+    get_default_options,
+    get_translation,
+)
 from custom_components.tibber_prices.time_travel import SUBENTRY_TYPE_TIME_TRAVEL
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -381,6 +387,11 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                 and (current_price := price_info.get("current"))
             ):
                 currency_code = current_price.get("currency")
+
+            # A contract that has not started has no current price yet: take the
+            # currency Tibber bills in for the home's country
+            if currency_code is None and self._get_subscription_status(selected_home) == "future":
+                currency_code = get_default_currency_for_country((selected_home.get("address") or {}).get("country"))
 
             # Generate entry title from home address (not appNickname)
             entry_title = self._get_entry_title(selected_home)

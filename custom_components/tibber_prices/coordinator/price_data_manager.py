@@ -35,8 +35,17 @@ from custom_components.tibber_prices.api import (
     TibberPricesApiClientCommunicationError,
     TibberPricesApiClientError,
 )
+from custom_components.tibber_prices.const import get_default_currency_for_country
+from custom_components.tibber_prices.utils.subscription import (
+    PHASE_ACTIVE,
+    PHASE_ENDED,
+    PHASE_PENDING,
+    find_subscription,
+    get_subscription_phase,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from . import cache, helpers
 
@@ -117,6 +126,23 @@ class TibberPricesPriceDataManager:
         prefixed_message = f"{self._log_prefix} {message}"
         getattr(_LOGGER, level)(prefixed_message, *args, **kwargs)
 
+    def _phase_of(self, subscription: dict[str, Any] | None) -> str:
+        """
+        Return the phase of a subscription at the real current time.
+
+        Real time on purpose: the clock of an ended subscription is held on its
+        last day, so ``self.time`` can never tell that the end has passed. A
+        time-travel view shows the past of a running contract and has no phases.
+        """
+        if self._historical:
+            return PHASE_ACTIVE
+        return get_subscription_phase(subscription, dt_util.now())
+
+    @property
+    def subscription_phase(self) -> str:
+        """Return the phase (pending, active, ended) of the cached subscription."""
+        return self._phase_of(find_subscription(self._cached_user_data, self.home_id))
+
     async def load_cache(self) -> None:
         """Load cached user data from storage (price data is in IntervalPool)."""
         cache_data = await cache.load_cache(self._store, self._log_prefix, time=self.time)
@@ -195,6 +221,8 @@ class TibberPricesPriceDataManager:
 
         Rejects incomplete/invalid data from API to prevent caching temporary errors.
         Currency information is critical - if missing, we cannot safely calculate prices.
+        Exception: before a subscription starts and after it ended, Tibber sends no
+        current price, so there is no currency to demand (see _get_currency_for_home).
 
         Args:
             user_data: User data dict from API.
@@ -204,18 +232,22 @@ class TibberPricesPriceDataManager:
             True if data is valid and complete, False otherwise.
 
         """
+        # After the end of a contract the API may answer without a subscription at all;
+        # that is expected then and not worth a warning every time.
+        level = "debug" if self.subscription_phase == PHASE_ENDED else "warning"
+
         if not user_data:
-            self._log("warning", "User data validation failed: Empty data")
+            self._log(level, "User data validation failed: Empty data")
             return False
 
         viewer = user_data.get("viewer")
         if not viewer or not isinstance(viewer, dict):
-            self._log("warning", "User data validation failed: Missing or invalid viewer")
+            self._log(level, "User data validation failed: Missing or invalid viewer")
             return False
 
         homes = viewer.get("homes")
         if not homes or not isinstance(homes, list) or len(homes) == 0:
-            self._log("warning", "User data validation failed: No homes found")
+            self._log(level, "User data validation failed: No homes found")
             return False
 
         # Find our home and validate it has required data
@@ -226,7 +258,7 @@ class TibberPricesPriceDataManager:
 
                 # Validate home has timezone (required for cursor calculation)
                 if not home.get("timeZone"):
-                    self._log("warning", "User data validation failed: Home %s missing timezone", home_id)
+                    self._log(level, "User data validation failed: Home %s missing timezone", home_id)
                     return False
 
                 # Currency is REQUIRED - we cannot function without it
@@ -234,16 +266,20 @@ class TibberPricesPriceDataManager:
                 subscription = home.get("currentSubscription")
                 if not subscription:
                     self._log(
-                        "warning",
+                        level,
                         "User data validation failed: Home %s has no active subscription",
                         home_id,
                     )
                     return False
 
+                # Not started yet / already ended: no current price exists, and nothing is fetched anyway
+                if self._phase_of(subscription) != PHASE_ACTIVE:
+                    break
+
                 price_info = subscription.get("priceInfo")
                 if not price_info:
                     self._log(
-                        "warning",
+                        level,
                         "User data validation failed: Home %s subscription has no priceInfo",
                         home_id,
                     )
@@ -252,7 +288,7 @@ class TibberPricesPriceDataManager:
                 current = price_info.get("current")
                 if not current:
                     self._log(
-                        "warning",
+                        level,
                         "User data validation failed: Home %s priceInfo has no current data",
                         home_id,
                     )
@@ -261,7 +297,7 @@ class TibberPricesPriceDataManager:
                 currency = current.get("currency")
                 if not currency:
                     self._log(
-                        "warning",
+                        level,
                         "User data validation failed: Home %s has no currency",
                         home_id,
                     )
@@ -270,7 +306,7 @@ class TibberPricesPriceDataManager:
                 break
 
         if not home_found:
-            self._log("warning", "User data validation failed: Home %s not found in homes list", home_id)
+            self._log(level, "User data validation failed: Home %s not found in homes list", home_id)
             return False
 
         self._log("debug", "User data validation passed for home %s", home_id)
@@ -283,22 +319,36 @@ class TibberPricesPriceDataManager:
         Only accepts complete and valid data. If API returns incomplete data
         (e.g., during maintenance), keeps existing cached data and retries later.
 
+        Once the subscription ended, the cached data is final: Tibber stops sending
+        a current subscription, and what the entities show is cached anyway. The
+        daily check then only looks for a renewed contract, and anything that is
+        not one is dropped without a warning.
+
         Returns:
             True if user data was updated, False otherwise
 
         """
         if self._last_user_update is None or current_time - self._last_user_update >= self._user_update_interval:
+            ended = self.subscription_phase == PHASE_ENDED
             try:
                 self._log("debug", "Updating user data")
                 user_data = await self.api.async_get_viewer_details()
 
                 # Validate before caching
                 if not self._validate_user_data(user_data, self.home_id):
+                    if ended:
+                        self._last_user_update = current_time  # Look again tomorrow, not every 15 minutes
+                        return False
                     self._log(
                         "warning",
                         "Rejecting incomplete user data from API - keeping existing cached data",
                     )
                     return False  # Keep existing data, don't update timestamp
+
+                if ended and self._phase_of(find_subscription(user_data, self.home_id)) == PHASE_ENDED:
+                    self._last_user_update = current_time
+                    self._log("debug", "Subscription has ended - keeping cached user data")
+                    return False
 
                 # Data is valid, cache it
                 self._cached_user_data = user_data
@@ -313,6 +363,47 @@ class TibberPricesPriceDataManager:
             else:
                 return True  # User data was updated
         return False  # No update needed
+
+    async def _ensure_user_data(self, current_time: datetime) -> bool:
+        """
+        Make sure user data is cached before anything depends on it.
+
+        User data carries the home's timezone, which the price cursor needs, and the
+        subscription, which decides whether prices are fetched at all.
+
+        Returns:
+            True if user data was fetched, False if the cached copy was usable.
+
+        Raises:
+            TibberPricesApiClientError: If user data cannot be fetched or is incomplete.
+
+        """
+        # Cached data that no longer passes validation is stale in a way the daily
+        # refresh would not fix in time: e.g. the contract started since, and the
+        # copy from before has no current price to take the currency from.
+        if self._cached_user_data and self._validate_user_data(self._cached_user_data, self.home_id):
+            return False
+
+        self._log("info", "User data not cached or outdated, fetching before price data")
+        try:
+            user_data = await self.api.async_get_viewer_details()
+
+            # Validate data before accepting it (especially on initial setup)
+            if not self._validate_user_data(user_data, self.home_id):
+                msg = "Received incomplete user data from API - cannot proceed with price fetching"
+                self._log("error", msg)
+                raise TibberPricesApiClientError(msg)  # noqa: TRY301
+
+            self._cached_user_data = user_data
+            self._last_user_update = current_time
+        except (
+            TibberPricesApiClientError,
+            TibberPricesApiClientCommunicationError,
+        ) as ex:
+            msg = f"Failed to fetch user data (required for price fetching): {ex}"
+            self._log("error", msg)
+            raise TibberPricesApiClientError(msg) from ex
+        return True
 
     async def fetch_home_data(
         self,
@@ -350,34 +441,26 @@ class TibberPricesPriceDataManager:
 
         # Ensure we have user_data before fetching price data
         # This is critical for timezone-aware cursor calculation
-        if not self._cached_user_data:
-            self._log("info", "User data not cached, fetching before price data")
-            try:
-                user_data = await self.api.async_get_viewer_details()
-
-                # Validate data before accepting it (especially on initial setup)
-                if not self._validate_user_data(user_data, self.home_id):
-                    msg = "Received incomplete user data from API - cannot proceed with price fetching"
-                    self._log("error", msg)
-                    raise TibberPricesApiClientError(msg)  # noqa: TRY301
-
-                self._cached_user_data = user_data
-                self._last_user_update = current_time
-            except (
-                TibberPricesApiClientError,
-                TibberPricesApiClientCommunicationError,
-            ) as ex:
-                msg = f"Failed to fetch user data (required for price fetching): {ex}"
-                self._log("error", msg)
-                raise TibberPricesApiClientError(msg) from ex
+        await self._ensure_user_data(current_time)
 
         # At this point, _cached_user_data is guaranteed to be not None (checked above)
         if not self._cached_user_data:
             msg = "User data unexpectedly None after fetch attempt"
             raise TibberPricesApiClientError(msg)
 
-        # Retrieve price data via IntervalPool (single source of truth)
-        price_info, api_called = await self._fetch_via_pool(home_id, include_tomorrow=include_tomorrow)
+        # Retrieve price data via IntervalPool (single source of truth).
+        # Tibber has no prices for a contract that has not started, and none to add once
+        # it ended: the former needs no request, the latter only what is already cached.
+        phase = self.subscription_phase
+        if phase == PHASE_PENDING:
+            self._log("debug", "Subscription has not started yet - not fetching price data")
+            price_info, api_called = [], False
+        elif phase == PHASE_ENDED:
+            self._log("debug", "Subscription has ended - serving cached price data only")
+            price_info = self._interval_pool.get_cached_sensor_data(self._cached_user_data)
+            api_called = False
+        else:
+            price_info, api_called = await self._fetch_via_pool(home_id, include_tomorrow=include_tomorrow)
 
         # Extract currency for this home from user_data
         currency = self._get_currency_for_home(home_id)
@@ -480,6 +563,13 @@ class TibberPricesPriceDataManager:
                 current = price_info.get("current") or {}
                 currency = current.get("currency")
 
+                if not currency and self._phase_of(subscription) != PHASE_ACTIVE:
+                    # No current price before the contract starts or after it ended:
+                    # the currency of the home's country is what Tibber bills in there.
+                    country = (home.get("address") or {}).get("country")
+                    currency = get_default_currency_for_country(country)
+                    self._log("debug", "No current price yet or any more - using %s for country %s", currency, country)
+
                 if not currency:
                     # This should not happen if validation worked correctly
                     msg = f"Home {home_id} has no active subscription - currency unavailable"
@@ -561,6 +651,9 @@ class TibberPricesPriceDataManager:
             result = transform_fn({})
             result["_home_not_found"] = True  # Special marker for coordinator
             return result, False  # No API call made (home doesn't exist)
+
+        # Stale or missing user data (e.g. the contract started since) is replaced before it is used
+        user_data_updated = await self._ensure_user_data(current_time) or user_data_updated
 
         # Determine if we should request tomorrow data
         include_tomorrow = self.should_fetch_tomorrow_data(current_price_info)

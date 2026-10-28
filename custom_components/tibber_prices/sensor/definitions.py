@@ -1195,6 +1195,9 @@ PRICE_PHASE_TIMING_SENSORS = (
     ),
 )
 
+# Diagnostic sensors that are built from prices and therefore wait for the subscription to start
+PRICE_DEPENDENT_DIAGNOSTIC_KEYS = frozenset({"chart_data_export", "chart_metadata"})
+
 # 9. DIAGNOSTIC SENSORS (data availability and metadata)
 # ----------------------------------------------------------------------------
 
@@ -1204,7 +1207,16 @@ DIAGNOSTIC_SENSORS = (
         translation_key="data_lifecycle_status",
         icon="mdi:database-sync",
         device_class=SensorDeviceClass.ENUM,
-        options=["cached", "fresh", "refreshing", "searching_tomorrow", "turnover_pending", "error"],
+        options=[
+            "cached",
+            "fresh",
+            "refreshing",
+            "searching_tomorrow",
+            "turnover_pending",
+            "error",
+            "awaiting_subscription",
+            "subscription_ended",
+        ],
         state_class=None,  # Status value: no statistics
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,  # Critical for debugging
@@ -1341,7 +1353,7 @@ DIAGNOSTIC_SENSORS = (
         icon="mdi:file-document-check",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.ENUM,
-        options=["running", "ended", "pending", "unknown"],
+        options=["running", "ended", "pending", "awaiting_market", "unknown"],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(

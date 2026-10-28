@@ -17,6 +17,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from homeassistant.const import EntityCategory
+
 from .core import TibberPricesBinarySensor
 from .definitions import ENTITY_DESCRIPTIONS
 
@@ -32,12 +34,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tibber Prices binary sensor based on a config entry."""
+    # Before the subscription starts there are no prices: only the diagnostic
+    # binary sensors exist (see sensor/__init__.py).
+    coordinator = entry.runtime_data.coordinator
+    live_descriptions = [
+        entity_description
+        for entity_description in ENTITY_DESCRIPTIONS
+        if coordinator.has_price_entities or entity_description.entity_category == EntityCategory.DIAGNOSTIC
+    ]
+
     async_add_entities(
         TibberPricesBinarySensor(
-            coordinator=entry.runtime_data.coordinator,
+            coordinator=coordinator,
             entity_description=entity_description,
         )
-        for entity_description in ENTITY_DESCRIPTIONS
+        for entity_description in live_descriptions
     )
 
     # One set of entities per time-travel view, each on its own coordinator and

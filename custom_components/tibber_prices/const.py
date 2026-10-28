@@ -259,6 +259,20 @@ CURRENCY_NAMES = {
 }
 
 
+# Currency Tibber bills in, per country of the home (used while the API sends no price yet)
+COUNTRY_CURRENCY = {
+    "NO": "NOK",
+    "SE": "SEK",
+    "DE": "EUR",
+    "NL": "EUR",
+}
+
+
+def get_default_currency_for_country(country: str | None) -> str:
+    """Return the currency Tibber bills in for a country code, EUR if unknown."""
+    return COUNTRY_CURRENCY.get((country or "").upper(), "EUR")
+
+
 def get_currency_info(currency_code: str | None) -> tuple[str, str, str]:
     """
     Get currency information for a given ISO currency code.

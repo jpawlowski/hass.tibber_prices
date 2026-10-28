@@ -381,6 +381,49 @@ class TibberPricesIntervalPool:
 
         return final_result, api_called
 
+    def _sensor_window(
+        self,
+        user_data: dict[str, Any],
+        home_timezone: str | None = None,
+    ) -> tuple[datetime, datetime, datetime]:
+        """
+        Return the 4-day sensor window in the home's timezone.
+
+        Returns:
+            Tuple of (day-before-yesterday 00:00, end of today, end of tomorrow).
+
+        """
+        tz_str = home_timezone
+        if not tz_str:
+            tz_str = self._extract_timezone_from_user_data(user_data)
+
+        # Calculate range in home's timezone
+        tz = ZoneInfo(tz_str) if tz_str else None
+        # Protected from GC: the same days as fetched here, counted in the home's time zone
+        self.set_home_timezone(tz_str)
+        now = self._time_service.now() if self._time_service else dt_util.now()
+        now_local = now.astimezone(tz) if tz else now
+
+        # Day before yesterday 00:00 (start) - same for both fetch and return
+        day_before_yesterday = (now_local - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_today = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_tomorrow = (now_local + timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+        return day_before_yesterday, end_of_today, end_of_tomorrow
+
+    def get_cached_sensor_data(
+        self,
+        user_data: dict[str, Any],
+        home_timezone: str | None = None,
+    ) -> list[dict[str, Any]]:
+        """
+        Return the 4-day sensor window from the cache alone, never calling the API.
+
+        For a subscription that ended: Tibber has nothing more to add, so asking
+        for what the cache lacks would only produce a failing request every cycle.
+        """
+        day_before_yesterday, _, end_of_tomorrow = self._sensor_window(user_data, home_timezone)
+        return self._get_cached_intervals(day_before_yesterday.isoformat(), end_of_tomorrow.isoformat())
+
     async def get_sensor_data(
         self,
         api_client: TibberPricesApiClient,
@@ -424,23 +467,7 @@ class TibberPricesIntervalPool:
             - api_called: True if API was called to fetch missing data, False if all from cache.
 
         """
-        # Determine timezone
-        tz_str = home_timezone
-        if not tz_str:
-            tz_str = self._extract_timezone_from_user_data(user_data)
-
-        # Calculate range in home's timezone
-        tz = ZoneInfo(tz_str) if tz_str else None
-        # Protected from GC: the same days as fetched here, counted in the home's time zone
-        self.set_home_timezone(tz_str)
-        now = self._time_service.now() if self._time_service else dt_util.now()
-        now_local = now.astimezone(tz) if tz else now
-
-        # Day before yesterday 00:00 (start) - same for both fetch and return
-        day_before_yesterday = (now_local - timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
-
-        # End of tomorrow (full protected range) - used for RETURN data
-        end_of_tomorrow = (now_local + timedelta(days=2)).replace(hour=0, minute=0, second=0, microsecond=0)
+        day_before_yesterday, end_of_today, end_of_tomorrow = self._sensor_window(user_data, home_timezone)
 
         # API fetch range depends on include_tomorrow flag
         if include_tomorrow:
@@ -448,7 +475,7 @@ class TibberPricesIntervalPool:
             fetch_desc = "end-of-tomorrow"
         else:
             # Only fetch up to end of today (prevents API spam before 13:00)
-            fetch_end_time = (now_local + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+            fetch_end_time = end_of_today
             fetch_desc = "end-of-today"
 
         _LOGGER.debug(

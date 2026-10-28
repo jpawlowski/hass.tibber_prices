@@ -44,7 +44,8 @@ class TibberPricesMetadataCalculator(TibberPricesBaseCalculator):
 
         # Convert string to lowercase for ENUM device_class
         if isinstance(value, str):
-            return value.lower()
+            # Multi-word statuses ("awaiting market") become valid option keys
+            return value.lower().replace(" ", "_")
 
         return value
 
@@ -110,7 +111,8 @@ class TibberPricesMetadataCalculator(TibberPricesBaseCalculator):
 
         # Convert string to lowercase for ENUM device_class
         if isinstance(value, str):
-            return value.lower()
+            # Multi-word statuses ("awaiting market") become valid option keys
+            return value.lower().replace(" ", "_")
 
         return value
 

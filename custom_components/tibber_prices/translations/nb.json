@@ -843,7 +843,9 @@
           "refreshing": "Oppdaterer",
           "searching_tomorrow": "Søker morgendagens data",
           "turnover_pending": "Midnattskifte venter",
-          "error": "Feil"
+          "error": "Feil",
+          "awaiting_subscription": "Venter på avtalestart",
+          "subscription_ended": "Avtalen er avsluttet"
         }
       },
       "today_volatility": {
@@ -986,7 +988,8 @@
           "running": "Aktiv",
           "ended": "Avsluttet",
           "pending": "Venter",
-          "unknown": "Ukjent"
+          "unknown": "Ukjent",
+          "awaiting_market": "Venter på marked"
         }
       },
       "day_pattern_yesterday": {

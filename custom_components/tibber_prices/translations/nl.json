@@ -843,7 +843,9 @@
           "refreshing": "Vernieuwen",
           "searching_tomorrow": "Morgen Zoeken",
           "turnover_pending": "Omslag In Behandeling",
-          "error": "Fout"
+          "error": "Fout",
+          "awaiting_subscription": "Wacht op start contract",
+          "subscription_ended": "Contract beëindigd"
         }
       },
       "today_volatility": {
@@ -986,7 +988,8 @@
           "running": "Actief",
           "ended": "Beëindigd",
           "pending": "In Afwachting",
-          "unknown": "Onbekend"
+          "unknown": "Onbekend",
+          "awaiting_market": "Wacht op markt"
         }
       },
       "day_pattern_yesterday": {
