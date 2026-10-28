@@ -42,6 +42,7 @@ from custom_components.tibber_prices.utils.subscription import (
     PHASE_PENDING,
     find_subscription,
     get_subscription_phase,
+    has_no_price_yet,
 )
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -120,6 +121,8 @@ class TibberPricesPriceDataManager:
         # Cached data (user data only - price data is in IntervalPool)
         self._cached_user_data: dict[str, Any] | None = None
         self._last_user_update: datetime | None = None
+        self._subscription_source: dict[str, Any] | None = None
+        self._subscription: dict[str, Any] | None = None
 
     def _log(self, level: str, message: str, *args: object, **kwargs: object) -> None:
         """Log with coordinator-specific prefix."""
@@ -138,10 +141,22 @@ class TibberPricesPriceDataManager:
             return PHASE_ACTIVE
         return get_subscription_phase(subscription, dt_util.now())
 
+    def _has_no_price_yet(self, subscription: dict[str, Any] | None) -> bool:
+        """Return True if no current price is to be expected (see utils.subscription.has_no_price_yet)."""
+        return not self._historical and has_no_price_yet(subscription, dt_util.now())
+
+    @property
+    def subscription(self) -> dict[str, Any] | None:
+        """Return the cached subscription, looked up once per copy of the user data."""
+        if self._subscription_source is not self._cached_user_data:
+            self._subscription_source = self._cached_user_data
+            self._subscription = find_subscription(self._cached_user_data, self.home_id)
+        return self._subscription
+
     @property
     def subscription_phase(self) -> str:
         """Return the phase (pending, active, ended) of the cached subscription."""
-        return self._phase_of(find_subscription(self._cached_user_data, self.home_id))
+        return self._phase_of(self.subscription)
 
     async def load_cache(self) -> None:
         """Load cached user data from storage (price data is in IntervalPool)."""
@@ -273,7 +288,7 @@ class TibberPricesPriceDataManager:
                     return False
 
                 # Not started yet / already ended: no current price exists, and nothing is fetched anyway
-                if self._phase_of(subscription) != PHASE_ACTIVE:
+                if self._has_no_price_yet(subscription):
                     break
 
                 price_info = subscription.get("priceInfo")
@@ -397,6 +412,10 @@ class TibberPricesPriceDataManager:
             TibberPricesApiClientError,
             TibberPricesApiClientCommunicationError,
         ) as ex:
+            if self._cached_user_data:
+                # An outdated copy still beats failing every cycle; the next update tries again
+                self._log("warning", "Could not refresh outdated user data, keeping the cached copy: %s", ex)
+                return False
             msg = f"Failed to fetch user data (required for price fetching): {ex}"
             self._log("error", msg)
             raise TibberPricesApiClientError(msg) from ex
@@ -560,7 +579,7 @@ class TibberPricesPriceDataManager:
                 current = price_info.get("current") or {}
                 currency = current.get("currency")
 
-                if not currency and self._phase_of(subscription) != PHASE_ACTIVE:
+                if not currency and self._has_no_price_yet(subscription):
                     # No current price before the contract starts or after it ended:
                     # the currency of the home's country is what Tibber bills in there.
                     currency = get_default_currency_for_home(home)

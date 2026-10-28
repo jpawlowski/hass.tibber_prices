@@ -445,7 +445,8 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """
         subscription = home.get("currentSubscription")
 
-        if subscription is None or subscription.get("status") is None:
+        # A status may be missing before the start; with a start date it is still a contract
+        if subscription is None or (subscription.get("status") is None and not subscription.get("validFrom")):
             return "none"
 
         # Check validTo (contract end date)

@@ -382,7 +382,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._created_pending = self.subscription_phase == PHASE_PENDING
 
         # Reload at the very moment the contract starts, not at the next 15-minute check
-        start = get_subscription_start(find_subscription(self._cached_user_data, self._home_id))
+        start = get_subscription_start(self._price_data_manager.subscription)
         if self._created_pending and start is not None:
             self.config_entry.async_on_unload(
                 async_track_point_in_utc_time(self.hass, self._handle_subscription_start, start)
@@ -1145,9 +1145,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         Market prices exist for days the contract no longer covers, but the home
         has none: the last day of the contract is the last day there is.
         """
-        end = get_subscription_end(find_subscription(self._cached_user_data, self._home_id))
+        end = get_subscription_end(self._price_data_manager.subscription)
         price_info = raw_data.get("price_info")
-        # The window holds at most two days ahead: a later end cuts nothing
+        # The data holds at most two days ahead of this coordinator's clock: a later end cuts nothing
         if end is None or not price_info or end > self.time.now() + timedelta(days=2):
             return raw_data
 

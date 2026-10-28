@@ -87,3 +87,17 @@ def get_subscription_phase(subscription: dict[str, Any] | None, now: datetime) -
     if end is not None and end <= now:
         return PHASE_ENDED
     return PHASE_ACTIVE
+
+
+def has_no_price_yet(subscription: dict[str, Any] | None, now: datetime) -> bool:
+    """
+    Return True if Tibber cannot have a current price for this subscription.
+
+    Before the start and after the end, and right at the start while Tibber still
+    reports the status "awaiting market": the dates say the contract runs, the API
+    has no price for it yet.
+    """
+    if get_subscription_phase(subscription, now) != PHASE_ACTIVE:
+        return True
+    status = (subscription or {}).get("status")
+    return isinstance(status, str) and status.lower().startswith("awaiting")

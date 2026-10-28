@@ -808,33 +808,6 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
 
         return metering_point.get(field)
 
-    def _get_subscription_value(self, field: str) -> str | None:
-        """
-        Get subscription value from user data.
-
-        String values are converted to lowercase for ENUM device_class compatibility.
-        """
-        user_homes = self.coordinator.get_user_homes()
-        if not user_homes:
-            return None
-
-        home_id = self.coordinator.config_entry.data.get("home_id")
-        if not home_id:
-            return None
-
-        home_data = next((home for home in user_homes if home.get("id") == home_id), None)
-        if not home_data:
-            return None
-
-        subscription = home_data.get("currentSubscription")
-        if not subscription:
-            return None
-
-        value = subscription.get(field)
-
-        # Lowercase for ENUM device_class
-        return normalize_enum_state(value)
-
     @property
     def available(self) -> bool:
         """

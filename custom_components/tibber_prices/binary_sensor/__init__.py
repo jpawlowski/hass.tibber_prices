@@ -20,7 +20,7 @@ from typing import TYPE_CHECKING
 from homeassistant.const import EntityCategory
 
 from .core import TibberPricesBinarySensor
-from .definitions import ENTITY_DESCRIPTIONS
+from .definitions import ENTITY_DESCRIPTIONS, PRICE_DEPENDENT_DIAGNOSTIC_KEYS
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
@@ -40,7 +40,11 @@ async def async_setup_entry(
     live_descriptions = [
         entity_description
         for entity_description in ENTITY_DESCRIPTIONS
-        if coordinator.has_price_entities or entity_description.entity_category == EntityCategory.DIAGNOSTIC
+        if coordinator.has_price_entities
+        or (
+            entity_description.entity_category == EntityCategory.DIAGNOSTIC
+            and entity_description.key not in PRICE_DEPENDENT_DIAGNOSTIC_KEYS
+        )
     ]
 
     async_add_entities(

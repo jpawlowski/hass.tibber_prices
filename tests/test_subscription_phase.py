@@ -33,10 +33,12 @@ HOME_ID = "home-123"
 NOW = datetime(2026, 11, 20, 12, 0, tzinfo=BERLIN)
 
 
-def _subscription(valid_from: str | None, valid_to: str | None = None, *, current: bool = False) -> dict:
+def _subscription(
+    valid_from: str | None, valid_to: str | None = None, *, current: bool = False, status: str = "awaiting market"
+) -> dict:
     """Build a currentSubscription as the viewer query returns it."""
     return {
-        "status": "awaiting market",
+        "status": status,
         "validFrom": valid_from,
         "validTo": valid_to,
         "priceInfo": {"current": {"currency": "EUR"} if current else None},
@@ -128,7 +130,7 @@ def test_validation_accepts_pending_subscription_without_current_price() -> None
 def test_validation_still_rejects_active_subscription_without_current_price() -> None:
     """An active contract without a current price is an incomplete API answer (issue #60)."""
     manager = _manager()
-    user_data = _user_data(_subscription("2020-01-01T00:00:00+01:00"))
+    user_data = _user_data(_subscription("2020-01-01T00:00:00+01:00", status="running"))
     assert manager._validate_user_data(user_data, HOME_ID) is False  # noqa: SLF001
 
 
@@ -184,7 +186,7 @@ async def test_ended_subscription_serves_cache_only() -> None:
 @pytest.mark.unit
 async def test_stale_pending_copy_is_replaced_once_the_contract_started() -> None:
     """The cached copy from before validFrom has no currency source any more, so it is refetched."""
-    started = _subscription("2020-01-01T00:00:00+01:00")  # cached while pending, validFrom is past now
+    started = _subscription("2020-01-01T00:00:00+01:00", status="running")  # cached while pending, now running
     manager = _manager(_user_data(started))
     fresh = _user_data(_subscription("2020-01-01T00:00:00+01:00", current=True))
     manager.api.async_get_viewer_details = AsyncMock(return_value=fresh)
@@ -214,6 +216,7 @@ def _coordinator_stub(subscription: dict | None) -> Mock:
     stub._time_shift = TimeShift()  # noqa: SLF001
     stub._home_id = HOME_ID  # noqa: SLF001
     stub._cached_user_data = _user_data(subscription)  # noqa: SLF001
+    stub._price_data_manager.subscription = subscription  # noqa: SLF001
     return stub
 
 
@@ -307,3 +310,47 @@ def test_lifecycle_error_outranks_subscription_phase() -> None:
     coordinator = _lifecycle_coordinator(PHASE_PENDING)
     coordinator.last_exception = Exception("boom")
     assert TibberPricesLifecycleCalculator(coordinator).get_lifecycle_state() == "error"
+
+
+# --- review follow-ups ------------------------------------------------------------
+
+
+@pytest.mark.unit
+def test_awaiting_market_after_start_still_has_no_price_yet() -> None:
+    """Right at validFrom Tibber may still say "awaiting market": no current price, no error."""
+    started = _subscription("2020-01-01T00:00:00+01:00")  # status "awaiting market", no current
+    manager = _manager()
+    assert manager._validate_user_data(_user_data(started), HOME_ID) is True  # noqa: SLF001
+    assert _manager(_user_data(started))._get_currency_for_home(HOME_ID) == "EUR"  # noqa: SLF001
+
+
+@pytest.mark.unit
+async def test_outdated_cache_is_kept_when_the_refresh_fails() -> None:
+    """A failing refresh must not turn a usable cached copy into an update failure."""
+    from custom_components.tibber_prices.api.exceptions import TibberPricesApiClientError  # noqa: PLC0415
+
+    cached = _user_data(_subscription("2020-01-01T00:00:00+01:00", current=True))
+    manager = _manager(cached)
+    manager._validate_user_data = Mock(return_value=False)  # noqa: SLF001
+    manager.api.async_get_viewer_details = AsyncMock(side_effect=TibberPricesApiClientError("down"))
+
+    assert await manager._ensure_user_data(NOW) is False  # noqa: SLF001
+    assert manager.cached_user_data == cached
+
+
+@pytest.mark.unit
+def test_binary_sensor_pending_set_leaves_out_price_dependent_sensors() -> None:
+    """tomorrow_data_available has nothing to report before the contract starts."""
+    from custom_components.tibber_prices.binary_sensor.definitions import PRICE_DEPENDENT_DIAGNOSTIC_KEYS  # noqa: PLC0415
+
+    assert "tomorrow_data_available" in PRICE_DEPENDENT_DIAGNOSTIC_KEYS
+
+
+@pytest.mark.unit
+def test_config_flow_accepts_future_subscription_without_status() -> None:
+    """A contract with a start date but no status yet is still a contract."""
+    from custom_components.tibber_prices.config_flow_handlers.user_flow import TibberPricesConfigFlowHandler  # noqa: PLC0415
+
+    home = {"currentSubscription": {"status": None, "validFrom": "2099-01-01T00:00:00+01:00"}}
+    assert TibberPricesConfigFlowHandler._get_subscription_status(home) == "future"  # noqa: SLF001
+    assert TibberPricesConfigFlowHandler._get_subscription_status({"currentSubscription": {"status": None}}) == "none"  # noqa: SLF001

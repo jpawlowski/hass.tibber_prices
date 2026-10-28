@@ -265,6 +265,8 @@ COUNTRY_CURRENCY = {
     "SE": "SEK",
     "DE": "EUR",
     "NL": "EUR",
+    "DK": "DKK",
+    "FI": "EUR",
 }
 
 
