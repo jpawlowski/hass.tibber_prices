@@ -276,8 +276,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Register options update listener to invalidate config caches
         config_entry.async_on_unload(config_entry.add_update_listener(self._handle_options_update))
 
-        # Subscription phase the entities were created for (see lock_entity_phase)
-        self._entity_phase: str | None = None
+        # True if the entities were created while the subscription had not started (see lock_entity_phase)
+        self._created_pending: bool | None = None
         self._reload_scheduled = False
 
         # Data lifecycle tracking
@@ -379,11 +379,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         need none exist. When it starts, the entry is reloaded to create the rest
         (see _check_subscription_phase_change).
         """
-        self._entity_phase = self.subscription_phase
+        self._created_pending = self.subscription_phase == PHASE_PENDING
 
         # Reload at the very moment the contract starts, not at the next 15-minute check
         start = get_subscription_start(find_subscription(self._cached_user_data, self._home_id))
-        if self._entity_phase == PHASE_PENDING and start is not None:
+        if self._created_pending and start is not None:
             self.config_entry.async_on_unload(
                 async_track_point_in_utc_time(self.hass, self._handle_subscription_start, start)
             )
@@ -396,18 +396,17 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     @property
     def has_price_entities(self) -> bool:
         """Return False while the subscription has not started: price entities are not created yet."""
-        return self._entity_phase != PHASE_PENDING
+        return not self._created_pending
 
     @callback
     def _check_subscription_phase_change(self) -> None:
         """Reload the entry once the subscription starts, to create the price entities."""
-        if self._entity_phase is None or self._reload_scheduled or self.is_time_travel:
+        if not self._created_pending or self._reload_scheduled or self.is_time_travel:
             return
-        if (self._entity_phase == PHASE_PENDING) == (self.subscription_phase == PHASE_PENDING):
+        phase = self.subscription_phase
+        if phase == PHASE_PENDING:
             return
-        self._log(
-            "info", "Subscription phase changed (%s -> %s), reloading", self._entity_phase, self.subscription_phase
-        )
+        self._log("info", "Subscription started (now %s), reloading", phase)
         self._reload_scheduled = True
         self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
@@ -1148,7 +1147,8 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         end = get_subscription_end(find_subscription(self._cached_user_data, self._home_id))
         price_info = raw_data.get("price_info")
-        if end is None or not price_info:
+        # The window holds at most two days ahead: a later end cuts nothing
+        if end is None or not price_info or end > self.time.now() + timedelta(days=2):
             return raw_data
 
         kept = [interval for interval in price_info if not self._starts_at_or_after(interval.get("startsAt"), end)]

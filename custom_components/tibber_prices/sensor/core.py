@@ -55,7 +55,7 @@ from .chart_metadata import (
     call_chartdata_service_for_metadata_async,
     get_chart_metadata_state,
 )
-from .helpers import aggregate_level_data, aggregate_rating_data
+from .helpers import aggregate_level_data, aggregate_rating_data, normalize_enum_state
 from .value_getters import get_value_getter_mapping
 
 if TYPE_CHECKING:
@@ -785,12 +785,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
 
         value = home_data.get(field)
 
-        # Convert string to lowercase for ENUM device_class
-        if isinstance(value, str):
-            # Multi-word statuses ("awaiting market") become valid option keys
-            return value.lower().replace(" ", "_")
-
-        return value
+        # Lowercase for ENUM device_class
+        return normalize_enum_state(value)
 
     def _get_metering_point_value(self, field: str) -> str | int | None:
         """Get metering point data value from user data."""
@@ -836,12 +832,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
 
         value = subscription.get(field)
 
-        # Convert string to lowercase for ENUM device_class
-        if isinstance(value, str):
-            # Multi-word statuses ("awaiting market") become valid option keys
-            return value.lower().replace(" ", "_")
-
-        return value
+        # Lowercase for ENUM device_class
+        return normalize_enum_state(value)
 
     @property
     def available(self) -> bool:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from custom_components.tibber_prices.sensor.helpers import normalize_enum_state
+
 from .base import TibberPricesBaseCalculator
 
 
@@ -42,12 +44,8 @@ class TibberPricesMetadataCalculator(TibberPricesBaseCalculator):
 
         value = home_data.get(field)
 
-        # Convert string to lowercase for ENUM device_class
-        if isinstance(value, str):
-            # Multi-word statuses ("awaiting market") become valid option keys
-            return value.lower().replace(" ", "_")
-
-        return value
+        # Lowercase for ENUM device_class
+        return normalize_enum_state(value)
 
     def get_metering_point_value(self, field: str) -> str | int | None:
         """
@@ -109,12 +107,8 @@ class TibberPricesMetadataCalculator(TibberPricesBaseCalculator):
 
         value = subscription.get(field)
 
-        # Convert string to lowercase for ENUM device_class
-        if isinstance(value, str):
-            # Multi-word statuses ("awaiting market") become valid option keys
-            return value.lower().replace(" ", "_")
-
-        return value
+        # Lowercase for ENUM device_class
+        return normalize_enum_state(value)
 
     def get_day_pattern_value(self, day: str) -> str | None:
         """

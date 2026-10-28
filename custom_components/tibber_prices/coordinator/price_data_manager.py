@@ -35,7 +35,7 @@ from custom_components.tibber_prices.api import (
     TibberPricesApiClientCommunicationError,
     TibberPricesApiClientError,
 )
-from custom_components.tibber_prices.const import get_default_currency_for_country
+from custom_components.tibber_prices.const import get_default_currency_for_home
 from custom_components.tibber_prices.utils.subscription import (
     PHASE_ACTIVE,
     PHASE_ENDED,
@@ -335,20 +335,17 @@ class TibberPricesPriceDataManager:
                 user_data = await self.api.async_get_viewer_details()
 
                 # Validate before caching
-                if not self._validate_user_data(user_data, self.home_id):
-                    if ended:
-                        self._last_user_update = current_time  # Look again tomorrow, not every 15 minutes
-                        return False
+                valid = self._validate_user_data(user_data, self.home_id)
+                if ended and (not valid or self._phase_of(find_subscription(user_data, self.home_id)) == PHASE_ENDED):
+                    # Nothing new to learn: look again tomorrow, not every 15 minutes
+                    self._last_user_update = current_time
+                    return False
+                if not valid:
                     self._log(
                         "warning",
                         "Rejecting incomplete user data from API - keeping existing cached data",
                     )
                     return False  # Keep existing data, don't update timestamp
-
-                if ended and self._phase_of(find_subscription(user_data, self.home_id)) == PHASE_ENDED:
-                    self._last_user_update = current_time
-                    self._log("debug", "Subscription has ended - keeping cached user data")
-                    return False
 
                 # Data is valid, cache it
                 self._cached_user_data = user_data
@@ -566,9 +563,8 @@ class TibberPricesPriceDataManager:
                 if not currency and self._phase_of(subscription) != PHASE_ACTIVE:
                     # No current price before the contract starts or after it ended:
                     # the currency of the home's country is what Tibber bills in there.
-                    country = (home.get("address") or {}).get("country")
-                    currency = get_default_currency_for_country(country)
-                    self._log("debug", "No current price yet or any more - using %s for country %s", currency, country)
+                    currency = get_default_currency_for_home(home)
+                    self._log("debug", "No current price yet or any more - using %s from the home's country", currency)
 
                 if not currency:
                     # This should not happen if validation worked correctly

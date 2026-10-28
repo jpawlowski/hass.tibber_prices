@@ -273,6 +273,11 @@ def get_default_currency_for_country(country: str | None) -> str:
     return COUNTRY_CURRENCY.get((country or "").upper(), "EUR")
 
 
+def get_default_currency_for_home(home: dict) -> str:
+    """Return the currency Tibber bills in for a home (viewer query dict), by its country."""
+    return get_default_currency_for_country((home.get("address") or {}).get("country"))
+
+
 def get_currency_info(currency_code: str | None) -> tuple[str, str, str]:
     """
     Get currency information for a given ISO currency code.

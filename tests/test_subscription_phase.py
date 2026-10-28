@@ -239,6 +239,7 @@ def test_clock_runs_normally_until_the_contract_ends() -> None:
 def test_intervals_after_the_end_are_dropped() -> None:
     """Market prices exist for days the contract does not cover; the home has none."""
     stub = _coordinator_stub(_subscription("2020-01-01T00:00:00+01:00", "2026-11-10T00:00:00+01:00", current=True))
+    stub.time.now.return_value = NOW
     stub._starts_at_or_after = lambda starts_at, boundary: starts_at >= boundary  # noqa: SLF001
     last = datetime(2026, 11, 9, 23, 45, tzinfo=BERLIN)
     first_after = datetime(2026, 11, 10, 0, 0, tzinfo=BERLIN)
@@ -255,7 +256,7 @@ def test_phase_change_reloads_the_entry_once() -> None:
     stub = Mock()
     stub.is_time_travel = False
     stub._reload_scheduled = False  # noqa: SLF001
-    stub._entity_phase = PHASE_PENDING  # noqa: SLF001
+    stub._created_pending = True  # noqa: SLF001
     stub.subscription_phase = PHASE_PENDING
 
     TibberPricesDataUpdateCoordinator._check_subscription_phase_change(stub)  # noqa: SLF001

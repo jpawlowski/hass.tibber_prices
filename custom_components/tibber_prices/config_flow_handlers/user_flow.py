@@ -22,7 +22,7 @@ from custom_components.tibber_prices.config_flow_handlers.validators import (
 from custom_components.tibber_prices.const import (
     DOMAIN,
     LOGGER,
-    get_default_currency_for_country,
+    get_default_currency_for_home,
     get_default_options,
     get_translation,
 )
@@ -391,7 +391,7 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             # A contract that has not started has no current price yet: take the
             # currency Tibber bills in for the home's country
             if currency_code is None and self._get_subscription_status(selected_home) == "future":
-                currency_code = get_default_currency_for_country((selected_home.get("address") or {}).get("country"))
+                currency_code = get_default_currency_for_home(selected_home)
 
             # Generate entry title from home address (not appNickname)
             entry_title = self._get_entry_title(selected_home)
