@@ -114,7 +114,8 @@ jobs:
       - name: Get previous tag
         id: previoustag
         run: |
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          # Relative to the pushed tag, not HEAD: the job checks out main, which may be ahead of the tag
+          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${GITHUB_REF_NAME}^" 2>/dev/null || echo "")
           echo "previous_tag=${PREVIOUS_TAG}" >> $GITHUB_OUTPUT
           echo "Previous tag: ${PREVIOUS_TAG}"
 
@@ -130,7 +131,7 @@ jobs:
           fi
 
           # Analyze commits between tags
-          COMMITS=$(git log ${PREV_TAG}..HEAD --format="%s" --no-merges)
+          COMMITS=$(git log ${PREV_TAG}..${GITHUB_REF_NAME} --format="%s" --no-merges)
           BREAKING=$(echo "$COMMITS" | grep -cE "^[^:]+!:|^[^:]+: .+BREAKING CHANGE" || true)
           FEAT=$(echo "$COMMITS" | grep -cE "^feat(\(.+\))?:" || true)
           FIX=$(echo "$COMMITS" | grep -cE "^fix(\(.+\))?:" || true)
