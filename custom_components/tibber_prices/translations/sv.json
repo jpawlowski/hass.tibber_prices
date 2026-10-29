@@ -843,7 +843,9 @@
           "refreshing": "Uppdaterar",
           "searching_tomorrow": "Söker morgondag",
           "turnover_pending": "Väntar på övergång",
-          "error": "Fel"
+          "error": "Fel",
+          "awaiting_subscription": "Väntar på avtalsstart",
+          "subscription_ended": "Avtalet har avslutats"
         }
       },
       "today_volatility": {
@@ -986,7 +988,8 @@
           "running": "Aktiv",
           "ended": "Avslutad",
           "pending": "Väntande",
-          "unknown": "Okänd"
+          "unknown": "Okänd",
+          "awaiting_market": "Väntar på marknad"
         }
       },
       "day_pattern_yesterday": {

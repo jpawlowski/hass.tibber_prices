@@ -793,6 +793,8 @@ def test_create_time_service_resolves_against_the_shifted_clock() -> None:
 
     coordinator = Mock(spec=TibberPricesDataUpdateCoordinator)
     coordinator._time_shift = TimeShift(days=-7, hours=-3)  # noqa: SLF001
+    coordinator._cached_user_data = None  # noqa: SLF001
+    coordinator._home_id = ""  # noqa: SLF001
 
     real_now = datetime(2026, 8, 23, 0, 30, tzinfo=UTC)
     with patch("custom_components.tibber_prices.coordinator.core.dt_util.now", return_value=real_now):
@@ -819,6 +821,8 @@ def test_view_midnight_arrives_late_when_shifted_by_hours() -> None:
 
     coordinator = Mock(spec=TibberPricesDataUpdateCoordinator)
     coordinator._time_shift = TimeShift(days=-7, hours=-3)  # noqa: SLF001
+    coordinator._cached_user_data = None  # noqa: SLF001
+    coordinator._home_id = ""  # noqa: SLF001
     coordinator._midnight_handler = TibberPricesMidnightHandler()  # noqa: SLF001
 
     create_time_service = TibberPricesDataUpdateCoordinator._create_time_service.__get__(coordinator)  # noqa: SLF001

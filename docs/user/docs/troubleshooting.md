@@ -22,6 +22,16 @@ This is normal. The integration needs up to one update cycle (15 minutes) to fet
 - **Authentication expired**: If you see a "Reauth required" notification in HA, your API token needs to be re-entered. Go to **Settings → Devices & Services → Tibber Prices** and follow the reauth flow.
 - **Rate limiting**: If you have multiple integrations using the same Tibber token, you may hit API rate limits. Check logs for "429" or "rate limit" messages.
 
+### Contract Has Not Started Yet (or Has Ended)
+
+You can set up the integration before your Tibber contract starts, for example right after signing up. Tibber sends no prices before the start date, so until then:
+
+- Only the diagnostic entities exist (connection, **Data Lifecycle Status** (`data_lifecycle_status`), subscription status and the home details). The **Data Lifecycle Status** shows `awaiting_subscription`, and the **Connection** sensor has a `subscription_phase` attribute (`pending`).
+- Nothing is fetched from the Tibber API, so there are no error messages in the log.
+- At the exact start date the integration reloads itself, creates the price entities and starts fetching prices. You don't need to do anything.
+
+When a contract ends, the entities keep showing the last day of the contract and no longer change: "today" stays that last day, "yesterday" is the day before it and there is no "tomorrow". The **Data Lifecycle Status** shows `subscription_ended`. If you start a new contract, the integration picks it up within a day, or immediately after a restart.
+
 ### Tomorrow's Prices Not Available
 
 Tomorrow's electricity prices are typically published by Tibber between **13:00 and 15:00 CET** (Central European Time). Before that time, all "tomorrow" sensors will show unavailable or their last known state.

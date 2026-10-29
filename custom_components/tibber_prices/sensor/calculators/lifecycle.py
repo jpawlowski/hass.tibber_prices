@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 from custom_components.tibber_prices.coordinator.constants import UPDATE_INTERVAL
+from custom_components.tibber_prices.utils.subscription import PHASE_ENDED, PHASE_PENDING
 
 from .base import TibberPricesBaseCalculator
 
@@ -28,14 +29,18 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         - "searching_tomorrow": After 13:00, actively looking for tomorrow data
         - "turnover_pending": Last interval of day (23:45-00:00, midnight approaching)
         - "error": Last API call failed
+        - "awaiting_subscription": The Tibber contract has not started yet, no prices exist
+        - "subscription_ended": The Tibber contract ended, the entities stay on its last day
 
         Priority order (highest to lowest):
         1. refreshing - Active operation has highest priority
         2. error - Errors must be immediately visible
-        3. turnover_pending - Important event at 23:45, should stay visible
-        4. searching_tomorrow - Stable during search phase (13:00-~15:00)
-        5. fresh - Informational only, lowest priority among active states
-        6. cached - Default fallback
+        3. awaiting_subscription / subscription_ended - Nothing is fetched, so none of the
+           states below applies
+        4. turnover_pending - Important event at 23:45, should stay visible
+        5. searching_tomorrow - Stable during search phase (13:00-~15:00)
+        6. fresh - Informational only, lowest priority among active states
+        7. cached - Default fallback
 
         """
         coordinator = self.coordinator
@@ -50,7 +55,14 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         if coordinator.last_exception is not None:
             return "error"
 
-        # Priority 3: Check if midnight turnover is pending (last quarter of day: 23:45-00:00)
+        # Priority 3: The contract has not started or already ended - no data is fetched either way
+        phase = coordinator.subscription_phase
+        if phase == PHASE_PENDING:
+            return "awaiting_subscription"
+        if phase == PHASE_ENDED:
+            return "subscription_ended"
+
+        # Priority 4: Check if midnight turnover is pending (last quarter of day: 23:45-00:00)
         midnight = coordinator.time.as_local(current_time).replace(
             hour=0, minute=0, second=0, microsecond=0
         ) + timedelta(days=1)
@@ -58,20 +70,20 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         if 0 < time_to_midnight <= TURNOVER_WARNING_SECONDS:  # Within 15 minutes of midnight (23:45-00:00)
             return "turnover_pending"
 
-        # Priority 4: Check if we're in tomorrow data search mode (after 13:00 and tomorrow missing)
+        # Priority 5: Check if we're in tomorrow data search mode (after 13:00 and tomorrow missing)
         # This should remain stable during the search phase, not flicker with "fresh" every 15 minutes
         now_local = coordinator.time.as_local(current_time)
         if now_local.hour >= TOMORROW_CHECK_HOUR and coordinator._needs_tomorrow_data():  # noqa: SLF001 - Internal state access
             return "searching_tomorrow"
 
-        # Priority 5: Check if data is fresh (within 5 minutes of last API fetch)
+        # Priority 6: Check if data is fresh (within 5 minutes of last API fetch)
         # Lower priority than searching_tomorrow to avoid state flickering during search phase
         if coordinator._last_price_update:  # noqa: SLF001 - Internal state access for lifecycle tracking
             age = current_time - coordinator._last_price_update  # noqa: SLF001
             if age <= timedelta(minutes=FRESH_DATA_THRESHOLD_MINUTES):
                 return "fresh"
 
-        # Priority 6: Default - using cached data
+        # Priority 7: Default - using cached data
         return "cached"
 
     def get_next_api_poll_time(self) -> datetime | None:
@@ -82,7 +94,8 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
         For example, if integration started at 13:07, timer runs at 13:07, 13:22, 13:37, 13:52.
 
         Returns:
-            Next poll time when tomorrow data will be fetched (predictive).
+            Next poll time when tomorrow data will be fetched (predictive), or None
+            while the subscription has not started or has ended.
 
         Logic:
             - If before 13:00 today: Show today 13:00 (when tomorrow-search begins)
@@ -91,6 +104,11 @@ class TibberPricesLifecycleCalculator(TibberPricesBaseCalculator):
 
         """
         coordinator = self.coordinator
+
+        # Nothing is polled before the contract starts or after it ended
+        if coordinator.subscription_phase in (PHASE_PENDING, PHASE_ENDED):
+            return None
+
         current_time = coordinator.time.now()
         now_local = coordinator.time.as_local(current_time)
 

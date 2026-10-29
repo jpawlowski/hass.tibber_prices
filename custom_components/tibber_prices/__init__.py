@@ -357,6 +357,9 @@ async def async_setup_entry(
     else:
         await coordinator.async_refresh()
 
+    # Which entities exist depends on whether the subscription has started
+    coordinator.lock_entity_phase()
+
     # Subentry coordinators must never block setup of the live entry: a view of a
     # date Tibber has no data for is a broken view, not a broken integration.
     for view in subentry_data.values():

@@ -21,7 +21,7 @@ from custom_components.tibber_prices.const import CONF_CURRENCY_DISPLAY_MODE, DI
 from homeassistant.const import EntityCategory
 
 from .core import TibberPricesSensor
-from .definitions import ENTITY_DESCRIPTIONS
+from .definitions import ENTITY_DESCRIPTIONS, PRICE_DEPENDENT_DIAGNOSTIC_KEYS
 
 if TYPE_CHECKING:
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
@@ -49,12 +49,25 @@ async def async_setup_entry(
         if not (entity_description.key == "current_interval_price_base" and display_mode == DISPLAY_MODE_BASE)
     ]
 
+    # While the subscription has not started Tibber has no prices: only the sensors
+    # that need none exist, the rest is created when the entry reloads at the start.
+    live_descriptions = (
+        entities_to_create
+        if coordinator.has_price_entities
+        else [
+            entity_description
+            for entity_description in entities_to_create
+            if entity_description.entity_category == EntityCategory.DIAGNOSTIC
+            and entity_description.key not in PRICE_DEPENDENT_DIAGNOSTIC_KEYS
+        ]
+    )
+
     async_add_entities(
         TibberPricesSensor(
             coordinator=coordinator,
             entity_description=entity_description,
         )
-        for entity_description in entities_to_create
+        for entity_description in live_descriptions
     )
 
     # One set of sensors per time-travel view, each on its own coordinator and

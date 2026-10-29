@@ -342,6 +342,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         return {
             "using_cached_data": self.coordinator.using_cached_fallback,
             "last_successful_update": last_update.isoformat() if last_update else None,
+            # pending: contract not started, no prices yet; ended: entities stay on its last day
+            "subscription_phase": self.coordinator.subscription_phase,
         }
 
     @callback
