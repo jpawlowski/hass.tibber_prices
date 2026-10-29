@@ -491,9 +491,13 @@ End after the Buy Me A Coffee button. No meta-commentary, no explanations."
     # Treat empty/whitespace-only output as a failure too: copilot has been
     # observed to exit 0 while producing no content (e.g. when it could not
     # obtain a prompt), which previously slipped past the "||" failure check.
-    if [[ -z "${AI_OUTPUT//[[:space:]]/}" ]]; then
+    # Output that doesn't start with the "# " title is not release notes either
+    # (a refusal, a question, a stray tool call when there was nothing to
+    # describe), so it must never reach the GitHub release.
+    AI_OUTPUT_TRIMMED="${AI_OUTPUT#"${AI_OUTPUT%%[![:space:]]*}"}"
+    if [[ -z $AI_OUTPUT_TRIMMED || $AI_OUTPUT_TRIMMED != "# "* ]]; then
         echo ""
-        log_info "${YELLOW}Warning: ${ai_cli} CLI failed, was not authenticated, or returned no output${NC}"
+        log_info "${YELLOW}Warning: ${ai_cli} CLI failed, was not authenticated, or returned no valid release notes${NC}"
         log_info "${YELLOW}Falling back to git-cliff${NC}"
         if command -v git-cliff >/dev/null 2>&1; then
             generate_with_gitcliff
