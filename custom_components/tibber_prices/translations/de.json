@@ -843,7 +843,9 @@
           "refreshing": "Aktualisiere",
           "searching_tomorrow": "Suche Morgendaten",
           "turnover_pending": "Mitternachtswechsel steht bevor",
-          "error": "Fehler"
+          "error": "Fehler",
+          "awaiting_subscription": "Wartet auf Vertragsbeginn",
+          "subscription_ended": "Vertrag beendet"
         }
       },
       "today_volatility": {
@@ -986,7 +988,8 @@
           "running": "Aktiv",
           "ended": "Beendet",
           "pending": "Ausstehend",
-          "unknown": "Unbekannt"
+          "unknown": "Unbekannt",
+          "awaiting_market": "Wartet auf Markt"
         }
       },
       "day_pattern_yesterday": {

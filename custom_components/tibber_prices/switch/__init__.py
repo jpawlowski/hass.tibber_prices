@@ -29,6 +29,11 @@ async def async_setup_entry(
     """Set up Tibber Prices switch entities based on a config entry."""
     coordinator = entry.runtime_data.coordinator
 
+    # These configure the period calculation, which has no prices to work on
+    # until the subscription starts - the entry reloads then.
+    if not coordinator.has_price_entities:
+        return
+
     async_add_entities(
         TibberPricesConfigSwitch(
             coordinator=coordinator,

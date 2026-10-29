@@ -14,7 +14,7 @@ see entity_utils/helpers.py:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor
 from custom_components.tibber_prices.utils.average import calculate_mean, calculate_median
@@ -22,6 +22,11 @@ from custom_components.tibber_prices.utils.price import aggregate_price_levels, 
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
+
+
+def normalize_enum_state(value: Any) -> Any:
+    """Lowercase a string status with underscores, so "awaiting market" is a valid ENUM option key."""
+    return value.lower().replace(" ", "_") if isinstance(value, str) else value
 
 
 def aggregate_average_data(

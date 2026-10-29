@@ -8,6 +8,9 @@ from homeassistant.const import EntityCategory
 # Period lookahead removed - icons show "waiting" state if ANY future periods exist
 # No artificial time limit - show all periods until midnight
 
+# Diagnostic binary sensors that are built from prices and therefore wait for the subscription to start
+PRICE_DEPENDENT_DIAGNOSTIC_KEYS = frozenset({"tomorrow_data_available"})
+
 ENTITY_DESCRIPTIONS = (
     BinarySensorEntityDescription(
         key="peak_price_period",

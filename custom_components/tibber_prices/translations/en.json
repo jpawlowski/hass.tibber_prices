@@ -843,7 +843,9 @@
           "refreshing": "Refreshing",
           "searching_tomorrow": "Searching Tomorrow",
           "turnover_pending": "Turnover Pending",
-          "error": "Error"
+          "error": "Error",
+          "awaiting_subscription": "Awaiting subscription",
+          "subscription_ended": "Subscription ended"
         }
       },
       "today_volatility": {
@@ -986,7 +988,8 @@
           "running": "Running",
           "ended": "Ended",
           "pending": "Pending",
-          "unknown": "Unknown"
+          "unknown": "Unknown",
+          "awaiting_market": "Awaiting market"
         }
       },
       "day_pattern_yesterday": {

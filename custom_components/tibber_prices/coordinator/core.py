@@ -7,6 +7,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -33,6 +34,14 @@ from custom_components.tibber_prices.time_travel import (
     uses_realistic_tomorrow,
 )
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
+from custom_components.tibber_prices.utils.subscription import (
+    PHASE_ACTIVE,
+    PHASE_PENDING,
+    find_subscription,
+    get_subscription_end,
+    get_subscription_last_interval_start,
+    get_subscription_start,
+)
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -218,6 +227,12 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         title = f"{config_entry.title} / {subentry.title}" if subentry is not None else config_entry.title
         self._log_prefix = f"[{title}]"
 
+        # User data cache (price data is in IntervalPool). Declared before the time
+        # service: the end of the subscription, which is read from it, holds the clock.
+        self._cached_user_data: dict[str, Any] | None = None
+        self._last_user_update: datetime | None = None
+        self._user_update_interval = timedelta(days=1)
+
         # Initialize time service (single source of truth for all time operations).
         # Always create through _create_time_service() so the time-travel offset is
         # applied consistently everywhere.
@@ -261,10 +276,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Register options update listener to invalidate config caches
         config_entry.async_on_unload(config_entry.add_update_listener(self._handle_options_update))
 
-        # User data cache (price data is in IntervalPool)
-        self._cached_user_data: dict[str, Any] | None = None
-        self._last_user_update: datetime | None = None
-        self._user_update_interval = timedelta(days=1)
+        # True if the entities were created while the subscription had not started (see lock_entity_phase)
+        self._created_pending: bool | None = None
+        self._reload_scheduled = False
 
         # Data lifecycle tracking
         # Note: _lifecycle_state is used for DIAGNOSTICS only (diagnostics.py export).
@@ -316,7 +330,16 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """
         real_now = dt_util.now()
         shifted = self._time_shift.resolve(real_now)
-        return TibberPricesTimeService(reference_time=shifted or real_now)
+        reference = shifted or real_now
+
+        # After the end of the subscription the clock stays on the last interval of
+        # its last day: "today" remains that day, "yesterday" the one before and
+        # there is no "tomorrow". Nothing else in the integration needs to know.
+        last_interval = get_subscription_last_interval_start(find_subscription(self._cached_user_data, self._home_id))
+        if last_interval is not None and reference > last_interval:
+            reference = dt_util.as_local(last_interval)
+
+        return TibberPricesTimeService(reference_time=reference)
 
     def _propagate_time_service(self, time_service: TibberPricesTimeService) -> None:
         """
@@ -342,6 +365,50 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.interval_pool.set_time_service(time_service)
         else:
             self.api.time = time_service
+
+    @property
+    def subscription_phase(self) -> str:
+        """Return the phase of the home's subscription: pending, active or ended."""
+        return self._price_data_manager.subscription_phase
+
+    def lock_entity_phase(self) -> None:
+        """
+        Remember the subscription phase the entities are created for.
+
+        A subscription that has not started has no prices, so only entities that
+        need none exist. When it starts, the entry is reloaded to create the rest
+        (see _check_subscription_phase_change).
+        """
+        self._created_pending = self.subscription_phase == PHASE_PENDING
+
+        # Reload at the very moment the contract starts, not at the next 15-minute check
+        start = get_subscription_start(self._price_data_manager.subscription)
+        if self._created_pending and start is not None:
+            self.config_entry.async_on_unload(
+                async_track_point_in_utc_time(self.hass, self._handle_subscription_start, start)
+            )
+
+    @callback
+    def _handle_subscription_start(self, _now: datetime) -> None:
+        """Timer callback for the start of the subscription."""
+        self._check_subscription_phase_change()
+
+    @property
+    def has_price_entities(self) -> bool:
+        """Return False while the subscription has not started: price entities are not created yet."""
+        return not self._created_pending
+
+    @callback
+    def _check_subscription_phase_change(self) -> None:
+        """Reload the entry once the subscription starts, to create the price entities."""
+        if not self._created_pending or self._reload_scheduled or self.is_time_travel:
+            return
+        phase = self.subscription_phase
+        if phase == PHASE_PENDING:
+            return
+        self._log("info", "Subscription started (now %s), reloading", phase)
+        self._reload_scheduled = True
+        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
     @property
     def is_time_travel(self) -> bool:
@@ -617,6 +684,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._propagate_time_service(time_service)
 
         self._log("debug", "[Timer #2] Quarter-hour refresh triggered at %s", now.isoformat())
+
+        # The subscription may just have started
+        self._check_subscription_phase_change()
 
         # Check if midnight has passed since last check
         midnight_turnover_performed = self._check_and_handle_midnight_turnover(now)
@@ -927,6 +997,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             # Check for repair conditions after successful update
             await self._check_repair_conditions(result, current_time)
+            self._check_subscription_phase_change()
 
             # Fire event when new data was fetched from API (not cached)
             if api_called and result and "priceInfo" in result and len(result["priceInfo"]) > 0:
@@ -964,8 +1035,9 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Home exists - clear any existing repair
             await self._repair_manager.clear_home_not_found_repair()
 
-        # 2. Tomorrow data availability (after 18:00)
-        if result and "priceInfo" in result:
+        # 2. Tomorrow data availability (after 18:00). Not expected before the subscription
+        # starts or after it ended.
+        if result and "priceInfo" in result and self.subscription_phase == PHASE_ACTIVE:
             has_tomorrow_data = self._price_data_manager.has_tomorrow_data(result["priceInfo"])
             await self._repair_manager.check_tomorrow_data_availability(
                 has_tomorrow_data=has_tomorrow_data,
@@ -1062,7 +1134,25 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Transform raw data for main entry (aggregated view of all homes)."""
         # Delegate complete transformation to DataTransformer (enrichment + periods)
         # DataTransformer handles its own caching internally
-        return self._data_transformer.transform_data(self._apply_tomorrow_realism(raw_data))
+        return self._data_transformer.transform_data(
+            self._apply_subscription_window(self._apply_tomorrow_realism(raw_data))
+        )
+
+    def _apply_subscription_window(self, raw_data: dict[str, Any]) -> dict[str, Any]:
+        """
+        Drop intervals after the end of the subscription.
+
+        Market prices exist for days the contract no longer covers, but the home
+        has none: the last day of the contract is the last day there is.
+        """
+        end = get_subscription_end(self._price_data_manager.subscription)
+        price_info = raw_data.get("price_info")
+        # The data holds at most two days ahead of this coordinator's clock: a later end cuts nothing
+        if end is None or not price_info or end > self.time.now() + timedelta(days=2):
+            return raw_data
+
+        kept = [interval for interval in price_info if not self._starts_at_or_after(interval.get("startsAt"), end)]
+        return {**raw_data, "price_info": kept} if len(kept) != len(price_info) else raw_data
 
     def _apply_tomorrow_realism(self, raw_data: dict[str, Any]) -> dict[str, Any]:
         """
