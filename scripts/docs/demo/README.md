@@ -18,6 +18,14 @@ Add the integration in the dev instance with this token. Screenshots must only e
 1. Install **ApexCharts Card**, **Config Template Card** and **TabDeck Card** from HACS in the dev instance (only `tibber-demo-apex` uses them).
 2. Create a long-lived access token (profile → Security) and store it in `config/.ha_token` (git-ignored), or export it as `HA_TOKEN`.
 
+## Energy data for the energy card (optional)
+
+```bash
+./scripts/docs/demo/setup-solar [--backfill] [--dry-run]
+```
+
+The energy card (`tibber-prices-energy-card`) reads the solar and battery sources of the Energy dashboard. The script sets one up in the dev instance: Forecast.Solar at the demo home's location (Stockholm, 25° / south / 10 kWp) if there is none, a "Solar production (demo)" energy sensor (a Riemann sum helper over Forecast.Solar's "Estimated power production - now"), a demo home battery and grid connection (four meters as external statistics for the last days, imported again at every run), and the Energy dashboard's solar, battery and grid sources. Other sources there stay, and a grid connection that exists is not replaced. `--backfill` imports the finished hours of today as statistics, so the production curve isn't empty at first. The production is the forecast's own, so the two curves lie on each other: it shows the look of the card, not real data. Forecast.Solar's free API allows about 12 requests per hour and IP, so run it on the dev instance only, not in CI.
+
 ## Render the dashboard
 
 ```bash

@@ -62,6 +62,21 @@ views:
             # The simple style: below and above the day's average, as in Tibber's app
             outlook: { resolution: hour, styles: [{ line: average, fill: average_shown }] }
             grid_options: { rows: 4 }
+  # The energy card: the chart card with the Energy dashboard's solar forecast and production and the
+  # home battery on top. Without such sources in the Energy dashboard it shows the prices alone
+  - title: Energy
+    path: energy
+    icon: mdi:solar-power
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:tibber-prices-energy-card
+            device_id: "device:current_interval_price"
+            views: [outlook, today, tomorrow, two_days]
+            grid_options: { columns: full, rows: 7 }
   # The now card's three styles side by side; the tile among Home Assistant's own tiles
   - title: Now
     path: now

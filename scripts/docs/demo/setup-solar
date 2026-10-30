@@ -1,0 +1,372 @@
+#!/usr/bin/env python3
+"""Set up solar, battery and grid data in the dev instance, for the energy card (tibber-prices-energy-card).
+
+Optional and safe to run again; it only adds what is missing:
+
+1. Forecast.Solar (Home Assistant Core) at the demo home's location (Stockholm), with default
+   plane values. Skipped if an entry exists.
+2. A "Solar production (demo)" energy sensor: a Riemann sum helper over Forecast.Solar's
+   "Estimated power production - now" (kW to kWh), so it behaves like an inverter's meter: it adds
+   up while HA runs. The Energy dashboard needs such a sensor as the solar source.
+3. With --backfill: the hours of today that are over, imported as long-term statistics of that
+   sensor from the forecast (a helper starts at zero, so without them the actual curve is empty
+   until the sun has shone for a while). Needs the forecast's current data.
+4. A demo home battery and grid connection: four meters (battery charge and discharge, grid import
+   and export) as external long-term statistics for the last days, shaped like a day with sun (charging
+   at noon, discharging in the evening, feeding in at the peak). Imported again at every run, so they
+   reach the present hour.
+5. The Energy dashboard's sources: solar (the sensor, the forecast power sensor and Forecast.Solar),
+   the battery and the grid. Other sources already set up there stay, and a grid connection that
+   exists is not replaced (Home Assistant allows one).
+
+The production shown is the forecast's own, so the two curves lie on each other: a demo of the
+card's look, not of real data.
+
+Usage: ./scripts/docs/demo/setup-solar [--backfill] [--dry-run] [--url http://localhost:8123]
+Token: config/.ha_token or HA_TOKEN (as for render-dashboard).
+"""
+
+from __future__ import annotations
+
+import argparse
+import asyncio
+from datetime import UTC, datetime, timedelta
+import itertools
+import math
+import os
+from pathlib import Path
+import sys
+from typing import Any
+
+import aiohttp
+
+ROOT = Path(__file__).resolve().parents[3]
+# Tibber's demo home is in Stockholm
+LATITUDE, LONGITUDE = 59.3293, 18.0686
+# Forecast.Solar's defaults
+PLANE = {"declination": 25, "azimuth": 180, "modules_power": 10000}
+SENSOR_NAME = "Solar production (demo)"
+# External statistics (the id is "source:name"): there is no sensor behind them
+DEMO_SOURCE = "tibber_prices_demo"
+BATTERY_CHARGE = f"{DEMO_SOURCE}:battery_charge"
+BATTERY_DISCHARGE = f"{DEMO_SOURCE}:battery_discharge"
+GRID_IMPORT = f"{DEMO_SOURCE}:grid_import"
+GRID_EXPORT = f"{DEMO_SOURCE}:grid_export"
+DEMO_DAYS = 3
+
+
+class HomeAssistant:
+    """Minimal client: websocket commands and the config flow's REST API."""
+
+    def __init__(self, session: aiohttp.ClientSession, ws: aiohttp.ClientWebSocketResponse, url: str) -> None:
+        """Keep the session, the authenticated websocket and the base URL."""
+        self.session = session
+        self.ws = ws
+        self.url = url
+        self.ids = itertools.count(1)
+
+    async def command(self, message_type: str, *, allow_error: bool = False, **data: Any) -> Any:
+        """Send a command and return its result, or exit with HA's error."""
+        await self.ws.send_json({"id": next(self.ids), "type": message_type, **data})
+        reply = await self.ws.receive_json()
+        if not reply.get("success"):
+            if allow_error:
+                return None
+            sys.exit(f"{message_type} failed: {reply.get('error')}")
+        return reply["result"]
+
+    async def flow(self, handler: str, data: dict[str, Any]) -> dict[str, Any]:
+        """Run a config flow with one form step and return its result."""
+        base = f"{self.url}/api/config/config_entries/flow"
+        async with self.session.post(base, json={"handler": handler, "show_advanced_options": False}) as r:
+            started = await r.json()
+        if started.get("type") != "form":
+            sys.exit(f"Config flow {handler} did not start with a form: {started}")
+        async with self.session.post(f"{base}/{started['flow_id']}", json=data) as r:
+            result = await r.json()
+        if result.get("type") != "create_entry":
+            sys.exit(f"Config flow {handler} did not create an entry: {result}")
+        return result
+
+
+async def authenticate(session: aiohttp.ClientSession, url: str, token: str) -> HomeAssistant:
+    """Authenticate on the websocket API with a long-lived access token."""
+    ws = await session.ws_connect(f"{url}/api/websocket")
+    await ws.receive_json()  # auth_required
+    await ws.send_json({"type": "auth", "access_token": token})
+    if (await ws.receive_json()).get("type") != "auth_ok":
+        sys.exit("Authentication failed, check config/.ha_token or HA_TOKEN")
+    return HomeAssistant(session, ws, url)
+
+
+def step(text: str) -> None:
+    """Say what is done."""
+    print(f"==> {text}")  # noqa: T201 - a command line script
+
+
+async def ensure_forecast_solar(ha: HomeAssistant, dry_run: bool) -> str:
+    """Return the entry id of Forecast.Solar, adding it if there is none."""
+    entries = await ha.command("config_entries/get", domain="forecast_solar")
+    if entries:
+        step(f"Forecast.Solar is set up already ({entries[0]['title']})")
+        return entries[0]["entry_id"]
+    step(f"Adding Forecast.Solar at {LATITUDE}, {LONGITUDE}: {PLANE}")
+    if dry_run:
+        return "(dry run)"
+    result = await ha.flow("forecast_solar", {"latitude": LATITUDE, "longitude": LONGITUDE, **PLANE})
+    return result["result"]["entry_id"]
+
+
+async def find_entity(ha: HomeAssistant, *, platform: str, translation_key: str) -> str | None:
+    """Return the entity id of an entity of an integration by its translation key."""
+    registry = await ha.command("config/entity_registry/list")
+    return next(
+        (e["entity_id"] for e in registry if e["platform"] == platform and e.get("translation_key") == translation_key),
+        None,
+    )
+
+
+async def ensure_energy_sensor(ha: HomeAssistant, power_sensor: str, dry_run: bool) -> str | None:
+    """Return the entity id of the demo energy sensor, adding it if there is none."""
+    registry = await ha.command("config/entity_registry/list")
+    entries = await ha.command("config_entries/get", domain="integration")
+    entry = next((e for e in entries if e["title"] == SENSOR_NAME), None)
+    if entry:
+        found = next((e["entity_id"] for e in registry if e.get("config_entry_id") == entry["entry_id"]), None)
+        step(f"The energy sensor is there already ({found})")
+        return found
+    step(f"Adding the energy sensor {SENSOR_NAME!r}: Riemann sum of {power_sensor} in kWh")
+    if dry_run:
+        return None
+    result = await ha.flow(
+        "integration",
+        {
+            "name": SENSOR_NAME,
+            "source": power_sensor,
+            "method": "trapezoidal",
+            "unit_prefix": "k",
+            "unit_time": "h",
+            "round": 3,
+        },
+    )
+    registry = await ha.command("config/entity_registry/list")
+    return next(
+        (e["entity_id"] for e in registry if e.get("config_entry_id") == result["result"]["entry_id"]),
+        None,
+    )
+
+
+async def backfill(ha: HomeAssistant, entity_id: str, forecast_entry: str, dry_run: bool) -> None:
+    """Import the hours of today that are over as statistics of the sensor, from the forecast."""
+    forecasts = await ha.command("energy/solar_forecast", allow_error=True) or {}
+    hours = (forecasts.get(forecast_entry) or {}).get("wh_hours") or {}
+    if not hours:
+        step("No forecast data to backfill from (set the forecast in the Energy dashboard first, then rerun)")
+        return
+    now = datetime.now(UTC)
+    # Whole hours that are over: a value is the energy of the period that ENDS at its timestamp (607 Wh
+    # at 15:00 is 14:00 to 15:00, the sun sets at 15:03), so it belongs to the hour before it
+    over: dict[datetime, float] = {}
+    for stamp, wh in hours.items():
+        start = (datetime.fromisoformat(stamp).astimezone(UTC) - timedelta(microseconds=1)).replace(
+            minute=0, second=0, microsecond=0
+        )
+        if start + timedelta(hours=1) <= now.replace(minute=0, second=0, microsecond=0):
+            over[start] = over.get(start, 0) + wh / 1000
+    if not over:
+        step("No hour of the forecast is over yet, nothing to backfill")
+        return
+    total = 0.0
+    stats = []
+    for start in sorted(over):
+        total += over[start]
+        stats.append({"start": start.isoformat(), "state": round(total, 3), "sum": round(total, 3)})
+    step(f"Importing {len(stats)} hourly statistics of {entity_id} ({total:.1f} kWh so far today)")
+    if dry_run:
+        return
+    await ha.command(
+        "recorder/import_statistics",
+        metadata={
+            "has_mean": False,
+            "mean_type": 0,
+            "has_sum": True,
+            "name": None,
+            "source": "recorder",
+            "statistic_id": entity_id,
+            "unit_class": "energy",
+            "unit_of_measurement": "kWh",
+        },
+        stats=stats,
+    )
+
+
+def demo_hours() -> list[tuple[datetime, dict[str, float]]]:
+    """Return the hours of the last days up to the present one, each with the kWh of the four meters.
+
+    A day with sun by the UTC hour (Stockholm is an hour or two off, good enough for a look): the sun
+    from 6 to 16, the battery charging from the surplus around noon and discharging in the evening, the
+    grid import the rest of the house needs, the export what neither house nor battery takes.
+    """
+    now = datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
+    first = (now - timedelta(days=DEMO_DAYS)).replace(hour=0)
+    hours = []
+    start = first
+    while start <= now:
+        hour = start.hour
+        # About what Forecast.Solar expects for the demo plant in autumn (some 16 kWh a day)
+        sun = max(0.0, math.sin(math.pi * (hour - 6) / 10)) * 2.6 if 6 <= hour <= 16 else 0.0
+        house = 0.35 + (0.9 if 17 <= hour <= 21 else 0.0) + (0.3 if 6 <= hour <= 8 else 0.0)
+        surplus = max(0.0, sun - house)
+        charge = min(1.5, surplus * 0.6) if 8 <= hour <= 14 else 0.0
+        discharge = min(house, 1.2) * 0.8 if 17 <= hour <= 23 else 0.0
+        wobble = 1 + 0.08 * math.sin(start.timetuple().tm_yday + hour)
+        hours.append(
+            (
+                start,
+                {
+                    BATTERY_CHARGE: charge * wobble,
+                    BATTERY_DISCHARGE: discharge * wobble,
+                    GRID_IMPORT: max(0.0, house - sun - discharge) * wobble,
+                    GRID_EXPORT: max(0.0, surplus - charge) * wobble,
+                },
+            )
+        )
+        start += timedelta(hours=1)
+    return hours
+
+
+async def import_demo_meters(ha: HomeAssistant, dry_run: bool) -> None:
+    """Import the demo battery and grid meters as external statistics (the whole span, every run)."""
+    hours = demo_hours()
+    names = {
+        BATTERY_CHARGE: "Battery charge (demo)",
+        BATTERY_DISCHARGE: "Battery discharge (demo)",
+        GRID_IMPORT: "Grid import (demo)",
+        GRID_EXPORT: "Grid export (demo)",
+    }
+    step(f"Importing {len(hours)} hourly statistics for each of the demo battery and grid meters")
+    if dry_run:
+        return
+    for statistic_id, name in names.items():
+        total = 0.0
+        stats = []
+        for start, values in hours:
+            total += values[statistic_id]
+            stats.append({"start": start.isoformat(), "state": round(total, 3), "sum": round(total, 3)})
+        await ha.command(
+            "recorder/import_statistics",
+            metadata={
+                "has_mean": False,
+                "mean_type": 0,
+                "has_sum": True,
+                "name": name,
+                "source": DEMO_SOURCE,
+                "statistic_id": statistic_id,
+                "unit_class": "energy",
+                "unit_of_measurement": "kWh",
+            },
+            stats=stats,
+        )
+
+
+async def set_energy_sources(
+    ha: HomeAssistant, energy_sensor: str, power_sensor: str, forecast_entry: str, dry_run: bool
+) -> None:
+    """Add the solar, battery and grid sources to the Energy dashboard, keeping what is set up there."""
+    prefs = await ha.command("energy/get_prefs", allow_error=True) or {}
+    sources = prefs.get("energy_sources", [])
+    candidates = {
+        "solar": (
+            lambda s: s.get("stat_energy_from") == energy_sensor,
+            {
+                "type": "solar",
+                "stat_energy_from": energy_sensor,
+                "stat_rate": power_sensor,
+                "config_entry_solar_forecast": [forecast_entry],
+            },
+        ),
+        "battery": (
+            lambda s: s.get("stat_energy_from") == BATTERY_DISCHARGE,
+            {"type": "battery", "stat_energy_from": BATTERY_DISCHARGE, "stat_energy_to": BATTERY_CHARGE},
+        ),
+        # A grid connection that exists stays (the demo's meters would only double it)
+        "grid": (
+            lambda _s: True,
+            {
+                "type": "grid",
+                "stat_energy_from": GRID_IMPORT,
+                "stat_energy_to": GRID_EXPORT,
+                "stat_cost": None,
+                "entity_energy_price": None,
+                "number_energy_price": None,
+                "stat_compensation": None,
+                "entity_energy_price_export": None,
+                "number_energy_price_export": None,
+                "cost_adjustment_day": 0,
+            },
+        ),
+    }
+    added = []
+    for kind, (present, source) in candidates.items():
+        if any(s["type"] == kind and present(s) for s in sources):
+            step(f"The Energy dashboard has a {kind} source already")
+        else:
+            added.append(source)
+    if not added:
+        return
+    step(f"Adding {', '.join(s['type'] for s in added)} to the Energy dashboard ({len(sources)} other sources stay)")
+    if dry_run:
+        return
+    await ha.command(
+        "energy/save_prefs",
+        energy_sources=[*sources, *added],
+        device_consumption=prefs.get("device_consumption", []),
+        device_consumption_water=prefs.get("device_consumption_water", []),
+    )
+
+
+async def setup(url: str, token: str, *, do_backfill: bool, dry_run: bool) -> None:
+    """Run the steps in order."""
+    headers = {"Authorization": f"Bearer {token}"}
+    async with aiohttp.ClientSession(headers=headers) as session:
+        ha = await authenticate(session, url, token)
+        forecast_entry = await ensure_forecast_solar(ha, dry_run)
+        power_sensor = await find_entity(ha, platform="forecast_solar", translation_key="power_production_now")
+        if power_sensor is None:
+            if dry_run:
+                power_sensor = "(the forecast's power sensor)"
+            else:
+                sys.exit(
+                    "Forecast.Solar's 'Estimated power production - now' sensor is not there (yet): "
+                    "wait a moment for its first data and run again"
+                )
+        energy_sensor = await ensure_energy_sensor(ha, power_sensor, dry_run)
+        if energy_sensor is None:
+            if not dry_run:
+                sys.exit("The energy sensor was created but not found in the entity registry")
+            energy_sensor = "(the energy sensor)"
+        if do_backfill:
+            await backfill(ha, energy_sensor, forecast_entry, dry_run)
+        await import_demo_meters(ha, dry_run)
+        await set_energy_sources(ha, energy_sensor, power_sensor, forecast_entry, dry_run)
+        await ha.ws.close()
+    step("Done." if not dry_run else "Dry run: nothing was changed.")
+
+
+def main() -> None:
+    """Parse arguments and run."""
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--backfill", action="store_true", help="import today's finished hours as statistics")
+    parser.add_argument("--dry-run", action="store_true", help="say what would be done, change nothing")
+    parser.add_argument("--url", default=os.environ.get("HA_URL", "http://localhost:8123"))
+    args = parser.parse_args()
+
+    token_file = ROOT / "config" / ".ha_token"
+    token = os.environ.get("HA_TOKEN") or (token_file.read_text().strip() if token_file.exists() else "")
+    if not token:
+        sys.exit("No access token: store one in config/.ha_token or export HA_TOKEN")
+    asyncio.run(setup(args.url.rstrip("/"), token, do_backfill=args.backfill, dry_run=args.dry_run))
+
+
+if __name__ == "__main__":
+    main()

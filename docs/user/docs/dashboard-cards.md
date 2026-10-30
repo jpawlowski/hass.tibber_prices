@@ -5,6 +5,7 @@ The integration brings its own cards for your dashboards. There's nothing to ins
 - **[Forecast Card](#forecast-card)**: the price now, the coming hours, the parts of the day and today and tomorrow, like a weather forecast. Tap anything for its details.
 - **[Now Card](#now-card)**: only the price now and what to make of it, as a tile, a gauge or a clock of the coming twelve hours. Made for a main dashboard; a tap can open the forecast card or the chart card in a window.
 - **[Chart Card](#chart-card)**: the price curve, read by moving a cursor across it: outlook, today, tomorrow and both days, in 15 or 60 minutes, with the price in a line or a ring on top.
+- **[Energy Card](#energy-card)**: the chart card with your Energy dashboard on top of the prices: the solar forecast and production, the home battery and the grid connection, to see where cheap hours and your energy meet.
 - **[Price Outlook Tile Feature](#price-outlook-tile-feature)**: the coming hours as small bars in a tile you already have.
 
 The cards also open each other in a window (see **[Cards inside cards](#cards-inside-cards)**): a now tile on your main dashboard can open the whole forecast with a tap and the price chart from a small icon.
@@ -231,6 +232,55 @@ tap_action: # Optional, on the card's top line (the curve is the cursor's)
 
 ![On a phone: the chart card](/img/cards/chart-phone.jpg#gh-light-mode-only)
 ![On a phone: the chart card](/img/cards/chart-phone-dark.jpg#gh-dark-mode-only)
+
+## Energy Card
+
+**Tibber Prices Energy** is the chart card with your energy added: the solar forecast and the production so far, the charging and discharging of a home battery and what you buy from and feed into the grid are drawn on top of the price curve, so you can see at a glance when cheap hours and your own energy line up, and when they don't. It takes everything the chart card does (views, resolution, styles, colors, tap actions) and adds those curves. The integration still doesn't predict consumption or plan around your yield; the card only shows them side by side. Tools like [EMHASS](https://github.com/davidusb-geek/emhass), [evcc](https://evcc.io/) and [Predbat](https://github.com/springfall2008/batpred) do the planning, and they can use the price sensors of this integration.
+
+```yaml
+type: custom:tibber-prices-energy-card
+device_id: YOUR_HOME_DEVICE_ID
+energy_curves: [price, forecast, actual, grid_import] # Optional: the curves shown at first (default as here); the others wait in the tiles above the chart
+energy_mode: power # Optional: what is shown first: power (kW per hour, default) or energy (kWh summed up over the day)
+energy_mode_switch: true # Optional: a small switch at the top right changes between the modes
+views: [outlook, today, tomorrow, two_days]
+all_views:
+  resolution: hour # Optional: the energy card draws hours (default, no switch); switch, quarter_hour and the others as in the chart card
+```
+
+**The home battery:** a battery you added to the Energy dashboard shows what went into it (**Battery charge**, indigo) and what came out of it (**Battery discharge**, cyan), hour by hour. Unlike the solar curves they are not tied to the sun: they run at night too, and there is no forecast for them. In the energy mode they sum up over the day like the others, and a number at the end of each line says what the day came to. 
+
+**The grid connection:** the grid source of the Energy dashboard shows what you buy (**Grid import**, brown) and what you feed in (**Grid export**, magenta), also hour by hour and without a forecast. With several grid connections or meters, their hours add up. The balloon adds what the energy bought cost: in the power mode the hour's (kWh × the hour's price), in the energy mode the day's so far. The export has no such number: what you feed in earns a different price than the one you pay.
+
+**All curves on one chart:** every curve can be laid over every other, so you see how they hang together: the sun charging the battery at noon, the battery carrying the expensive evening, the grid only at night when it's cheap. At first the prices, the solar curves and the grid import are on; the battery and the export wait in their tiles (`energy_curves` sets this).
+
+**The head looking ahead: when the sun and the low prices come.** In the **Outlook** and **Tomorrow** tabs the head answers “when do I run the dishwasher?”: **Most sun** names the next stretch of strong sun (the hour the forecast peaks and the hours around it with at least half as much, “Most sun tomorrow 09:00–15:00 · ≈ 4.67 kWh”), **Cheapest** the next best price period (the one marked under the hours; without one the cheapest three hours in a row), and where the two meet, **Sun and low price** says when, in green. The card only shows this, it plans nothing and switches nothing; for that, see energy managers like EMHASS, evcc or Predbat. The tiles show what is expected from the hour running on (“≈ 5.28 kWh”); nothing is measured there yet.
+
+**The head looking back: what your day came to.** In the other tabs (today, yesterday, both days) the values at a moment are in the balloons, so the line above the chart shows the balance of what is in view instead of a price. Top left the prices' switch with their mean (“⌀ 2.31 kr/kWh”); next to it, where you bought from the grid, what you **paid** on average for it, against the mean price of the same hours (“Paid ⌀ 2.14 kr/kWh −8 % vs. ⌀”, green when you bought cheaper than buying evenly would have cost, orange when dearer), and with solar and grid data the share of your use you covered yourself (“64 % self-sufficient”: all you used minus what you bought). Below, a tile per section with its sums: **Solar** what was produced and what was expected, **Battery** what went in and came out, **Grid** what you bought, what it cost and what you fed in. A day still to come shows what is expected (“≈ 18 kWh”).
+
+**Where the data comes from:** there is nothing to set up besides your **Energy dashboard**. The card reads the solar sources you added there for the production, and the forecast integration you picked for them (for example Forecast.Solar). Any integration that provides a solar forecast to the Energy dashboard works, without being supported one by one. If the Energy dashboard has no solar source, or no forecast, the card shows the prices alone.
+
+**Two modes:** *Power* draws kW per clock hour, in steps like the prices, so you see when the sun is strong, and the production has a soft area below its steps that fades out towards the bottom (the forecast is only a line: it is what is still to come, and the price line stays readable behind the area). *Energy* sums up the day's kWh hour by hour from midnight, so you see whether the day is on track, and the forecast goes on from what has been produced so far. Production counts a meter that resets at midnight and one that runs on alike, because the card uses the long-term statistics of the source. Only sources with an energy meter (kWh, with a `total_increasing` state class) show up there; a sensor that only reports power (W) isn't an energy source in the Energy dashboard either.
+
+**Reading the curves:** the cursor stays one moment in time, as in the chart card. Each curve gets a dot in its color, and while you read (mouse over the chart, or a finger held on it) every dot has a balloon with its value, in the color of its curve and joined to its dot by a dashed line of that color: the highest point's above it, the lowest point's below it. Balloons never cover each other or a dot and no line crosses another one; where points lie close together a balloon moves sideways and its line runs at a slant. With three or more points at once the balloons become **one**: a card beside the cursor that lists the curves from the top down, each with a swatch in its color, its name and its value. Drag the cursor along the hours and the list follows. The price is a point like the others, and the time of the cursor is a small mark on the time axis under it (with the day where the view spans more than one).
+
+**Until tomorrow's prices are in:** the solar forecast usually comes long before tomorrow's prices (they arrive in the early afternoon), and a day is planned in the morning. So as soon as the forecast reaches tomorrow, the **Tomorrow** tab is there and the **Outlook** runs to the end of tomorrow: the forecast is drawn, the price line ends where the prices do, and the head says when they usually come. Without a forecast for tomorrow, the energy card shows yesterday in the place of tomorrow, as the dashboard from `get_dashboard_yaml` does for the chart card (`tomorrow_pending: yesterday`, which is the default here, the chart card's is `placeholder`): yesterday's prices with yesterday's production. The Yesterday tab appears before Today and goes again once tomorrow has something to show. Set `tomorrow_pending` to `placeholder` or `hide` for the behavior of the chart card.
+
+**Hours:** unlike the chart card the energy card shows 60-minute prices and no 15 / 60 min switch: the forecast and the production are hourly, so a finer price curve would only add positions that read the same solar value. Set `resolution` (under `all_views` or in a view) to bring the switch or the quarter hours back.
+
+**Units:** the solar axis picks its unit from what is in view, as the Energy dashboard does: W (Wh) below 1 kW, kW (kWh), MW (MWh) from 1000 kW. The values in the balloons and tiles do the same.
+
+**The tiles are the legend:** each tile lists its curves (only those with data, and a tile only where there is some). A tap on a curve's name switches it on or off, a tap on the tile's name switches all of its curves (off where one is on, else on); a tile with all its curves off is grey. Point at a tile or a name (or tab to it) and its curves come to the front while the others fade, and in the balloon its line stands out: a quick way to see one curve against the prices without switching anything. The choice is remembered per browser. Hidden curves leave no dot or balloon either, and with the prices off the card is a pure energy chart.
+
+**Production first, then the forecast:** the production is drawn as far as there is data, the forecast only from there on: from the next hour on, and for later days. The hours before have the production or nothing: where the recording has a gap, the curve breaks, the card neither draws a line across it nor fills it with the forecast. In the energy mode the forecast goes on from what has been produced so far, so it shows where the day is heading. Only if there is no production data at all, the whole forecast shows.
+
+**What the day comes to:** in the energy mode a number sits at the end of each curve and stays in view (it fades while you read the chart). At the end of the forecast, at sunset, it says what is expected for the day (“≈ 12.2 kWh”). At the end of the production, which is now while the sun is up and sunset once the day is over, it says what was produced against what was forecast up to there, with the gap in percent (“5.9 / 6.2 kWh (−5 %)”). Where there is no forecast for a day, only the production shows. In the power mode there are no such numbers: its curve falls back to zero at sunset, and a total would compete with the kW axis.
+
+**Only by day:** the curves are drawn between sunrise and sunset only, in both modes: before it nothing is produced, after it nothing is expected, so the energy curve begins at sunrise at zero and ends at sunset at the day's total instead of running flat through the night. The cursor shows no values at night either.
+
+**Sunrise and sunset:** a row under the hours marks them with a small sun and an arrow up or down and their time (calculated for your home's location from Home Assistant's settings), so it is clear why the curves stop and begin there.
+
+**Colors, two axes, no area:** the prices are one neutral line (their level is in the balloon's price and the bars under the chart), the forecast is violet and dashed, the production orange (as the Energy dashboard draws solar), the battery indigo and cyan, the grid brown and magenta. Green and red are left out on purpose: they are the best and peak price periods' colors under the chart. The solar curves have their own axis at the right (kW or kWh) and both axes always name their unit. With more than one curve the area below the prices would hide the others, so the card leaves it out and offers no style switch.
 
 ## Cards inside cards
 
