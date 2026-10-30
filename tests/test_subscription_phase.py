@@ -1,10 +1,11 @@
 """
 Tests for subscriptions that have not started yet or have ended (issue #230).
 
-Tibber sends no prices before ``validFrom`` (``priceInfo.current`` is null, the day
-lists are empty). The integration must still set up, create only the entities that
-need no prices, and start fetching when the contract starts. After ``validTo`` the
-entities stay on the last day of the contract.
+While the status is "awaiting market" Tibber sends no prices (``priceInfo.current``
+is null, the day lists are empty). The integration must still set up, create only the
+entities that need no prices, and start fetching when the contract starts. A contract
+already "running" before ``validFrom`` has prices and works as usual (issue #237).
+After ``validTo`` the entities stay on the last day of the contract.
 """
 
 from __future__ import annotations
@@ -34,7 +35,11 @@ NOW = datetime(2026, 11, 20, 12, 0, tzinfo=BERLIN)
 
 
 def _subscription(
-    valid_from: str | None, valid_to: str | None = None, *, current: bool = False, status: str = "awaiting market"
+    valid_from: str | None,
+    valid_to: str | None = None,
+    *,
+    current: bool = False,
+    status: str | None = "awaiting market",
 ) -> dict:
     """Build a currentSubscription as the viewer query returns it."""
     return {
@@ -85,6 +90,32 @@ def test_phase_pending_before_valid_from() -> None:
 
 
 @pytest.mark.unit
+def test_phase_active_before_valid_from_once_running_with_prices() -> None:
+    """Issue #237: a confirmed switch is "running" with prices weeks before validFrom."""
+    subscription = _subscription("2026-12-31T23:00:00+00:00", status="running", current=True)
+    assert get_subscription_phase(subscription, NOW) == PHASE_ACTIVE
+
+
+@pytest.mark.unit
+@pytest.mark.parametrize(
+    ("status", "current"),
+    [("awaiting market", True), ("Awaiting Market", True), (None, False), ("pending", False), ("ended", False)],
+)
+def test_phase_pending_before_valid_from_unless_running(status: str | None, current: bool) -> None:
+    """Before validFrom, any status but "running" (or none) keeps the contract pending."""
+    subscription = _subscription("2026-12-31T23:00:00+00:00", status=status, current=current)
+    assert get_subscription_phase(subscription, NOW) == PHASE_PENDING
+
+
+@pytest.mark.unit
+def test_running_contract_stays_active_when_the_current_price_is_missing() -> None:
+    """A null current price during Tibber's maintenance must not turn a running contract pending."""
+    subscription = _subscription("2026-12-31T23:00:00+00:00", status="running")
+    assert get_subscription_phase(subscription, NOW) == PHASE_ACTIVE
+    assert _manager()._validate_user_data(_user_data(subscription), HOME_ID) is False  # noqa: SLF001
+
+
+@pytest.mark.unit
 def test_phase_active_from_valid_from_on() -> None:
     """From validFrom on the contract is active."""
     subscription = _subscription("2026-12-06T23:00:00+00:00")
@@ -101,10 +132,17 @@ def test_phase_ended_from_valid_to_on() -> None:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("subscription", [None, {}, {"validFrom": "garbage", "validTo": "2026-11-10T00:00:00"}])
+@pytest.mark.parametrize("subscription", [None, {}, {"validFrom": "garbage", "validTo": "not a date"}])
 def test_phase_unknown_counts_as_active(subscription: dict | None) -> None:
     """Without usable dates nothing changes against the behaviour before phases existed."""
     assert get_subscription_phase(subscription, NOW) == PHASE_ACTIVE
+
+
+@pytest.mark.unit
+def test_phase_reads_dates_without_offset_as_utc() -> None:
+    """A validTo without offset still ends the contract instead of being ignored."""
+    subscription = _subscription("2025-01-01T00:00:00", "2026-11-10T00:00:00", current=True, status="running")
+    assert get_subscription_phase(subscription, NOW) == PHASE_ENDED
 
 
 @pytest.mark.unit
@@ -168,6 +206,22 @@ async def test_pending_subscription_fetches_no_prices() -> None:
 
 
 @pytest.mark.unit
+async def test_running_subscription_before_valid_from_fetches_prices() -> None:
+    """Issue #237: the prices Tibber already sends before validFrom are fetched as usual."""
+    running = _subscription("2099-01-01T00:00:00+01:00", status="running", current=True)
+    manager = _manager(_user_data(running))
+    fetched = [{"startsAt": "2026-11-20T12:00:00+01:00", "total": 0.3}]
+    manager._fetch_via_pool = AsyncMock(return_value=(fetched, True))  # noqa: SLF001
+
+    assert manager._validate_user_data(_user_data(running), HOME_ID) is True  # noqa: SLF001
+    data, api_called = await manager.fetch_home_data(HOME_ID, NOW)
+
+    assert manager.subscription_phase == PHASE_ACTIVE
+    assert data["price_info"] == fetched
+    assert api_called is True
+
+
+@pytest.mark.unit
 async def test_ended_subscription_serves_cache_only() -> None:
     """After validTo only what is cached is shown - no request that could only fail."""
     ended = _subscription("2020-01-01T00:00:00+01:00", "2021-01-01T00:00:00+01:00", current=True)
@@ -206,6 +260,36 @@ async def test_ended_subscription_keeps_cache_when_api_has_nothing_new() -> None
     assert await manager.update_user_data_if_needed(NOW) is False
     assert manager.cached_user_data == cached
     assert manager._last_user_update == NOW  # noqa: SLF001
+
+
+@pytest.mark.unit
+async def test_pending_subscription_looks_for_the_switch_hourly() -> None:
+    """While pending, user data is checked hourly, and a confirmed switch with prices is taken."""
+    manager = _manager(_user_data(_subscription("2099-01-01T00:00:00+01:00")))
+    manager._last_user_update = NOW - timedelta(minutes=61)  # noqa: SLF001
+    running = _user_data(_subscription("2099-01-01T00:00:00+01:00", status="running", current=True))
+    manager.api.async_get_viewer_details = AsyncMock(return_value=running)
+
+    assert await manager.update_user_data_if_needed(NOW) is True
+    assert manager.cached_user_data == running
+    assert manager.subscription_phase == PHASE_ACTIVE
+
+
+@pytest.mark.unit
+async def test_pending_subscription_keeps_its_copy_until_the_first_price() -> None:
+    """A "running" copy without a price yet is not usable: keep the pending one, look again in an hour."""
+    cached = _user_data(_subscription("2099-01-01T00:00:00+01:00"))
+    manager = _manager(cached)
+    manager._last_user_update = NOW - timedelta(hours=2)  # noqa: SLF001
+    manager.api.async_get_viewer_details = AsyncMock(
+        return_value=_user_data(_subscription("2099-01-01T00:00:00+01:00", status="running"))
+    )
+
+    assert await manager.update_user_data_if_needed(NOW) is False
+    assert manager.cached_user_data == cached
+    assert manager._last_user_update == NOW  # noqa: SLF001
+    assert await manager.update_user_data_if_needed(NOW + timedelta(minutes=30)) is False
+    assert manager.api.async_get_viewer_details.await_count == 1
 
 
 # --- coordinator: the clock of an ended contract -----------------------------------

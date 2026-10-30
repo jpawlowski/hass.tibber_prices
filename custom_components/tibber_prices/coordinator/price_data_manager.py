@@ -61,6 +61,10 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+# While a contract awaits the market, its switch to "running" (and the prices that
+# come with it) is looked for hourly, not once a day
+PENDING_USER_UPDATE_INTERVAL = timedelta(hours=1)
+
 # Hour when Tibber publishes tomorrow's prices (around 13:00 local time)
 # Before this hour, requesting tomorrow data will always fail → wasted API call
 TOMORROW_DATA_AVAILABLE_HOUR = 13
@@ -247,9 +251,10 @@ class TibberPricesPriceDataManager:
             True if data is valid and complete, False otherwise.
 
         """
-        # After the end of a contract the API may answer without a subscription at all;
-        # that is expected then and not worth a warning every time.
-        level = "debug" if self.subscription_phase == PHASE_ENDED else "warning"
+        # After the end of a contract the API may answer without a subscription at all,
+        # and before the start a contract just confirmed may have no price yet; both are
+        # expected then and not worth a warning every time.
+        level = "debug" if self.subscription_phase in (PHASE_PENDING, PHASE_ENDED) else "warning"
 
         if not user_data:
             self._log(level, "User data validation failed: Empty data")
@@ -339,12 +344,18 @@ class TibberPricesPriceDataManager:
         daily check then only looks for a renewed contract, and anything that is
         not one is dropped without a warning.
 
+        While the subscription is pending, the check runs hourly: once Tibber confirms
+        the switch the status turns "running", often weeks before the start, and the
+        prices come with it. A copy that cannot be used yet is tried again an hour later.
+
         Returns:
             True if user data was updated, False otherwise
 
         """
-        if self._last_user_update is None or current_time - self._last_user_update >= self._user_update_interval:
-            ended = self.subscription_phase == PHASE_ENDED
+        phase = self.subscription_phase
+        interval = PENDING_USER_UPDATE_INTERVAL if phase == PHASE_PENDING else self._user_update_interval
+        if self._last_user_update is None or current_time - self._last_user_update >= interval:
+            ended = phase == PHASE_ENDED
             try:
                 self._log("debug", "Updating user data")
                 user_data = await self.api.async_get_viewer_details()
@@ -353,6 +364,11 @@ class TibberPricesPriceDataManager:
                 valid = self._validate_user_data(user_data, self.home_id)
                 if ended and (not valid or self._phase_of(find_subscription(user_data, self.home_id)) == PHASE_ENDED):
                     # Nothing new to learn: look again tomorrow, not every 15 minutes
+                    self._last_user_update = current_time
+                    return False
+                if not valid and phase == PHASE_PENDING:
+                    # E.g. "running" before Tibber's first price: keep the pending copy, look again in an hour
+                    self._log("debug", "User data not usable yet - keeping the pending copy")
                     self._last_user_update = current_time
                     return False
                 if not valid:

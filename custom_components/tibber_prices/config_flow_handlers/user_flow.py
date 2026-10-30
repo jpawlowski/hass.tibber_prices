@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -27,10 +26,12 @@ from custom_components.tibber_prices.const import (
     get_translation,
 )
 from custom_components.tibber_prices.time_travel import SUBENTRY_TYPE_TIME_TRAVEL
+from custom_components.tibber_prices.utils.subscription import PHASE_ENDED, PHASE_PENDING, get_subscription_phase
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import callback
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector, SelectSelectorConfig, SelectSelectorMode
+from homeassistant.util import dt as dt_util
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigSubentryFlow
@@ -388,9 +389,9 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             ):
                 currency_code = current_price.get("currency")
 
-            # A contract that has not started has no current price yet: take the
-            # currency Tibber bills in for the home's country
-            if currency_code is None and self._get_subscription_status(selected_home) == "future":
+            # Without a current price (contract not started, or Tibber's maintenance)
+            # take the currency Tibber bills in for the home's country
+            if currency_code is None:
                 currency_code = get_default_currency_for_home(selected_home)
 
             # Generate entry title from home address (not appNickname)
@@ -438,8 +439,8 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         Returns:
             - "active": Subscription is currently active
-            - "future": Subscription exists but starts in the future (validFrom > now)
-            - "expired": Subscription exists but has ended (validTo < now)
+            - "future": Subscription starts in the future and has no prices yet (pending)
+            - "expired": Subscription has ended (validTo has passed)
             - "none": No subscription exists
 
         """
@@ -449,26 +450,11 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         if subscription is None or (subscription.get("status") is None and not subscription.get("validFrom")):
             return "none"
 
-        # Check validTo (contract end date)
-        valid_to = subscription.get("validTo")
-        if valid_to:
-            try:
-                valid_to_dt = datetime.fromisoformat(valid_to)
-                if valid_to_dt < datetime.now(valid_to_dt.tzinfo):
-                    return "expired"
-            except ValueError, AttributeError:
-                pass  # If parsing fails, continue with other checks
-
-        # Check validFrom (contract start date)
-        valid_from = subscription.get("validFrom")
-        if valid_from:
-            try:
-                valid_from_dt = datetime.fromisoformat(valid_from)
-                if valid_from_dt > datetime.now(valid_from_dt.tzinfo):
-                    return "future"
-            except ValueError, AttributeError:
-                pass  # If parsing fails, assume active
-
+        phase = get_subscription_phase(subscription, dt_util.now())
+        if phase == PHASE_ENDED:
+            return "expired"
+        if phase == PHASE_PENDING:
+            return "future"
         return "active"
 
     def _get_home_title_with_status(self, home: dict) -> str:

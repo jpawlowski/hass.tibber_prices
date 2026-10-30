@@ -24,11 +24,13 @@ This is normal. The integration needs up to one update cycle (15 minutes) to fet
 
 ### Contract Has Not Started Yet (or Has Ended)
 
-You can set up the integration before your Tibber contract starts, for example right after signing up. Tibber sends no prices before the start date, so until then:
+You can set up the integration before your Tibber contract starts, for example right after signing up. Right after signing up, Tibber reports the subscription status "awaiting market": the switch from your old supplier is not confirmed yet, and Tibber sends no prices. Until then:
 
 - Only the diagnostic entities exist (connection, **Data Lifecycle Status** (`data_lifecycle_status`), subscription status and the home details). The **Data Lifecycle Status** shows `awaiting_subscription`, and the **Connection** sensor has a `subscription_phase` attribute (`pending`).
 - Nothing is fetched from the Tibber API, so there are no error messages in the log.
-- At the exact start date the integration reloads itself, creates the price entities and starts fetching prices. You don't need to do anything.
+- As soon as Tibber has prices for you, the integration reloads itself, creates the price entities and starts fetching prices. You don't need to do anything.
+
+Once the switch is confirmed, the status turns "running" and Tibber sends the prices of your area, often weeks before your contract starts. The integration then works normally, and you can set up your dashboards and automations before your first delivery day. While waiting, the integration checks the status hourly, so it notices the switch within an hour.
 
 When a contract ends, the entities keep showing the last day of the contract and no longer change: "today" stays that last day, "yesterday" is the day before it and there is no "tomorrow". The **Data Lifecycle Status** shows `subscription_ended`. If you start a new contract, the integration picks it up within a day, or immediately after a restart.
 
