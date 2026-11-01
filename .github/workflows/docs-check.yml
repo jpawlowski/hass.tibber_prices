@@ -1,0 +1,71 @@
+name: Docs Build
+
+# Builds the documentation sites a pull request changes, without deploying: docusaurus.yml only
+# runs after the merge, so a broken docs update (npm, Node, content) would otherwise first fail on
+# main. Keep the setup and build steps in step with docusaurus.yml.
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "docs/**"
+      - "mise.toml"
+      - ".github/workflows/docs-check.yml"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build ${{ matrix.site }} docs
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        site: [user, developer]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2 # The PR's merge commit and the base it is diffed against
+          persist-credentials: false # npm ci runs the dependencies' install scripts
+
+      # A site builds when the PR changes it or what all sites use (Node, this workflow); by hand always
+      - name: Check whether the PR changes this site
+        id: changed
+        env:
+          SITE: ${{ matrix.site }}
+        run: |
+          if [[ $GITHUB_EVENT_NAME != pull_request ]] ||
+              git diff --name-only HEAD^1 HEAD | grep -qE "^(docs/${SITE}/|mise\.toml$|\.github/workflows/docs-check\.yml$)"; then
+              echo "build=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node (mise.toml)
+        if: steps.changed.outputs.build == 'true'
+        uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
+        with:
+          install_args: "node"
+
+      # One key per site: each matrix job only downloads its own site's packages, so a shared key
+      # would keep whichever job saved first. The fallback still finds the deploy's cache of both.
+      - name: Cache npm downloads
+        if: steps.changed.outputs.build == 'true'
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.npm
+          key: npm-${{ runner.os }}-${{ matrix.site }}-${{ hashFiles(format('docs/{0}/package-lock.json', matrix.site)) }}
+          restore-keys: npm-${{ runner.os }}-
+
+      - name: Install dependencies
+        if: steps.changed.outputs.build == 'true'
+        working-directory: docs/${{ matrix.site }}
+        run: npm ci
+
+      - name: Build
+        if: steps.changed.outputs.build == 'true'
+        working-directory: docs/${{ matrix.site }}
+        run: npm run build

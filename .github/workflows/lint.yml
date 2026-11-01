@@ -1,18 +1,25 @@
-name: Lint
+name: Lint & Test
 
 on:
   push:
     branches:
       - "main"
-    paths-ignore:
-      - "docs/**"
-      - ".github/workflows/docusaurus.yml"
+    paths: &paths
+      - "custom_components/**"
+      - "tests/**"
+      - "scripts/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "requirements.txt"
+      - "mise.toml"
+      - ".python-version"
+      - "docs/user/docs/sensor-reference.md" # checked against the translations
+      - ".github/workflows/lint.yml"
   pull_request:
     branches:
       - "main"
-    paths-ignore:
-      - "docs/**"
-      - ".github/workflows/docusaurus.yml"
+    paths: *paths
+  workflow_dispatch:
 
 permissions: {}
 
@@ -21,20 +28,34 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  ruff:
-    name: "Ruff"
+  checks:
+    name: "Ruff, Pyright, pytest"
     runs-on: "ubuntu-latest"
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Set up Python and uv (mise.toml, .python-version)
+      - name: Set up Python, uv and Pyright (mise.toml, .python-version)
         uses: jdx/mise-action@6612f0ef07ed2a736cd1e00a94a065522dd41195 # v5.2.5
         with:
-          install_args: "python uv"
+          install_args: "python uv node npm:pyright"
+
+      # uv's downloads: Home Assistant and its requirements, the same for every run of one HA version
+      - name: Cache uv downloads
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ~/.cache/uv
+          key: uv-${{ runner.os }}-${{ hashFiles('requirements.txt', 'scripts/setup/bootstrap', '.python-version') }}
+          restore-keys: uv-${{ runner.os }}-
 
       - name: Install requirements
+        id: bootstrap
         run: scripts/setup/bootstrap
 
-      - name: Lint check
-        run: scripts/lint-check
+      - name: Pyright, Ruff, sensor reference
+        run: scripts/check
+
+      # Runs even when the check failed, so one push reports both, but not without an environment
+      - name: pytest
+        if: ${{ !cancelled() && steps.bootstrap.outcome == 'success' }}
+        run: scripts/test

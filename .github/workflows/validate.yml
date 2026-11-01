@@ -4,18 +4,20 @@ on:
   workflow_dispatch:
   schedule:
     - cron: "0 0 * * *"
+  # Only what hassfest and the HACS action read: the integration, hacs.json and the README.
+  # The nightly run still catches changes on their side and in the repository settings.
   push:
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
-      - ".github/workflows/docusaurus.yml"
+    paths: &paths
+      - "custom_components/**"
+      - "hacs.json"
+      - "README.md"
+      - ".github/workflows/validate.yml"
   pull_request:
     branches:
       - main
-    paths-ignore:
-      - "docs/**"
-      - ".github/workflows/docusaurus.yml"
+    paths: *paths
 
 permissions: {}
 

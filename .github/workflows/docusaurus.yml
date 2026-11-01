@@ -1,10 +1,13 @@
 name: Deploy Docusaurus Documentation (Dual Sites)
 
+# docs-check.yml builds the same sites on pull requests: keep the setup and build steps in step.
+
 on:
   push:
     branches: [main]
     paths:
       - "docs/**"
+      - "mise.toml" # Node version
       - ".github/workflows/docusaurus.yml"
     tags:
       - "v*.*.*"
