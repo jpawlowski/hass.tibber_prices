@@ -3,7 +3,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Tibber Prices - Developer Guide',
+  title: 'Tibber Prices & Planning – Developer Guide',
   tagline: 'Developer documentation for the Tibber Prices custom integration',
   favicon: 'img/icon.svg',
 

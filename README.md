@@ -1,7 +1,7 @@
-# Tibber Prices - Custom Home Assistant Integration
+# Tibber Prices & Planning – Custom Integration for Home Assistant
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/header.svg" alt="Tibber Prices Custom Integration for Tibber" width="600">
+  <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/header.svg" alt="Tibber Prices & Planning" width="600">
 </p>
 
 [![GitHub Release][releases-shield]][releases]
@@ -14,7 +14,7 @@
 > **⚠️ Not affiliated with Tibber**
 > This is an independent, community-maintained custom integration for Home Assistant. It is **not** an official Tibber product and is **not** affiliated with or endorsed by Tibber AS.
 
-**The most comprehensive Tibber price integration for Home Assistant.** Get 100+ sensors with quarter-hourly precision, intelligent best/peak price period detection, price forecasts, trend analysis, volatility tracking, and dashboard cards of its own - all from a single integration. Automate your energy consumption like a pro.
+**Plan your electricity use around Tibber's quarter-hourly prices.** 100+ sensors with price levels and ratings, best and peak price periods, forecasts, trends and volatility, plus scheduling actions, ready-made blueprints and dashboard cards of its own – all from one integration.
 
 ## 📖 Documentation
 

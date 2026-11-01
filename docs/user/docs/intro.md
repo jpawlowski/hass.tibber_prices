@@ -4,7 +4,7 @@ comments: false
 
 # User Documentation
 
-Welcome to the **Tibber Prices custom integration for Home Assistant**! This community-developed integration enhances your Home Assistant installation with detailed electricity price data from Tibber, featuring quarter-hourly precision, statistical analysis, and intelligent ratings.
+Welcome to **Tibber Prices & Planning**, a custom integration for Home Assistant! It brings Tibber's quarter-hourly electricity prices into Home Assistant and helps you plan around them: price ratings, best and peak price periods, forecasts and trends, scheduling actions, blueprints and dashboard cards of its own.
 
 :::info Not affiliated with Tibber
 This is an independent, community-maintained custom integration. It is **not** an official Tibber product and is **not** affiliated with or endorsed by Tibber AS.

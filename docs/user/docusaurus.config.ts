@@ -3,8 +3,8 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 const config: Config = {
-  title: 'Tibber Prices Integration',
-  tagline: 'Custom Home Assistant integration for Tibber electricity prices',
+  title: 'Tibber Prices & Planning',
+  tagline: 'Custom integration for Home Assistant: plan your electricity use around Tibber prices',
   favicon: 'img/icon.svg',
 
   future: {

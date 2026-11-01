@@ -107,7 +107,7 @@ export default function Home(): ReactNode {
   return (
     <Layout
       title="Home"
-      description="Custom Home Assistant integration for Tibber electricity price management">
+      description="Custom integration for Home Assistant: plan your electricity use around Tibber prices">
       <HomepageHeader />
       <main>
         <HomepageFeatures />
