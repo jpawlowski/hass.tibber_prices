@@ -37,7 +37,7 @@ from custom_components.tibber_prices.const import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 
-from .get_apexcharts_yaml import CUSTOM_CARDS, async_build_apexcharts_card, check_custom_cards_installed
+from .get_apexcharts_yaml import CUSTOM_CARDS, async_build_apexcharts_card, check_custom_cards_installed, store_name
 from .helpers import resolve_service_target
 
 _LOGGER = logging.getLogger(__name__)
@@ -296,9 +296,9 @@ class _Resolver:
         return card
 
     def missing_card_hint(self, cards: list[str]) -> dict[str, Any]:
-        """Markdown card that names the custom cards to install, with their HACS links."""
+        """Markdown card that names the custom cards to install, with their store links."""
         links = ", ".join(f'<a href="{CUSTOM_CARDS[card]}">{card}</a>' for card in cards)
-        text = self.labels["missing_card"].format(card=links)
+        text = self.labels["missing_card"].format(card=links, store=self.labels["store"])
         return {"type": "markdown", "text_only": True, "content": f'<ha-alert alert-type="warning">{text}</ha-alert>'}
 
 
@@ -324,6 +324,7 @@ async def handle_dashboard_yaml(call: ServiceCall) -> dict[str, Any]:
     await async_load_translations(hass, language)
     # English fills whatever the language lacks, nested texts (the notification) included
     labels = _merged(get_translation(["dashboard"], "en") or {}, get_translation(["dashboard"], language) or {})
+    labels["store"] = store_name(language)  # fills the {store} placeholder of the missing-card hints
 
     subentry_id = target.subentry.subentry_id if target.subentry else None
     home_entries = {
@@ -376,7 +377,11 @@ async def _async_notify(hass: HomeAssistant, notification_id: str, labels: dict[
     texts = labels["notification"]
     parts = []
     if cards := response.get("missing_cards"):
-        parts.append(texts["cards"].format(cards="\n".join(f"- [{card}]({url})" for card, url in cards.items())))
+        parts.append(
+            texts["cards"].format(
+                cards="\n".join(f"- [{card}]({url})" for card, url in cards.items()), store=labels["store"]
+            )
+        )
     for name, text in (
         ("missing_entities", "entities"),
         ("removed_entities", "removed"),

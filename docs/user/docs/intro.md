@@ -26,7 +26,7 @@ This is an independent, community-maintained custom integration. It is **not** a
 
 ## 🚀 Quick Start
 
-1. **Install via HACS** (add as custom repository)
+1. **Install from the Marketplace or HACS** ([how](installation.md))
 2. **Add Integration** in Home Assistant → Settings → Devices & Services
 3. **Enter Tibber API Token** (get yours at [developer.tibber.com](https://developer.tibber.com/))
 4. **Configure Price Thresholds** (optional, defaults work for most users)

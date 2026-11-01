@@ -1,4 +1,8 @@
 {
+  "store": {
+    "marketplace": "de Marketplace",
+    "hacs": "HACS"
+  },
   "apexcharts": {
     "title_rating_level": "Prijsfasen dagverloop",
     "title_level": "Prijsniveau",
@@ -12,14 +16,14 @@
       },
       "missing_cards": {
         "title": "Tibber Prices: ApexCharts YAML kan niet worden gebruikt",
-        "message": "Je hebt zojuist een ApexCharts-kaartconfiguratie gegenereerd via Ontwikkelaarstools, maar de gegenereerde YAML **zal niet werken** omdat vereiste aangepaste kaarten ontbreken.\n\n**Ontbrekende kaarten:**\n{cards}\n\n**Om de gegenereerde YAML te gebruiken:**\n1. Klik op de bovenstaande links om de ontbrekende kaarten te installeren vanuit HACS\n2. Herstart Home Assistant (soms nodig)\n3. **Genereer de YAML opnieuw** via Ontwikkelaarstools\n4. Voeg de YAML toe aan je dashboard\n\n⚠️ De huidige YAML-code werkt niet totdat alle kaarten zijn geïnstalleerd!"
+        "message": "Je hebt zojuist een ApexCharts-kaartconfiguratie gegenereerd via Ontwikkelaarstools, maar de gegenereerde YAML **zal niet werken** omdat vereiste aangepaste kaarten ontbreken.\n\n**Ontbrekende kaarten:**\n{cards}\n\n**Om de gegenereerde YAML te gebruiken:**\n1. Klik op de bovenstaande links om de ontbrekende kaarten te installeren vanuit {store}\n2. Herstart Home Assistant (soms nodig)\n3. **Genereer de YAML opnieuw** via Ontwikkelaarstools\n4. Voeg de YAML toe aan je dashboard\n\n⚠️ De huidige YAML-code werkt niet totdat alle kaarten zijn geïnstalleerd!"
       }
     }
   },
   "dashboard": {
     "overview": "Stroomprijzen",
     "compact": "Compact",
-    "missing_card": "Deze kaart heeft {card} uit HACS nodig.",
+    "missing_card": "Deze kaart heeft {card} uit {store} nodig.",
     "today": "Vandaag",
     "tomorrow": "Morgen",
     "connection_lost": "Geen verbinding met Tibber. De laatst bekende prijzen worden getoond.",
@@ -30,7 +34,7 @@
     "notification": {
       "title": "Tibber Prices: dashboardweergaven onvolledig",
       "intro": "Je hebt zojuist dashboardweergaven gemaakt met de actie „Dashboard-YAML ophalen”. Sommige delen konden niet worden opgenomen:",
-      "cards": "**Ontbrekende custom cards** – grafieken tonen in plaats daarvan een hint, tabgroepen alleen hun eerste tabblad:\n{cards}\n\nInstalleer ze via HACS, herlaad de browser, **genereer de YAML daarna opnieuw** en vervang de weergaven die je hebt geplakt.",
+      "cards": "**Ontbrekende custom cards** – grafieken tonen in plaats daarvan een hint, tabgroepen alleen hun eerste tabblad:\n{cards}\n\nInstalleer ze via {store}, herlaad de browser, **genereer de YAML daarna opnieuw** en vervang de weergaven die je hebt geplakt.",
       "entities": "**Uitgeschakelde sensoren** – de kaarten die ze tonen zijn weggelaten:\n{entities}\n\n[Open de Tibber Prices-integratie](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), schakel de sensoren in en **genereer de YAML daarna opnieuw**.",
       "removed": "**Verwijderde sensoren** – de kaarten die ze tonen zijn weggelaten:\n{entities}\n\n[Laad de Tibber Prices-integratie opnieuw](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) om ze terug te halen en **genereer de YAML daarna opnieuw**.",
       "optional": "**Optionele sensoren** – er is niets weggelaten, maar de grafieken schalen beter met deze sensoren:\n{entities}\n\nSchakel ze desgewenst in bij de [Tibber Prices-integratie](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices); de grafieken gebruiken ze dan zonder dat je de YAML opnieuw hoeft te genereren."

@@ -3,14 +3,14 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v1.0.0
+    (custom integration)** · Blueprint v1.0.0
 
     Automatically run your dryer at the cheapest electricity price
     overnight using a smart plug.
 
     **Prerequisites:**
 
-    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed
 
     - One helper: Date & Time (`input_datetime`) — stores the planned start time
 

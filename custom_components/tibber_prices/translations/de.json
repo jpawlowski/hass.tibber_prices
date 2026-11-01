@@ -11,14 +11,14 @@
       },
       "new_token": {
         "title": "API-Token eingeben",
-        "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche [{tibber_url}]({tibber_url}).",
+        "description": "Richte Tibber Prices & Planning ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API-Zugriffstoken"
         },
         "submit": "Token validieren"
       },
       "user": {
-        "description": "Richte Tibber Preisinformationen & Bewertungen ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche [{tibber_url}]({tibber_url}).",
+        "description": "Richte Tibber Prices & Planning ein.\n\nUm einen API-Zugriffstoken zu generieren, besuche [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API-Zugriffstoken"
         },
@@ -172,7 +172,7 @@
       },
       "general_settings": {
         "title": "⚙️ Allgemeine Einstellungen",
-        "description": "**Konfiguriere allgemeine Einstellungen für Tibber-Preisinformationen und -bewertungen.**\n\n---\n\n**Benutzer:** {user_login}",
+        "description": "**Konfiguriere allgemeine Einstellungen für Tibber Prices & Planning.**\n\n---\n\n**Benutzer:** {user_login}",
         "data": {
           "extended_descriptions": "Erweiterte Beschreibungen",
           "average_sensor_display": "Durchschnittsensor-Anzeige"
@@ -1507,7 +1507,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Dashboard-YAML abrufen",
-      "description": "Liefert eine Dashboard-Ansicht für ein Zuhause als Startpunkt: die Preisempfehlung für jetzt, Charts und den Tagesverlauf mit Tageszeiten, heute und morgen. Kopiere die Antwort unter `views:` in den Rohkonfigurations-Editor eines deiner Dashboards und passe sie dann an. Es wird in kein Dashboard geschrieben, und spätere Updates ändern deine Kopie nicht. Die Charts zeichnet standardmäßig die Chart-Karte der Integration, ohne dass etwas zu installieren ist. Mit ApexCharts als Chart-Karte nutzen sie ApexCharts Card, Config Template Card und TabDeck Card aus HACS; fehlen sie, zeigt die Antwort an Stelle der Charts einen Hinweis und von jeder Tab-Gruppe nur den ersten Tab.",
+      "description": "Liefert eine Dashboard-Ansicht für ein Zuhause als Startpunkt: die Preisempfehlung für jetzt, Charts und den Tagesverlauf mit Tageszeiten, heute und morgen. Kopiere die Antwort unter `views:` in den Rohkonfigurations-Editor eines deiner Dashboards und passe sie dann an. Es wird in kein Dashboard geschrieben, und spätere Updates ändern deine Kopie nicht. Die Charts zeichnet standardmäßig die Chart-Karte der Integration, ohne dass etwas zu installieren ist. Mit ApexCharts als Chart-Karte nutzen sie ApexCharts Card, Config Template Card und TabDeck Card aus dem Marketplace oder HACS; fehlen sie, zeigt die Antwort an Stelle der Charts einen Hinweis und von jeder Tab-Gruppe nur den ersten Tab.",
       "fields": {
         "entry_id": {
           "name": "Eintrags-ID",
@@ -1527,7 +1527,7 @@
         },
         "chart_card": {
           "name": "Chart-Karte",
-          "description": "Was die Charts zeichnet: die eigene Chart-Karte der Integration (Standard: nichts zu installieren, ein Cursor über der Kurve zeigt jeden Preis) oder ApexCharts-Charts in Tabs (ApexCharts Card, Config Template Card und TabDeck Card aus HACS)."
+          "description": "Was die Charts zeichnet: die eigene Chart-Karte der Integration (Standard: nichts zu installieren, ein Cursor über der Kurve zeigt jeden Preis) oder ApexCharts-Charts in Tabs (ApexCharts Card, Config Template Card und TabDeck Card aus dem Marketplace oder HACS)."
         },
         "language": {
           "name": "Sprache",

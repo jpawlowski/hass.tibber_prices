@@ -35,7 +35,9 @@ LABEL_KEYS = sorted(set(re.findall(r"label:([a-z0-9_]+)", TEMPLATE_TEXT)))
 
 
 def _labels(language: str) -> dict[str, str]:
-    return json.loads((TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8"))["dashboard"]
+    texts = json.loads((TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8"))
+    # The service adds the store's name the same way (store_name())
+    return {**texts["dashboard"], "store": texts["store"]["hacs"]}
 
 
 def _walk(node: Any) -> list[Any]:

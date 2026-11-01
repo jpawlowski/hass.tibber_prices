@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v1.0.0
+    (custom integration)** · Blueprint v1.0.0
 
     Automatically charge your electric vehicle during the cheapest hours
     overnight. Uses `find_cheapest_hours` to select the cheapest
@@ -22,7 +22,7 @@ blueprint:
 
     **Prerequisites:**
 
-    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed
 
     - One helper: Date & Time (`input_datetime`) for the charge start
 

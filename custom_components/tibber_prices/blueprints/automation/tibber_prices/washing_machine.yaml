@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v1.0.0
+    (custom integration)** · Blueprint v1.0.0
 
     Automatically run your washing machine at the cheapest electricity
     price overnight using a smart plug.
@@ -23,7 +23,7 @@ blueprint:
 
     **Prerequisites:**
 
-    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed
 
     - One helper (created in Settings → Helpers):
       - Date & Time (`input_datetime`) — stores the planned start time
@@ -196,7 +196,7 @@ actions:
                     title: "👕 Washing Machine — Setup Required"
                     message: >
                       The Tibber Prices integration is not installed or not
-                      configured. Install it via HACS and set up your Tibber
+                      configured. Install it and set up your Tibber
                       account before using this blueprint.
       - stop: "Tibber Prices integration not found"
 

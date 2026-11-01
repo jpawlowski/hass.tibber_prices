@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v1.0.0
+    (custom integration)** · Blueprint v1.0.0
 
     Automatically boost your water heater during the cheapest price
     periods and return to eco temperature when prices rise.
@@ -18,7 +18,7 @@ blueprint:
 
     **Prerequisites:**
 
-    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed
 
     - A `water_heater` entity (or `climate` entity for heat-pump boilers)
   domain: automation

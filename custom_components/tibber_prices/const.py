@@ -86,7 +86,7 @@ CONF_PEAK_PRICE_SEGMENT_MIN_PERIODS = "peak_price_segment_min_periods"
 ATTRIBUTION = "Data provided by Tibber"
 
 # Integration name should match manifest.json
-DEFAULT_NAME = "Tibber Price Information & Ratings"
+DEFAULT_NAME = "Tibber Prices & Planning"
 DEFAULT_EXTENDED_DESCRIPTIONS = False
 DEFAULT_VIRTUAL_TIME_OFFSET_DAYS = 0  # No time offset (live mode)
 DEFAULT_VIRTUAL_TIME_OFFSET_HOURS = 0

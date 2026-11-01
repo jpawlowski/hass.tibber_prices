@@ -20,6 +20,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, Final
 
+from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from custom_components.tibber_prices.const import (
@@ -40,6 +41,7 @@ from custom_components.tibber_prices.const import (
     get_display_unit_string,
     get_translation,
 )
+from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_registry import EntityRegistry, async_get as async_get_entity_registry
@@ -59,11 +61,33 @@ APEXCHARTS_YAML_SERVICE_NAME: Final = "get_apexcharts_yaml"
 ATTR_DAY: Final = "day"
 ATTR_ENTRY_ID: Final = "entry_id"
 
-# Custom cards the generated YAML can use (resource URL fragment), with their HACS repository
+# The store that installs custom cards: built in as the Marketplace from 2026.11, HACS before that.
+# store_name() fills the {store} placeholder of the hints, so text and link name the same store.
+# dev0 is the lowest pre-release, so dev builds of 2026.11 count too.
+_HAS_MARKETPLACE: Final = AwesomeVersion(HA_VERSION) >= "2026.11.0.dev0"
+_STORE: Final = "marketplace" if _HAS_MARKETPLACE else "hacs"
+_STORE_REDIRECT: Final = f"{_STORE}_repository"
+
+
+def store_name(language: str) -> str:
+    """The store's name as the hints' {store} placeholder takes it (article and case per language)."""
+    return (
+        get_translation(["store", _STORE], language)
+        or get_translation(["store", _STORE], "en")
+        or ("the Marketplace" if _HAS_MARKETPLACE else "HACS")
+    )
+
+
+def _store_link(owner: str, repository: str) -> str:
+    """My link that opens a dashboard card's repository in the store."""
+    return f"https://my.home-assistant.io/redirect/{_STORE_REDIRECT}/?owner={owner}&repository={repository}&category=plugin"
+
+
+# Custom cards the generated YAML can use (resource URL fragment), with their repository in the store
 CUSTOM_CARDS: Final = {
-    "apexcharts-card": "https://my.home-assistant.io/redirect/hacs_repository/?owner=RomRider&repository=apexcharts-card",
-    "config-template-card": "https://my.home-assistant.io/redirect/hacs_repository/?owner=iantrich&repository=config-template-card",
-    "tabdeck-card": "https://my.home-assistant.io/redirect/hacs_repository/?owner=tempus2016&repository=tabdeck-card",
+    "apexcharts-card": _store_link("RomRider", "apexcharts-card"),
+    "config-template-card": _store_link("iantrich", "config-template-card"),
+    "tabdeck-card": _store_link("tempus2016", "tabdeck-card"),
 }
 
 # Service schema
@@ -185,7 +209,7 @@ def _build_entity_map(
 
 def check_custom_cards_installed(hass: Any) -> dict[str, bool]:
     """
-    Check if required custom cards are installed via HACS/Lovelace resources.
+    Check if required custom cards are installed as dashboard resources (Marketplace or HACS).
 
     Args:
         hass: Home Assistant instance
@@ -255,12 +279,12 @@ def _get_missing_cards_notification(language: str, missing_cards: list[str]) -> 
         message = (
             "The following custom cards are required but not installed:\n"
             "{cards}\n\n"
-            "Please click the links above to install them from HACS."
+            "Please click the links above to install them from {store}."
         )
 
-    # Replace {cards} placeholder
+    # Replace {cards} and {store} placeholders
     cards_list = "\n".join(missing_cards)
-    message = message.replace("{cards}", cards_list)
+    message = message.replace("{cards}", cards_list).replace("{store}", store_name(language))
 
     return {"title": title, "message": message}
 

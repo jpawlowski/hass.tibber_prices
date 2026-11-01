@@ -11,14 +11,14 @@
       },
       "new_token": {
         "title": "Voer API-Token In",
-        "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek [{tibber_url}]({tibber_url}).",
+        "description": "Stel Tibber Prices & Planning in.\n\nOm een API-toegangstoken te genereren, bezoek [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API-toegangstoken"
         },
         "submit": "Token valideren"
       },
       "user": {
-        "description": "Stel Tibber Prijsinformatie & Beoordelingen in.\n\nOm een API-toegangstoken te genereren, bezoek [{tibber_url}]({tibber_url}).",
+        "description": "Stel Tibber Prices & Planning in.\n\nOm een API-toegangstoken te genereren, bezoek [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API-toegangstoken"
         },
@@ -172,7 +172,7 @@
       },
       "general_settings": {
         "title": "⚙️ Algemene Instellingen",
-        "description": "**Configureer algemene instellingen voor Tibber Prijsinformatie & Beoordelingen.**\n\n---\n\n**Gebruiker:** {user_login}",
+        "description": "**Configureer algemene instellingen voor Tibber Prices & Planning.**\n\n---\n\n**Gebruiker:** {user_login}",
         "data": {
           "extended_descriptions": "Uitgebreide Beschrijvingen",
           "average_sensor_display": "Gemiddelde Sensor Weergave"
@@ -1507,7 +1507,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Dashboard-YAML ophalen",
-      "description": "Geeft een dashboardweergave voor één woning als startpunt: het prijsadvies voor nu, grafieken en het dagverloop met dagdelen, vandaag en morgen. Kopieer het antwoord onder `views:` naar de ruwe configuratie-editor van een van je dashboards en pas het daarna aan. Er wordt niets naar een dashboard geschreven, en latere updates veranderen je kopie niet. De grafieken komen standaard van de eigen grafiekkaart van de integratie, zonder dat je iets hoeft te installeren. Met ApexCharts als grafiekkaart gebruiken ze ApexCharts Card, Config Template Card en TabDeck Card uit HACS; zonder deze toont het antwoord een hint in plaats van de grafieken en alleen het eerste tabblad van elke tabgroep.",
+      "description": "Geeft een dashboardweergave voor één woning als startpunt: het prijsadvies voor nu, grafieken en het dagverloop met dagdelen, vandaag en morgen. Kopieer het antwoord onder `views:` naar de ruwe configuratie-editor van een van je dashboards en pas het daarna aan. Er wordt niets naar een dashboard geschreven, en latere updates veranderen je kopie niet. De grafieken komen standaard van de eigen grafiekkaart van de integratie, zonder dat je iets hoeft te installeren. Met ApexCharts als grafiekkaart gebruiken ze ApexCharts Card, Config Template Card en TabDeck Card uit de Marketplace of HACS; zonder deze toont het antwoord een hint in plaats van de grafieken en alleen het eerste tabblad van elke tabgroep.",
       "fields": {
         "entry_id": {
           "name": "Invoer-ID",
@@ -1527,7 +1527,7 @@
         },
         "chart_card": {
           "name": "Grafiekkaart",
-          "description": "Wat de grafieken tekent: de eigen grafiekkaart van de integratie (standaard: niets te installeren, een cursor over de curve toont elke prijs) of ApexCharts-grafieken in tabbladen (ApexCharts Card, Config Template Card en TabDeck Card uit HACS)."
+          "description": "Wat de grafieken tekent: de eigen grafiekkaart van de integratie (standaard: niets te installeren, een cursor over de curve toont elke prijs) of ApexCharts-grafieken in tabbladen (ApexCharts Card, Config Template Card en TabDeck Card uit de Marketplace of HACS)."
         },
         "language": {
           "name": "Taal",

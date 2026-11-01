@@ -11,14 +11,14 @@
       },
       "new_token": {
         "title": "Enter API Token",
-        "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit [{tibber_url}]({tibber_url}).",
+        "description": "Set up Tibber Prices & Planning.\n\nTo generate an API access token, visit [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API access token"
         },
         "submit": "Validate Token"
       },
       "user": {
-        "description": "Set up Tibber Price Information & Ratings.\n\nTo generate an API access token, visit [{tibber_url}]({tibber_url}).",
+        "description": "Set up Tibber Prices & Planning.\n\nTo generate an API access token, visit [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API access token"
         },
@@ -172,7 +172,7 @@
       },
       "general_settings": {
         "title": "⚙️ General Settings",
-        "description": "**Configure general settings for Tibber Price Information & Ratings.**\n\n---\n\n**User:** {user_login}",
+        "description": "**Configure general settings for Tibber Prices & Planning.**\n\n---\n\n**User:** {user_login}",
         "data": {
           "extended_descriptions": "Extended Descriptions",
           "average_sensor_display": "Average Sensor Display"
@@ -1507,7 +1507,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Get dashboard YAML",
-      "description": "Returns a dashboard view for one home as a starting point: the price verdict for now, charts, and the course of the day with its parts, today and tomorrow. Copy the response under `views:` into the raw configuration editor of one of your dashboards, then adapt it. Nothing is written to any dashboard, and later updates don't change the copy. The charts come from the integration's own chart card by default, with nothing to install. With ApexCharts as the chart card, they use ApexCharts Card, Config Template Card and TabDeck Card from HACS; without them, the response shows a hint in place of the charts and the first tab of each tab group.",
+      "description": "Returns a dashboard view for one home as a starting point: the price verdict for now, charts, and the course of the day with its parts, today and tomorrow. Copy the response under `views:` into the raw configuration editor of one of your dashboards, then adapt it. Nothing is written to any dashboard, and later updates don't change the copy. The charts come from the integration's own chart card by default, with nothing to install. With ApexCharts as the chart card, they use ApexCharts Card, Config Template Card and TabDeck Card from the Marketplace or HACS; without them, the response shows a hint in place of the charts and the first tab of each tab group.",
       "fields": {
         "entry_id": {
           "name": "Entry ID",
@@ -1527,7 +1527,7 @@
         },
         "chart_card": {
           "name": "Chart card",
-          "description": "What draws the charts: the integration's own chart card (default: nothing to install, move a cursor across the curve to read each price) or ApexCharts charts in tabs (ApexCharts Card, Config Template Card and TabDeck Card from HACS)."
+          "description": "What draws the charts: the integration's own chart card (default: nothing to install, move a cursor across the curve to read each price) or ApexCharts charts in tabs (ApexCharts Card, Config Template Card and TabDeck Card from the Marketplace or HACS)."
         },
         "language": {
           "name": "Language",

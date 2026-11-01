@@ -3,7 +3,7 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v1.0.0
+    (custom integration)** · Blueprint v1.0.0
 
     Schedule multiple wash + dry cycles at the cheapest electricity prices
     using smart plug switches.
@@ -23,7 +23,7 @@ blueprint:
 
     **Prerequisites:**
 
-    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed
 
     - Two helpers (created in Settings → Helpers):
       - Toggle (`input_boolean`) — starts laundry day when turned on
@@ -305,7 +305,7 @@ actions:
                     title: "🧺 Laundry Day — Setup Required"
                     message: >
                       The Tibber Prices integration is not installed or not
-                      configured. Install it via HACS and set up your Tibber
+                      configured. Install it and set up your Tibber
                       account before using this blueprint.
       - action: input_boolean.turn_off
         target:

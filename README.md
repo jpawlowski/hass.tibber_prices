@@ -7,8 +7,6 @@
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
-
-[![hacs][hacsbadge]][hacs]
 [![Project Maintenance][maintenance-shield]][user_profile]
 
 <a href="https://www.buymeacoffee.com/jpawlowski" target="_blank"><img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/bmc-button.svg" alt="Buy Me A Coffee" height="41" width="174"></a>
@@ -72,14 +70,18 @@ Most Tibber integrations give you a single price sensor. This one gives you a **
 
 ## 🚀 Quick Start
 
-### Step 1: Install via HACS
+### Step 1: Install from the Marketplace (or HACS)
 
-**Prerequisites:** [HACS](https://hacs.xyz/) (Home Assistant Community Store) must be installed.
+Home Assistant 2026.11 or newer (built-in Marketplace):
+
+[![Open your Home Assistant instance and open a repository inside the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+
+Older versions with HACS:
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
 
 1. Click "Download" to install
-2. **Restart Home Assistant**
+2. With HACS, **restart Home Assistant** ([details](https://jpawlowski.github.io/hass.tibber_prices/user/installation))
 
 ### Step 2: Configure
 
@@ -89,12 +91,12 @@ Most Tibber integrations give you a single price sensor. This one gives you a **
 2. Select your Tibber home
 3. Configure price thresholds (optional — sensible defaults are provided)
 
-Or manually: **Settings** → **Devices & Services** → **+ Add Integration** → search "Tibber Price Information & Ratings"
+Or manually: **Settings** → **Devices & Services** → **+ Add Integration** → search "Tibber Prices & Planning"
 
 ### Step 3: Done!
 
 - **100+ sensors** are now available (key sensors enabled by default, advanced ones ready to enable)
-- Explore entities in **Settings** → **Devices & Services** → **Tibber Price Information & Ratings**
+- Explore entities in **Settings** → **Devices & Services** → **Tibber Prices & Planning**
 - Start building automations, dashboards, and energy-saving workflows
 
 📖 **[Full Installation Guide →](https://jpawlowski.github.io/hass.tibber_prices/user/installation)**
@@ -235,8 +237,6 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 [releases-shield]: https://img.shields.io/github/release/jpawlowski/hass.tibber_prices.svg?style=for-the-badge
 [commits-shield]: https://img.shields.io/github/commit-activity/y/jpawlowski/hass.tibber_prices.svg?style=for-the-badge
 [commits]: https://github.com/jpawlowski/hass.tibber_prices/commits/main
-[hacs]: https://github.com/hacs/integration
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [license-shield]: https://img.shields.io/github/license/jpawlowski/hass.tibber_prices.svg?style=for-the-badge
 [maintenance-shield]: https://img.shields.io/badge/maintainer-%40jpawlowski-blue.svg?style=for-the-badge
 [user_profile]: https://github.com/jpawlowski

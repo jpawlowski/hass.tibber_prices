@@ -1,4 +1,8 @@
 {
+  "store": {
+    "marketplace": "the Marketplace",
+    "hacs": "HACS"
+  },
   "apexcharts": {
     "title_rating_level": "Price Phases Daily Progress",
     "title_level": "Price Level",
@@ -12,14 +16,14 @@
       },
       "missing_cards": {
         "title": "Tibber Prices: ApexCharts YAML Cannot Be Used",
-        "message": "You just generated an ApexCharts card configuration via Developer Tools, but the generated YAML **will not work** because required custom cards are missing.\n\n**Missing cards:**\n{cards}\n\n**To use the generated YAML:**\n1. Click the links above to install the missing cards from HACS\n2. Restart Home Assistant (sometimes needed)\n3. **Generate the YAML again** via Developer Tools\n4. Add the YAML to your dashboard\n\n⚠️ The current YAML code will not work until all cards are installed!"
+        "message": "You just generated an ApexCharts card configuration via Developer Tools, but the generated YAML **will not work** because required custom cards are missing.\n\n**Missing cards:**\n{cards}\n\n**To use the generated YAML:**\n1. Click the links above to install the missing cards from {store}\n2. Restart Home Assistant (sometimes needed)\n3. **Generate the YAML again** via Developer Tools\n4. Add the YAML to your dashboard\n\n⚠️ The current YAML code will not work until all cards are installed!"
       }
     }
   },
   "dashboard": {
     "overview": "Electricity prices",
     "compact": "Compact",
-    "missing_card": "This card needs {card} from HACS.",
+    "missing_card": "This card needs {card} from {store}.",
     "today": "Today",
     "tomorrow": "Tomorrow",
     "connection_lost": "No connection to Tibber. Showing the last known prices.",
@@ -30,7 +34,7 @@
     "notification": {
       "title": "Tibber Prices: dashboard views incomplete",
       "intro": "You just generated dashboard views with the Get dashboard YAML action. Some parts could not be included:",
-      "cards": "**Missing custom cards** – charts show a hint instead, tab groups only their first tab:\n{cards}\n\nInstall them from HACS, reload the browser, then **generate the YAML again** and replace the views you pasted.",
+      "cards": "**Missing custom cards** – charts show a hint instead, tab groups only their first tab:\n{cards}\n\nInstall them from {store}, reload the browser, then **generate the YAML again** and replace the views you pasted.",
       "entities": "**Disabled sensors** – the cards showing them were left out:\n{entities}\n\n[Open the Tibber Prices integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), enable the sensors, then **generate the YAML again**.",
       "removed": "**Removed sensors** – the cards showing them were left out:\n{entities}\n\n[Reload the Tibber Prices integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) to bring them back, then **generate the YAML again**.",
       "optional": "**Optional sensors** – nothing was left out, but the charts scale better with them:\n{entities}\n\nEnable them in the [Tibber Prices integration](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) if you like; the charts pick them up without generating the YAML again."

@@ -83,7 +83,7 @@ If you see duplicate entities after changing settings:
 
 If the integration doesn't appear in **Settings → Devices & Services → Add Integration**:
 
-1. Confirm you restarted Home Assistant after installing via HACS
+1. Confirm you restarted Home Assistant after installing or updating (a first install from the built-in Marketplace doesn't need one)
 2. Clear your browser cache (Ctrl+Shift+R)
 3. Check the HA logs for import errors related to `tibber_prices`
 

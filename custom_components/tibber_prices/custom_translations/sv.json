@@ -1,4 +1,8 @@
 {
+  "store": {
+    "marketplace": "Marketplace",
+    "hacs": "HACS"
+  },
   "apexcharts": {
     "title_rating_level": "Prisfaser dagsprogress",
     "title_level": "Prisnivå",
@@ -12,14 +16,14 @@
       },
       "missing_cards": {
         "title": "Tibber Prices: ApexCharts YAML kan inte användas",
-        "message": "Du har precis genererat en ApexCharts-kortkonfiguration via Utvecklarverktyg, men den genererade YAML:en **kommer inte att fungera** eftersom nödvändiga anpassade kort saknas.\n\n**Saknade kort:**\n{cards}\n\n**För att använda den genererade YAML:en:**\n1. Klicka på länkarna ovan för att installera de saknade korten från HACS\n2. Starta om Home Assistant (ibland nödvändigt)\n3. **Generera YAML:en igen** via Utvecklarverktyg\n4. Lägg till YAML:en i din instrumentpanel\n\n⚠️ Den nuvarande YAML-koden fungerar inte förrän alla kort är installerade!"
+        "message": "Du har precis genererat en ApexCharts-kortkonfiguration via Utvecklarverktyg, men den genererade YAML:en **kommer inte att fungera** eftersom nödvändiga anpassade kort saknas.\n\n**Saknade kort:**\n{cards}\n\n**För att använda den genererade YAML:en:**\n1. Klicka på länkarna ovan för att installera de saknade korten från {store}\n2. Starta om Home Assistant (ibland nödvändigt)\n3. **Generera YAML:en igen** via Utvecklarverktyg\n4. Lägg till YAML:en i din instrumentpanel\n\n⚠️ Den nuvarande YAML-koden fungerar inte förrän alla kort är installerade!"
       }
     }
   },
   "dashboard": {
     "overview": "Elpriser",
     "compact": "Kompakt",
-    "missing_card": "Det här kortet behöver {card} från HACS.",
+    "missing_card": "Det här kortet behöver {card} från {store}.",
     "today": "Idag",
     "tomorrow": "Imorgon",
     "connection_lost": "Ingen anslutning till Tibber. Visar senast kända priser.",
@@ -30,7 +34,7 @@
     "notification": {
       "title": "Tibber Prices: dashboardvyer ofullständiga",
       "intro": "Du har just skapat dashboardvyer med åtgärden ”Hämta dashboard-YAML”. Vissa delar kunde inte tas med:",
-      "cards": "**Saknade anpassade kort** – diagram visar en hint i stället, flikgrupper bara sin första flik:\n{cards}\n\nInstallera dem från HACS, ladda om webbläsaren, **generera sedan YAML igen** och ersätt vyerna du klistrade in.",
+      "cards": "**Saknade anpassade kort** – diagram visar en hint i stället, flikgrupper bara sin första flik:\n{cards}\n\nInstallera dem från {store}, ladda om webbläsaren, **generera sedan YAML igen** och ersätt vyerna du klistrade in.",
       "entities": "**Inaktiverade sensorer** – korten som visar dem utelämnades:\n{entities}\n\n[Öppna Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices), aktivera sensorerna och **generera sedan YAML igen**.",
       "removed": "**Borttagna sensorer** – korten som visar dem utelämnades:\n{entities}\n\n[Ladda om Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) för att få tillbaka dem och **generera YAML-koden igen** efteråt.",
       "optional": "**Valfria sensorer** – inget utelämnades, men diagrammen skalas bättre med dem:\n{entities}\n\nAktivera dem i [Tibber Prices-integrationen](https://my.home-assistant.io/redirect/integration/?domain=tibber_prices) om du vill; diagrammen använder dem då utan att du behöver generera YAML-koden igen."

@@ -11,14 +11,14 @@
       },
       "new_token": {
         "title": "Skriv inn API-token",
-        "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk [{tibber_url}]({tibber_url}).",
+        "description": "Sett opp Tibber Prices & Planning.\n\nFor å generere et API-tilgangstoken, besøk [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API-tilgangstoken"
         },
         "submit": "Valider token"
       },
       "user": {
-        "description": "Sett opp Tibber Prisinformasjon & Vurderinger.\n\nFor å generere et API-tilgangstoken, besøk [{tibber_url}]({tibber_url}).",
+        "description": "Sett opp Tibber Prices & Planning.\n\nFor å generere et API-tilgangstoken, besøk [{tibber_url}]({tibber_url}).",
         "data": {
           "access_token": "API-tilgangstoken"
         },
@@ -172,7 +172,7 @@
       },
       "general_settings": {
         "title": "⚙️ Generelle innstillinger",
-        "description": "**Konfigurer generelle innstillinger for Tibber prisinformasjon og vurderinger.**\n\n---\n\n**Bruker:** {user_login}",
+        "description": "**Konfigurer generelle innstillinger for Tibber Prices & Planning.**\n\n---\n\n**Bruker:** {user_login}",
         "data": {
           "extended_descriptions": "Utvidede beskrivelser",
           "average_sensor_display": "Gjennomsnittssensor-visning"
@@ -1507,7 +1507,7 @@
     },
     "get_dashboard_yaml": {
       "name": "Hent dashbord-YAML",
-      "description": "Gir en dashbordvisning for ett hjem som et utgangspunkt: prisvurderingen for nå, diagrammer og dagsforløpet med tider på døgnet, i dag og i morgen. Kopier svaret under `views:` inn i rå konfigurasjonsredigering for et av dashbordene dine, og tilpass det deretter. Ingenting skrives til noe dashbord, og senere oppdateringer endrer ikke kopien. Diagrammene tegnes som standard av integrasjonens eget diagramkort, uten at noe må installeres. Med ApexCharts som diagramkort bruker de ApexCharts Card, Config Template Card og TabDeck Card fra HACS; uten dem viser svaret et hint i stedet for diagrammene og bare den første fanen i hver fanegruppe.",
+      "description": "Gir en dashbordvisning for ett hjem som et utgangspunkt: prisvurderingen for nå, diagrammer og dagsforløpet med tider på døgnet, i dag og i morgen. Kopier svaret under `views:` inn i rå konfigurasjonsredigering for et av dashbordene dine, og tilpass det deretter. Ingenting skrives til noe dashbord, og senere oppdateringer endrer ikke kopien. Diagrammene tegnes som standard av integrasjonens eget diagramkort, uten at noe må installeres. Med ApexCharts som diagramkort bruker de ApexCharts Card, Config Template Card og TabDeck Card fra Marketplace eller HACS; uten dem viser svaret et hint i stedet for diagrammene og bare den første fanen i hver fanegruppe.",
       "fields": {
         "entry_id": {
           "name": "Oppførings-ID",
@@ -1527,7 +1527,7 @@
         },
         "chart_card": {
           "name": "Diagramkort",
-          "description": "Hva som tegner diagrammene: integrasjonens eget diagramkort (standard: ingenting å installere, en markør over kurven viser hver pris) eller ApexCharts-diagrammer i faner (ApexCharts Card, Config Template Card og TabDeck Card fra HACS)."
+          "description": "Hva som tegner diagrammene: integrasjonens eget diagramkort (standard: ingenting å installere, en markør over kurven viser hver pris) eller ApexCharts-diagrammer i faner (ApexCharts Card, Config Template Card og TabDeck Card fra Marketplace eller HACS)."
         },
         "language": {
           "name": "Språk",

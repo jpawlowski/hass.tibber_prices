@@ -3,11 +3,11 @@ blueprint:
   description: >
     **Companion blueprint for
     [Tibber Prices](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
-    (HACS integration)** · Blueprint v1.0.0
+    (custom integration)** · Blueprint v1.0.0
 
     **Device-driven** laundry pipeline — schedule multiple wash + dry
     cycles at the cheapest electricity prices using **Home Connect Alt**
-    ([HACS integration by ekutner](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass&category=integration)).
+    ([custom integration by ekutner](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass&category=integration)).
 
     **How it works:**
 
@@ -45,7 +45,7 @@ blueprint:
 
     **Prerequisites:**
 
-    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed via HACS
+    - [Tibber Prices integration](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration) installed
 
     - [Home Connect Alt](https://my.home-assistant.io/redirect/hacs_repository/?owner=ekutner&repository=home-connect-hass&category=integration) integration configured
 
@@ -351,7 +351,7 @@ actions:
       - variables:
           _n_title: "🧺 Laundry Day — Setup Required"
           _n_message: >
-            Install the Tibber Prices integration via HACS and
+            Install the Tibber Prices integration and
             configure your Tibber account.
       - choose:
           - conditions:

@@ -10,7 +10,7 @@ After [installing](installation.md) the integration:
 
 1. Go to **Settings → Devices & Services**
 2. Click **+ Add Integration**
-3. Search for **Tibber Price Information & Ratings**
+3. Search for **Tibber Prices & Planning**
 4. **Enter your API token** from [developer.tibber.com](https://developer.tibber.com/settings/access-token)
 5. **Select your Tibber home** from the dropdown (if you have multiple)
 6. Click **Submit** — the integration starts fetching price data

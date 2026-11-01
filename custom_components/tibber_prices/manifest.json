@@ -1,6 +1,7 @@
 {
   "domain": "tibber_prices",
-  "name": "Tibber Price Information & Ratings",
+  "name": "Tibber Prices & Planning",
+  "categories": ["energy.energy_prices"],
   "codeowners": ["@jpawlowski"],
   "config_flow": true,
   "dependencies": ["frontend", "http"],

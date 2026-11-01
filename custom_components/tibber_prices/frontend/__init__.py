@@ -2,7 +2,7 @@
 Dashboard cards shipped with the integration.
 
 The JavaScript lives in `cards/` next to this file and is served by Home Assistant itself, then
-loaded into every frontend: users get the cards with the integration (HACS update included), with
+loaded into every frontend: users get the cards with the integration (updates included), with
 no separate repository and no dashboard resource to add. The cards are ES modules that import each
 other by relative path, and they are cached for long. So the version is part of the directory's
 URL, not a query on the entry file: a query would not reach the modules it imports, and after an
