@@ -429,6 +429,7 @@ const STRINGS = {
       bought: "bought",
       fed_in: "{value} fed in",
       paid: "Paid ⌀ {price}",
+      paid_total: "Paid ⌀ {price} incl. taxes & fees",
       vs_average: "{percent} vs. ⌀",
       self_sufficient: "{percent} self-sufficient",
       sun_window: "Most sun {time}",
@@ -721,6 +722,7 @@ const STRINGS = {
       bought: "gekauft",
       fed_in: "{value} eingespeist",
       paid: "Bezahlt ⌀ {price}",
+      paid_total: "Bezahlt ⌀ {price} inkl. Steuern & Gebühren",
       vs_average: "{percent} zum ⌀",
       self_sufficient: "{percent} selbst versorgt",
       sun_window: "Meiste Sonne {time}",
@@ -1010,6 +1012,7 @@ const STRINGS = {
       bought: "kjøpt",
       fed_in: "{value} levert til nettet",
       paid: "Betalt ⌀ {price}",
+      paid_total: "Betalt ⌀ {price} inkl. skatter og avgifter",
       vs_average: "{percent} mot ⌀",
       self_sufficient: "{percent} selvforsynt",
       sun_window: "Mest sol {time}",
@@ -1300,6 +1303,7 @@ const STRINGS = {
       bought: "gekocht",
       fed_in: "{value} teruggeleverd",
       paid: "Betaald ⌀ {price}",
+      paid_total: "Betaald ⌀ {price} incl. belastingen & kosten",
       vs_average: "{percent} t.o.v. ⌀",
       self_sufficient: "{percent} zelfvoorzienend",
       sun_window: "Meeste zon {time}",
@@ -1589,6 +1593,7 @@ const STRINGS = {
       bought: "köpt",
       fed_in: "{value} levererat",
       paid: "Betalt ⌀ {price}",
+      paid_total: "Betalt ⌀ {price} inkl. skatter & avgifter",
       vs_average: "{percent} mot ⌀",
       self_sufficient: "{percent} självförsörjande",
       sun_window: "Mest sol {time}",
@@ -1699,6 +1704,12 @@ const EDITOR_STRINGS = {
     unit_auto: "As set in the integration",
     unit_base: "Base currency (e.g. €/kWh)",
     unit_subunit: "Subunit (e.g. ct/kWh)",
+    price_source: "Price shown",
+    price_source_total: "Total (incl. taxes & fees)",
+    price_source_energy: "Energy price only",
+    price_source_help: "Levels and colors always follow the total price",
+    price_source_switch: "Tick box in the card",
+    price_source_switch_help: "“Energy price only” beside the views, to switch while looking",
     interactions: "Interactions",
     average: "Average shown",
     average_help:
@@ -1924,6 +1935,12 @@ const EDITOR_STRINGS = {
     unit_auto: "Wie in der Integration eingestellt",
     unit_base: "Hauptwährung (z. B. €/kWh)",
     unit_subunit: "Untereinheit (z. B. ct/kWh)",
+    price_source: "Angezeigter Preis",
+    price_source_total: "Gesamt (inkl. Steuern & Gebühren)",
+    price_source_energy: "Nur Energiepreis",
+    price_source_help: "Preisniveaus und Farben folgen immer dem Gesamtpreis",
+    price_source_switch: "Haken in der Karte",
+    price_source_switch_help: "„Nur Energiepreis“ neben den Ansichten, zum Umschalten beim Anschauen",
     interactions: "Interaktionen",
     average: "Angezeigter Durchschnitt",
     average_help:
@@ -2152,6 +2169,12 @@ const EDITOR_STRINGS = {
     unit_auto: "Som innstilt i integrasjonen",
     unit_base: "Hovedvaluta (f.eks. kr/kWh)",
     unit_subunit: "Underenhet (f.eks. øre/kWh)",
+    price_source: "Pris som vises",
+    price_source_total: "Totalt (inkl. skatter og avgifter)",
+    price_source_energy: "Kun energipris",
+    price_source_help: "Prisnivåer og farger følger alltid totalprisen",
+    price_source_switch: "Avkrysning i kortet",
+    price_source_switch_help: "«Kun energipris» ved siden av visningene, for å bytte mens du ser",
     interactions: "Interaksjoner",
     average: "Gjennomsnitt som vises",
     average_help:
@@ -2378,6 +2401,12 @@ const EDITOR_STRINGS = {
     unit_auto: "Zoals ingesteld in de integratie",
     unit_base: "Hoofdvaluta (bijv. €/kWh)",
     unit_subunit: "Subeenheid (bijv. ct/kWh)",
+    price_source: "Getoonde prijs",
+    price_source_total: "Totaal (incl. belastingen & kosten)",
+    price_source_energy: "Alleen energieprijs",
+    price_source_help: "Prijsniveaus en kleuren volgen altijd de totaalprijs",
+    price_source_switch: "Vinkje in de kaart",
+    price_source_switch_help: "“Alleen energieprijs” naast de weergaven, om te wisselen terwijl je kijkt",
     interactions: "Interacties",
     average: "Getoond gemiddelde",
     average_help:
@@ -2603,6 +2632,12 @@ const EDITOR_STRINGS = {
     unit_auto: "Som inställt i integrationen",
     unit_base: "Huvudvaluta (t.ex. kr/kWh)",
     unit_subunit: "Underenhet (t.ex. öre/kWh)",
+    price_source: "Pris som visas",
+    price_source_total: "Totalt (inkl. skatter & avgifter)",
+    price_source_energy: "Enbart energipris",
+    price_source_help: "Prisnivåer och färger följer alltid totalpriset",
+    price_source_switch: "Kryssruta i kortet",
+    price_source_switch_help: "”Enbart energipris” bredvid vyerna, för att växla medan du tittar",
     interactions: "Interaktioner",
     average: "Visat medelvärde",
     average_help:
@@ -2866,6 +2901,7 @@ const ACTION_BUTTON_POSITIONS = ["bottom", "top"];
 // (so the editor shows them selected, not empty), and so does the dashboard from get_dashboard_yaml
 const DEFAULTS = {
   price_unit: "auto",
+  price_source: "total",
   average: "mean",
   layout: "detailed",
   appearance: "auto",
@@ -3275,17 +3311,122 @@ function homeCalendar(hass) {
   return CALENDARS.get(key);
 }
 
-// Every quarter hour of the price sensor's outlook (from last night on), in the unit shown;
-// undefined from an integration without them
+// Every quarter hour of the price sensor's outlook (from last night on), in the unit shown, with
+// the total prices beside them (the same list unless the energy price alone is shown, see
+// priceState); undefined from an integration without them
 function quarterSeries(stateObj, factor) {
   const series = stateObj.attributes.outlook_quarters;
   if (!series || !Array.isArray(series.prices)) return undefined;
+  const scale = (list) => list.map((price) => (typeof price === "number" ? price * factor : null));
+  const prices = scale(series.prices);
   return {
     start: Date.parse(series.start),
     step: (series.minutes || 15) * 60000,
-    prices: series.prices.map((price) => (typeof price === "number" ? price * factor : null)),
+    prices,
+    totals: series.totals ? scale(series.totals) : prices,
     levels: series.levels || [],
   };
+}
+
+// Which price a card shows: the total, taxes and fees included (default, as Tibber bills it), or
+// the energy price alone
+const PRICE_SOURCES = ["total", "energy"];
+
+/**
+ * The price sensor as a card showing `source` reads it: as it is for the total price; for the
+ * energy price alone, every price of its outlook (hours, parts of the day, days, yesterday, the
+ * quarter hours) and its state taken from the energy prices of the quarter hours. Levels,
+ * volatility and the periods stay those of the total price, as the integration decides on them,
+ * so the colors and marks never disagree with its sensors. As it is from an integration that
+ * sends no energy prices. One object per state, so redraws of the same state compare equal
+ */
+const ENERGY_STATES = new WeakMap();
+function priceState(hass, stateObj, source) {
+  if (!stateObj || source !== "energy") return stateObj;
+  const attributes = stateObj.attributes;
+  const series = attributes.outlook_quarters;
+  if (!series || !Array.isArray(series.energy)) return stateObj;
+  const { zone } = homeCalendar(hass);
+  const start = Date.parse(series.start);
+  const step = (series.minutes || 15) * 60000;
+  // The energy price now: the sensor's, else the running quarter hour's; never the total beside
+  // energy prices (unknown then). Read again when the quarter hour has moved on
+  const quarter = Math.floor((Date.now() - start) / step);
+  const nowState = () => {
+    const price = typeof attributes.energy_price === "number" ? attributes.energy_price : series.energy[quarter];
+    return typeof price === "number" ? String(price) : "unknown";
+  };
+  const cached = ENERGY_STATES.get(stateObj);
+  if (cached && cached.zone === zone) {
+    if (cached.quarter !== quarter) {
+      cached.quarter = quarter;
+      cached.state = { ...cached.state, state: nowState() };
+    }
+    return cached.state;
+  }
+  if (!series.energy.some((p) => typeof p === "number")) return stateObj;
+  // The energy prices from `from` to `to`: their spread, their averages and when the lowest and
+  // highest come first; nulls where none is known
+  const pricesOf = (from, to) => {
+    const values = [];
+    let low;
+    let high;
+    for (let i = Math.max(0, Math.ceil((from - start) / step)); i < series.energy.length; i += 1) {
+      const at = start + i * step;
+      if (at >= to) break;
+      const price = series.energy[i];
+      if (typeof price !== "number") continue;
+      values.push(price);
+      if (!low || price < low.price) low = { price, at };
+      if (!high || price > high.price) high = { price, at };
+    }
+    if (!values.length) {
+      return {
+        price_mean: null,
+        price_median: null,
+        price_min: null,
+        price_max: null,
+        price_min_at: null,
+        price_max_at: null,
+      };
+    }
+    return {
+      price_mean: aggregate(values, "mean"),
+      price_median: aggregate(values, "median"),
+      price_min: low.price,
+      price_max: high.price,
+      price_min_at: new Date(low.at).toISOString(),
+      price_max_at: new Date(high.at).toISOString(),
+    };
+  };
+  // A block's own prices; a day's reference and its extremes' times too, the rest as it was
+  const block = ({ price_min_at, price_max_at, ...prices }, entry) => ({ ...entry, ...prices });
+  const day = (prices, entry, reference) => ({
+    ...entry,
+    ...prices,
+    price_reference: reference === "median" ? prices.price_median : prices.price_mean,
+  });
+  const span = (entry) => pricesOf(Date.parse(entry.start), Date.parse(entry.end));
+  const days = (attributes.outlook_days || []).map((entry) => day(span(entry), entry, entry.reference));
+  const yesterday = attributes.outlook_yesterday;
+  const state = {
+    ...stateObj,
+    state: nowState(),
+    attributes: {
+      ...attributes,
+      // What the price is made of means the total: the energy price alone has no parts
+      energy_price: undefined,
+      tax: undefined,
+      outlook_hours: (attributes.outlook_hours || []).map((entry) => block(span(entry), entry)),
+      outlook_day_parts: (attributes.outlook_day_parts || []).map((entry) => block(span(entry), entry)),
+      outlook_days: days,
+      outlook_yesterday: yesterday && day(pricesOf(...dayBounds(yesterday.date, zone)), yesterday, days[0]?.reference),
+      // The total prices kept beside them, for what buying costs (see quarterSeries)
+      outlook_quarters: { ...series, prices: series.energy, totals: series.prices },
+    },
+  };
+  ENERGY_STATES.set(stateObj, { zone, quarter, state });
+  return state;
 }
 
 // The average a card shows: the mean unless it says otherwise ("auto": as set for the
@@ -3464,11 +3605,19 @@ function cardTitle(config, t) {
   return escapeHtml(String(config.title || "").trim() || t.card_title);
 }
 
+// The price shown, checked alike by the cards and the tile feature
+function validatePriceSource(config) {
+  if (config.price_source && !PRICE_SOURCES.includes(config.price_source)) {
+    throw new Error("`price_source` is `total` (taxes and fees included) or `energy` (the energy price alone)");
+  }
+}
+
 // Errors for config values the card can't use; setConfig and the visual editor check the same
 function validateConfig(config) {
   if (config.price_unit && !PRICE_UNITS.includes(config.price_unit)) {
     throw new Error("`price_unit` is `auto`, `base` or `subunit`");
   }
+  validatePriceSource(config);
   if (config.average && !AVERAGES.includes(config.average)) {
     throw new Error("`average` is `auto` (as set in the integration), `median` or `mean`");
   }
@@ -4538,6 +4687,10 @@ const EDITOR_FIELDS = {
     name: "price_unit",
     selector: dropdown(marked(e, PRICE_UNITS, (value) => e[`unit_${value}`], DEFAULTS.price_unit)),
   }),
+  priceSource: (e) => ({
+    name: "price_source",
+    selector: dropdown(marked(e, PRICE_SOURCES, (value) => e[`price_source_${value}`], DEFAULTS.price_source)),
+  }),
   average: (e) => ({
     name: "average",
     selector: dropdown(
@@ -4605,6 +4758,11 @@ function inCardWindow(element) {
 class TibberPricesCardBase extends HTMLElement {
   // The cards this one shows in a window, `when` its config asks for it
   static windowCards = [];
+
+  // The price shown (see priceState): the total or the energy price alone, as set
+  _priceSource() {
+    return this._config.price_source;
+  }
 
   // The cards this one holds the options of, edited a level down
   static nestedCards(config) {
@@ -4773,7 +4931,13 @@ class TibberPricesCardBase extends HTMLElement {
     const { element, title } = WINDOW_CARDS[key];
     this._window.open({
       element,
-      config: { ...options, device_id: this._config.device_id, show_title: false },
+      // The price shown outside, unless the card's own options set one
+      config: {
+        price_source: this._priceSource(),
+        ...options,
+        device_id: this._config.device_id,
+        show_title: false,
+      },
       title: title && !String(options.title || "").trim() ? title(t) : cardTitle(options, t),
       width: this._config.window_width || DEFAULTS.window_width,
       hass: this._hass,
@@ -4946,6 +5110,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
               },
             },
             EDITOR_FIELDS.priceUnit(e),
+            EDITOR_FIELDS.priceSource(e),
             EDITOR_FIELDS.average(e),
             EDITOR_FIELDS.appearance(e),
             {
@@ -5095,7 +5260,7 @@ class TibberPricesForecastCard extends TibberPricesCardBase {
     );
     const t = stringsFor(this._hass);
     const entities = this._entities || homeEntities(this._hass, this._config);
-    const stateObj = entities.price && this._hass.states[entities.price];
+    const stateObj = priceState(this._hass, entities.price && this._hass.states[entities.price], this._priceSource());
     if (!stateObj) {
       this._setHidden(false);
       card.innerHTML = `<div class="empty">${t.no_data}</div>`;
@@ -8252,6 +8417,7 @@ const WINDOW_WIDTHS = ["narrow", "medium", "wide", "full"];
 const NOW_CARD_DEFAULTS = {
   style: "tile",
   price_unit: "auto",
+  price_source: "total",
   average: "mean",
   appearance: "auto",
   tap_opens: "details",
@@ -8361,6 +8527,7 @@ class TibberPricesNowCard extends TibberPricesForecastCard {
           iconPath: CONTENT_PATH,
           schema: [
             EDITOR_FIELDS.priceUnit(e),
+            EDITOR_FIELDS.priceSource(e),
             EDITOR_FIELDS.average(e),
             EDITOR_FIELDS.nowDecimals(e),
             EDITOR_FIELDS.appearance(e),
@@ -8566,6 +8733,8 @@ const CHART_MODES = ["light", "dark"];
 const CHART_DEFAULTS = {
   views: [...CHART_DEFAULT_VIEWS],
   price_unit: "auto",
+  price_source: "total",
+  price_source_switch: false,
   average: "mean",
   appearance: "auto",
   tomorrow_pending: "placeholder",
@@ -9201,6 +9370,10 @@ const CHART_STYLE = `
   .resolution button:focus-visible { outline: var(--focus-ring); outline-offset: -2px; }
   /* The views, like a segmented control */
   .controls { flex: none; display: flex; gap: 8px; align-items: center; margin-top: 6px; }
+  .price-source { flex: none; display: inline-flex; align-items: center; gap: 4px; margin-left: auto; min-height: 32px;
+    font-size: 13px; color: var(--secondary-text-color); cursor: pointer; white-space: nowrap; }
+  .price-source input { margin: 0; width: 16px; height: 16px; accent-color: var(--primary-color); cursor: pointer; }
+  .price-source input:focus-visible { outline: var(--focus-ring); outline-offset: 2px; }
   .segments { display: flex; padding: 2px; border-radius: 18px; background: rgba(127, 127, 127, 0.15); min-width: 0; }
   /* The views: spread over the width, or scrolled sideways where their names don't fit (never cut
      off); a soft edge shows there's more */
@@ -9228,11 +9401,14 @@ const CHART_STYLE = `
     .overlay .to-now::after { inset: -9px -2px; }
     /* (The views scroll sideways, which cuts off any hit area beyond them: they grow instead) */
     .segments button { min-height: 40px; }
+    .price-source { min-height: 44px; }
+    .price-source input { width: 20px; height: 20px; }
   }
   @container chart (max-width: 360px) {
     .price { font-size: 24px; }
     .chip { padding: 0 7px; font-size: 12px; }
     .segments button { font-size: 12px; padding: 0 10px; }
+    .price-source { font-size: 12px; }
   }
 `;
 
@@ -9285,6 +9461,8 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     this._styleKey = `${key}:style`;
     this._view = storedValue(this._viewKey);
     this._cursor = undefined;
+    // A new config sets the price shown again (the tick box's pick is kept with the card only)
+    this._pickedSource = undefined;
     this._viewCache = new Map();
     this._configApplied();
   }
@@ -9513,6 +9691,15 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     return mode === "switch_hour" ? "hour" : "quarter_hour";
   }
 
+  /**
+   * The price shown: the one ticked in the card (with `price_source_switch`; kept with the card,
+   * not stored, like the resolution picked), else the one set
+   */
+  _priceSource() {
+    if (this._config.price_source_switch && this._pickedSource) return this._pickedSource;
+    return super._priceSource();
+  }
+
   _build() {
     this.attachShadow({ mode: "open" });
     trackKeyboard(this);
@@ -9553,6 +9740,11 @@ class TibberPricesChartCard extends TibberPricesCardBase {
       }
     };
     root.querySelector(".controls").addEventListener("click", choose);
+    root.querySelector(".controls").addEventListener("change", (ev) => {
+      if (!ev.target.matches("[data-price-source]")) return;
+      this._pickedSource = ev.target.checked ? "energy" : "total";
+      this._render();
+    });
     this._els.overlay.addEventListener("click", choose);
     this._bindStyleMenu(root.querySelector(".style-menu"));
     this._bindCardActions(root.querySelector("ha-card"));
@@ -9646,8 +9838,11 @@ class TibberPricesChartCard extends TibberPricesCardBase {
         })
         .join("");
     }
-    controls.innerHTML = viewButtons;
-    controls.hidden = !viewButtons;
+    const sourceSwitch = this._config.price_source_switch
+      ? `<label class="price-source"><input type="checkbox" data-price-source${this._priceSource() === "energy" ? " checked" : ""}><span>${e.price_source_energy}</span></label>`
+      : "";
+    controls.innerHTML = viewButtons + sourceSwitch;
+    controls.hidden = !viewButtons && !sourceSwitch;
     const tabs = controls.querySelector(".views");
     if (tabs) {
       tabs.addEventListener("scroll", () => this._markScrolled(tabs), { passive: true });
@@ -9696,7 +9891,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
   // Everything a view is drawn from, once per update of the sensors
   _collect(t) {
     const entities = this._entities || homeEntities(this._hass, this._config);
-    const stateObj = entities.price && this._hass.states[entities.price];
+    const stateObj = priceState(this._hass, entities.price && this._hass.states[entities.price], this._priceSource());
     const { factor, unit } = stateObj ? priceUnit(stateObj, this._config.price_unit) : {};
     const quarters = stateObj && quarterSeries(stateObj, factor);
     if (!quarters || !quarters.prices.length) return undefined;
@@ -9720,7 +9915,7 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     const average = averageOf(t, averageKind);
     return {
       ...calendar,
-      // The quarter hours (start, step, prices, levels) on the data itself
+      // The quarter hours (start, step, prices, totals, levels) on the data itself
       ...quarters,
       unit,
       // Prices in the subunit (ct, øre), not the base currency (€, kr)
@@ -10450,11 +10645,12 @@ class TibberPricesChartCard extends TibberPricesCardBase {
     this._readout(slot, index, { live: index === g.nowIndex && !pinned, reading: pinned, period });
   }
 
-  // The price of the quarter hour a moment falls in (null: not known)
-  _quarterPrice(time) {
+  // The price of the quarter hour a moment falls in (null: not known), of the prices shown or of
+  // `prices` on the same quarter hours
+  _quarterPrice(time, prices = this._data.prices) {
     const d = this._data;
     const i = Math.floor((time - d.start) / d.step);
-    return i >= 0 && i < d.prices.length ? d.prices[i] : null;
+    return i >= 0 && i < prices.length ? prices[i] : null;
   }
 
   // The resolution switch out of the way of the cursor's tag, for as long as the mouse reads the
@@ -11160,6 +11356,9 @@ class TibberPricesChartCard extends TibberPricesCardBase {
             { name: "show_title", selector: { boolean: {} } },
             { name: "title", visible: { field: "show_title", value: true }, selector: { text: {} } },
             EDITOR_FIELDS.priceUnit(e),
+            EDITOR_FIELDS.priceSource(e),
+            // The tick box "Energy price only" beside the views, to switch while looking
+            { name: "price_source_switch", selector: { boolean: {} } },
             // Where the unit shows, and how much of it (nested under units)
             {
               name: "units",
@@ -11622,6 +11821,84 @@ function solarActualHours(statistics, ids, zone) {
   return hours;
 }
 
+// The Energy dashboard's data from `from` to `to` (ms): the solar forecast, and per measured curve
+// its hours. Throws where it can't be had (no energy setup)
+async function fetchSolar(hass, zone, from, to) {
+  // Without an energy setup the call fails: no solar curves then, the card stays a price chart
+  const prefs = await hass.callWS({ type: "energy/get_prefs" });
+  const all = prefs.energy_sources || [];
+  const sources = all.filter((source) => source.type === "solar");
+  const batteries = all.filter((source) => source.type === "battery");
+  const grids = all.filter((source) => source.type === "grid");
+  const ids = {
+    actual: sources.map((source) => source.stat_energy_from).filter(Boolean),
+    // Into the battery is `stat_energy_to`, out of it `stat_energy_from`
+    charge: batteries.map((source) => source.stat_energy_to).filter(Boolean),
+    discharge: batteries.map((source) => source.stat_energy_from).filter(Boolean),
+    // The grid: one connection each with its import and export meter (older Home Assistant
+    // versions list them as `flow_from` / `flow_to` of one source)
+    grid_import: grids
+      .flatMap((source) => [source.stat_energy_from, ...(source.flow_from || []).map((f) => f.stat_energy_from)])
+      .filter(Boolean),
+    grid_export: grids
+      .flatMap((source) => [source.stat_energy_to, ...(source.flow_to || []).map((f) => f.stat_energy_to)])
+      .filter(Boolean),
+  };
+  const statisticIds = [...new Set(Object.values(ids).flat())];
+  const hasForecast = sources.some((source) => (source.config_entry_solar_forecast || []).length);
+  const [forecasts, statistics] = await Promise.all([
+    hasForecast ? hass.callWS({ type: "energy/solar_forecast" }) : {},
+    statisticIds.length
+      ? hass.callWS({
+          type: "recorder/statistics_during_period",
+          start_time: new Date(from).toISOString(),
+          end_time: new Date(to).toISOString(),
+          statistic_ids: statisticIds,
+          period: "hour",
+          types: ["change"],
+          units: { energy: "kWh" },
+        })
+      : {},
+  ]);
+  const solar = { forecast: solarForecastHours(forecasts, zone) };
+  for (const kind of SOLAR_MEASURED) solar[kind] = solarActualHours(statistics, ids[kind], zone);
+  return solar;
+}
+
+// The energy data, shared by every energy card of the page: the Energy dashboard is set up once per
+// Home Assistant, so a second card, or the same card again after a change of dashboard, needn't ask
+// anew. By time zone and stretch of days; an answer counts as long as a card's own one did (a
+// failure for a shorter while), and cards asking at the same time share one request. Gives
+// { at, solar }: when it was asked, and the data (undefined where it failed: a card keeps what it
+// had). The data is shared, so cards only read it
+const SOLAR_CACHE = new Map();
+
+// The answer for that stretch still counting, at once (none while a request is under way)
+function solarCached(zone, from, to) {
+  const entry = SOLAR_CACHE.get(`${zone}|${from}|${to}`);
+  const fresh = entry && !entry.pending && Date.now() - entry.at < (entry.solar ? SOLAR_REFRESH_MS : SOLAR_RETRY_MS);
+  return fresh ? entry : undefined;
+}
+
+function solarData(hass, zone, from, to) {
+  const key = `${zone}|${from}|${to}`;
+  const entry = SOLAR_CACHE.get(key);
+  if (entry && entry.pending) return entry.pending;
+  const cached = solarCached(zone, from, to);
+  if (cached) return Promise.resolve(cached);
+  const keep = (solar) => {
+    const answer = { at: Date.now(), solar };
+    SOLAR_CACHE.set(key, answer);
+    return answer;
+  };
+  const pending = fetchSolar(hass, zone, from, to).then(keep, () => keep(undefined));
+  SOLAR_CACHE.delete(key);
+  SOLAR_CACHE.set(key, { pending });
+  // Only the last few stretches (a new day is a new one)
+  while (SOLAR_CACHE.size > 4) SOLAR_CACHE.delete(SOLAR_CACHE.keys().next().value);
+  return pending;
+}
+
 class TibberPricesEnergyCard extends TibberPricesChartCard {
   setConfig(config) {
     // The defaults where a key is unset (an explicit undefined or null is unset too)
@@ -11652,7 +11929,7 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
     this._emphasis = undefined;
     // Data still on its way for the old config is dropped, and a new load may start
     this._solar = undefined;
-    this._solarLoadedAt = 0;
+    this._solarAt = undefined;
     this._solarLoading = false;
     this._loadToken = undefined;
   }
@@ -11767,58 +12044,20 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
     const hass = this._hass;
     const d = this._data;
     if (!hass || !d || this._solarLoading) return;
-    if (Date.now() - this._solarLoadedAt < (this._solarFailed ? SOLAR_RETRY_MS : SOLAR_REFRESH_MS)) return;
+    // Mostly the answer this card already has: nothing to wait for (this runs at every redraw)
+    const cached = solarCached(d.zone, d.yesterdayStart, d.dayAfter);
+    if (cached && cached.at === this._solarAt) return;
     this._solarLoading = true;
-    this._solarFailed = false;
     const token = {};
     this._loadToken = token;
-    let solar;
-    try {
-      // Without an energy setup the call fails: no solar curves then, the card stays a price chart
-      const prefs = await hass.callWS({ type: "energy/get_prefs" });
-      const all = prefs.energy_sources || [];
-      const sources = all.filter((source) => source.type === "solar");
-      const batteries = all.filter((source) => source.type === "battery");
-      const grids = all.filter((source) => source.type === "grid");
-      const ids = {
-        actual: sources.map((source) => source.stat_energy_from).filter(Boolean),
-        // Into the battery is `stat_energy_to`, out of it `stat_energy_from`
-        charge: batteries.map((source) => source.stat_energy_to).filter(Boolean),
-        discharge: batteries.map((source) => source.stat_energy_from).filter(Boolean),
-        // The grid: one connection each with its import and export meter (older Home Assistant
-        // versions list them as `flow_from` / `flow_to` of one source)
-        grid_import: grids
-          .flatMap((source) => [source.stat_energy_from, ...(source.flow_from || []).map((f) => f.stat_energy_from)])
-          .filter(Boolean),
-        grid_export: grids
-          .flatMap((source) => [source.stat_energy_to, ...(source.flow_to || []).map((f) => f.stat_energy_to)])
-          .filter(Boolean),
-      };
-      const statisticIds = [...new Set(Object.values(ids).flat())];
-      const hasForecast = sources.some((source) => (source.config_entry_solar_forecast || []).length);
-      const [forecasts, statistics] = await Promise.all([
-        hasForecast ? hass.callWS({ type: "energy/solar_forecast" }) : {},
-        statisticIds.length
-          ? hass.callWS({
-              type: "recorder/statistics_during_period",
-              start_time: new Date(d.yesterdayStart).toISOString(),
-              end_time: new Date(d.dayAfter).toISOString(),
-              statistic_ids: statisticIds,
-              period: "hour",
-              types: ["change"],
-              units: { energy: "kWh" },
-            })
-          : {},
-      ]);
-      solar = { forecast: solarForecastHours(forecasts, d.zone) };
-      for (const kind of SOLAR_MEASURED) solar[kind] = solarActualHours(statistics, ids[kind], d.zone);
-    } catch {
-      this._solarFailed = true;
-    }
+    // Shared with the other energy cards, which decides when to ask anew: mostly the answer this
+    // card already has, then there's nothing to redraw
+    const { at, solar } = await solarData(hass, d.zone, d.yesterdayStart, d.dayAfter);
     // A new config came in meanwhile: this answer is for the old one
     if (this._loadToken !== token) return;
     this._solarLoading = false;
-    this._solarLoadedAt = Date.now();
+    if (at === this._solarAt) return;
+    this._solarAt = at;
     // A failed refresh keeps what was loaded before
     const views = this._views;
     if (solar) this._solar = solar;
@@ -12107,13 +12346,14 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
     return points;
   }
 
-  // The mean price of an hour (its quarter hours that are known), null where none is
-  _hourPrice(hour) {
+  // The mean price of an hour (its quarter hours that are known), null where none is: of the
+  // prices shown, or of `prices` (the totals, d.totals)
+  _hourPrice(hour, prices = this._data.prices) {
     const d = this._data;
     let sum = 0;
     let count = 0;
     for (let at = hour; at < hour + HOUR_MS; at += d.step) {
-      const price = this._quarterPrice(at);
+      const price = this._quarterPrice(at, prices);
       if (price === null) continue;
       sum += price;
       count += 1;
@@ -12123,17 +12363,19 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
 
   // What the energy bought from the grid cost, in the prices' unit (ct, €): in the power mode the
   // hour's, in the energy mode the day's up to the moment (the hour it is in as far as it has come).
-  // Undefined without a price for the hour. The import only: what is fed in earns a different price
+  // Undefined without a price for the hour. The import only: what is fed in earns a different price.
+  // Always at the total price, taxes and fees included, also while the energy price alone is shown:
+  // that is what it cost
   _importCost(time) {
     const d = this._data;
     const hours = this._solar.grid_import;
     const hour = localFloor(time, HOUR_MS, d.zone);
-    const price = this._hourPrice(hour);
+    const price = this._hourPrice(hour, this._data.totals);
     if (price === null || !hours.has(hour)) return undefined;
     if (this._mode === "power") return hours.get(hour) * price;
     let total = ((time - hour) / HOUR_MS) * hours.get(hour) * price;
     for (let at = dayBounds(d.dateOf(hour), d.zone)[0]; at < hour; at += HOUR_MS) {
-      const before = this._hourPrice(at);
+      const before = this._hourPrice(at, this._data.totals);
       if (before !== null && hours.has(at)) total += hours.get(at) * before;
     }
     return total;
@@ -12526,7 +12768,8 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
    * What the view's stretch comes to: per curve its kWh, what was bought cost and paid on average
    * against the mean price of the same hours (buying evenly), how much of the home's use the home
    * covered itself (all that isn't bought: production and battery, less what went into the battery
-   * or the grid), and the mean price of the stretch
+   * or the grid), and the mean price of the stretch. Cost and paid at the total price whichever is
+   * shown (what was bought cost that), the mean in the price shown
    */
   _balance(from, to) {
     const sums = Object.fromEntries(SOLAR_KINDS.map((kind) => [kind, this._sumBetween(kind, from, to)]));
@@ -12536,7 +12779,7 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
     let hours = 0;
     for (const [hour, kwh] of this._solar.grid_import) {
       if (hour < from || hour >= to) continue;
-      const price = this._hourPrice(hour);
+      const price = this._hourPrice(hour, this._data.totals);
       if (price === null) continue;
       cost += kwh * price;
       bought += kwh;
@@ -12641,7 +12884,9 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
     if (ahead !== undefined) {
       hero.push(...this._aheadKpis(ahead, g.to));
     } else if (b.paid !== undefined) {
-      let text = fill(s.paid, { price: `<b>${priceText(b.paid)}</b>` });
+      // Paid is at the total price: said so beside the energy price alone, so the two aren't compared
+      const paid = this._priceSource() === "energy" ? s.paid_total : s.paid;
+      let text = fill(paid, { price: `<b>${priceText(b.paid)}</b>` });
       if (b.reference) {
         const gap = b.paid / b.reference - 1;
         const percent = formatPercent(this._hass.language, gap, "always");
@@ -12774,8 +13019,9 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
 
   /**
    * The lowest prices ahead, as [start, end]: the next best price period (the integration's own, as
-   * the chart marks it below the hours), else the cheapest three hours in a row. Undefined without
-   * prices ahead
+   * the chart marks it below the hours), else the cheapest three hours in a row at the total price,
+   * like the periods (what buying then costs, whichever price is shown). Undefined without prices
+   * ahead
    */
   _cheapAhead(from, to) {
     const best = this._data.periods.best.find(([a, b]) => b > from && a < to);
@@ -12783,7 +13029,7 @@ class TibberPricesEnergyCard extends TibberPricesChartCard {
     const span = 3 * HOUR_MS;
     let pick;
     for (let hour = from; hour + span <= to; hour += HOUR_MS) {
-      const prices = [0, 1, 2].map((i) => this._hourPrice(hour + i * HOUR_MS));
+      const prices = [0, 1, 2].map((i) => this._hourPrice(hour + i * HOUR_MS, this._data.totals));
       if (prices.includes(null)) continue;
       const mean = prices.reduce((a, b) => a + b, 0) / 3;
       if (!pick || mean < pick[2]) pick = [hour, hour + span, mean];
@@ -12912,6 +13158,10 @@ const NESTED_EDITOR_STYLE = `
   .sub-title { font-size: 16px; font-weight: var(--ha-font-weight-medium, 500); color: var(--primary-text-color); }
 `;
 
+// Options a card in another card's window takes from the outer card (see _openInWindow), so its
+// editor a level down leaves them out
+const NESTED_FROM_OUTER = ["device_id", "price_source"];
+
 class TibberPricesFormEditor extends HTMLElement {
   // The card this edits (getConfigForm, configDefaults); set by each editor
   get _card() {
@@ -12999,10 +13249,16 @@ class TibberPricesFormEditor extends HTMLElement {
   }
 
   // The fields of the form on top (an editor with panels of its own may keep some for the end);
-  // a level down, without the home: it's the outer card's
+  // a level down, without the home and the price shown: the card in the window takes them from
+  // the outer card
   _formSchema() {
     const schema = this._card.getConfigForm().schema;
-    return this._nested ? schema.filter((field) => field.name !== "device_id") : schema;
+    if (!this._nested) return schema;
+    const outer = (fields) =>
+      fields
+        .filter((field) => !NESTED_FROM_OUTER.includes(field.name))
+        .map((field) => (field.schema ? { ...field, schema: outer(field.schema) } : field));
+    return outer(schema);
   }
 
   // ---- A level down: the editor of a card this one holds, in place of this one's
@@ -13606,7 +13862,11 @@ class TibberPricesOutlookFeature extends HTMLElement {
 
   setConfig(config) {
     if (!config) throw new Error("Invalid configuration");
+    validatePriceSource(config);
     this._config = config;
+    // Drawn again with the new options, also for the same state
+    this._drawn = undefined;
+    this._render();
   }
 
   set hass(hass) {
@@ -13621,7 +13881,7 @@ class TibberPricesOutlookFeature extends HTMLElement {
   }
 
   _render() {
-    if (!this._hass || !this._stateObj) return;
+    if (!this._hass || !this._stateObj || !this._config) return;
     // Redraw only for a new state (state objects are replaced on change) or another language
     if (this.shadowRoot && this._drawn && this._drawn[0] === this._stateObj && this._drawn[1] === this._hass.language) {
       return;
@@ -13632,8 +13892,10 @@ class TibberPricesOutlookFeature extends HTMLElement {
     const now = Date.now();
     // The mean, like the forecast card by default (the tile feature has no settings of its own)
     const { key } = averageOf(t, "mean");
-    // Now and six hours ahead: a tile has room for that, with readable labels
-    const hours = (this._stateObj.attributes.outlook_hours || [])
+    // Now and six hours ahead: a tile has room for that, with readable labels (`price_source`
+    // in YAML, like the cards: the energy price alone)
+    const stateObj = priceState(this._hass, this._stateObj, this._config.price_source);
+    const hours = (stateObj.attributes.outlook_hours || [])
       .filter((h) => Date.parse(h.end) > now && typeof h[key] === "number")
       .slice(0, FEATURE_HOURS);
     if (!hours.length) {

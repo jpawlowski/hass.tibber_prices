@@ -365,8 +365,11 @@ def _quarter_series(
     yesterday's midnight: each hour and part of the day they show can be zoomed into, and the
     chart card can draw yesterday.
 
-    {"start": ISO time, "minutes": 15, "prices": [...], "levels": [...]}; position i is
-    start + i * 15 minutes (counted in real time, so clock changes need no special case).
+    {"start": ISO time, "minutes": 15, "prices": [...], "energy": [...], "levels": [...]}; position i
+    is start + i * 15 minutes (counted in real time, so clock changes need no special case).
+    `energy` is the energy price alone, without taxes and fees, for cards set to show it (their
+    levels and periods stay those of the total price); None where Tibber sends none, and left out
+    when it sends none at all.
     `sorted_known` is known_starts() of the prices: sorted in UTC like the parts of the day (the
     repeated hour when clocks go back would collide in local time).
     """
@@ -378,15 +381,27 @@ def _quarter_series(
     first = known[0][0]
     count = int((known[-1][0] - first) / QUARTER) + 1
     prices: list[float | None] = [None] * count
+    energy: list[float | None] = [None] * count
     levels: list[str | None] = [None] * count
     for start, interval in known:
         position, rest = divmod(start - first, QUARTER)
         if rest:
             continue  # Not on the quarter-hour grid (never for Tibber's prices)
         prices[position] = round(float(interval["total"]) * factor, precision)
+        if interval.get("energy") is not None:
+            energy[position] = round(float(interval["energy"]) * factor, precision)
         level = interval.get("level")
         levels[position] = level.lower() if isinstance(level, str) else None
-    return {"start": first.astimezone(now.tzinfo).isoformat(), "minutes": 15, "prices": prices, "levels": levels}
+    series: dict[str, Any] = {
+        "start": first.astimezone(now.tzinfo).isoformat(),
+        "minutes": 15,
+        "prices": prices,
+        "levels": levels,
+    }
+    # Left out where Tibber sends no energy prices: a list of nulls only costs bytes on every update
+    if any(price is not None for price in energy):
+        series["energy"] = energy
+    return series
 
 
 def _past_periods(

@@ -43,6 +43,7 @@ views:
             device_id: "device:current_interval_price"
             style: gauge
             price_unit: auto
+            price_source: total
             average: mean
             appearance: auto
             now_decimals: entity
@@ -51,6 +52,7 @@ views:
           - type: custom:tibber-prices-forecast-card
             device_id: "device:current_interval_price"
             price_unit: auto
+            price_source: total
             average: mean
             layout: detailed
             appearance: auto
@@ -70,6 +72,7 @@ views:
           - type: custom:tibber-prices-forecast-card
             device_id: "device:current_interval_price"
             price_unit: auto
+            price_source: total
             average: mean
             layout: detailed
             appearance: auto
@@ -95,6 +98,7 @@ views:
           - $chart_card: tibber_prices
             type: custom:tibber-prices-chart-card
             device_id: "device:current_interval_price"
+            price_source: total
             tomorrow_pending: yesterday
             all_views:
               style_switch: true

@@ -29,6 +29,7 @@ device_id: YOUR_HOME_DEVICE_ID # Your home; the visual editor offers only Tibber
 show_title: false # Optional: true shows a title inside the card, top left like Home Assistant's own cards
 title: Strompreise # Optional: your own title (empty: “Electricity prices” in the card's language)
 price_unit: auto # Optional: auto (as set in the integration), base (€/kWh) or subunit (ct/kWh)
+price_source: total # Optional: total (taxes and fees included, default) or energy (the energy price alone)
 average: mean # Optional: the average of the prices shown and the strips' dashed line: auto (as set for the ⌀ sensors), mean (default) or median
 show: # Optional, default: all four, in this order (shown in the order you list them)
   - now # The current price on today's scale and what to make of it
@@ -134,6 +135,7 @@ type: custom:tibber-prices-now-card
 device_id: YOUR_HOME_DEVICE_ID
 style: tile # tile (default), gauge or clock
 price_unit: auto # Optional, as for the forecast card
+price_source: total # Optional: total (default) or energy, as for the forecast card
 average: mean # Optional: the day's average on the scale: auto, mean (default) or median
 now_decimals: entity # Optional: decimals of the current price: entity (default) or 0–4
 hide: [] # Optional: verdict (what to make of it), trend (the icon top right)
@@ -177,6 +179,8 @@ device_id: YOUR_HOME_DEVICE_ID
 views: [outlook, today, tomorrow, two_days] # Optional, default: these four, in this order (also: yesterday); the first one opens first
 header: chips # Optional: chips (the price with its chips in a line, default), dial (the price in a ring) or none
 price_unit: auto # Optional: auto, base (€/kWh) or subunit (ct/kWh)
+price_source: total # Optional: total (default) or energy (the energy price alone)
+price_source_switch: false # Optional: true adds an “Energy price only” tick box beside the views, to switch while looking
 average: mean # Optional: what the 60-minute prices and the dashed line are: mean (default), median or auto
 appearance: auto # Optional: auto, light or dark
 tomorrow_pending: placeholder # Optional: until tomorrow's prices are in, the tomorrow view says when they come (placeholder), stays away (hide) or shows yesterday instead (yesterday)
@@ -250,7 +254,7 @@ all_views:
 
 **The home battery:** a battery you added to the Energy dashboard shows what went into it (**Battery charge**, indigo) and what came out of it (**Battery discharge**, cyan), hour by hour. Unlike the solar curves they are not tied to the sun: they run at night too, and there is no forecast for them. In the energy mode they sum up over the day like the others, and a number at the end of each line says what the day came to. 
 
-**The grid connection:** the grid source of the Energy dashboard shows what you buy (**Grid import**, brown) and what you feed in (**Grid export**, magenta), also hour by hour and without a forecast. With several grid connections or meters, their hours add up. The balloon adds what the energy bought cost: in the power mode the hour's (kWh × the hour's price), in the energy mode the day's so far. The export has no such number: what you feed in earns a different price than the one you pay.
+**The grid connection:** the grid source of the Energy dashboard shows what you buy (**Grid import**, brown) and what you feed in (**Grid export**, magenta), also hour by hour and without a forecast. With several grid connections or meters, their hours add up. The balloon adds what the energy bought cost: in the power mode the hour's (kWh × the hour's price), in the energy mode the day's so far. The export has no such number: what you feed in earns a different price than the one you pay. Costs and what you **paid** are always worked out from the total price, also while the card shows the energy price alone: that's what the energy you bought cost.
 
 **All curves on one chart:** every curve can be laid over every other, so you see how they hang together: the sun charging the battery at noon, the battery carrying the expensive evening, the grid only at night when it's cheap. At first the prices, the solar curves and the grid import are on; the battery and the export wait in their tiles (`energy_curves` sets this).
 
@@ -282,6 +286,12 @@ all_views:
 
 **Colors, two axes, no area:** the prices are one neutral line (their level is in the balloon's price and the bars under the chart), the forecast is violet and dashed, the production orange (as the Energy dashboard draws solar), the battery indigo and cyan, the grid brown and magenta. Green and red are left out on purpose: they are the best and peak price periods' colors under the chart. The solar curves have their own axis at the right (kW or kWh) and both axes always name their unit. With more than one curve the area below the prices would hide the others, so the card leaves it out and offers no style switch.
 
+## Total price or energy price only
+
+Tibber sends two prices for every quarter hour: the **total** you pay, with taxes and fees, and the **energy price** on its own, without them. Every card shows the total by default, as Tibber bills it. Set `price_source: energy` (in the visual editor: **Price shown → Energy price only**) to see the energy price alone, for example to compare it with the exchange price. In the chart and energy cards, `price_source_switch: true` adds an **Energy price only** tick box beside the views, so you can switch while looking. After a reload, the card shows the price that's set again. A card opened in a window (the chart from the forecast card, say) shows the same price as the card it opened from, unless its own options set `price_source`.
+
+Only the numbers and the curve change. The price levels and their colors, the best and peak price periods and the volatility are the integration's, worked out from the total price, so the cards never disagree with your sensors and automations.
+
 ## Cards inside cards
 
 The cards can open each other in a window, which is handy on a main dashboard with little room:
@@ -312,6 +322,7 @@ entity: sensor.<home_name>_current_electricity_price
 features_position: bottom # or inline: next to the name on wide tiles
 features:
   - type: custom:tibber-prices-outlook-feature
+    price_source: total # Optional, YAML only: total (default) or energy (the energy price alone)
 ```
 
 Below the tile the bars carry their hour; inline, where it's too narrow for labels, an outline marks the hour now. Home Assistant's own **Trend graph** feature fits the same tile well: it shows where the price came from, ours where it's going.

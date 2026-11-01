@@ -189,7 +189,13 @@ def test_outlook_attributes_carry_mean_spread_and_level_in_display_unit(berlin: 
 
     now = datetime(2026, 10, 16, 13, 30, tzinfo=berlin)
     intervals = [
-        {**interval, "startsAt": interval["startsAt"].isoformat(), "total": 0.10 + 0.01 * (i % 4), "level": "CHEAP"}
+        {
+            **interval,
+            "startsAt": interval["startsAt"].isoformat(),
+            "total": 0.10 + 0.01 * (i % 4),
+            "energy": 0.05 + 0.01 * (i % 4),
+            "level": "CHEAP",
+        }
         for i, interval in enumerate(
             _intervals(datetime(2026, 10, 15, 0, tzinfo=berlin), datetime(2026, 10, 17, 23, 45, tzinfo=berlin))
         )
@@ -245,6 +251,9 @@ def test_outlook_attributes_carry_mean_spread_and_level_in_display_unit(berlin: 
     assert quarters["minutes"] == 15
     assert len(quarters["prices"]) == len(quarters["levels"]) == (24 + 48) * 4  # until tomorrow 23:45
     assert quarters["prices"][:4] == [10.0, 11.0, 12.0, 13.0]
+    # The energy price alone beside it, for cards set to show it
+    assert len(quarters["energy"]) == len(quarters["prices"])
+    assert quarters["energy"][:4] == [5.0, 6.0, 7.0, 8.0]
     assert quarters["levels"][0] == "cheap"
     # Part boundaries for cards, wrapping around midnight for the night
     assert attributes["outlook_day_part_hours"] == {
@@ -287,6 +296,8 @@ def test_quarters_reach_back_as_far_as_the_strips(berlin: ZoneInfo) -> None:
         "2026-10-15T06:00:00+02:00",
     )
     assert attributes["outlook_quarters"]["start"] == night["start"]
+    # Without energy prices from Tibber, no list of nulls for them
+    assert "energy" not in attributes["outlook_quarters"]
 
 
 @pytest.mark.unit
