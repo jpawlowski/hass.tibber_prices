@@ -11,7 +11,7 @@ idiomatic_version_file_enable_tools = ["python"]
 
 [tools]
 node = "24.22.1"
-uv = "0.13.5"
+uv = "0.13.6"
 "npm:pyright" = "1.1.414"
 "npm:prettier" = "3.9.10"
 git-cliff = "2.14.2"
