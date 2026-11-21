@@ -319,6 +319,10 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         if self.entity_description.key == "chart_metadata":
             self.hass.async_create_task(self._refresh_chart_metadata())
 
+    @callback
+    def async_entity_id_changed(self, old_entity_id: str) -> None:
+        """Accept an in-place rename (HA 2026.11+); see AGENTS.md "async_entity_id_changed"."""
+
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
         await super().async_will_remove_from_hass()

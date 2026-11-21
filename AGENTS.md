@@ -788,6 +788,7 @@ When debugging period calculation issues:
 **Home Assistant version, test package, store (dev environment):**
 
 - **Schema library**: the minimum supported HA version is 2026.9 (`hacs.json`, `docs/user/docs/installation.md`) because HA 2026.9 replaced voluptuous with Probatio. The integration writes `import probatio as vol`, never `import voluptuous`: HA aliases the old name at runtime, but type checkers don't see the alias and HA's signatures are typed against `probatio.Schema`.
+- **`async_entity_id_changed`**: HA 2026.11 renames entities in place, but removes and re-adds (until 2027.11) any entity whose class defines `async_added_to_hass`, `async_will_remove_from_hass` or `async_prepare_to_add_to_hass` without defining the hook itself or in a subclass. A base class does not cover its subclasses, so every concrete entity class (sensor, binary_sensor, number, switch) has an empty one. A new entity class with such hooks needs it too.
 
 **Python Virtual Environment:**
 
