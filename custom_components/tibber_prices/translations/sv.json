@@ -248,7 +248,7 @@
               "best_price_min_distance_from_avg": "Minimiavstånd"
             },
             "data_description": {
-              "best_price_flex": "Maximum över dagens minimipris som intervall kan vara och fortfarande kvalificera som 'bästa pris'. Rekommenderat: 15-20 med relaxation aktiverad (standard), eller 25-35 utan relaxation. Maximum: 50 (hård gräns för pålitlig perioddetektering).",
+              "best_price_flex": "Hur långt över dagens minimipris ett pris får ligga och ändå räknas som 'bästa pris', i procent av avståndet mellan dagens minimipris och dagens medelpris. Rekommenderat: 15-20 med relaxation aktiverad (standard), eller 25-35 utan relaxation. Maximum: 50 (hård gräns för pålitlig perioddetektering).",
               "best_price_min_distance_from_avg": "Säkerställer att perioder är betydligt billigare än dagsgenomsnittet, inte bara marginellt under det. Detta filtrerar bort brus och förhindrar att perioder strax under genomsnittet markeras som 'bästa pris' på dagar med platta priser. Högre värden = striktare filtrering (endast verkligt billiga perioder kvalificerar). Standard: 5 betyder att perioder måste vara minst 5% under dagsgenomsnittet."
             }
           },
@@ -313,7 +313,7 @@
               "peak_price_min_distance_from_avg": "Minimiavstånd"
             },
             "data_description": {
-              "peak_price_flex": "Maximum under dagens maximipris som intervall kan vara och fortfarande kvalificera som 'topppris'. Rekommenderat: -15 till -20 med relaxation aktiverad (standard), eller -25 till -35 utan relaxation. Maximum: -50 (hård gräns för pålitlig perioddetektering). Obs: Negativa värden indikerar avstånd under maximum.",
+              "peak_price_flex": "Hur långt under dagens maximipris ett pris får ligga och ändå räknas som 'topppris', i procent av avståndet mellan dagens maximipris och dagens medelpris. Rekommenderat: -15 till -20 med relaxation aktiverad (standard), eller -25 till -35 utan relaxation. Maximum: -50 (hård gräns för pålitlig perioddetektering). Obs: Negativa värden indikerar avstånd under maximum.",
               "peak_price_min_distance_from_avg": "Säkerställer att perioder är betydligt dyrare än dagsgenomsnittet, inte bara marginellt över det. Detta filtrerar bort brus och förhindrar att perioder strax över genomsnittet markeras som 'topppris' på dagar med platta priser. Högre värden = striktare filtrering (endast verkligt dyra perioder kvalificerar). Standard: 5 betyder att perioder måste vara minst 5% över dagsgenomsnittet."
             }
           },
@@ -1283,6 +1283,17 @@
           "confirm": {
             "title": "Prisspann: ny enhet",
             "description": "Sensorerna för perioder med bästa pris och topppris för **{home_name}** anger nu dagens prisspann (`day_price_min`, `day_price_max`, `day_price_span`) i samma enhet som `price_mean`, din visningsenhet. Eftersom priserna för detta hem visas i huvudvalutan står det nu t.ex. **0,10** i stället för **10** (tidigare öre/cent).\n\nUppdatera automationer och mallar som jämför dessa attribut med fasta tal och bekräfta sedan detta meddelande: det tas då bort för gott."
+          }
+        }
+      }
+    },
+    "period_flex_base": {
+      "title": "Tibber Prices: perioder med bästa pris och topppris använder en ny flexibilitetsskala ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Periodernas flexibilitet: ny skala",
+            "description": "Flexibiliteten för perioderna med bästa pris och topppris för **{home_name}** är nu en andel av avståndet mellan dagens minimipris (eller maximipris) och dagens medelpris, inte längre av själva priset. Perioderna håller sig därmed alltid under (bästa pris) eller över (topppris) medelpriset. Med samma inställningar blir perioder med topppris oftast kortare, och perioder med bästa pris på dagar med liten prisvariation också; relaxation slår till oftare.\n\nKontrollera dina flexibilitetsinställningar och automationer som beror på hur länge dessa perioder varar, och bekräfta sedan detta meddelande: det tas då bort för gott."
           }
         }
       }

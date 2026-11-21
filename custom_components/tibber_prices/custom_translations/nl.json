@@ -700,7 +700,7 @@
   },
   "number": {
     "best_price_flex_override": {
-      "description": "Maximaal percentage boven de dagelijkse minimumprijs dat intervallen kunnen hebben en nog steeds als 'beste prijs' kwalificeren. Aanbevolen: 15-20 met versoepeling ingeschakeld (standaard), of 25-35 zonder versoepeling. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
+      "description": "Hoe ver een prijs boven de dagelijkse minimumprijs mag liggen om nog als 'beste prijs' te gelden, in procent van het verschil tussen de dagelijkse minimumprijs en het daggemiddelde. Aanbevolen: 15-20 met versoepeling ingeschakeld (standaard), of 25-35 zonder versoepeling. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
       "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Flexibiliteit'-instelling uit de opties-dialoog voor beste prijs-periodeberekeningen.",
       "usage_tips": "Schakel deze entiteit in om beste prijs-detectie dynamisch aan te passen via automatiseringen, bijv. hogere flexibiliteit voor kritieke lasten of strengere eisen voor flexibele apparaten."
     },
@@ -730,7 +730,7 @@
       "usage_tips": "Verhoog dit voor apparaten met variabele belasting (bijv. warmtepompen) die korte duurdere intervallen kunnen tolereren. Stel in op 0 voor continu goedkope perioden."
     },
     "peak_price_flex_override": {
-      "description": "Maximaal percentage onder de dagelijkse maximumprijs dat intervallen kunnen hebben en nog steeds als 'piekprijs' kwalificeren. Dezelfde aanbevelingen als voor beste prijs-flexibiliteit.",
+      "description": "Hoe ver een prijs onder de dagelijkse maximumprijs mag liggen om nog als 'piekprijs' te gelden, in procent van het verschil tussen de dagelijkse maximumprijs en het daggemiddelde. Dezelfde aanbevelingen als voor beste prijs-flexibiliteit.",
       "long_description": "Wanneer deze entiteit is ingeschakeld, overschrijft de waarde de 'Flexibiliteit'-instelling uit de opties-dialoog voor piekprijs-periodeberekeningen.",
       "usage_tips": "Gebruik dit om de piekprijs-drempel tijdens runtime aan te passen voor automatiseringen die verbruik tijdens dure uren vermijden."
     },

@@ -1,4 +1,4 @@
-"""Tests for the config entry version migration (1.0 -> 1.1: day_price_* in the display unit)."""
+"""Tests for the config entry version migration (1.1: day_price_* in the display unit, 1.2: flex base)."""
 
 from __future__ import annotations
 
@@ -30,17 +30,31 @@ def test_older_entry_is_migrated_and_base_currency_homes_are_told(mode: str | No
     with patch.object(migrations.ir, "async_create_issue") as create_issue:
         assert migrations.async_migrate_entry_version(hass, _entry(0, mode))
 
-    assert create_issue.called is notified
+    keys = {call.kwargs["translation_key"] for call in create_issue.call_args_list}
+    assert ("period_day_price_unit" in keys) is notified
+    assert "period_flex_base" in keys
     hass.config_entries.async_update_entry.assert_called_once()
-    assert hass.config_entries.async_update_entry.call_args.kwargs == {"minor_version": 1}
+    assert hass.config_entries.async_update_entry.call_args.kwargs == {"minor_version": 2}
+
+
+@pytest.mark.unit
+def test_entry_at_1_1_is_told_of_the_flex_base_only() -> None:
+    """1.1 -> 1.2: every home hears that period flex is now a share of the gap to the mean (#259)."""
+    hass = MagicMock()
+    with patch.object(migrations.ir, "async_create_issue") as create_issue:
+        assert migrations.async_migrate_entry_version(hass, _entry(1, DISPLAY_MODE_BASE))
+
+    create_issue.assert_called_once()
+    assert create_issue.call_args.kwargs["translation_key"] == "period_flex_base"
+    assert hass.config_entries.async_update_entry.call_args.kwargs == {"minor_version": 2}
 
 
 @pytest.mark.unit
 def test_current_entry_is_left_alone() -> None:
-    """An entry already at 1.1 (or created there) gets neither a notice nor an update."""
+    """An entry already at 1.2 (or created there) gets neither a notice nor an update."""
     hass = MagicMock()
     with patch.object(migrations.ir, "async_create_issue") as create_issue:
-        assert migrations.async_migrate_entry_version(hass, _entry(1, DISPLAY_MODE_BASE))
+        assert migrations.async_migrate_entry_version(hass, _entry(2, DISPLAY_MODE_BASE))
 
     create_issue.assert_not_called()
     hass.config_entries.async_update_entry.assert_not_called()
@@ -58,8 +72,9 @@ def test_notices_can_be_confirmed() -> None:
     with patch.object(migrations.ir, "async_create_issue") as create_issue:
         migrations.async_migrate_entry_version(MagicMock(), _entry(0, DISPLAY_MODE_BASE))
 
-    assert create_issue.call_args.kwargs["is_fixable"] is True
-    assert create_issue.call_args.kwargs["translation_key"] in migrations.NOTICES
+    for call in create_issue.call_args_list:
+        assert call.kwargs["is_fixable"] is True
+        assert call.kwargs["translation_key"] in migrations.NOTICES
 
 
 @pytest.mark.unit

@@ -90,7 +90,7 @@ class TibberPricesPeriodConfig(NamedTuple):
     gap_count: int = 0  # Number of allowed consecutive deviating intervals
     extend_to_extreme: bool = False  # Extend periods into adjacent VERY_CHEAP/VERY_EXPENSIVE intervals
     max_extension_intervals: int = 0  # Max intervals this extension may add per side (0 = disabled)
-    geometric_extra_flex: float = 0.0  # Extra flex (decimal) for intervals inside the valley/peak zone (0.0 = disabled)
+    geometric_extra_flex: float = 0.0  # Geometric flex bonus (decimal) inside the valley/peak zone (0.0 = disabled)
     segment_forcing: bool = False  # Force at least segment_min_periods in each W/M-shape segment
     segment_min_periods: int = 1  # Minimum periods required per segment when segment_forcing is True
 
@@ -141,6 +141,9 @@ class TibberPricesIntervalCriteria(NamedTuple):
     flex: float
     min_distance_from_avg: float
     reverse_sort: bool
+    # Geometric flex bonus (decimal). Unlike flex, it is a share of
+    # max(|avg - ref|, |ref|), so a configured bonus keeps its strength.
+    geometric_flex: float = 0.0
 
 
 # ─── Day pattern constants ─────────────────────────────────────────────────────

@@ -41,11 +41,6 @@ MIN_DURATION_FALLBACK_MINIMUM = 30  # Minimum period length to try (30 min = 2 i
 MIN_DURATION_FALLBACK_STEP = 15  # Reduce by 15 min (1 interval) each step
 
 
-# Span-to-ref ratio threshold for suppressing flex warnings on V-shape days.
-# When span / ref_price < this on ANY available day, the warning is shown.
-# Below 0.5 means span < 50% of ref_price → "normal" day (high flex is genuinely risky).
-# Above 0.5 means V-shape day (span-based formula already compensates → warning less relevant).
-FLEX_WARNING_VSHAPE_RATIO = 0.5  # span/ref_price ratio below which a day is considered "normal"
 # On flat price days (low variation), it is unrealistic to require multiple distinct
 # best/peak price periods. Requiring 2+ periods would force relaxation to create
 # artificial periods that don't represent genuine price structure.
@@ -696,53 +691,30 @@ def calculate_periods_with_relaxation(
     total_days = len(prices_by_day)
 
     # =========================================================================
-    # SPAN-AWARE FLEX WARNINGS
+    # FLEX WARNINGS
     # =========================================================================
-    # With the span-based flex formula (flex_base = max(span, ref_price)), a high
-    # configured base_flex is less problematic on V-shape days (single low outlier)
-    # where span dominates. However, on normal days (span ≈ ref_price), high base_flex
-    # leaves little room for relaxation to escalate effectively.
-    #
-    # We only warn when relaxation is enabled AND the flex is high on typical days.
-    # V-shape days have span >> ref_price; normal days have span ≈ ref_price.
-    # We use the MEAN span/ref ratio across available days as a proxy:
-    # - Ratio near 1.0 → span ≈ ref (normal day, warning is relevant)
-    # - Ratio >> 1.0 → span >> ref (V-shape day, warning less relevant)
-    # Threshold: if any day has span/ref < 0.5 (i.e., span < 50% of ref_price),
-    # the spread is not extreme enough to suppress the warning.
-    if enable_relaxation and prices_by_day:
+    # A high base flex leaves relaxation few 3% steps before the 50% hard limit.
+    # Flex is a share of |avg - ref| on every day, so there is no day shape on
+    # which a high base flex would be harmless.
+    if enable_relaxation:
         base_flex = abs(config.flex)
-        if base_flex >= FLEX_WARNING_THRESHOLD_RELAXATION:
-            # Check whether any available day is "normal enough" to make the warning relevant
-            any_normal_day = False
-            for day_prices in prices_by_day.values():
-                prices = [float(p["total"]) for p in day_prices if p.get("total") is not None]
-                if len(prices) >= 2:
-                    day_min = min(prices)
-                    day_avg = sum(prices) / len(prices)
-                    span = abs(day_avg - day_min)
-                    if day_min > 0 and span / day_min < FLEX_WARNING_VSHAPE_RATIO:
-                        any_normal_day = True
-                        break
-
-            if any_normal_day:
-                if base_flex >= FLEX_HIGH_THRESHOLD_RELAXATION:
-                    _LOGGER.warning(
-                        "Base flex %.0f%% is too high for relaxation mode. "
-                        "Relaxation escalates in 3%% steps from your base - starting at %.0f%% "
-                        "means only ~%.0f steps remain before the 50%% hard limit. "
-                        "Recommendation: Use 15-20%% base flex with relaxation enabled.",
-                        base_flex * 100,
-                        base_flex * 100,
-                        (MAX_FLEX_HARD_LIMIT - base_flex) / 0.03,
-                    )
-                else:
-                    _LOGGER.info(
-                        "Base flex %.0f%% is high for relaxation mode (recommended: 15-20%%). "
-                        "Only ~%.0f relaxation steps remain to 50%% hard limit.",
-                        base_flex * 100,
-                        (MAX_FLEX_HARD_LIMIT - base_flex) / 0.03,
-                    )
+        if base_flex >= FLEX_HIGH_THRESHOLD_RELAXATION:
+            _LOGGER.warning(
+                "Base flex %.0f%% is too high for relaxation mode. "
+                "Relaxation escalates in 3%% steps from your base - starting at %.0f%% "
+                "means only ~%.0f steps remain before the 50%% hard limit. "
+                "Recommendation: Use 15-20%% base flex with relaxation enabled.",
+                base_flex * 100,
+                base_flex * 100,
+                (MAX_FLEX_HARD_LIMIT - base_flex) / 0.03,
+            )
+        elif base_flex >= FLEX_WARNING_THRESHOLD_RELAXATION:
+            _LOGGER.info(
+                "Base flex %.0f%% is high for relaxation mode (recommended: 15-20%%). "
+                "Only ~%.0f relaxation steps remain to 50%% hard limit.",
+                base_flex * 100,
+                (MAX_FLEX_HARD_LIMIT - base_flex) / 0.03,
+            )
 
     _LOGGER.info(
         "Calculating baseline periods for %d days...",

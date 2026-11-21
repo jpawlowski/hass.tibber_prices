@@ -59,10 +59,6 @@ _LOGGER = logging.getLogger(__name__)
 # Interval duration in minutes (quarter-hourly resolution)
 INTERVAL_MINUTES = 15
 
-# Default flexibility percentage for outlier smoothing in services
-# Matches the period system default (15%) for consistency
-DEFAULT_SERVICE_SMOOTHING_FLEX = 15.0
-
 # Valid scopes for the search_scope shorthand parameter
 VALID_SEARCH_SCOPES = frozenset({"today", "tomorrow", "remaining_today", "next_24h", "next_48h"})
 
@@ -907,7 +903,7 @@ def smooth_service_intervals(
     """
     from custom_components.tibber_prices.coordinator.period_handlers.outlier_filtering import filter_price_outliers  # noqa: PLC0415
 
-    return filter_price_outliers(intervals, DEFAULT_SERVICE_SMOOTHING_FLEX, 0)
+    return filter_price_outliers(intervals)
 
 
 def restore_original_prices(intervals: list[dict[str, Any]]) -> list[dict[str, Any]]:

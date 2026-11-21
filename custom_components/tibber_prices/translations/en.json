@@ -248,7 +248,7 @@
               "best_price_min_distance_from_avg": "Minimum Distance"
             },
             "data_description": {
-              "best_price_flex": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
+              "best_price_flex": "How far above the daily minimum a price can be and still qualify as 'best price', as a percentage of the gap between the daily minimum and the daily average. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
               "best_price_min_distance_from_avg": "Ensures periods are significantly cheaper than the daily average, not just marginally below it. This filters out noise and prevents marking slightly-below-average periods as 'best price' on days with flat prices. Higher values = stricter filtering (only truly cheap periods qualify). Default: 5 means periods must be at least 5% below the daily average."
             }
           },
@@ -313,7 +313,7 @@
               "peak_price_min_distance_from_avg": "Minimum Distance"
             },
             "data_description": {
-              "peak_price_flex": "Maximum below the daily maximum price that intervals can be and still qualify as 'peak price'. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
+              "peak_price_flex": "How far below the daily maximum a price can be and still qualify as 'peak price', as a percentage of the gap between the daily maximum and the daily average. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
               "peak_price_min_distance_from_avg": "Ensures periods are significantly more expensive than the daily average, not just marginally above it. This filters out noise and prevents marking slightly-above-average periods as 'peak price' on days with flat prices. Higher values = stricter filtering (only truly expensive periods qualify). Default: 5 means periods must be at least 5% above the daily average."
             }
           },
@@ -1283,6 +1283,17 @@
           "confirm": {
             "title": "Period price range: new unit",
             "description": "The best and peak price period sensors of **{home_name}** now give the day's price range (`day_price_min`, `day_price_max`, `day_price_span`) in the same unit as `price_mean`, your display unit. As prices for this home show in the base currency, these values are now e.g. **0.10** instead of **10** (ct/øre before).\n\nUpdate automations and templates that compare these attributes with fixed numbers, then confirm this notice: it's removed for good."
+          }
+        }
+      }
+    },
+    "period_flex_base": {
+      "title": "Tibber Prices: best and peak price periods use a new flexibility scale ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Period flexibility: new scale",
+            "description": "Flexibility of the best and peak price periods of **{home_name}** is now a share of the gap between the daily minimum (or maximum) and the daily average, no longer of the price itself. Periods now always stay below (best price) or above (peak price) the average. With the same settings, peak price periods are usually shorter, and so are best price periods on days with little price variation; relaxation may step in more often.\n\nCheck your flexibility settings and automations that rely on how long these periods last, then confirm this notice: it's removed for good."
           }
         }
       }

@@ -31,6 +31,10 @@ RELATIVE_VOLATILITY_THRESHOLD = 2.0  # Window volatility vs context (cluster det
 ASYMMETRY_TAIL_WINDOW = 6  # Skip asymmetry check for last ~1.5h (6 intervals) of available data
 ZIGZAG_TAIL_WINDOW = 6  # Skip zigzag/cluster detection for last ~1.5h (6 intervals)
 EXTREMES_PROTECTION_TOLERANCE = 0.001  # Protect prices within 0.1% of daily min/max from smoothing
+# Stable context: the averages before and after a spike may differ by at most this share
+# of the price before. Fixed on purpose: flex is a share of the gap between the daily
+# extreme and the mean (#259), not relative to the price, so it can't serve here.
+CONTEXT_STABILITY_RATIO = 0.15
 
 # Adaptive confidence level constants
 # Uses coefficient of variation (CV) from utils/price.py for consistency with volatility sensors
@@ -54,7 +58,6 @@ class TibberPricesSpikeCandidateContext(NamedTuple):
     current: dict
     context_before: list[dict]
     context_after: list[dict]
-    flexibility_ratio: float
     remaining_intervals: int
     stats: dict[str, float]
     analysis_window: list[dict]
@@ -205,7 +208,7 @@ def _validate_spike_candidate(
     avg_after = sum(x["total"] for x in candidate.context_after) / len(candidate.context_after)
 
     context_diff_pct = abs(avg_after - avg_before) / avg_before if avg_before > 0 else 0
-    if context_diff_pct > candidate.flexibility_ratio:
+    if context_diff_pct > CONTEXT_STABILITY_RATIO:
         _LOGGER_DETAILS.debug(
             "%sInterval %s: Context unstable (%.1f%% change) - not a spike",
             INDENT_L0,
@@ -408,11 +411,7 @@ def _is_daily_extreme(
     return price <= min_threshold or price >= max_threshold
 
 
-def filter_price_outliers(
-    intervals: list[dict],
-    flexibility_pct: float,
-    _min_duration: int,  # Unused, kept for API compatibility
-) -> list[dict]:
+def filter_price_outliers(intervals: list[dict]) -> list[dict]:
     """
     Filter single-interval price spikes within stable sequences.
 
@@ -428,16 +427,11 @@ def filter_price_outliers(
 
     Args:
         intervals: Price intervals to filter (typically 96 for yesterday/today/tomorrow)
-        flexibility_pct: User's flexibility setting (derives tolerance)
-        _min_duration: Minimum period duration (unused, kept for API compatibility)
 
     Returns:
         Intervals with smoothed prices (marked with _smoothed flag)
 
     """
-    # Convert percentage to ratio once for all comparisons (e.g., 15.0 → 0.15)
-    flexibility_ratio = flexibility_pct / 100
-
     # Calculate daily extremes to protect reference prices from smoothing
     # Daily min is the reference for best_price, daily max for peak_price
     daily_extremes = _calculate_daily_extremes(intervals)
@@ -450,10 +444,10 @@ def filter_price_outliers(
     # Log CV info for debugging (CV is in percentage points, e.g., 15.0 = 15%)
     cv_info = ", ".join(f"{date}: {cv:.1f}%" for date, cv in sorted(daily_cv.items()))
     _LOGGER.info(
-        "%sSmoothing price outliers: %d intervals, flex=%.1f%%, daily CV: %s",
+        "%sSmoothing price outliers: %d intervals, stable context ≤%.0f%%, daily CV: %s",
         INDENT_L0,
         len(intervals),
-        flexibility_pct,
+        CONTEXT_STABILITY_RATIO * 100,
         cv_info,
     )
 
@@ -518,7 +512,6 @@ def filter_price_outliers(
             current=current,
             context_before=context_before,
             context_after=context_after,
-            flexibility_ratio=flexibility_ratio,
             remaining_intervals=remaining_intervals,
             stats=stats,
             analysis_window=analysis_window,

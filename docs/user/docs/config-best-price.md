@@ -26,7 +26,7 @@ See **[Period Calculation](period-calculation.md)** for an in-depth explanation 
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Flex percentage** | 15% | How far above the daily minimum a price can be and still qualify. Higher = more intervals qualify |
+| **Flex percentage** | 15% | How far above the daily minimum a price can be and still qualify, as a share of the gap between the daily minimum and the daily average. Higher = more intervals qualify |
 | **Minimum distance from average** | 5% | Qualifying intervals must be at least this far below the daily average — ensures periods are meaningfully cheap, not just "not expensive" |
 
 ### Relaxation & Target

@@ -248,7 +248,7 @@
               "best_price_min_distance_from_avg": "Minimale Afstand"
             },
             "data_description": {
-              "best_price_flex": "Maximum boven de dagelijkse minimumprijs dat intervallen kunnen zijn en nog steeds als 'beste prijs' kwalificeren. Aanbevolen: 15-20 met relaxatie ingeschakeld (standaard), of 25-35 zonder relaxatie. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
+              "best_price_flex": "Hoe ver een prijs boven de dagelijkse minimumprijs mag liggen om nog als 'beste prijs' te gelden, in procent van het verschil tussen de dagelijkse minimumprijs en het daggemiddelde. Aanbevolen: 15-20 met relaxatie ingeschakeld (standaard), of 25-35 zonder relaxatie. Maximum: 50 (harde limiet voor betrouwbare periodedetectie).",
               "best_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant goedkoper zijn dan het dagelijkse gemiddelde, niet slechts marginaal eronder. Dit filtert ruis en voorkomt het markeren van licht-onder-gemiddelde periodes als 'beste prijs' op dagen met vlakke prijzen. Hogere waarden = striktere filtering (alleen echt goedkope periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% onder het dagelijkse gemiddelde moeten zijn."
             }
           },
@@ -313,7 +313,7 @@
               "peak_price_min_distance_from_avg": "Minimale Afstand"
             },
             "data_description": {
-              "peak_price_flex": "Maximum onder de dagelijkse maximumprijs dat intervallen kunnen zijn en nog steeds als 'piekprijs' kwalificeren. Aanbevolen: -15 tot -20 met relaxatie ingeschakeld (standaard), of -25 tot -35 zonder relaxatie. Maximum: -50 (harde limiet voor betrouwbare periodedetectie). Let op: Negatieve waarden geven afstand onder maximum aan.",
+              "peak_price_flex": "Hoe ver een prijs onder de dagelijkse maximumprijs mag liggen om nog als 'piekprijs' te gelden, in procent van het verschil tussen de dagelijkse maximumprijs en het daggemiddelde. Aanbevolen: -15 tot -20 met relaxatie ingeschakeld (standaard), of -25 tot -35 zonder relaxatie. Maximum: -50 (harde limiet voor betrouwbare periodedetectie). Let op: Negatieve waarden geven afstand onder maximum aan.",
               "peak_price_min_distance_from_avg": "Zorgt ervoor dat periodes significant duurder zijn dan het dagelijkse gemiddelde, niet slechts marginaal erboven. Dit filtert ruis en voorkomt het markeren van licht-boven-gemiddelde periodes als 'piekprijs' op dagen met vlakke prijzen. Hogere waarden = striktere filtering (alleen echt dure periodes kwalificeren). Standaard: 5 betekent dat periodes minimaal 5% boven het dagelijkse gemiddelde moeten zijn."
             }
           },
@@ -1283,6 +1283,17 @@
           "confirm": {
             "title": "Prijsbereik: nieuwe eenheid",
             "description": "De sensoren voor periodes met beste prijs en piekprijs van **{home_name}** geven het prijsbereik van de dag (`day_price_min`, `day_price_max`, `day_price_span`) nu in dezelfde eenheid als `price_mean`, je weergave-eenheid. Omdat prijzen voor deze woning in de hoofdvaluta worden getoond, staat er nu bijv. **0,10** in plaats van **10** (eerder ct/øre).\n\nPas automatiseringen en templates aan die deze attributen met vaste getallen vergelijken en bevestig daarna deze melding: die wordt dan definitief verwijderd."
+          }
+        }
+      }
+    },
+    "period_flex_base": {
+      "title": "Tibber Prices: periodes met beste prijs en piekprijs gebruiken een nieuwe flexibiliteitsschaal ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Flexibiliteit van periodes: nieuwe schaal",
+            "description": "De flexibiliteit van de periodes met beste prijs en piekprijs van **{home_name}** is nu een aandeel van het verschil tussen de dagelijkse minimumprijs (of maximumprijs) en het daggemiddelde, niet meer van de prijs zelf. Periodes blijven daardoor altijd onder (beste prijs) of boven (piekprijs) het gemiddelde. Met dezelfde instellingen zijn periodes met piekprijs meestal korter, en periodes met beste prijs op dagen met weinig prijsschommeling ook; relaxatie grijpt vaker in.\n\nControleer je flexibiliteitsinstellingen en automatiseringen die afhangen van hoe lang deze periodes duren, en bevestig daarna deze melding: die wordt dan definitief verwijderd."
           }
         }
       }

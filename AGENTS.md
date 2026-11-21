@@ -4,7 +4,7 @@ This is a **Home Assistant custom integration** (display name **Tibber Prices & 
 
 ## Documentation Metadata
 
-- **Last Major Update**: 2026-11-01 (Marketplace: display name „Tibber Prices & Planning“, manifest `categories`, store links and store name in hints chosen by HA version; Cards split into native ES modules under `frontend/cards/`, served from a versioned directory URL, module layering without cycles; 2026-10-31: Cards: `price_source` total/energy via `priceState()`, `outlook_quarters.energy`, tick box `price_source_switch` in chart and energy card; 2026-10-30: Subscription phases: pending before `validFrom` unless the status is `running`, user data checked hourly while pending, a contract `running` before `validFrom` is active (#237); Energy card: head looking ahead in Outlook/Tomorrow (sun and cheapest windows), Tomorrow tab from the solar forecast before the prices via `_tomorrowShown()`/`_drawsWithoutPrices()`; balance head with tiles as legend, grid curves with import cost, emphasis instead of groups, one balloon for three or more points; 2026-10-29: Energy card (was the solar card): `tibber-prices-energy-card` extends the chart card through hooks, with solar and home battery curves; 2026-10-28: Subscription phases: pending/active/ended via `utils/subscription.py`; 2026-10-25: Dev environment: tool versions via mise (`mise.toml`), Python version in `.python-version` kept in step with HA by `update-ha-version`, uv uses only mise's Python; Renovate instead of Dependabot; 2026-10-18: Cards: shared `TibberPricesCardBase`, `tibber-prices-card-window`, `windowCards`/`WINDOW_CARDS`, CSS state class rule; cards in windows of other cards and nested editor pages via `nestedCards`; 2026-10-17: Repairs: `repairs.py` fix flows, notices confirmable via `fix_flow`, runtime issues cleared on start, config entry minor version migration; allowed `frontend/` in the integration root; 2026-10-16: rolling hour routing via ROLLING_HOUR_SENSOR_WINDOWS, removed core.py `_get_rolling_hour_value`, added utils/trend.py; 2026-10-13: rolling hour vs clock hour)
+- **Last Major Update**: 2026-11-21 (Periods: flex is a share of `|avg - ref|` for best and peak price, the geometric flex bonus keeps the former base via `TibberPricesIntervalCriteria.geometric_flex`, conflict condition updated, min_distance cut only where flex passes it, outlier smoothing with its own `CONTEXT_STABILITY_RATIO` instead of flex (#259); 2026-11-01: Marketplace: display name „Tibber Prices & Planning“, manifest `categories`, store links and store name in hints chosen by HA version; Cards split into native ES modules under `frontend/cards/`, served from a versioned directory URL, module layering without cycles; 2026-10-31: Cards: `price_source` total/energy via `priceState()`, `outlook_quarters.energy`, tick box `price_source_switch` in chart and energy card; 2026-10-30: Subscription phases: pending before `validFrom` unless the status is `running`, user data checked hourly while pending, a contract `running` before `validFrom` is active (#237); Energy card: head looking ahead in Outlook/Tomorrow (sun and cheapest windows), Tomorrow tab from the solar forecast before the prices via `_tomorrowShown()`/`_drawsWithoutPrices()`; balance head with tiles as legend, grid curves with import cost, emphasis instead of groups, one balloon for three or more points; 2026-10-29: Energy card (was the solar card): `tibber-prices-energy-card` extends the chart card through hooks, with solar and home battery curves; 2026-10-28: Subscription phases: pending/active/ended via `utils/subscription.py`; 2026-10-25: Dev environment: tool versions via mise (`mise.toml`), Python version in `.python-version` kept in step with HA by `update-ha-version`, uv uses only mise's Python; Renovate instead of Dependabot; 2026-10-18: Cards: shared `TibberPricesCardBase`, `tibber-prices-card-window`, `windowCards`/`WINDOW_CARDS`, CSS state class rule; cards in windows of other cards and nested editor pages via `nestedCards`; 2026-10-17: Repairs: `repairs.py` fix flows, notices confirmable via `fix_flow`, runtime issues cleared on start, config entry minor version migration; allowed `frontend/` in the integration root; 2026-10-16: rolling hour routing via ROLLING_HOUR_SENSOR_WINDOWS, removed core.py `_get_rolling_hour_value`, added utils/trend.py; 2026-10-13: rolling hour vs clock hour)
 - **Last Architecture Review**: 2025-01-21 (Phase 1: Added TypedDict documentation system, improved BaseCalculator with 8 helper methods. Phase 2: Documented Import Architecture - Hybrid Pattern (Trend/Volatility build own attributes), verified no circular dependencies, confirmed optimal TYPE_CHECKING usage across all 8 calculators.)
 - **Last Code Example Cleanup**: 2025-11-18 (Removed redundant implementation details from AGENTS.md, added guidelines for when to include code examples)
 - **Documentation Status**: ✅ Current (verified against codebase)
@@ -662,43 +662,44 @@ if TYPE_CHECKING:
 
 ## Period Calculation System (Best/Peak Price Periods)
 
-**CRITICAL:** Period calculation uses multi-criteria filtering that can create **mathematical conflicts** at high flexibility values. Understanding these interactions is essential for reliable period detection.
+**CRITICAL:** Period calculation uses multi-criteria filtering that can create **mathematical conflicts** at high flexibility values on flat days. Understanding these interactions is essential for reliable period detection.
 
 **Core Challenge:**
 
-The period calculation applies **three independent filters** that ALL must pass:
+The period calculation applies **three independent filters** that ALL must pass (shown for best price; peak mirrors with the daily max and `1 + min_distance/100`):
 
-1. **Flex filter**: `price ≤ daily_min × (1 + flex)`
+1. **Flex filter**: `price ≤ daily_min + |daily_avg - daily_min| × flex`
 2. **Min_Distance filter**: `price ≤ daily_avg × (1 - min_distance/100)`
 3. **Level filter**: `rating_level IN [allowed_levels]`
 
+**Flex is a share of the gap between the daily extreme and the mean, in both directions** (`check_interval_criteria()` in `coordinator/period_handlers/level_filtering.py`, #259). So the threshold never crosses the mean, and flex, not min_distance, sets the period edges. Don't reintroduce `max(|avg - ref|, |ref|)` as the base: with positive prices the maximum always wins for peak (the threshold fell below the mean at default settings), and the minimum wins on flat best price days. The **geometric flex bonus** (`*_geometric_flex`) is the exception on purpose: it is passed separately as `TibberPricesIntervalCriteria.geometric_flex` and stays a share of the former base `max(|avg - ref|, |ref|)`, so configured values kept their strength. Don't add it to `flex`.
+
 **Mathematical Conflict Condition:**
 
-When `daily_min × (1 + flex) > daily_avg × (1 - min_distance/100)`, the flex filter permits intervals that the min_distance filter blocks, causing zero periods despite high flexibility.
+When `daily_min + |daily_avg - daily_min| × flex > daily_avg × (1 - min_distance/100)`, i.e. `flex > 1 - (daily_avg × min_distance/100) / (daily_avg - daily_min)`, the flex filter permits intervals that the min_distance filter blocks. On normal days that needs flex above the 50% cap; only flat days get there.
 
-Example: daily_min=10 ct, daily_avg=20 ct, flex=50%, min_distance=5%
+Example (flat day): daily_min=30 ct, daily_avg=33 ct, flex=50%, min_distance=5%
 
-- Flex allows: ≤15 ct
-- Distance allows: ≤19 ct
-- But combined: Only intervals ≤15 ct AND ≤19 ct AND matching level → Distance becomes dominant constraint
+- Flex allows: ≤31.5 ct
+- Distance allows: ≤31.35 ct
+- Combined: Distance becomes the dominant constraint (conflict from flex 45% on)
 
 **Solutions Implemented (Nov 2025):**
 
-1. **Hard Caps on Flex** (`coordinator/period_handlers/core.py`):
-   - `MAX_SAFE_FLEX = 0.50` (50% overall maximum)
-   - `MAX_OUTLIER_FLEX = 0.25` (25% for price spike detection)
-   - Warns users when base flex exceeds thresholds (INFO at 25%, WARNING at 30%)
+1. **Hard Cap on Flex** (`coordinator/period_handlers/core.py`):
+   - `MAX_SAFE_FLEX = 0.50` (50% overall maximum: halfway between the daily extreme and the mean)
+   - Warns users when base flex exceeds thresholds (INFO at 25%, WARNING at 30%, `relaxation.py`, independent of the day's shape)
+   - **Outlier smoothing does not use flex** (`CONTEXT_STABILITY_RATIO = 0.15` in `outlier_filtering.py`): its "stable context" is relative to the price, flex is a share of `|avg - ref|`. Don't tie it to flex again: then changing or relaxing flex silently changed spike detection.
 
 2. **Relaxation Increment Cap** (`coordinator/period_handlers/relaxation.py`):
    - Maximum 3% increment per relaxation step (prevents explosion from high base flex)
    - Example: Base flex 40% → increments as 43%, 46%, 49% (capped at 50%)
    - Without cap: 40% × 1.25 = 50% step → reaches 100% in 6 steps
 
-3. **Dynamic Min_Distance Scaling** (`coordinator/period_handlers/level_filtering.py`):
-   - Reduces min_distance proportionally as flex increases above 20%
-   - Formula: `scale_factor = max(0.25, 1.0 - ((flex - 0.20) × 2.5))`
-   - Example: flex=30% → scale=0.75 → min_distance reduced by 25%
-   - Minimum scaling: 25% of original (prevents complete removal)
+3. **Conflict Scaling of Min_Distance** (`coordinator/period_handlers/level_filtering.py`):
+   - Only above 20% flex plus geometric bonus (`FLEX_SCALING_THRESHOLD`, i.e. during relaxation or in a geometric zone) and only where the flex threshold passes the min_distance threshold: cut min_distance just far enough for both to meet (`calculate_effective_min_distance()`)
+   - Floor: 25% of the setting (`MIN_DISTANCE_SCALE_FLOOR`), so very flat days still yield no phantom periods; it never raises a min_distance the low-price scaling already cut further
+   - Normal days keep the full min_distance at any flex. Don't go back to cutting by flex alone on every day: with flex as a share of `|avg - ref|` that loosened min_distance where nothing conflicted
 
 4. **Enhanced Debug Logging** (`coordinator/period_handlers/period_building.py`):
    - Tracks exact counts of intervals filtered by flex, min_distance, and level
@@ -713,13 +714,15 @@ Example: daily_min=10 ct, daily_avg=20 ct, flex=50%, min_distance=5%
 - **Without relaxation**: 20-35% direct flex (no automatic escalation)
 - **Anti-pattern**: Base flex >30% with relaxation enabled → causes rapid escalation and filter conflicts
 
-**Key Constants** (defined in `coordinator/period_handlers/core.py`):
+**Key Constants** (in `coordinator/period_handlers/`):
 
 ```python
-MAX_SAFE_FLEX = 0.50  # 50% absolute maximum
-MAX_OUTLIER_FLEX = 0.25  # 25% for stable outlier detection
-FLEX_WARNING_THRESHOLD_RELAXATION = 0.25  # INFO warning at 25% base flex
-FLEX_HIGH_THRESHOLD_RELAXATION = 0.30  # WARNING at 30% base flex
+MAX_SAFE_FLEX = 0.50  # core.py: 50% absolute maximum
+FLEX_WARNING_THRESHOLD_RELAXATION = 0.25  # relaxation.py: INFO warning at 25% base flex
+FLEX_HIGH_THRESHOLD_RELAXATION = 0.30  # relaxation.py: WARNING at 30% base flex
+FLEX_SCALING_THRESHOLD = 0.20  # level_filtering.py: min_distance may be cut above this
+MIN_DISTANCE_SCALE_FLOOR = 0.25  # level_filtering.py: never below 25% of min_distance
+CONTEXT_STABILITY_RATIO = 0.15  # outlier_filtering.py: stable context for spike smoothing
 ```
 
 **Relaxation Strategy** (`coordinator/period_handlers/relaxation.py`):
@@ -747,18 +750,14 @@ DEFAULT_RELAXATION_ATTEMPTS_PEAK = 11  # 11 steps: 20% → 50% (3% increment per
 
 The relaxation increment is **hard-coded at 3% per step** in `relaxation.py` for reliability and predictability. This prevents configuration issues with high base flex values while still allowing sufficient escalation to the 50% hard maximum.
 
-**Dynamic Scaling Table** (min_distance adjustment):
+**Conflict Scaling Examples** (min_distance=5%, flex=50%, best price):
 
 ```
-Flex    Scale   Example (min_distance=5%)
--------------------------------------------
-≤20%    100%    5.00% (no reduction)
-25%     87.5%   4.38%
-30%     75%     3.75%
-35%     62.5%   3.13%
-40%     50%     2.50%
-45%     37.5%   1.88%
-≥50%    25%     1.25% (minimum)
+Day        Min/Avg     Flex thr.  Dist. thr.  Min_distance
+-----------------------------------------------------------
+Normal     10 / 20     15 ct      19 ct       5.00% (no conflict)
+Flat       30 / 33     31.5 ct    31.35 ct    4.55% (meet at 31.5 ct)
+Very flat  30 / 30.2   30.1 ct    28.69 ct    1.25% (floor)
 ```
 
 **Testing Scenarios:**
@@ -766,7 +765,7 @@ Flex    Scale   Example (min_distance=5%)
 When debugging period calculation issues:
 
 1. Check flex value: Is base flex >30%? Reduce to 15-20% if using relaxation
-2. Check logs for "scaled min_distance": Is it reducing too much? May need lower base flex
+2. Check logs for "Day D: min_distance Y% → Z%" (`period_building.details`, once per day and phase): only flat days with flex >20% or low-price days should show it
 3. Check filter statistics: Which filter blocks most intervals? (flex, distance, or level)
 4. Check relaxation warnings: INFO at 25%, WARNING at 30% indicate suboptimal config
 

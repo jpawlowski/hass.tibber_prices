@@ -700,7 +700,7 @@
   },
   "number": {
     "best_price_flex_override": {
-      "description": "Maximal procent över daglig minimumpris som intervaller kan ha och fortfarande kvalificera som 'bästa pris'. Rekommenderas: 15-20 med lättnad aktiverad (standard), eller 25-35 utan lättnad. Maximum: 50 (hårt tak för tillförlitlig perioddetektering).",
+      "description": "Hur långt över dagens minimipris ett pris får ligga och ändå räknas som 'bästa pris', i procent av avståndet mellan dagens minimipris och dagens medelpris. Rekommenderas: 15-20 med lättnad aktiverad (standard), eller 25-35 utan lättnad. Maximum: 50 (hårt tak för tillförlitlig perioddetektering).",
       "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för bästa pris-periodberäkningar.",
       "usage_tips": "Aktivera denna entitet för att dynamiskt justera bästa pris-detektering via automatiseringar, t.ex. högre flexibilitet för kritiska laster eller striktare krav för flexibla apparater."
     },
@@ -730,7 +730,7 @@
       "usage_tips": "Öka detta för apparater med variabel last (t.ex. värmepumpar) som kan tolerera korta dyrare intervaller. Ställ in på 0 för kontinuerligt billiga perioder."
     },
     "peak_price_flex_override": {
-      "description": "Maximal procent under daglig maximumpris som intervaller kan ha och fortfarande kvalificera som 'topppris'. Samma rekommendationer som för bästa pris-flexibilitet.",
+      "description": "Hur långt under dagens maximipris ett pris får ligga och ändå räknas som 'topppris', i procent av avståndet mellan dagens maximipris och dagens medelpris. Samma rekommendationer som för bästa pris-flexibilitet.",
       "long_description": "När denna entitet är aktiverad överskriver värdet 'Flexibilitet'-inställningen från alternativ-dialogen för topppris-periodberäkningar.",
       "usage_tips": "Använd detta för att justera topppris-tröskeln vid körtid för automatiseringar som undviker förbrukning under dyra timmar."
     },

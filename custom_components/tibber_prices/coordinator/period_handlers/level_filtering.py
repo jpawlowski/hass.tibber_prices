@@ -4,7 +4,7 @@ Interval-level filtering logic for period calculation.
 Key Concepts:
 - Flex Filter: Limits price distance from daily min/max
 - Min Distance Filter: Ensures prices are significantly different from average
-- Dynamic Scaling: Min_Distance reduces at high Flex to prevent conflicts
+- Conflict Scaling: Min_Distance is cut where high Flex passes it (flat days)
 
 See docs/development/period-calculation-theory.md for detailed explanation.
 """
@@ -24,8 +24,8 @@ from custom_components.tibber_prices.const import PRICE_LEVEL_MAPPING
 INDENT_L0 = ""  # Entry point / main function
 
 # Flex threshold for min_distance scaling
-FLEX_SCALING_THRESHOLD = 0.20  # 20% - start adjusting min_distance
-SCALE_FACTOR_WARNING_THRESHOLD = 0.8  # Log when reduction > 20%
+FLEX_SCALING_THRESHOLD = 0.20  # 20% - above this, min_distance may be cut where flex passes it
+MIN_DISTANCE_SCALE_FLOOR = 0.25  # conflict scaling never cuts min_distance below 25% of the setting
 
 # Low absolute price threshold for min_distance scaling (in major currency unit, e.g. EUR/NOK)
 # When the daily average price is below this, percentage-based min_distance becomes unreliable:
@@ -112,6 +112,58 @@ def apply_level_filter(
     return meets_level, new_consecutive_gaps, is_gap
 
 
+def calculate_flex_threshold(criteria: TibberPricesIntervalCriteria) -> float:
+    """
+    Return the flex threshold: the highest best price / lowest peak price that is in flex.
+
+    Flex is a share of the band between the reference (daily min for best price, daily
+    max for peak price) and the daily mean (span = |avg - ref|), so the threshold never
+    crosses the mean (#259). Examples with flex=15%:
+    - Best, normal:  min=10 ct, avg=20 ct → span=10 ct → threshold=10+1.5=11.5 ct
+    - Best, flat:    min=30 ct, avg=33 ct → span=3 ct  → threshold=30+0.45=30.45 ct
+    - Peak:          max=46 ct, avg=38 ct → span=8 ct  → threshold=46-1.2=44.8 ct
+
+    The geometric bonus keeps its former base max(span, |ref|), so configured values
+    widen the band as much as before.
+    """
+    price_span = abs(criteria.avg_price - criteria.ref_price)
+    flex_amount = price_span * abs(criteria.flex) + max(price_span, abs(criteria.ref_price)) * criteria.geometric_flex
+    return criteria.ref_price - flex_amount if criteria.reverse_sort else criteria.ref_price + flex_amount
+
+
+def calculate_effective_min_distance(criteria: TibberPricesIntervalCriteria, flex_threshold: float) -> float:
+    """
+    Return min_distance (in %, positive) after low-price and conflict scaling.
+
+    Low-price scaling: on days where the entire price level is extremely low (e.g., avg=3 ct),
+    even the daily minimum might not fall 5% below the average in relative terms. min_distance
+    scales linearly to 0 as avg_price approaches 0 (avg=10 ct → full, 5 ct → 50%, 0 ct → 0%).
+    Currency-agnostic: 10 ct EUR and 10 øre NOK are both "very low price territory".
+
+    Conflict scaling: at high flex, the flex threshold can pass the min_distance threshold, so
+    min_distance alone would set the period edges. Since flex is a share of |avg - ref| (#259),
+    that only happens when the span is small against the min_distance band (flat days). Then
+    min_distance is cut just far enough for both thresholds to meet, never below
+    MIN_DISTANCE_SCALE_FLOOR of the setting (and never raised). At or below
+    FLEX_SCALING_THRESHOLD (flex plus geometric bonus), min_distance stays whole, so it keeps
+    suppressing phantom periods on flat days at the configured flex.
+    """
+    min_distance_setting = abs(criteria.min_distance_from_avg)
+    min_distance = min_distance_setting
+
+    if criteria.avg_price < LOW_PRICE_AVG_THRESHOLD and LOW_PRICE_AVG_THRESHOLD > 0:
+        min_distance *= max(0.0, criteria.avg_price / LOW_PRICE_AVG_THRESHOLD)
+
+    if abs(criteria.flex) + criteria.geometric_flex > FLEX_SCALING_THRESHOLD and criteria.avg_price > 0:
+        flex_threshold_ratio = flex_threshold / criteria.avg_price
+        meeting_distance = (flex_threshold_ratio - 1 if criteria.reverse_sort else 1 - flex_threshold_ratio) * 100
+        if meeting_distance < min_distance:
+            floor = min(min_distance, min_distance_setting * MIN_DISTANCE_SCALE_FLOOR)
+            min_distance = max(meeting_distance, floor)
+
+    return min_distance
+
+
 def check_interval_criteria(
     price: float,
     criteria: TibberPricesIntervalCriteria,
@@ -132,123 +184,26 @@ def check_interval_criteria(
         Tuple of (in_flex, meets_min_distance)
 
     """
-    # ============================================================
-    # FAST PATH: Negative/zero prices always qualify as best price
-    # ============================================================
-    # When price ≤ 0 the consumer is paid or gets free electricity.
-    # This is unconditionally the cheapest possible outcome regardless
-    # of daily average, flex setting, or level filter.
-    # Bypasses both flex AND min_distance: a negative price is always
-    # maximally "far below average" in the economically meaningful sense.
+    # FAST PATH: Negative/zero prices always qualify as best price.
+    # When price ≤ 0 the consumer is paid or gets free electricity: unconditionally the
+    # cheapest possible outcome regardless of daily average, flex setting, or level filter.
+    # Bypasses both flex AND min_distance. Positive shoulders around a short negative core
+    # are handled later in the raw-period pipeline, where adjacency can be evaluated locally;
+    # keeping this filter day-agnostic avoids a global halo across the whole day.
     if not criteria.reverse_sort and price <= 0:
         return True, True
 
-    # Normalize inputs to absolute values for consistent calculation
-    flex_abs = abs(criteria.flex)
-    min_distance_abs = abs(criteria.min_distance_from_avg)
+    # FLEX FILTER: Peak accepts prices at or above the threshold (close to the maximum),
+    # best accepts ALL prices at or below it, before or after the daily minimum
+    flex_threshold = calculate_flex_threshold(criteria)
+    in_flex = price >= flex_threshold if criteria.reverse_sort else price <= flex_threshold
 
-    # ============================================================
-    # FLEX FILTER: Check if price is within flex threshold of reference
-    # ============================================================
-    # Reference price is:
-    # - Peak price (reverse_sort=True): daily MAXIMUM
-    # - Best price (reverse_sort=False): daily MINIMUM
-    #
-    # Standard formula (positive daily minimum):
-    # Flex base = max(price_span, abs(ref_price)):
-    # - On V-shape days (tiny minimum, large span): span wins → meaningful flex band
-    # - On flat days (large minimum, small span): ref_price wins → same as before
-    #
-    # Examples with flex=15% (positive minimum):
-    # - V-shape: min=1 ct, avg=19 ct → span=18 ct → flex_base=18 → threshold=1+2.7=3.7 ct
-    # - Flat:    min=30 ct, avg=33 ct → span=3 ct  → flex_base=30 → threshold=30+4.5=34.5 ct
-    # - Normal:  min=10 ct, avg=20 ct → span=10 ct → flex_base=10 → threshold=10+1.5=11.5 ct
-
-    # Positive shoulders around a short negative core are handled later in the
-    # raw-period pipeline, where adjacency can be evaluated locally. Keeping the
-    # interval filter day-agnostic avoids creating a global halo across the whole day.
-    price_span = abs(criteria.avg_price - criteria.ref_price)
-    flex_base = max(price_span, abs(criteria.ref_price))
-
-    if flex_base == 0:
-        # Degenerate case: all prices are zero → only exact zero qualifies
-        in_flex = price == 0
-    else:
-        flex_amount = flex_base * flex_abs
-
-        if criteria.reverse_sort:
-            # Peak price: accept prices >= (ref_price - flex_amount)
-            # Prices must be CLOSE TO or AT the maximum
-            flex_threshold = criteria.ref_price - flex_amount
-            in_flex = price >= flex_threshold
-        else:
-            # Best price: accept prices <= (ref_price + flex_amount)
-            # Accept ALL low prices up to the flex threshold, not just those >= minimum
-            # This ensures that if there are multiple low-price intervals, all that meet
-            # the threshold are included, regardless of whether they're before or after
-            # the daily minimum in the chronological sequence.
-            flex_threshold = criteria.ref_price + flex_amount
-            in_flex = price <= flex_threshold
-
-    # ============================================================
-    # MIN_DISTANCE FILTER: Check if price is far enough from average
-    # ============================================================
-    # CRITICAL: Adjust min_distance dynamically based on flex to prevent conflicts
-    # Problem: High flex (e.g., 50%) can conflict with fixed min_distance (e.g., 5%)
-    # Solution: When flex is high, reduce min_distance requirement proportionally
-
-    adjusted_min_distance = min_distance_abs
-
-    if flex_abs > FLEX_SCALING_THRESHOLD:
-        # Scale down min_distance as flex increases
-        # At 20% flex: multiplier = 1.0 (full min_distance)
-        # At 40% flex: multiplier = 0.5 (half min_distance)
-        # At 50% flex: multiplier = 0.25 (quarter min_distance)
-        flex_excess = flex_abs - 0.20  # How much above 20%
-        scale_factor = max(0.25, 1.0 - (flex_excess * 2.5))  # Linear reduction, min 25%
-        adjusted_min_distance = min_distance_abs * scale_factor
-
-        # Log adjustment at DEBUG level (only when significant reduction)
-        if scale_factor < SCALE_FACTOR_WARNING_THRESHOLD:
-            import logging  # noqa: PLC0415
-
-            _LOGGER = logging.getLogger(f"{__name__}.details")
-            _LOGGER.debug(
-                "High flex %.1f%% detected: Reducing min_distance %.1f%% → %.1f%% (scale %.2f)",
-                flex_abs * 100,
-                min_distance_abs,
-                adjusted_min_distance,
-                scale_factor,
-            )
-
-    # ============================================================
-    # ABSOLUTE LOW-PRICE SCALING: Reduce min_distance when avg is very low
-    # ============================================================
-    # Problem: On days where the entire price level is extremely low (e.g., avg=3 ct),
-    # even the daily minimum might not fall 5% below the average in relative terms.
-    # Example: avg=3 ct, min_distance=5% → threshold=2.85 ct.
-    #          If min=2.9 ct, no interval qualifies despite being genuinely cheap.
-    #
-    # Solution: Scale min_distance linearly to 0 as avg_price approaches 0.
-    # At avg=10 ct → full min_distance; at avg=5 ct → 50%; at avg=0 ct → 0%.
-    #
-    # This is currency-agnostic: 10 ct EUR and 10 øre NOK are both
-    # "very low price territory" for their respective markets.
-    if criteria.avg_price < LOW_PRICE_AVG_THRESHOLD and LOW_PRICE_AVG_THRESHOLD > 0:
-        low_price_scale = max(0.0, criteria.avg_price / LOW_PRICE_AVG_THRESHOLD)
-        adjusted_min_distance = adjusted_min_distance * low_price_scale
-
-    # Calculate threshold from average (using normalized positive distance)
-    # - Peak price: threshold = avg * (1 + distance/100) → prices must be ABOVE avg+distance
-    # - Best price: threshold = avg * (1 - distance/100) → prices must be BELOW avg-distance
+    # MIN_DISTANCE FILTER: Peak must be min_distance% above the average, best below it
+    min_distance = calculate_effective_min_distance(criteria, flex_threshold)
     if criteria.reverse_sort:
-        # Peak: price must be >= avg * (1 + distance%)
-        min_distance_threshold = criteria.avg_price * (1 + adjusted_min_distance / 100)
-        meets_min_distance = price >= min_distance_threshold
+        meets_min_distance = price >= criteria.avg_price * (1 + min_distance / 100)
     else:
-        # Best: price must be <= avg * (1 - distance%)
-        min_distance_threshold = criteria.avg_price * (1 - adjusted_min_distance / 100)
-        meets_min_distance = price <= min_distance_threshold
+        meets_min_distance = price <= criteria.avg_price * (1 - min_distance / 100)
 
     return in_flex, meets_min_distance
 
@@ -261,7 +216,10 @@ def compute_geometric_flex_bonus(
     reverse_sort: bool,
 ) -> float:
     """
-    Return extra flex if interval falls within the valley/peak geometric zone.
+    Return the geometric flex bonus if interval falls within the valley/peak geometric zone.
+
+    The bonus is not added to flex: it goes into ``TibberPricesIntervalCriteria.geometric_flex``,
+    a share of max(|avg - ref|, |ref|), while flex is a share of |avg - ref|.
 
     For best price (reverse_sort=False): widens flex inside the VALLEY zone
     defined by [valley_start, valley_end] knee points.
@@ -271,7 +229,7 @@ def compute_geometric_flex_bonus(
     Args:
         interval_time: Timezone-aware datetime of the interval's start.
         day_pattern: DayPatternDict for the interval's calendar day, or None.
-        extra_flex: Additional flex to add (decimal, e.g. 0.10 for 10%).
+        extra_flex: Geometric flex bonus (decimal, e.g. 0.10 for 10%).
         reverse_sort: True for peak price, False for best price.
 
     Returns:

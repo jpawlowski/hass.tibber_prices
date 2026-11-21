@@ -248,7 +248,7 @@
               "best_price_min_distance_from_avg": "Minimumsavstand"
             },
             "data_description": {
-              "best_price_flex": "Maksimalt over den daglige minimumsprisen der intervaller fortsatt kvalifiserer som 'beste pris'. Anbefalt: 15-20 med lemping aktivert (standard), eller 25-35 uten lemping. Maksimum: 50 (hard grense for pålitelig periodegjenkjenning).",
+              "best_price_flex": "Hvor langt over dagens minimumspris en pris kan ligge og fortsatt regnes som 'beste pris', i prosent av avstanden mellom dagens minimumspris og dagens gjennomsnitt. Anbefalt: 15-20 med lemping aktivert (standard), eller 25-35 uten lemping. Maksimum: 50 (hard grense for pålitelig periodegjenkjenning).",
               "best_price_min_distance_from_avg": "Sikrer at perioder er betydelig billigere enn daglig gjennomsnitt, ikke bare marginalt under det. Dette filtrerer støy og forhindrer at litt-under-gjennomsnittet perioder markeres som 'beste pris' på dager med flate priser. Høyere verdier = strengere filtrering (bare virkelig billige perioder kvalifiserer). Standard: 5 betyr at perioder må være minst 5% under daglig gjennomsnitt."
             }
           },
@@ -313,7 +313,7 @@
               "peak_price_min_distance_from_avg": "Minimumsavstand"
             },
             "data_description": {
-              "peak_price_flex": "Maksimalt under den daglige maksimumsprisen der intervaller fortsatt kvalifiserer som 'topppris'. Anbefaling: -15 til -20 med lemping aktivert (standard), eller -25 til -35 uten lemping. Maksimum: -50 (hard grense for pålitelig periodegjenkjenning). Merk: Negative verdier angir avstand under maksimum.",
+              "peak_price_flex": "Hvor langt under dagens maksimumspris en pris kan ligge og fortsatt regnes som 'topppris', i prosent av avstanden mellom dagens maksimumspris og dagens gjennomsnitt. Anbefaling: -15 til -20 med lemping aktivert (standard), eller -25 til -35 uten lemping. Maksimum: -50 (hard grense for pålitelig periodegjenkjenning). Merk: Negative verdier angir avstand under maksimum.",
               "peak_price_min_distance_from_avg": "Sikrer at perioder er betydelig dyrere enn daglig gjennomsnitt, ikke bare marginalt over det. Dette filtrerer støy og forhindrer at litt-over-gjennomsnittet perioder markeres som 'topppris' på dager med flate priser. Høyere verdier = strengere filtrering (bare virkelig dyre perioder kvalifiserer). Standard: 5 betyr at perioder må være minst 5% over daglig gjennomsnitt."
             }
           },
@@ -1283,6 +1283,17 @@
           "confirm": {
             "title": "Prisspenn: ny enhet",
             "description": "Sensorene for perioder med beste pris og topppris for **{home_name}** oppgir nå dagens prisspenn (`day_price_min`, `day_price_max`, `day_price_span`) i samme enhet som `price_mean`, visningsenheten din. Siden prisene for dette hjemmet vises i hovedvalutaen, står det nå f.eks. **0,10** i stedet for **10** (før øre/cent).\n\nOppdater automasjoner og maler som sammenligner disse attributtene med faste tall, og bekreft deretter denne meldingen: den fjernes da for godt."
+          }
+        }
+      }
+    },
+    "period_flex_base": {
+      "title": "Tibber Prices: perioder med beste pris og topppris bruker en ny fleksibilitetsskala ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Fleksibilitet for perioder: ny skala",
+            "description": "Fleksibiliteten for periodene med beste pris og topppris for **{home_name}** er nå en andel av avstanden mellom dagens minimumspris (eller maksimumspris) og dagens gjennomsnitt, ikke lenger av selve prisen. Periodene holder seg dermed alltid under (beste pris) eller over (topppris) gjennomsnittet. Med de samme innstillingene blir periodene med topppris som regel kortere, og det samme gjelder perioder med beste pris på dager med lite prisvariasjon; lemping slår oftere inn.\n\nSjekk fleksibilitetsinnstillingene dine og automasjoner som avhenger av hvor lenge disse periodene varer, og bekreft deretter denne meldingen: den fjernes da for godt."
           }
         }
       }

@@ -11,7 +11,13 @@ from custom_components.tibber_prices.const import PRICE_LEVEL_CHEAP, PRICE_LEVEL
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-from .level_filtering import apply_level_filter, check_interval_criteria, compute_geometric_flex_bonus
+from .level_filtering import (
+    apply_level_filter,
+    calculate_effective_min_distance,
+    calculate_flex_threshold,
+    check_interval_criteria,
+    compute_geometric_flex_bonus,
+)
 from .types import CROSS_DAY_OVERNIGHT_VALIDATION_HOUR, TibberPricesIntervalCriteria
 
 _LOGGER = logging.getLogger(__name__)
@@ -321,6 +327,19 @@ def build_periods(
         )
         for day in ref_prices
     }
+    # Log scaled min_distance once per day (outside geometric zones), not per interval
+    for day, day_criteria in criteria_by_day.items():
+        day_min_distance = calculate_effective_min_distance(day_criteria, calculate_flex_threshold(day_criteria))
+        if day_min_distance < abs(min_distance_from_avg):
+            _LOGGER_DETAILS.debug(
+                "%sDay %s: min_distance %.2f%% → %.2f%% (flex %.1f%%, avg %.4f, low prices or flex passes it)",
+                INDENT_L0,
+                day,
+                abs(min_distance_from_avg),
+                day_min_distance,
+                abs(flex) * 100,
+                day_criteria.avg_price,
+            )
     for price_data in all_prices:
         starts_at = time.get_interval_time(price_data)
         if starts_at is None:
@@ -367,7 +386,7 @@ def build_periods(
                 reverse_sort=reverse_sort,
             )
 
-        effective_criteria = criteria._replace(flex=criteria.flex + geo_bonus) if geo_bonus > 0 else criteria
+        effective_criteria = criteria._replace(geometric_flex=geo_bonus)
         in_flex, meets_min_distance = check_interval_criteria(price_for_criteria, effective_criteria)
 
         # Cross-day boundary validation (symmetric for best AND peak periods):
@@ -376,9 +395,9 @@ def build_periods(
         #
         # PEAK example: A 30ct interval becomes "peak" against tomorrow's lower max (35ct)
         #   but wasn't peak against today's higher max (39ct).
-        # BEST example: An 8ct interval becomes "best" against today's lower min (5ct, flex
-        #   allows ≤7.5ct) but actually a 7ct interval qualifying today wouldn't have
-        #   qualified yesterday when min was 4ct (flex allows ≤6ct).
+        # BEST example (flex 50%): today min 5ct, avg 9ct → flex allows ≤7ct; yesterday
+        #   min 4ct, avg 7ct → flex allows ≤5.5ct. A 6.5ct interval just after midnight
+        #   qualifies against today but not against yesterday.
         #
         # In both cases the apparent "extreme" is just a relative shift between adjacent
         # days, not a genuine outlier worth reporting.
@@ -386,14 +405,12 @@ def build_periods(
             prev_day = date_key - timedelta(days=1)
             prev_criteria = criteria_by_day.get(prev_day)
             if prev_criteria is not None:
-                prev_effective = (
-                    prev_criteria._replace(flex=prev_criteria.flex + geo_bonus) if geo_bonus > 0 else prev_criteria
-                )
+                prev_effective = prev_criteria._replace(geometric_flex=geo_bonus)
                 in_prev_flex, _ = check_interval_criteria(price_for_criteria, prev_effective)
                 if not in_prev_flex:
                     # Fails against previous day → boundary artifact, treat as not in flex
+                    # (counted as filtered by flex just below)
                     in_flex = False
-                    intervals_filtered_by_flex += 1
 
         # Track why intervals are filtered
         if not in_flex:

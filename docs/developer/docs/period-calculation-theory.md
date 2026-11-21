@@ -26,18 +26,31 @@ Period detection uses **three independent filters** (all must pass):
 **Logic:**
 
 ```python
-# Best Price: Price must be within flex% ABOVE daily minimum
-in_flex = price <= (daily_min + daily_min × flex)
+# Flex is a share of the band between the reference and the daily mean
+flex_base = abs(daily_avg - ref_price)   # ref = daily min (best) / daily max (peak)
 
-# Peak Price: Price must be within flex% BELOW daily maximum
-in_flex = price >= (daily_max - daily_max × flex)
+# Best Price
+in_flex = price <= (daily_min + flex_base × flex)
+
+# Peak Price
+in_flex = price >= (daily_max - flex_base × flex)
 ```
 
 **Example (Best Price):**
 
-- Daily Min: 10 ct/kWh
+- Daily Min: 10 ct/kWh, Daily Avg: 20 ct/kWh
 - Flex: 15%
 - Acceptance Range: 0 - 11.5 ct/kWh (10 + 10×0.15)
+
+**Example (Peak Price):**
+
+- Daily Max: 46.19 ct/kWh, Daily Avg: 37.89 ct/kWh
+- Flex: 20%
+- Acceptance Range: from 44.53 ct/kWh (46.19 − 8.30×0.20)
+
+**Why the span to the mean:** The threshold never crosses the daily mean for any flex below 100%, so flex, not min distance, sets the period edges. The former base `max(|avg - ref|, |ref|)` let the reference win on flat best price days and on practically every peak price day (with positive prices the maximum always exceeds `max - avg`). There the threshold crossed the mean as soon as `flex ≥ |avg - ref| / |ref|` (on 2026-11-13, peak: 36.95 ct against a mean of 37.89 ct), and min distance alone cut the period (#259).
+
+**Geometric flex bonus:** `*_geometric_flex` is added on top as a share of the former base `max(|avg - ref|, |ref|)` (`TibberPricesIntervalCriteria.geometric_flex`), so a configured bonus widens the band as much as before the change.
 
 ### 2. Min Distance Filter (Distance from Daily Average)
 
@@ -108,33 +121,32 @@ period_low_threshold = PRICE_LEVEL_THRESHOLDS["volatility_low"]  # Always 10%
 
 ### Problem Statement
 
-**These two filters can conflict when Flex is high!**
+**These two filters can conflict when Flex is high on a flat day.** Since flex is a share of the span to the mean (#259), the conflict needs a small span relative to the min distance band; on normal days it no longer occurs below the 50% hard limit.
 
-#### Scenario: Best Price with Flex=50%, Min_Distance=5%
+#### Scenario: Best Price on a flat day with Flex=50%, Min_Distance=5%
 
 **Given:**
 
-- Daily Min: 10 ct/kWh
-- Daily Avg: 15 ct/kWh
-- Daily Max: 20 ct/kWh
+- Daily Min: 30 ct/kWh
+- Daily Avg: 33 ct/kWh
 
 **Flex Filter (50%):**
 
 ```
-Max accepted = 10 + (10 × 0.50) = 15 ct/kWh
+Max accepted = 30 + (3 × 0.50) = 31.5 ct/kWh
 ```
 
 **Min Distance Filter (5%):**
 
 ```
-Max accepted = 15 × (1 - 0.05) = 14.25 ct/kWh
+Max accepted = 33 × (1 - 0.05) = 31.35 ct/kWh
 ```
 
 **Conflict:**
 
-- Interval at 14.8 ct/kWh:
-    - ✅ Flex: 14.8 ≤ 15 (PASS)
-    - ❌ Distance: 14.8 > 14.25 (FAIL)
+- Interval at 31.4 ct/kWh:
+    - ✅ Flex: 31.4 ≤ 31.5 (PASS)
+    - ❌ Distance: 31.4 > 31.35 (FAIL)
     - **Result:** Rejected by Min_Distance even though Flex allows it!
 
 **The Issue:** At high Flex values, Min_Distance becomes the dominant filter and blocks intervals that Flex would permit. This defeats the purpose of having high Flex.
@@ -144,91 +156,46 @@ Max accepted = 15 × (1 - 0.05) = 14.25 ct/kWh
 **Conflict condition for Best Price:**
 
 ```
-daily_min × (1 + flex) > daily_avg × (1 - min_distance/100)
+daily_min + (daily_avg - daily_min) × flex > daily_avg × (1 - min_distance/100)
+⇔ flex > 1 - (daily_avg × min_distance/100) / (daily_avg - daily_min)
 ```
 
 **Typical values:**
 
-- Min = 10, Avg = 15, Min_Distance = 5%
-- Conflict occurs when: `10 × (1 + flex) > 14.25`
-- Simplify: `flex > 0.425` (42.5%)
+- Normal day: Min = 10, Avg = 15, Min_Distance = 5% → `flex > 0.85` (never reached, hard limit is 50%)
+- Flat day: Min = 30, Avg = 33, Min_Distance = 5% → `flex > 0.45` (45%)
 
-**Below 42.5% Flex:** Both filters contribute meaningfully.
-**Above 42.5% Flex:** Min_Distance dominates and blocks intervals.
+**Below the conflict flex:** Both filters contribute meaningfully.
+**Above it:** Min_Distance dominates and blocks intervals. Peak Price mirrors this with max and `1 + min_distance/100`.
 
-### Solution: Dynamic Min_Distance Scaling
+### Solution: Conflict Scaling of Min_Distance
 
-**Approach:** Reduce Min_Distance proportionally as Flex increases.
+**Approach:** Cut Min_Distance only where the flex threshold actually passes it, and only as far as needed for both thresholds to meet.
 
-**Formula:**
+**Formula (best price; peak mirrors it):**
 
 ```python
-if flex > 0.20:  # 20% threshold
-    flex_excess = flex - 0.20
-    scale_factor = max(0.25, 1.0 - (flex_excess × 2.5))
-    adjusted_min_distance = original_min_distance × scale_factor
+if flex + geometric_flex > 0.20 and daily_avg > 0:  # FLEX_SCALING_THRESHOLD
+    flex_threshold = daily_min + |daily_avg - daily_min| × flex  # incl. geometric bonus
+    meeting_distance = (1 - flex_threshold / daily_avg) × 100
+    if meeting_distance < min_distance:  # flex passes min_distance
+        floor = min(min_distance, setting × 0.25)  # MIN_DISTANCE_SCALE_FLOOR, never raises it
+        min_distance = max(meeting_distance, floor)
 ```
 
-**Scaling Table (Original Min_Distance = 5%):**
+**Examples (Min_Distance = 5%, Flex = 50%):**
 
-| Flex | Scale Factor | Adjusted Min_Distance | Rationale                         |
-| ---- | ------------ | --------------------- | --------------------------------- |
-| ≤20% | 1.00         | 5.0%                  | Standard - both filters relevant  |
-| 25%  | 0.88         | 4.4%                  | Slight reduction                  |
-| 30%  | 0.75         | 3.75%                 | Moderate reduction                |
-| 40%  | 0.50         | 2.5%                  | Strong reduction - Flex dominates |
-| 50%  | 0.25         | 1.25%                 | Minimal distance - Flex decides   |
+| Day        | Min / Avg  | Flex threshold | Distance threshold | Adjusted Min_Distance        |
+| ---------- | ---------- | -------------- | ------------------ | ---------------------------- |
+| Normal     | 10 / 20    | 15 ct          | 19 ct              | 5% (no conflict)             |
+| Flat       | 30 / 33    | 31.5 ct        | 31.35 ct           | 4.55% (both meet at 31.5 ct) |
+| Very flat  | 30 / 30.2  | 30.1 ct        | 28.69 ct           | 1.25% (floor)                |
 
-**Why stop at 25% of original?**
+**Why not below 20% flex?** At the configured flex (15-20%), a whole min_distance keeps suppressing phantom periods on very flat days. Only relaxation raises flex past 20%, and only then is min_distance cut where it blocks flex.
 
-- Min_Distance ensures periods are **significantly** different from average
-- Even at 1.25%, prevents "flat days" (little price variation) from accepting every interval
-- Maintains semantic meaning: "this is a meaningful best/peak price period"
+**History:** Before #259, min_distance was cut on every day from 20% flex on (linearly to 25% at 50% flex), because the old flex base `max(|avg - ref|, |ref|)` let the flex threshold pass the min_distance threshold on most days. With flex as a share of `|avg - ref|`, that conflict only exists on flat days, so cutting everywhere loosened min_distance where nothing conflicted.
 
 **Implementation:** See `level_filtering.py` → `check_interval_criteria()`
-
-**Code Extract:**
-
-```python
-# coordinator/period_handlers/level_filtering.py
-
-FLEX_SCALING_THRESHOLD = 0.20  # 20% - start adjusting min_distance
-SCALE_FACTOR_WARNING_THRESHOLD = 0.8  # Log when reduction > 20%
-
-def check_interval_criteria(price, criteria):
-    # ... flex check ...
-
-    # Dynamic min_distance scaling
-    adjusted_min_distance = criteria.min_distance_from_avg
-    flex_abs = abs(criteria.flex)
-
-    if flex_abs > FLEX_SCALING_THRESHOLD:
-        flex_excess = flex_abs - 0.20  # How much above 20%
-        scale_factor = max(0.25, 1.0 - (flex_excess × 2.5))
-        adjusted_min_distance = criteria.min_distance_from_avg × scale_factor
-
-        if scale_factor < SCALE_FACTOR_WARNING_THRESHOLD:
-            _LOGGER.debug(
-                "High flex %.1f%% detected: Reducing min_distance %.1f%% → %.1f%%",
-                flex_abs × 100,
-                criteria.min_distance_from_avg,
-                adjusted_min_distance,
-            )
-
-    # Apply adjusted min_distance in distance check
-    meets_min_distance = (
-        price <= avg_price × (1 - adjusted_min_distance/100)  # Best Price
-        # OR
-        price >= avg_price × (1 + adjusted_min_distance/100)  # Peak Price
-    )
-```
-
-**Why Linear Scaling?**
-
-- Simple and predictable
-- No abrupt behavior changes
-- Easy to reason about for users and developers
-- Alternative considered: Exponential scaling (rejected as too aggressive)
 
 **Why 25% Minimum?**
 
@@ -247,7 +214,12 @@ def check_interval_criteria(price, criteria):
 
 ```python
 MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
-MAX_OUTLIER_FLEX = 0.25  # 25% - cap for outlier filtering: above this, spike detection too permissive
+```
+
+**Defined in `coordinator/period_handlers/outlier_filtering.py`:**
+
+```python
+CONTEXT_STABILITY_RATIO = 0.15  # 15% - max change between the averages before/after a spike
 ```
 
 **Defined in `const.py`:**
@@ -369,8 +341,7 @@ Expensive period: 17:00-18:30 (1.5 hours at 35-40 ct) ← Sharp, brief
 **Rationale:**
 
 - Above 50%, period detection becomes unreliable
-- Best Price: Almost entire day qualifies (Min + 50% typically covers 60-80% of intervals)
-- Peak Price: Similar issue with Max - 50%
+- At 50%, the threshold reaches halfway between the daily min/max and the mean; beyond that, periods stop being clearly cheaper/more expensive than the rest of the day
 - **Result:** Either massive periods (entire day) or no periods (min_length not met)
 
 **Warning Message:**
@@ -380,17 +351,15 @@ Flex XX% exceeds maximum safe value! Capping at 50%.
 Recommendation: Use 15-20% with relaxation enabled, or 25-35% without relaxation.
 ```
 
-#### 2. Outlier Filtering Maximum: 25%
+#### 2. Outlier Filtering: Fixed Stable-Context Threshold
 
-**Enforcement:** `core.py` caps outlier filtering flex at 0.25 (25%)
+**Enforcement:** `outlier_filtering.py` → `CONTEXT_STABILITY_RATIO = 0.15`
 
 **Rationale:**
 
-- Outlier filtering uses Flex to determine "stable context" threshold
-- At > 25% Flex, almost any price swing is considered "stable"
-- **Result:** Legitimate price shifts aren't smoothed, breaking period formation
-
-**Note:** User's Flex still applies to period criteria (`in_flex` check), only outlier filtering is capped.
+- Outlier filtering only smooths a spike when the averages before and after it differ by at most 15% of the price before ("stable context")
+- Above that, a price swing is a legitimate shift, not a spike; smoothing it would break period formation
+- The threshold is fixed and independent of Flex: Flex is a share of the gap between the daily extreme and the mean (#259), not relative to the price. Until then, outlier filtering used the user's Flex (capped at 25%), so changing Flex or relaxing it also changed spike detection.
 
 ### Recommended Ranges (User Guidance)
 
@@ -526,8 +495,8 @@ if in_flex and starts_at.hour < CROSS_DAY_OVERNIGHT_VALIDATION_HOUR:
 
 The check applies to **both** directions:
 
-- **Peak example:** Tomorrow's max=35 ct, today's max=39 ct, flex=15% → 30 ct passes against tomorrow (≤35 ct) but not against today (≤33.15 ct). It is dropped.
-- **Best example:** Today's min=5 ct, yesterday's min=4 ct, flex=50% → 7 ct passes against today (≤7.5 ct) but not against yesterday (≤6 ct). It is dropped.
+- **Peak example (flex 20%):** Today max=39 ct, avg=29 ct → flex allows ≥37 ct; yesterday max=44 ct, avg=30 ct → flex allows ≥41.2 ct. A 38 ct interval just after midnight passes against today but not against yesterday. It is dropped.
+- **Best example (flex 50%):** Today min=5 ct, avg=9 ct → flex allows ≤7 ct; yesterday min=4 ct, avg=7 ct → flex allows ≤5.5 ct. A 6.5 ct interval just after midnight passes against today but not against yesterday. It is dropped.
 
 Without the symmetric check, both directions produced "false extremes" purely from inter-day reference shifts. The check adds at most one extra criteria evaluation per qualifying interval and only for the first ~6 hours of each day.
 
@@ -861,7 +830,7 @@ logger:
 1. `"Filter statistics: X intervals checked"` - Shows how many intervals filtered by each criterion
 2. `"After build_periods: X raw periods found"` - Periods before min_length filtering
 3. `"Day X: Success with flex=Y%"` - Relaxation succeeded
-4. `"High flex X% detected: Reducing min_distance Y% → Z%"` - Distance scaling active
+4. `"Day D: min_distance Y% → Z% (flex X%, avg A, low prices or flex passes it)"` - Min_distance scaled for that day (once per day and relaxation phase, outside geometric zones)
 
 ---
 
@@ -1105,9 +1074,9 @@ When debugging period calculation issues:
     - If seeing these: Lower base flex to 15-20%
 
 4. **Check Min_Distance Scaling**
-    - Debug messages show "High flex X% detected: Reducing min_distance Y% → Z%"
-    - If scale factor `<`0.8 (20% reduction): High flex is active
-    - If periods still not found: Filters conflict even with scaling
+    - Debug messages show "Day D: min_distance Y% → Z% (flex X%, …)"
+    - Only on flat days with flex above 20% (relaxation); normal days keep the full min_distance
+    - If periods still not found: The 25% floor still blocks (very flat day, no meaningful period)
 
 5. **Check Outlier Filtering**
     - Look for "Outlier detected" messages
@@ -1156,8 +1125,7 @@ When debugging period calculation issues:
 ### Known Limitations
 
 1. **Fixed increment step:** 3% cap may be too aggressive for very low base Flex
-2. **Linear distance scaling:** Could benefit from non-linear curve
-3. **No consideration of temporal distribution:** May find all periods in one part of day
+2. **No consideration of temporal distribution:** May find all periods in one part of day
 
 ---
 
@@ -1277,27 +1245,7 @@ else:  # Normal day
 - Users with strict requirements likely disable relaxation
 - Simplicity preferred over edge case optimization
 
-#### 2. Linear Distance Scaling
-
-**Current:** Linear scaling may be too aggressive/conservative
-
-**Alternative:** Non-linear curve
-
-```python
-# Example: Exponential scaling
-scale_factor = 0.25 + 0.75 × exp(-5 × (flex - 0.20))
-
-# Or: Sigmoid scaling
-scale_factor = 0.25 + 0.75 / (1 + exp(10 × (flex - 0.35)))
-```
-
-**Why Not Implemented:**
-
-- Linear is easier to reason about
-- No evidence that non-linear is better
-- Would need extensive testing
-
-#### 3. No Temporal Distribution Consideration
+#### 2. No Temporal Distribution Consideration
 
 **Issue:** May find all periods in one part of day
 
@@ -1318,7 +1266,7 @@ scale_factor = 0.25 + 0.75 / (1 + exp(10 × (flex - 0.35)))
 - Users can work around with multiple automations
 - Different users have different needs (no one-size-fits-all)
 
-#### 4. Period Boundary Handling
+#### 3. Period Boundary Handling
 
 **Current Behavior:** Periods can cross midnight naturally
 
@@ -1450,5 +1398,6 @@ Low volatility (< 15%) means classification changes are less economically signif
 
 ## Changelog
 
+- **2026-11-21**: Flex is now a share of `|avg - ref|` for best and peak price instead of `max(|avg - ref|, |ref|)`, so the threshold never crosses the daily mean (#259). The geometric flex bonus keeps the former base. The relaxation flex warning no longer depends on the day's shape. Min_distance is cut only where flex passes it (flat days, flex > 20%), just far enough for both thresholds to meet. Outlier filtering uses a fixed stable-context threshold (`CONTEXT_STABILITY_RATIO = 0.15`) instead of the user's flex.
 - **2026-04-17**: Documented symmetric cross-day boundary validation (best _and_ peak), smarter min-duration fallback (no longer maxes out flex/min_distance), and the new `RELAXATION_FLEX_INCREMENT` constant. Recorded that period merging now recombines `price_min`/`price_max`/`price_spread`/`price_mean` (weighted by interval count) instead of inheriting only from the older period.
 - **2025-11-19**: Initial documentation of Flex/Distance interaction and Relaxation strategy fixes

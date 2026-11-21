@@ -201,33 +201,35 @@ flowchart TD
 
 #### ① Flexibility (Search Range)
 
-**Best Price:** How much MORE than the daily minimum can a price be?
+**Best Price:** How far up from the daily minimum toward the daily average can a price be? Flexibility is a share of the gap between the two, so a best price period always stays below the average.
 
 <details>
 <summary>Show example: Search Range Flexibility</summary>
 
 ```
 Daily MIN: 20 ct/kWh
+Daily AVG: 30 ct/kWh
 Flexibility: 15% (default)
-→ Search for times ≤ 23 ct/kWh (20 + 15%)
+→ Search for times ≤ 21.5 ct/kWh (20 + 15% of the 10 ct gap)
 ```
 
 </details>
 
-**Peak Price:** How much LESS than the daily maximum can a price be?
+**Peak Price:** How far down from the daily maximum toward the daily average can a price be? Flexibility is a share of the gap between the two, so a peak period always stays above the average.
 
 <details>
 <summary>Show example: Peak Price Flexibility</summary>
 
 ```
 Daily MAX: 40 ct/kWh
-Flexibility: -15% (default)
-→ Search for times ≥ 34 ct/kWh (40 - 15%)
+Daily AVG: 30 ct/kWh
+Flexibility: -20% (default)
+→ Search for times ≥ 38 ct/kWh (40 - 20% of the 10 ct gap)
 ```
 
 </details>
 
-**Why flexibility?** Prices rarely stay at exactly MIN/MAX. Flexibility lets you capture realistic time windows. At high flex values (>20%), the distance filter is automatically scaled down to prevent conflicting constraints.
+**Why flexibility?** Prices rarely stay at exactly MIN/MAX. Flexibility lets you capture realistic time windows. On flat days at high flex values (>20%), the distance filter is relaxed just enough that it doesn't cut the period shorter than flexibility allows.
 
 #### ② Distance from Average (Quality Gate)
 
@@ -330,34 +332,34 @@ This ensures that every day has at least one period under realistic market condi
 
 Daily MIN: 18 ct | Daily MAX: 35 ct | Daily AVG: 26 ct
 
-| Hour | Price | Best Price threshold<br/>≤ 20.7 ct (15% flex) | Peak Price threshold<br/>≥ 29.75 ct (15% flex) |
+| Hour | Price | Best Price threshold<br/>≤ 19.2 ct (15% flex) | Peak Price threshold<br/>≥ 33.2 ct (-20% flex) |
 |------|------:|:---:|:---:|
 | 00:00 | **18 ct** | ✅ Best Price | |
 | 01:00 | **19 ct** | ✅ Best Price | |
-| 02:00 | **20 ct** | ✅ Best Price | |
+| 02:00 | 20 ct | | |
 | 03:00 | 28 ct | | |
 | 04:00 | 29 ct | | |
 | 05:00 | 29 ct | | |
 | 06:00 | **35 ct** | | 🔴 Peak Price |
 | 07:00 | **34 ct** | | 🔴 Peak Price |
-| 08:00 | **33 ct** | | 🔴 Peak Price |
-| 09:00 | **32 ct** | | 🔴 Peak Price |
-| 10:00 | **30 ct** | | 🔴 Peak Price |
+| 08:00 | 33 ct | | |
+| 09:00 | 32 ct | | |
+| 10:00 | 30 ct | | |
 | 11:00 | 28 ct | | |
 | 12:00 | 25 ct | | |
 | 13:00 | 24 ct | | |
 | 14:00 | 26 ct | | |
 | 15:00 | 28 ct | | |
-| 16:00 | 30 ct | | 🔴 Peak Price |
-| 17:00 | 32 ct | | 🔴 Peak Price |
-| 18:00 | 31 ct | | 🔴 Peak Price |
-| 19:00 | **22 ct** | | |
-| 20:00 | **20 ct** | ✅ Best Price | |
+| 16:00 | 30 ct | | |
+| 17:00 | 32 ct | | |
+| 18:00 | 31 ct | | |
+| 19:00 | 22 ct | | |
+| 20:00 | 20 ct | | |
 | 21:00 | **19 ct** | ✅ Best Price | |
 | 22:00 | **19 ct** | ✅ Best Price | |
 | 23:00 | **18 ct** | ✅ Best Price | |
 
-**Result:** Two Best Price periods (00:00–03:00 and 19:00–00:00) and two Peak Price periods (06:00–11:00 and 16:00–19:00).
+**Result:** Two Best Price periods (00:00–02:00 and 21:00–00:00) and one Peak Price period (06:00–08:00). Flexibility is a share of the gap to the average: the best price threshold is 18 + 15% × (26 − 18) = 19.2 ct, the peak threshold 35 − 20% × (35 − 26) = 33.2 ct (both defaults). If you ask for two peak periods, relaxation raises the flexibility step by step until the evening hill (32 ct at 17:00) qualifies too.
 
 ---
 
@@ -367,16 +369,16 @@ Daily MIN: 18 ct | Daily MAX: 35 ct | Daily AVG: 26 ct
 
 #### Flexibility
 
-**What:** How far from MIN/MAX to search for periods
-**Default:** 15% (Best Price), -15% (Peak Price)
+**What:** How far from MIN/MAX toward the daily average to search for periods (as a share of the gap between them)
+**Default:** 15% (Best Price), -20% (Peak Price)
 **Range:** 0-100%
 
 <details>
 <summary>Show YAML: Flexibility</summary>
 
 ```yaml
-best_price_flex: 15 # Can be up to 15% more expensive than daily MIN
-peak_price_flex: -15 # Can be up to 15% less expensive than daily MAX
+best_price_flex: 15 # Can be up to 15% of the way from daily MIN up to the average
+peak_price_flex: -20 # Can be up to 20% of the way from daily MAX down to the average
 ```
 
 </details>
@@ -430,7 +432,7 @@ peak_price_min_distance_from_avg: 5
 -   **Increase (5-10%)** → Only show clearly better times
 -   **Decrease (0-1%)** → Show any time below/above average
 
-**ℹ️ Note:** Both flexibility and distance filters must be satisfied. When using high flexibility values (>30%), the distance filter may become the limiting factor. For best results, use moderate flexibility (15-20%) with relaxation enabled.
+**ℹ️ Note:** Both flexibility and distance filters must be satisfied. On flat days with high flexibility values (>30%), the distance filter may become the limiting factor. For best results, use moderate flexibility (15-20%) with relaxation enabled.
 
 ### Optional Filters
 

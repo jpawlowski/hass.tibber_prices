@@ -30,7 +30,9 @@ _LOGGER = logging.getLogger(__name__)
 # A notice (only to read and confirm) is "fixable": HA then offers to confirm it instead of only
 # to ignore it, and deletes it once confirmed (with no repairs platform, HA's own confirm flow
 # shows the fix_flow text). Ignored, it would stay in the registry for good
-NOTICES: frozenset[str] = frozenset({"entity_migration", "period_day_price_unit", "currency_display_mode_changed"})
+NOTICES: frozenset[str] = frozenset(
+    {"entity_migration", "period_day_price_unit", "currency_display_mode_changed", "period_flex_base"}
+)
 
 
 # ============================================================================
@@ -162,12 +164,16 @@ def _auto_migrate_entity_keys(
 @callback
 def async_migrate_entry_version(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """
-    Bring a config entry from an older version to the current one (VERSION 1, MINOR_VERSION 1).
+    Bring a config entry from an older version to the current one (VERSION 1, MINOR_VERSION 2).
 
     1.0 -> 1.1: day_price_min, day_price_max and day_price_span of the best/peak price periods
     are in the display unit like price_mean, no longer always in ct/øre. That changes their
     values only where prices show in the base currency (€, kr): those homes get a notice to
-    review automations and templates. New entries start at 1.1 and never see it.
+    review automations and templates.
+    1.1 -> 1.2: period flex is a share of the gap between the daily min/max and the mean (#259),
+    so the same setting gives narrower best/peak price periods (peak on every day, best on flat
+    days). Every home gets a notice to review flex and automations.
+    New entries start at the current version and never see these notices.
     """
     if entry.version > 1:
         # A newer version of the integration was installed before: can't go back
@@ -185,8 +191,20 @@ def async_migrate_entry_version(hass: HomeAssistant, entry: ConfigEntry) -> bool
                 translation_placeholders={"home_name": entry.title},
                 learn_more_url="https://github.com/jpawlowski/hass.tibber_prices/releases",
             )
-        _LOGGER.info("[%s] Migrated config entry to version 1.1", entry.title)
-        hass.config_entries.async_update_entry(entry, minor_version=1)
+    if entry.minor_version < 2:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"period_flex_base_{entry.entry_id}",
+            is_fixable=True,  # A notice to confirm (see NOTICES)
+            is_persistent=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="period_flex_base",
+            translation_placeholders={"home_name": entry.title},
+            learn_more_url="https://github.com/jpawlowski/hass.tibber_prices/releases",
+        )
+        _LOGGER.info("[%s] Migrated config entry to version 1.2", entry.title)
+        hass.config_entries.async_update_entry(entry, minor_version=2)
     return True
 
 

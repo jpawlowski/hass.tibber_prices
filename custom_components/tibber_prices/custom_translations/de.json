@@ -700,7 +700,7 @@
   },
   "number": {
     "best_price_flex_override": {
-      "description": "Maximaler Prozentsatz über dem Tagesminimumpreis, den Intervalle haben können und trotzdem als 'Bestpreis' gelten. Empfohlen: 15-20 mit Lockerung aktiviert (Standard), oder 25-35 ohne Lockerung. Maximum: 50 (Obergrenze für zuverlässige Periodenerkennung).",
+      "description": "Wie weit ein Preis über dem Tagesminimum liegen darf, um noch als 'Bestpreis' zu gelten, in Prozent des Abstands zwischen Tagesminimum und Tagesdurchschnitt. Empfohlen: 15-20 mit Lockerung aktiviert (Standard), oder 25-35 ohne Lockerung. Maximum: 50 (Obergrenze für zuverlässige Periodenerkennung).",
       "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Bestpreis-Periodenberechnung.",
       "usage_tips": "Aktiviere diese Entität, um die Bestpreiserkennung dynamisch über Automatisierungen anzupassen, z.B. höhere Flexibilität bei kritischen Lasten oder engere Anforderungen für flexible Geräte."
     },
@@ -730,7 +730,7 @@
       "usage_tips": "Erhöhe dies für Geräte mit variabler Last (z.B. Wärmepumpen), die kurze teurere Intervalle tolerieren können. Setze auf 0 für kontinuierliche günstige Perioden."
     },
     "peak_price_flex_override": {
-      "description": "Maximaler Prozentsatz unter dem Tagesmaximumpreis, den Intervalle haben können und trotzdem als 'Spitzenpreis' gelten. Gleiche Empfehlungen wie für Bestpreis-Flexibilität.",
+      "description": "Wie weit ein Preis unter dem Tageshöchstpreis liegen darf, um noch als 'Spitzenpreis' zu gelten, in Prozent des Abstands zwischen Tageshöchstpreis und Tagesdurchschnitt. Gleiche Empfehlungen wie für Bestpreis-Flexibilität.",
       "long_description": "Wenn diese Entität aktiviert ist, überschreibt ihr Wert die Einstellung 'Flexibilität' aus dem Optionen-Dialog für die Spitzenpreis-Periodenberechnung.",
       "usage_tips": "Nutze dies, um den Spitzenpreis-Schwellenwert zur Laufzeit für Automatisierungen anzupassen, die den Verbrauch während teurer Stunden vermeiden."
     },

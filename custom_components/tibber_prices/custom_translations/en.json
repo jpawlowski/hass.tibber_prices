@@ -700,7 +700,7 @@
   },
   "number": {
     "best_price_flex_override": {
-      "description": "Maximum above the daily minimum price that intervals can be and still qualify as 'best price'. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
+      "description": "How far above the daily minimum a price can be and still qualify as 'best price', as a percentage of the gap between the daily minimum and the daily average. Recommended: 15-20 with relaxation enabled (default), or 25-35 without relaxation. Maximum: 50 (hard cap for reliable period detection).",
       "long_description": "When this entity is enabled, its value overrides the 'Flexibility' setting from the options flow for best price period calculations.",
       "usage_tips": "Enable this entity to dynamically adjust best price detection via automations. Higher values create longer periods, lower values are stricter."
     },
@@ -730,7 +730,7 @@
       "usage_tips": "Increase to allow longer periods with occasional price spikes. Keep low for stricter continuous cheap periods."
     },
     "peak_price_flex_override": {
-      "description": "Maximum below the daily maximum price that intervals can be and still qualify as 'peak price'. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
+      "description": "How far below the daily maximum a price can be and still qualify as 'peak price', as a percentage of the gap between the daily maximum and the daily average. Recommended: -15 to -20 with relaxation enabled (default), or -25 to -35 without relaxation. Maximum: -50 (hard cap for reliable period detection). Note: Negative values indicate distance below maximum.",
       "long_description": "When this entity is enabled, its value overrides the 'Flexibility' setting from the options flow for peak price period calculations.",
       "usage_tips": "Enable this entity to dynamically adjust peak price detection via automations. Higher values create longer peak periods."
     },

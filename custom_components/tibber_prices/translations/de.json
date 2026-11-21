@@ -248,7 +248,7 @@
               "best_price_min_distance_from_avg": "Mindestabstand"
             },
             "data_description": {
-              "best_price_flex": "Maximale Menge über dem Tagesminimumpreis, um noch als 'Bestpreis' zu gelten. Empfohlen: 15-20% mit Lockerung aktiviert (Standard), oder 25-35% ohne Lockerung. Maximum: 50% (Hartgrenze für zuverlässige Zeitraumerkennung).",
+              "best_price_flex": "Wie weit ein Preis über dem Tagesminimum liegen darf, um noch als 'Bestpreis' zu gelten, in Prozent des Abstands zwischen Tagesminimum und Tagesdurchschnitt. Empfohlen: 15-20% mit Lockerung aktiviert (Standard), oder 25-35% ohne Lockerung. Maximum: 50% (Hartgrenze für zuverlässige Zeitraumerkennung).",
               "best_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume erheblich günstiger als der Tagesdurchschnitt sind, nicht nur marginal darunter. Dies filtert Rauschen heraus und verhindert, dass leicht unterdurchschnittliche Zeiträume an flachen Preistagen als 'Bestpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich billige Zeiträume gelten). Standard: 5 bedeutet Zeiträume müssen mindestens 5% unter dem Tagesdurchschnitt liegen."
             }
           },
@@ -313,7 +313,7 @@
               "peak_price_min_distance_from_avg": "Mindestabstand"
             },
             "data_description": {
-              "peak_price_flex": "Maximal unter dem täglichen Höchstpreis, bei dem Intervalle noch als 'Spitzenpreis' qualifizieren. Empfehlung: -15 bis -20 mit aktivierter Lockerung (Standard), oder -25 bis -35 ohne Lockerung. Maximum: -50 (harte Grenze für zuverlässige Zeitraumerkennung). Hinweis: Negative Werte zeigen den Abstand unter dem Maximum an.",
+              "peak_price_flex": "Wie weit ein Preis unter dem Tageshöchstpreis liegen darf, um noch als 'Spitzenpreis' zu gelten, in Prozent des Abstands zwischen Tageshöchstpreis und Tagesdurchschnitt. Empfehlung: -15 bis -20 mit aktivierter Lockerung (Standard), oder -25 bis -35 ohne Lockerung. Maximum: -50 (harte Grenze für zuverlässige Zeitraumerkennung). Hinweis: Negative Werte zeigen den Abstand unter dem Maximum an.",
               "peak_price_min_distance_from_avg": "Stellt sicher, dass Zeiträume signifikant teurer als der Tagesdurchschnitt sind, nicht nur geringfügig darüber. Dies filtert Rauschen und verhindert, dass leicht überdurchschnittliche Zeiträume an Tagen mit flachen Preisen als 'Spitzenpreis' markiert werden. Höhere Werte = strengere Filterung (nur wirklich teure Zeiträume qualifizieren). Standard: 5 bedeutet, Zeiträume müssen mindestens 5% über dem Tagesdurchschnitt liegen."
             }
           },
@@ -1283,6 +1283,17 @@
           "confirm": {
             "title": "Preisspanne: neue Einheit",
             "description": "Die Sensoren für Bestpreis- und Spitzenpreis-Zeiträume von **{home_name}** geben die Preisspanne des Tages (`day_price_min`, `day_price_max`, `day_price_span`) jetzt in derselben Einheit wie `price_mean` an, deiner Anzeigeeinheit. Da die Preise für dieses Zuhause in der Hauptwährung angezeigt werden, stehen dort jetzt z. B. **0,10** statt **10** (vorher ct/øre).\n\nPasse Automationen und Templates an, die diese Attribute mit festen Zahlen vergleichen, und bestätige danach diesen Hinweis: Er wird dann endgültig entfernt."
+          }
+        }
+      }
+    },
+    "period_flex_base": {
+      "title": "Tibber Prices: Bestpreis- und Spitzenpreis-Zeiträume nutzen eine neue Flexibilitäts-Skala ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Flexibilität der Zeiträume: neue Skala",
+            "description": "Die Flexibilität der Bestpreis- und Spitzenpreis-Zeiträume von **{home_name}** ist jetzt ein Anteil des Abstands zwischen Tagesminimum (bzw. Tageshöchstpreis) und Tagesdurchschnitt, nicht mehr des Preises selbst. Zeiträume bleiben damit immer unter (Bestpreis) bzw. über (Spitzenpreis) dem Durchschnitt. Mit denselben Einstellungen sind Spitzenpreis-Zeiträume meist kürzer, Bestpreis-Zeiträume an Tagen mit wenig Preisschwankung ebenfalls; die Lockerung greift öfter.\n\nPrüfe deine Flexibilitäts-Einstellungen und Automationen, die von der Länge dieser Zeiträume abhängen, und bestätige danach diesen Hinweis: Er wird dann endgültig entfernt."
           }
         }
       }

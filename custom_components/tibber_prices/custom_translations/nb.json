@@ -700,7 +700,7 @@
   },
   "number": {
     "best_price_flex_override": {
-      "description": "Maksimal prosent over daglig minimumspris som intervaller kan ha og fortsatt kvalifisere som 'beste pris'. Anbefalt: 15-20 med lemping aktivert (standard), eller 25-35 uten lemping. Maksimum: 50 (tak for pålitelig periodedeteksjon).",
+      "description": "Hvor langt over dagens minimumspris en pris kan ligge og fortsatt regnes som 'beste pris', i prosent av avstanden mellom dagens minimumspris og dagens gjennomsnitt. Anbefalt: 15-20 med lemping aktivert (standard), eller 25-35 uten lemping. Maksimum: 50 (tak for pålitelig periodedeteksjon).",
       "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Fleksibilitet'-innstillingen fra alternativer-dialogen for beste pris-periodeberegninger.",
       "usage_tips": "Aktiver denne entiteten for å dynamisk justere beste pris-deteksjon via automatiseringer, f.eks. høyere fleksibilitet for kritiske laster eller strengere krav for fleksible apparater."
     },
@@ -730,7 +730,7 @@
       "usage_tips": "Øk dette for apparater med variabel last (f.eks. varmepumper) som kan tåle korte dyrere intervaller. Sett til 0 for kontinuerlige billige perioder."
     },
     "peak_price_flex_override": {
-      "description": "Maksimal prosent under daglig maksimumspris som intervaller kan ha og fortsatt kvalifisere som 'topppris'. Samme anbefalinger som for beste pris-fleksibilitet.",
+      "description": "Hvor langt under dagens maksimumspris en pris kan ligge og fortsatt regnes som 'topppris', i prosent av avstanden mellom dagens maksimumspris og dagens gjennomsnitt. Samme anbefalinger som for beste pris-fleksibilitet.",
       "long_description": "Når denne entiteten er aktivert, overstyrer verdien 'Fleksibilitet'-innstillingen fra alternativer-dialogen for topppris-periodeberegninger.",
       "usage_tips": "Bruk dette for å justere topppris-terskelen ved kjøretid for automatiseringer som unngår forbruk under dyre timer."
     },

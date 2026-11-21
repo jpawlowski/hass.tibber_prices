@@ -28,7 +28,7 @@ See **[Period Calculation](period-calculation.md)** for an in-depth explanation 
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| **Flex percentage** | -20% | How far below the daily maximum a price can be and still qualify (negative value = below maximum) |
+| **Flex percentage** | -20% | How far below the daily maximum a price can be and still qualify, as a share of the gap between the daily maximum and the daily average (negative value = below maximum) |
 | **Minimum distance from average** | 5% | Qualifying intervals must be at least this far above the daily average |
 
 ### Relaxation & Target

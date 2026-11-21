@@ -64,84 +64,50 @@ class TestFlexFilterBestPrice:
 class TestFlexFilterPeakPrice:
     """Test flex filter logic for Peak Price (reverse_sort=True)."""
 
-    def test_interval_within_flex_threshold(self) -> None:
-        """Test interval that qualifies (price within flex threshold from maximum)."""
-        # Daily max = 50 ct, flex = 20% → accepts down to 40 ct
-        # NOTE: flex is passed as POSITIVE 0.20, not negative!
+    @pytest.mark.parametrize(
+        ("price", "expected"),
+        [
+            (50.0, True),  # At the daily maximum
+            (47.0, True),  # Within the band
+            (46.0, True),  # Exactly at the threshold
+            (45.99, False),  # One cent below the threshold
+            (38.0, False),  # Far below, still above the mean
+        ],
+    )
+    def test_flex_threshold(self, price: float, *, expected: bool) -> None:
+        """Max 50, avg 30, flex 20% of the 20 ct span → accepts down to 46 ct."""
+        # Regression (Nov 2025): flex arrives POSITIVE (user-facing -20% → 0.20, direction
+        # from reverse_sort). Negative flex or an extra "price <= ref_price" condition once
+        # blocked every peak interval.
         criteria = TibberPricesIntervalCriteria(
-            ref_price=50.0,  # Daily maximum
+            ref_price=50.0,
             avg_price=30.0,
-            flex=0.20,  # 20% flexibility (positive internally!)
-            min_distance_from_avg=0.0,
-            reverse_sort=True,  # Peak Price mode
-        )
-
-        # Price 45 ct is within 50 - (50 * 0.20) = 40 ct threshold
-        price = 45.0
-
-        in_flex, _meets_distance = check_interval_criteria(price, criteria)
-
-        assert in_flex is True, "Interval within flex threshold should pass flex check"
-
-    def test_interval_outside_flex_threshold(self) -> None:
-        """Test interval that fails (price outside flex threshold from maximum)."""
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=50.0,  # Daily maximum
-            avg_price=30.0,
-            flex=0.20,  # 20% flexibility (positive internally!)
-            min_distance_from_avg=0.0,
-            reverse_sort=True,  # Peak Price mode
-        )
-
-        # Price 38 ct is outside 50 - (50 * 0.20) = 40 ct threshold (too cheap!)
-        price = 38.0
-
-        in_flex, _meets_distance = check_interval_criteria(price, criteria)
-
-        assert in_flex is False, "Interval outside flex threshold should fail flex check"
-
-    def test_regression_bug_peak_price_sign_convention(self) -> None:
-        """
-        Regression test for Peak Price Sign Convention Bug (Nov 2025).
-
-        Bug: When flex was passed as negative value (e.g., -0.20 for peak price),
-        the flex filter would reject ALL intervals because:
-        - User-facing config: peak_price_flex = -20% (negative sign convention)
-        - Expected internal: 0.20 (positive, with reverse_sort=True for direction)
-        - Broken behavior: Used -0.20 directly → math was wrong
-
-        Additionally, there was a redundant condition that blocked peak prices:
-            if reverse_sort:
-                in_flex = price >= ref_price + (ref_price * flex)
-                and price <= ref_price  # ← This was the bug!
-
-        This test ensures:
-        1. Negative flex values are normalized to positive (abs())
-        2. No redundant conditions block valid peak price intervals
-        """
-        # User-facing: -20%, internally normalized to +0.20
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=50.0,  # Daily maximum
-            avg_price=30.0,
-            flex=0.20,  # After normalization: abs(-0.20) = 0.20
+            flex=0.20,
             min_distance_from_avg=0.0,
             reverse_sort=True,
         )
+        in_flex, _ = check_interval_criteria(price, criteria)
+        assert in_flex is expected
 
-        # Price exactly at threshold: 50 - (50 * 0.20) = 40 ct
-        price_at_threshold = 40.0
-        in_flex, _ = check_interval_criteria(price_at_threshold, criteria)
-        assert in_flex is True, "Boundary case should pass after normalization fix"
+    def test_regression_issue_259_threshold_stays_above_mean(self) -> None:
+        """
+        Regression (#259): peak flex is a share of max - avg, not of max.
 
-        # Price within threshold: 45 ct
-        price_within = 45.0
-        in_flex, _ = check_interval_criteria(price_within, criteria)
-        assert in_flex is True, "Price within threshold should pass"
-
-        # Price outside threshold (too cheap): 38 ct
-        price_outside = 38.0
-        in_flex, _ = check_interval_criteria(price_outside, criteria)
-        assert in_flex is False, "Price outside threshold should fail"
+        2026-11-13: max 46.19, mean 37.89, flex 20% → threshold 44.53 ct. The old
+        base (max) gave 36.95 ct, below the mean, so min distance alone cut the period.
+        """
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=46.19,
+            avg_price=37.89,
+            flex=0.20,
+            min_distance_from_avg=5.0,
+            reverse_sort=True,
+        )
+        assert check_interval_criteria(44.6, criteria)[0] is True
+        assert check_interval_criteria(44.4, criteria)[0] is False
+        in_flex, meets_distance = check_interval_criteria(39.97, criteria)
+        assert in_flex is False, "Flex must cut the period before min distance does"
+        assert meets_distance is True
 
 
 @pytest.mark.unit
@@ -240,101 +206,83 @@ class TestMinDistanceFilter:
 
 
 @pytest.mark.unit
-class TestDynamicScaling:
-    """Test dynamic scaling of min_distance when flex is high."""
+class TestConflictScaling:
+    """min_distance is cut only where high flex passes it, just far enough for both to meet."""
 
-    def test_no_scaling_below_threshold(self) -> None:
-        """Test no scaling when flex <= 20% (threshold)."""
+    def test_no_scaling_on_normal_day(self) -> None:
+        """Min 10, avg 20, flex 50%: flex ≤ 15 ct stays inside distance ≤ 19 ct → full 5%."""
         criteria = TibberPricesIntervalCriteria(
             ref_price=10.0,
             avg_price=20.0,
-            flex=0.20,  # Exactly at threshold
+            flex=0.50,
             min_distance_from_avg=5.0,
             reverse_sort=False,
         )
+        assert check_interval_criteria(19.0, criteria)[1] is True
+        assert check_interval_criteria(19.1, criteria)[1] is False
 
-        # Price at exactly 5% below average
-        # Threshold = 20 * (1 - 5/100) = 19.0 ct
-        price = 19.0
-
-        _, meets_distance = check_interval_criteria(price, criteria)
-
-        # At flex=20%, no scaling → full 5% requirement applies
-        assert meets_distance is True, "Boundary case should pass with no scaling"
-
-    def test_scaling_at_30_percent_flex(self) -> None:
-        """Test dynamic scaling at flex=30% (scale factor ~0.75)."""
-        # flex=30% → excess=10% → scale_factor = 1.0 - (0.10 x 2.5) = 0.75
-        # adjusted_min_distance = 5.0 x 0.75 = 3.75%
+    def test_flat_day_cut_to_meet_flex(self) -> None:
+        """Min 30, avg 33, flex 50%: flex ≤ 31.5 ct passes distance ≤ 31.35 ct → both meet at 31.5 ct."""
         criteria = TibberPricesIntervalCriteria(
-            ref_price=10.0,
-            avg_price=20.0,
-            flex=0.30,  # 30% flex
+            ref_price=30.0,
+            avg_price=33.0,
+            flex=0.50,
             min_distance_from_avg=5.0,
             reverse_sort=False,
         )
+        assert check_interval_criteria(31.5, criteria) == (True, True)
+        assert check_interval_criteria(31.6, criteria) == (False, False)
 
-        # Price at 4% below average
-        # Original threshold: 20 * (1 - 5/100) = 19.0 ct
-        # Scaled threshold: 20 * (1 - 3.75/100) = 19.25 ct
-        price = 19.2  # 4% below average
-
-        _, meets_distance = check_interval_criteria(price, criteria)
-
-        # With scaling, 4% below average passes (scaled requirement: 3.75%)
-        assert meets_distance is True, "Dynamic scaling should relax requirement"
-
-    def test_scaling_at_50_percent_flex(self) -> None:
-        """Test maximum scaling at flex=50% (scale factor 0.25)."""
-        # flex=50% → excess=30% → scale_factor = max(0.25, 1.0 - 0.75) = 0.25
-        # adjusted_min_distance = 5.0 x 0.25 = 1.25%
+    def test_flat_day_peak_cut_to_meet_flex(self) -> None:
+        """Max 36, avg 33, flex 50%: flex ≥ 34.5 ct passes distance ≥ 34.65 ct → both meet at 34.5 ct."""
         criteria = TibberPricesIntervalCriteria(
-            ref_price=10.0,
-            avg_price=20.0,
-            flex=0.50,  # Maximum safe flex
+            ref_price=36.0,
+            avg_price=33.0,
+            flex=0.50,
             min_distance_from_avg=5.0,
-            reverse_sort=False,
+            reverse_sort=True,
         )
+        assert check_interval_criteria(34.5, criteria) == (True, True)
+        assert check_interval_criteria(34.4, criteria) == (False, False)
 
-        # Price at 2% below average (would fail without scaling)
-        # Original threshold: 20 * (1 - 5/100) = 19.0 ct
-        # Scaled threshold: 20 * (1 - 1.25/100) = 19.75 ct
-        price = 19.6  # 2% below average
-
-        _, meets_distance = check_interval_criteria(price, criteria)
-
-        # With maximum scaling, 2% below average passes (scaled requirement: 1.25%)
-        assert meets_distance is True, "Maximum scaling should heavily relax requirement"
-
-    def test_scaling_never_below_25_percent(self) -> None:
-        """Test that scale factor never goes below 0.25 (25%)."""
-        # Even with unrealistically high flex, min 25% of min_distance is enforced
+    def test_no_scaling_at_or_below_threshold_flex(self) -> None:
+        """Very flat day at flex 20%: the conflict exists, but min_distance stays whole."""
         criteria = TibberPricesIntervalCriteria(
-            ref_price=10.0,
-            avg_price=20.0,
-            flex=0.80,  # Unrealistically high flex (would be capped elsewhere)
+            ref_price=30.0,
+            avg_price=31.0,
+            flex=0.20,  # flex ≤ 30.2 ct, distance ≤ 29.45 ct
             min_distance_from_avg=5.0,
             reverse_sort=False,
         )
+        assert check_interval_criteria(30.1, criteria) == (True, False)
 
-        # Minimum scaled distance: 5.0 x 0.25 = 1.25%
-        # Threshold: 20 * (1 - 1.25/100) = 19.75 ct
-        price_fail = 19.8  # 1% below average (fails even with max scaling)
-        price_pass = 19.7  # 1.5% below average (passes)
-
-        _, meets_distance_fail = check_interval_criteria(price_fail, criteria)
-        _, meets_distance_pass = check_interval_criteria(price_pass, criteria)
-
-        assert meets_distance_fail is False, "Below minimum scaled threshold should fail"
-        assert meets_distance_pass is True, "Above minimum scaled threshold should pass"
+    def test_never_below_25_percent(self) -> None:
+        """Min 30, avg 30.2, flex 50%: meeting would need 0.33%, floor keeps 1.25% (≤ 29.82 ct)."""
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=30.0,
+            avg_price=30.2,
+            flex=0.50,
+            min_distance_from_avg=5.0,
+            reverse_sort=False,
+        )
+        assert check_interval_criteria(30.0, criteria) == (True, False)
+        assert check_interval_criteria(29.8, criteria)[1] is True
 
 
 @pytest.mark.unit
 class TestBoundaryConditions:
     """Test boundary and edge cases."""
 
-    def test_price_exactly_at_ref_price_best(self) -> None:
-        """Test Best Price: interval exactly at reference price (daily minimum)."""
+    @pytest.mark.parametrize(
+        ("price", "expected"),
+        [
+            (10.0, True),  # At the daily minimum
+            (11.5, True),  # Exactly at the threshold: 10 + (10 * 0.15)
+            (11.51, False),  # One cent over the threshold
+        ],
+    )
+    def test_best_price_flex_boundaries(self, price: float, *, expected: bool) -> None:
+        """Min 10, avg 20, flex 15% of the 10 ct span → accepts up to 11.5 ct."""
         criteria = TibberPricesIntervalCriteria(
             ref_price=10.0,
             avg_price=20.0,
@@ -342,98 +290,8 @@ class TestBoundaryConditions:
             min_distance_from_avg=0.0,
             reverse_sort=False,
         )
-
-        # Price exactly at daily minimum
-        price = 10.0
-
         in_flex, _ = check_interval_criteria(price, criteria)
-
-        assert in_flex is True, "Price at reference should pass"
-
-    def test_price_exactly_at_ref_price_peak(self) -> None:
-        """Test Peak Price: interval exactly at reference price (daily maximum)."""
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=50.0,
-            avg_price=30.0,
-            flex=0.20,
-            min_distance_from_avg=0.0,
-            reverse_sort=True,
-        )
-
-        # Price exactly at daily maximum
-        price = 50.0
-
-        in_flex, _ = check_interval_criteria(price, criteria)
-
-        assert in_flex is True, "Price at reference should pass"
-
-    def test_price_exactly_at_flex_threshold_best(self) -> None:
-        """Test Best Price: interval exactly at flex threshold."""
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=10.0,
-            avg_price=20.0,
-            flex=0.15,  # 15% → accepts up to 11.5 ct
-            min_distance_from_avg=0.0,
-            reverse_sort=False,
-        )
-
-        # Price exactly at threshold: 10 + (10 * 0.15) = 11.5 ct
-        price = 11.5
-
-        in_flex, _ = check_interval_criteria(price, criteria)
-
-        assert in_flex is True, "Price at flex threshold should pass"
-
-    def test_price_exactly_at_flex_threshold_peak(self) -> None:
-        """Test Peak Price: interval exactly at flex threshold."""
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=50.0,
-            avg_price=30.0,
-            flex=0.20,  # 20% → accepts down to 40 ct
-            min_distance_from_avg=0.0,
-            reverse_sort=True,
-        )
-
-        # Price exactly at threshold: 50 - (50 * 0.20) = 40 ct
-        price = 40.0
-
-        in_flex, _ = check_interval_criteria(price, criteria)
-
-        assert in_flex is True, "Price at flex threshold should pass"
-
-    def test_price_one_cent_outside_flex_threshold_best(self) -> None:
-        """Test Best Price: interval one cent outside flex threshold."""
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=10.0,
-            avg_price=20.0,
-            flex=0.15,  # Accepts up to 11.5 ct
-            min_distance_from_avg=0.0,
-            reverse_sort=False,
-        )
-
-        # Price one cent over threshold
-        price = 11.51
-
-        in_flex, _ = check_interval_criteria(price, criteria)
-
-        assert in_flex is False, "Price over threshold should fail"
-
-    def test_price_one_cent_outside_flex_threshold_peak(self) -> None:
-        """Test Peak Price: interval one cent outside flex threshold."""
-        criteria = TibberPricesIntervalCriteria(
-            ref_price=50.0,
-            avg_price=30.0,
-            flex=0.20,  # Accepts down to 40 ct
-            min_distance_from_avg=0.0,
-            reverse_sort=True,
-        )
-
-        # Price one cent below threshold (too cheap)
-        price = 39.99
-
-        in_flex, _ = check_interval_criteria(price, criteria)
-
-        assert in_flex is False, "Price below threshold should fail"
+        assert in_flex is expected
 
     def test_zero_flex(self) -> None:
         """Test with zero flexibility (only exact reference price passes)."""
@@ -518,19 +376,19 @@ class TestCombinedFilters:
         # Use flex <= 20% to avoid dynamic scaling interference
         criteria = TibberPricesIntervalCriteria(
             ref_price=10.0,
-            avg_price=13.0,  # Closer average makes distance threshold tighter
-            flex=0.20,  # Flex threshold: 10 + (10 * 0.20) = 12 ct
-            min_distance_from_avg=10.0,  # Distance threshold: 13 * (1 - 10/100) = 11.7 ct
+            avg_price=11.0,  # Close average: distance threshold lands below the flex threshold
+            flex=0.20,  # Flex threshold: 10 + (1 * 0.20) = 10.2 ct
+            min_distance_from_avg=10.0,  # Distance threshold: 11 * (1 - 10/100) = 9.9 ct
             reverse_sort=False,
         )
 
-        # Price 11.8 ct: passes flex (11.8 <= 12) but fails distance (11.8 > 11.7)
-        price = 11.8
+        # Price 10.1 ct: passes flex (10.1 <= 10.2) but fails distance (10.1 > 9.9)
+        price = 10.1
 
         in_flex, meets_distance = check_interval_criteria(price, criteria)
 
-        assert in_flex is True, "Should pass flex (within 12 ct threshold)"
-        assert meets_distance is False, "Should fail distance (above 11.7 ct threshold)"
+        assert in_flex is True, "Should pass flex (within 10.2 ct threshold)"
+        assert meets_distance is False, "Should fail distance (above 9.9 ct threshold)"
 
     def test_fails_flex_passes_distance(self) -> None:
         """Test interval that fails flex but passes min_distance."""
@@ -603,13 +461,13 @@ class TestRealWorldScenarios:
         )
 
         # Calculate thresholds:
-        # Flex threshold: 0.17 + (0.17 * 0.15) = 0.17 + 0.0255 = 0.1955 ct
+        # Flex threshold: 0.17 + ((8.26 - 0.17) * 0.15) = 0.17 + 1.2135 = 1.3835 ct
         # Distance threshold: 8.26 * (1 - 5/100) = 8.26 * 0.95 = 7.847 ct
 
         # Price scenarios
         price_at_min = 0.17  # Should pass both (at minimum)
-        price_within_flex = 0.19  # Should pass flex (< 0.1955)
-        price_too_high = 5.0  # Should fail flex (> 0.1955), but pass distance (< 7.847)
+        price_within_flex = 1.3  # Should pass flex (< 1.3835)
+        price_too_high = 5.0  # Should fail flex (> 1.3835), but pass distance (< 7.847)
 
         in_flex_min, meets_dist_min = check_interval_criteria(price_at_min, criteria)
         in_flex_within, meets_dist_within = check_interval_criteria(price_within_flex, criteria)
@@ -618,10 +476,10 @@ class TestRealWorldScenarios:
         assert in_flex_min is True, "Minimum price should pass flex"
         assert meets_dist_min is True, "Minimum price should pass distance"
 
-        assert in_flex_within is True, "0.19 ct should pass flex (< 0.1955)"
-        assert meets_dist_within is True, "0.19 ct should pass distance (< 7.847)"
+        assert in_flex_within is True, "1.3 ct should pass flex (< 1.3835)"
+        assert meets_dist_within is True, "1.3 ct should pass distance (< 7.847)"
 
-        assert in_flex_high is False, "5 ct should fail flex (way above 0.1955 threshold)"
+        assert in_flex_high is False, "5 ct should fail flex (way above 1.3835 threshold)"
         assert meets_dist_high is True, "5 ct should pass distance (< 7.847)"
 
     def test_german_market_peak_price(self) -> None:
@@ -636,13 +494,13 @@ class TestRealWorldScenarios:
         )
 
         # Calculate thresholds:
-        # Flex threshold: 17.24 - (17.24 * 0.20) = 17.24 - 3.448 = 13.792 ct
+        # Flex threshold: 17.24 - ((17.24 - 8.26) * 0.20) = 17.24 - 1.796 = 15.444 ct
         # Distance threshold: 8.26 * (1 + 5/100) = 8.26 * 1.05 = 8.673 ct
 
         # Price scenarios
         price_at_max = 17.24  # Should pass both (at maximum)
-        price_within_flex = 14.0  # Should pass flex (> 13.792)
-        price_too_low = 10.0  # Should fail flex (< 13.792)
+        price_within_flex = 16.0  # Should pass flex (> 15.444)
+        price_too_low = 14.0  # Should fail flex (< 15.444)
 
         in_flex_max, meets_dist_max = check_interval_criteria(price_at_max, criteria)
         in_flex_within, meets_dist_within = check_interval_criteria(price_within_flex, criteria)
@@ -651,12 +509,12 @@ class TestRealWorldScenarios:
         assert in_flex_max is True, "Maximum price should pass flex"
         assert meets_dist_max is True, "Maximum price should pass distance"
 
-        assert in_flex_within is True, "14 ct should pass flex (> 13.792)"
-        assert meets_dist_within is True, "14 ct should pass distance (> 8.673)"
+        assert in_flex_within is True, "16 ct should pass flex (> 15.444)"
+        assert meets_dist_within is True, "16 ct should pass distance (> 8.673)"
 
-        assert in_flex_low is False, "10 ct should fail flex (< 13.792 threshold)"
-        # 10 ct is still above average (8.26), so should pass distance
-        assert meets_dist_low is True, "10 ct should pass distance (> 8.673)"
+        assert in_flex_low is False, "14 ct should fail flex (< 15.444 threshold)"
+        # 14 ct is still above average (8.26), so should pass distance
+        assert meets_dist_low is True, "14 ct should pass distance (> 8.673)"
 
     def test_negative_prices(self) -> None:
         """Test with negative prices (wind/solar surplus scenarios)."""
@@ -776,3 +634,60 @@ class TestNegativePriceFastPath:
             in_flex, meets_distance = check_interval_criteria(price, criteria)
             assert in_flex is True, f"Price {price} ct should pass with new logic (regression)"
             assert meets_distance is True, f"Price {price} ct should pass distance (regression)"
+
+
+@pytest.mark.unit
+class TestFlexBaseIsSpanToMean:
+    """Flex is a share of |avg - ref| in both directions; the geometric bonus keeps max(span, |ref|)."""
+
+    def test_best_price_flat_day_stays_below_mean(self) -> None:
+        """Flat day: min 30, avg 33, flex 15% → threshold 30.45 ct (was 34.5, above the mean)."""
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=30.0,
+            avg_price=33.0,
+            flex=0.15,
+            min_distance_from_avg=0.0,
+            reverse_sort=False,
+        )
+        assert check_interval_criteria(30.45, criteria)[0] is True
+        assert check_interval_criteria(30.5, criteria)[0] is False
+
+    @pytest.mark.parametrize(("reverse_sort", "ref"), [(False, 30.0), (True, 46.0)])
+    def test_threshold_never_crosses_mean(self, *, reverse_sort: bool, ref: float) -> None:
+        """At the 50% hard limit, a price at the mean fails flex in both directions."""
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=ref,
+            avg_price=38.0,
+            flex=0.50,
+            min_distance_from_avg=0.0,
+            reverse_sort=reverse_sort,
+        )
+        assert check_interval_criteria(38.0, criteria)[0] is False
+
+    def test_geometric_bonus_keeps_former_base_peak(self) -> None:
+        """Peak bonus 10% widens by 10% of max (46 ct → 4.6 ct), not of the 8 ct span."""
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=46.0,
+            avg_price=38.0,
+            flex=0.20,
+            min_distance_from_avg=0.0,
+            reverse_sort=True,
+            geometric_flex=0.10,
+        )
+        # Threshold: 46 - (8 * 0.20) - (46 * 0.10) = 46 - 1.6 - 4.6 = 39.8 ct
+        assert check_interval_criteria(39.8, criteria)[0] is True
+        assert check_interval_criteria(39.7, criteria)[0] is False
+
+    def test_geometric_bonus_keeps_former_base_best_v_shape(self) -> None:
+        """Best on a V-shape day: the former base was the span, so the bonus uses it too."""
+        criteria = TibberPricesIntervalCriteria(
+            ref_price=1.0,
+            avg_price=19.0,
+            flex=0.15,
+            min_distance_from_avg=0.0,
+            reverse_sort=False,
+            geometric_flex=0.10,
+        )
+        # Threshold: 1 + (18 * 0.15) + (18 * 0.10) = 1 + 2.7 + 1.8 = 5.5 ct
+        assert check_interval_criteria(5.5, criteria)[0] is True
+        assert check_interval_criteria(5.6, criteria)[0] is False

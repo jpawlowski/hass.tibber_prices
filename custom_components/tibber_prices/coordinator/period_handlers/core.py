@@ -30,7 +30,6 @@ from .types import TibberPricesThresholdConfig
 
 # Flex limits to prevent degenerate behavior (see docs/development/period-calculation-theory.md)
 MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
-MAX_OUTLIER_FLEX = 0.25  # 25% - cap for outlier filtering: above this, spike detection too permissive
 MIN_SEGMENT_FORCING_INTERVALS = 8  # Minimum intervals per day half to attempt segment forcing (< 2 hours is too few)
 
 
@@ -132,29 +131,7 @@ def calculate_periods(
     # Step 2.5: Filter price outliers (smoothing for period formation only)
     # This runs BEFORE period formation to prevent isolated price spikes
     # from breaking up otherwise continuous periods
-
-    # CRITICAL: Cap flexibility for outlier filtering at 25%
-    # High flex (>25%) makes outlier detection too permissive, accepting
-    # unstable price contexts as "normal". This breaks period formation.
-    # User's flex setting still applies to period criteria (in_flex check).
-
-    # Import details logger locally (core.py imports logger locally in function)
-    _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
-
-    outlier_flex = min(abs(flex) * 100, MAX_OUTLIER_FLEX * 100)
-    if abs(flex) * 100 > MAX_OUTLIER_FLEX * 100:
-        _LOGGER_DETAILS.debug(
-            "%sOutlier filtering: Using capped flex %.1f%% (user setting: %.1f%%)",
-            INDENT_L0,
-            outlier_flex,
-            abs(flex) * 100,
-        )
-
-    all_prices_smoothed = filter_price_outliers(
-        all_prices_sorted,
-        outlier_flex,  # Use capped flex for outlier detection
-        min_period_length,
-    )
+    all_prices_smoothed = filter_price_outliers(all_prices_sorted)
 
     # Step 3: Build periods
     price_context = {
