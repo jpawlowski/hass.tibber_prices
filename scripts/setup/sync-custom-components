@@ -15,6 +15,8 @@
 #   ./scripts/setup/sync-custom-components
 
 set -euo pipefail
+# An empty folder must give an empty loop, not the literal pattern (it once linked a file named "*")
+shopt -s nullglob
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 cd "$SCRIPT_DIR/../.."
