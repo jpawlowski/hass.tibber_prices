@@ -20,17 +20,17 @@
       "enabled": false
     },
     {
-      "description": "A new Home Assistant version is only listed on the Dependency Dashboard: it takes scripts/setup/update-ha-version (HA_VERSION, the matching pytest-homeassistant-custom-component and .python-version together), a PR changing HA_VERSION alone would be incomplete",
+      "description": "A new Home Assistant version is only listed on the Dependency Dashboard: it takes scripts/setup/update-ha-version (HA_VERSION, the matching pytest-homeassistant and .python-version together), a PR changing HA_VERSION alone would be incomplete",
       "matchManagers": ["custom.regex"],
       "matchDepNames": ["homeassistant"],
       "dependencyDashboardApproval": true,
       "prBodyNotes": [
-        "Don't merge this as is: run `./scripts/setup/update-ha-version {{{newVersion}}}` on this branch, it also updates pytest-homeassistant-custom-component and .python-version."
+        "Don't merge this as is: run `./scripts/setup/update-ha-version {{{newVersion}}}` on this branch, it also updates pytest-homeassistant and .python-version."
       ]
     },
     {
-      "description": "Each pytest-homeassistant-custom-component version pins exactly one HA version: scripts/setup/update-ha-version updates it together with HA_VERSION",
-      "matchPackageNames": ["pytest-homeassistant-custom-component"],
+      "description": "Each pytest-homeassistant version (Home Assistant's own test package) pins exactly one HA version, its own: scripts/setup/update-ha-version updates it together with HA_VERSION",
+      "matchPackageNames": ["pytest-homeassistant"],
       "enabled": false
     },
     {

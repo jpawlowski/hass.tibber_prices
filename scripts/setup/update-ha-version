@@ -2,8 +2,8 @@
 
 # scripts/setup/update-ha-version: Update Home Assistant version across dev environment
 #
-# Finds the pytest-homeassistant-custom-component version that matches the given
-# HA version (1:1 mapping on PyPI) and updates scripts/setup/bootstrap and
+# Checks that the pytest-homeassistant release for the given HA version exists
+# (same version number, Home Assistant's own test package) and updates scripts/setup/bootstrap and
 # requirements.txt atomically, plus .python-version to the Python that HA version
 # is built on. This is the single command to run when upgrading
 # the development environment to a new Home Assistant version.
@@ -36,10 +36,10 @@ NEW_HA_VERSION="$1"
 
 # --- Read current versions from files ---
 CURRENT_HA_VERSION=$(grep -oP 'HA_VERSION:-"\K[^"]+' "$BOOTSTRAP_FILE")
-CURRENT_PHAC_VERSION=$(grep -oP 'pytest-homeassistant-custom-component==\K\S+' "$REQUIREMENTS_FILE")
+CURRENT_TEST_VERSION=$(grep -oP 'pytest-homeassistant==\K\S+' "$REQUIREMENTS_FILE")
 
 log_header "Updating Home Assistant version"
-log_info "Current: homeassistant==${CURRENT_HA_VERSION} / phac==${CURRENT_PHAC_VERSION}"
+log_info "Current: homeassistant==${CURRENT_HA_VERSION} / pytest-homeassistant==${CURRENT_TEST_VERSION}"
 log_info "Target:  homeassistant==${NEW_HA_VERSION}"
 echo
 
@@ -48,47 +48,18 @@ if [[ "$NEW_HA_VERSION" == "$CURRENT_HA_VERSION" ]]; then
     exit 0
 fi
 
-# --- Find matching phac version via PyPI ---
-log_step "Querying PyPI for matching pytest-homeassistant-custom-component version..."
-
-NEW_PHAC_VERSION=$(
-    python3 - "$NEW_HA_VERSION" <<'PYEOF'
-import json, sys, urllib.request
-
-target_ha = sys.argv[1]
-
-# Fetch full list of all releases
-url = "https://pypi.org/pypi/pytest-homeassistant-custom-component/json"
-try:
-    data = json.loads(urllib.request.urlopen(url, timeout=15).read())
-except Exception as e:
-    print(f"ERROR: Could not reach PyPI: {e}", file=sys.stderr)
-    sys.exit(1)
-
-releases = sorted(data["releases"].keys(), reverse=True)
-
-for version in releases:
-    try:
-        pkg_url = f"https://pypi.org/pypi/pytest-homeassistant-custom-component/{version}/json"
-        pkg_data = json.loads(urllib.request.urlopen(pkg_url, timeout=10).read())
-        requires = pkg_data["info"]["requires_dist"] or []
-        ha_req = next((r for r in requires if r.startswith("homeassistant==")), None)
-        if ha_req and target_ha in ha_req:
-            print(version)
-            sys.exit(0)
-    except Exception:
-        pass
-
-print(f"ERROR: No phac version found for homeassistant=={target_ha}", file=sys.stderr)
-sys.exit(1)
-PYEOF
-) || {
-    log_error "Could not find a pytest-homeassistant-custom-component version for homeassistant==${NEW_HA_VERSION}"
-    log_info "Check https://pypi.org/pypi/pytest-homeassistant-custom-component/json for available versions"
+# --- Check that the matching pytest-homeassistant release exists ---
+# pytest-homeassistant is Home Assistant's own test package (it replaced
+# pytest-homeassistant-custom-component): its version IS the HA version, so there
+# is nothing to look up, only to check that it was published already.
+log_step "Checking PyPI for pytest-homeassistant==${NEW_HA_VERSION}..."
+if ! curl -fsS -o /dev/null "https://pypi.org/pypi/pytest-homeassistant/${NEW_HA_VERSION}/json"; then
+    log_error "No pytest-homeassistant release for homeassistant==${NEW_HA_VERSION}"
+    log_info "Check https://pypi.org/pypi/pytest-homeassistant/json for available versions"
     exit 1
-}
+fi
 
-log_result 0 "pytest-homeassistant-custom-component==${NEW_PHAC_VERSION}"
+log_result 0 "pytest-homeassistant==${NEW_HA_VERSION}"
 echo
 
 # --- Find the Python version of that HA version ---
@@ -121,7 +92,7 @@ log_step "Updating ${BOOTSTRAP_FILE}..."
 sed -i "s/HA_VERSION:-\"${CURRENT_HA_VERSION}\"/HA_VERSION:-\"${NEW_HA_VERSION}\"/" "$BOOTSTRAP_FILE"
 
 log_step "Updating ${REQUIREMENTS_FILE}..."
-sed -i "s/pytest-homeassistant-custom-component==${CURRENT_PHAC_VERSION}/pytest-homeassistant-custom-component==${NEW_PHAC_VERSION}/" "$REQUIREMENTS_FILE"
+sed -i "s/pytest-homeassistant==${CURRENT_TEST_VERSION}/pytest-homeassistant==${NEW_HA_VERSION}/" "$REQUIREMENTS_FILE"
 
 log_step "Updating ${PYTHON_VERSION_FILE}..."
 echo "$NEW_PYTHON_VERSION" >"$PYTHON_VERSION_FILE"
@@ -130,7 +101,7 @@ echo "$NEW_PYTHON_VERSION" >"$PYTHON_VERSION_FILE"
 echo
 log_success "Done! Updated to:"
 log_info "  homeassistant==${NEW_HA_VERSION}  (in ${BOOTSTRAP_FILE})"
-log_info "  pytest-homeassistant-custom-component==${NEW_PHAC_VERSION}  (in ${REQUIREMENTS_FILE})"
+log_info "  pytest-homeassistant==${NEW_HA_VERSION}  (in ${REQUIREMENTS_FILE})"
 log_info "  Python ${NEW_PYTHON_VERSION}  (in ${PYTHON_VERSION_FILE})"
 if [[ "$NEW_PYTHON_VERSION" != "$CURRENT_PYTHON_VERSION" ]]; then
     log_warning "Python changes from ${CURRENT_PYTHON_VERSION} to ${NEW_PYTHON_VERSION}: check requires-python in pyproject.toml"

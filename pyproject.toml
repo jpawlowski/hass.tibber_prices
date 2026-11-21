@@ -2,7 +2,7 @@
 # https://github.com/home-assistant/core/blob/dev/pyproject.toml
 #
 # Sections not included (HA Core specific):
-# - [build-system] - Not published to PyPI (installed via HACS)
+# - [build-system] - Not published to PyPI (installed via the Marketplace or HACS)
 # - [tool.pylint.*] - Optional additional linting (Ruff is sufficient)
 
 [project]
@@ -44,7 +44,8 @@ log_date_format = "%Y-%m-%d %H:%M:%S"
 asyncio_debug = true
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
-addopts = "-ra -q --strict-markers"
+# -p no:respx: HA installs its httpx alias on import, respx would import httpx before that (pytest-homeassistant README)
+addopts = "-ra -q --strict-markers -p no:respx"
 markers = [
     "unit: Unit tests (fast, no external dependencies)",
     "integration: Integration tests (may use coordinator/time service)",
@@ -53,6 +54,8 @@ filterwarnings = [
     # Treat warnings as errors to catch issues early
     "error",
     # Ignore specific warnings from third-party libraries as needed
+    # Home Assistant itself subclasses aiohttp.web.Application; raised while the pytest-homeassistant plugin loads
+    "ignore:Inheritance class HomeAssistantApplication from web.Application is discouraged:DeprecationWarning",
     # "ignore:.*custom_components.* is using deprecated.*:DeprecationWarning",
     # AsyncMock cleanup noise when mixing sync/async mocks
     "ignore::pytest.PytestUnraisableExceptionWarning",
@@ -299,4 +302,4 @@ property-decorators = ["propcache.api.cached_property"]
 keep-runtime-typing = true
 
 [project.optional-dependencies]
-test = ["pytest-homeassistant-custom-component>=0.13.354"]
+test = ["pytest-homeassistant>=2026.11.0"]

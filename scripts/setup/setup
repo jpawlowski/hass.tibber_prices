@@ -86,10 +86,13 @@ if ! grep -q '\$HOME/.local/bin' "$HOME/.zshrc" 2>/dev/null; then
     printf '\n# Added by scripts/setup/setup\nexport PATH="$HOME/.local/bin:$PATH"\n' >>"$HOME/.zshrc"
 fi
 
-# Install HACS for testing with other custom components
+# Store for testing with other custom components
+#
+# Since Home Assistant 2026.11 the Marketplace is built in and replaced HACS (whose
+# installer stops there), so only older versions still get HACS. Either way the store
+# installs into config/custom_components/, which sync-custom-components links into the
+# workspace (see there for why).
 echo ""
-log_header "Installing HACS in dev environment"
-log_info "This allows testing your integration alongside other HACS components"
 
 # Ensure config directory is initialized by Home Assistant first
 if [[ ! -f config/.HA_VERSION ]]; then
@@ -100,7 +103,8 @@ fi
 # Create custom_components directory if it doesn't exist
 mkdir -p config/custom_components
 
-# Clean up existing HACS installation if present
+# Remove a HACS from an earlier setup: reinstalled below on older versions, and on
+# newer ones it would clash with the built-in store
 if [[ -d config/custom_components/hacs ]]; then
     log_step "Removing existing HACS installation"
     rm -rf config/custom_components/hacs
@@ -110,35 +114,45 @@ if [[ -L custom_components/hacs ]]; then
     rm -f custom_components/hacs
 fi
 
-# Download and extract HACS (stable release ZIP)
-cd config/custom_components
-log_step "Downloading HACS"
-if wget -q https://github.com/hacs/integration/releases/latest/download/hacs.zip &&
-    unzip -q hacs.zip -d hacs &&
-    rm hacs.zip; then
-    cd ../..
-
-    # Install HACS Python dependencies
-    log_step "Installing HACS Python dependencies"
-    if uv pip install -q 'aiogithubapi>=22.10.1'; then
-        # Create symlink so HA finds HACS alongside tibber_prices
-        log_step "Creating symlink in custom_components/"
-        ln -sf "${PWD}/config/custom_components/hacs" custom_components/hacs
-
-        log_success "HACS installed successfully"
-        log_info "Location: ${BOLD}config/custom_components/hacs/${NC}"
-        log_info "Version: Stable release (no auto-updates)"
-    else
-        log_warning "Failed to install HACS Python dependencies"
-        log_info "You can install manually: ${BOLD}uv pip install 'aiogithubapi>=22.10.1'${NC}"
-    fi
+HA_DEV_VERSION=$(grep -oP 'HA_VERSION:-"\K[^"]+' scripts/setup/bootstrap)
+# sort -V puts the lower version first; a pre-release of 2026.11 sorts above 2026.11
+if [[ $(printf '%s\n' "2026.11" "$HA_DEV_VERSION" | sort -V | head -n 1) == "2026.11" ]]; then
+    log_header "Marketplace instead of HACS (Home Assistant ${HA_DEV_VERSION})"
+    log_info "Install other custom integrations via Settings > Marketplace in the dev instance"
 else
-    log_warning "HACS installation failed"
-    log_info "You can install manually:"
-    log_step "${BOLD}cd config/custom_components${NC}"
-    log_step "${BOLD}wget https://github.com/hacs/integration/releases/latest/download/hacs.zip${NC}"
-    log_step "${BOLD}unzip hacs.zip -d hacs && rm hacs.zip${NC}"
-    cd ../..
+    log_header "Installing HACS in dev environment"
+    log_info "This allows testing your integration alongside other HACS components"
+
+    # Download and extract HACS (stable release ZIP)
+    cd config/custom_components
+    log_step "Downloading HACS"
+    if wget -q https://github.com/hacs/integration/releases/latest/download/hacs.zip &&
+        unzip -q hacs.zip -d hacs &&
+        rm hacs.zip; then
+        cd ../..
+
+        # Install HACS Python dependencies
+        log_step "Installing HACS Python dependencies"
+        if uv pip install -q 'aiogithubapi>=22.10.1'; then
+            # Create symlink so HA finds HACS alongside tibber_prices
+            log_step "Creating symlink in custom_components/"
+            ln -sf "${PWD}/config/custom_components/hacs" custom_components/hacs
+
+            log_success "HACS installed successfully"
+            log_info "Location: ${BOLD}config/custom_components/hacs/${NC}"
+            log_info "Version: Stable release (no auto-updates)"
+        else
+            log_warning "Failed to install HACS Python dependencies"
+            log_info "You can install manually: ${BOLD}uv pip install 'aiogithubapi>=22.10.1'${NC}"
+        fi
+    else
+        log_warning "HACS installation failed"
+        log_info "You can install manually:"
+        log_step "${BOLD}cd config/custom_components${NC}"
+        log_step "${BOLD}wget https://github.com/hacs/integration/releases/latest/download/hacs.zip${NC}"
+        log_step "${BOLD}unzip hacs.zip -d hacs && rm hacs.zip${NC}"
+        cd ../..
+    fi
 fi
 
 echo ""

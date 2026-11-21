@@ -25,8 +25,6 @@ import pytest
 from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
 from homeassistant.util import dt as dt_util
 
-pytest_plugins = ("pytest_homeassistant_custom_component",)
-
 # Skip all tests in this module until they are rewritten for single-home architecture
 pytestmark = pytest.mark.skip(reason="Tests need rewrite for single-home architecture + API routing mocks")
 

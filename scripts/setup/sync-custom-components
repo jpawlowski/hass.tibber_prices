@@ -1,0 +1,69 @@
+#!/bin/bash
+
+# scripts/setup/sync-custom-components: Sync store-installed integrations to custom_components/
+#
+# Creates symlinks from workspace custom_components/ to integrations that the
+# Marketplace (Home Assistant 2026.11+) or HACS (older) installed in
+# config/custom_components/. Keeps development workspace in sync with the test
+# Home Assistant instance.
+#
+# Why symlinks: the store installs into config/custom_components/, but the workspace
+# custom_components/ is the folder on the import path (see AGENTS.md "Marketplace
+# instead of HACS"). Links appear when ./scripts/develop starts.
+#
+# Usage:
+#   ./scripts/setup/sync-custom-components
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=scripts/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+log_header "Syncing store-installed integrations"
+
+# Check if config/custom_components exists
+if [[ ! -d config/custom_components ]]; then
+    log_info "No config/custom_components directory found"
+    exit 0
+fi
+
+# Clean up broken symlinks (where target no longer exists)
+cleaned=0
+for link in custom_components/*; do
+    if [[ -L $link && ! -e $link ]]; then
+        rm "$link"
+        log_step "Removed broken link: $(basename "$link")"
+        cleaned=$((cleaned + 1))
+    fi
+done
+
+# Create symlinks for all integrations in config/custom_components/
+# except those that already exist in custom_components/.
+# The link target is absolute: a relative one would resolve against custom_components/.
+synced=0
+for dir in config/custom_components/*/; do
+    component=$(basename "$dir")
+    target="custom_components/$component"
+
+    # Skip if already exists and is not a symlink (don't touch tibber_prices)
+    if [[ -e $target && ! -L $target ]]; then
+        continue
+    fi
+
+    ln -sfn "$PWD/config/custom_components/$component" "$target"
+    log_result 0 "Linked: $component"
+    synced=$((synced + 1))
+done
+
+if [[ $synced -eq 0 && $cleaned -eq 0 ]]; then
+    log_info "No changes needed"
+elif [[ $synced -gt 0 && $cleaned -eq 0 ]]; then
+    log_success "Synced $synced integration(s)"
+elif [[ $synced -eq 0 && $cleaned -gt 0 ]]; then
+    log_success "Cleaned up $cleaned broken link(s)"
+else
+    log_success "Synced $synced integration(s), cleaned up $cleaned broken link(s)"
+fi

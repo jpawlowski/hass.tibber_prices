@@ -15,7 +15,7 @@ Add the integration in the dev instance with this token. Screenshots must only e
 
 ## Setup (once)
 
-1. Install **ApexCharts Card**, **Config Template Card** and **TabDeck Card** from HACS in the dev instance (only `tibber-demo-apex` uses them).
+1. Install **ApexCharts Card**, **Config Template Card** and **TabDeck Card** from the Marketplace (HACS before HA 2026.11) in the dev instance (only `tibber-demo-apex` uses them).
 2. Create a long-lived access token (profile → Security) and store it in `config/.ha_token` (git-ignored), or export it as `HA_TOKEN`.
 
 ## Energy data for the energy card (optional)

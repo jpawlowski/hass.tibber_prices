@@ -66,11 +66,14 @@ ln -sfn "$HOME/.venv/" .venv
 source "$HOME/.venv/bin/activate"
 
 # Allow pre-release versions of homeassistant in this dev environment.
-# phac pins an exact HA version (sometimes a beta/rc), and HA_VERSION may
+# pytest-homeassistant pins an exact HA version (sometimes a beta/rc), and HA_VERSION may
 # intentionally be set to a pre-release for testing purposes.
 export UV_PRERELEASE=allow
 
 log_header "Installing project dependencies"
+# pytest-homeassistant replaces pytest-homeassistant-custom-component and must not be
+# installed next to it (overlapping fixtures): drop it from a venv that still has it
+uv pip uninstall --quiet pytest-homeassistant-custom-component 2>/dev/null || true
 uv pip install --requirement requirements.txt
 
 ###############################################################################
@@ -78,8 +81,8 @@ uv pip install --requirement requirements.txt
 ###############################################################################
 
 # HA_VERSION can be overridden from the environment, e.g.:
-#   HA_VERSION=2026.4.1 script/bootstrap
-HA_VERSION=${HA_VERSION:-"2026.8.0"}
+#   HA_VERSION=2026.11.1 script/bootstrap
+HA_VERSION=${HA_VERSION:-"2026.11.2"}
 HA_CORE_BASE_URL="https://raw.githubusercontent.com/home-assistant/core/${HA_VERSION}"
 HA_TMP_DIR="$HOME/.ha_requirements"
 

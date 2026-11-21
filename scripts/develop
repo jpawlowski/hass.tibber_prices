@@ -38,7 +38,7 @@ fi
 # HTTP settings for a new config
 [[ -f config/.storage/http ]] || "$SCRIPT_DIR/setup/seed-http-config"
 
-"$SCRIPT_DIR/setup/sync-hacs"
+"$SCRIPT_DIR/setup/sync-custom-components"
 
 # Set the path to custom_components
 ## This let's us have the structure we want <root>/custom_components/tibber_prices
