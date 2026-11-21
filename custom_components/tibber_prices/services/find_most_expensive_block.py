@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
+import probatio as vol
 
 from .find_cheapest_block import _COMMON_BLOCK_SCHEMA, _handle_find_block
 

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import (
     BEST_PRICE_MAX_LEVEL_OPTIONS,

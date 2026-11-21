@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import (
     CONF_HEADLESS,

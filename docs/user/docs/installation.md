@@ -10,7 +10,7 @@ The Marketplace warns you that the Home Assistant project doesn't make or suppor
 
 ### Prerequisites
 
-- Home Assistant 2026.4.4 or newer
+- Home Assistant 2026.9.0 or newer
 - A [Tibber API token](https://developer.tibber.com/settings/access-token)
 
 ### Steps (Home Assistant 2026.11 or newer)

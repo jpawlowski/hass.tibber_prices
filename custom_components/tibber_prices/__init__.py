@@ -11,7 +11,7 @@ from pathlib import Path
 import shutil
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform

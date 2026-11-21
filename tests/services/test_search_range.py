@@ -15,8 +15,8 @@ from datetime import datetime, time as dt_time, timedelta
 from typing import Any, cast
 from zoneinfo import ZoneInfo
 
+import probatio as vol
 import pytest
-import voluptuous as vol
 
 from custom_components.tibber_prices.services.find_cheapest_block import _COMMON_BLOCK_SCHEMA
 from custom_components.tibber_prices.services.find_cheapest_hours import _COMMON_HOURS_SCHEMA

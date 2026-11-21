@@ -27,7 +27,7 @@ import re
 import statistics
 from typing import TYPE_CHECKING, Any, Final
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_THRESHOLD_HIGH,

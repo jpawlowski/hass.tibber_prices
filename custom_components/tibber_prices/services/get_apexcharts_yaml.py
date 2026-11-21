@@ -21,7 +21,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Final
 
 from awesomeversion import AwesomeVersion
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import (
     CONF_CURRENCY_DISPLAY_MODE,
@@ -220,7 +220,7 @@ def check_custom_cards_installed(hass: Any) -> dict[str, bool]:
     """
     installed_cards = dict.fromkeys(CUSTOM_CARDS, False)
 
-    # Access Lovelace resources via the new API (2026.2+)
+    # Access the Lovelace resources
     lovelace_data = hass.data.get("lovelace")
     if lovelace_data and hasattr(lovelace_data, "resources"):
         try:

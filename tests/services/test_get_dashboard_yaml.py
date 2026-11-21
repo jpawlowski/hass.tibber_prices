@@ -8,8 +8,8 @@ import re
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import probatio as vol
 import pytest
-import voluptuous as vol
 
 from custom_components.tibber_prices.services import get_dashboard_yaml
 from custom_components.tibber_prices.services.get_dashboard_yaml import (

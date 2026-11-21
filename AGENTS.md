@@ -308,7 +308,7 @@ After successful refactoring:
 - Platform modules: `__init__.py`, `sensor.py` (deprecated, now `sensor/`), `binary_sensor.py` (deprecated, now `binary_sensor/`), future platforms
 - Core integration files: `const.py`, `manifest.json`, `services.yaml`, `diagnostics.py`, `data.py`, `migrations.py`, `repairs.py` (HA's repairs platform: fix flows of the repair issues)
 - Translation directories: `translations/`, `custom_translations/`
-- Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA brands proxy API (HA ≥ 2026.4), silently ignored on older versions
+- Brand images: `brand/` (icon.png, dark_icon.png, logo.png, dark_logo.png + `@2x` variants) — served via HA's brands proxy API
 - Frontend: `frontend/` — the bundled dashboard cards in `frontend/cards/` (plain JavaScript web components as native ES modules, no build step; entry `tibber-prices-cards.js`), served as a static directory and loaded into every frontend via `add_extra_js_url` by its `__init__.py` (no dashboard resource for users to add). The version goes into the directory URL, never into a `?v=` query (why: the docstring of `frontend/__init__.py`)
 
 **❌ PROHIBITED in root:**
@@ -784,6 +784,10 @@ When debugging period calculation issues:
 - **uv** (`scripts/setup/bootstrap`): Python packages, i.e. Home Assistant and its dependencies with HA's constraints. `[tool.uv]` in `pyproject.toml` makes uv use only mise's Python, never a download of its own. Bootstrap recreates the venv when its Python doesn't match `.python-version`.
 - System libraries and the convenience CLI tools stay apt packages in `.devcontainer/devcontainer.json`.
 - **Updates: Renovate** (`renovate.json`, replaced Dependabot, which can't read `mise.toml`). It never bumps Python (`.python-version`, `requires-python`) or pytest-homeassistant-custom-component; a new Home Assistant version (`HA_VERSION` in bootstrap, regex manager) only appears on the Dependency Dashboard, since it takes `update-ha-version`. Its commits are `chore(dev-deps)`, which `cliff.toml` leaves out of the release notes; only the integration's own requirements (`manifest.json`) get `chore(deps)` and are listed.
+
+**Home Assistant version, test package, store (dev environment):**
+
+- **Schema library**: the minimum supported HA version is 2026.9 (`hacs.json`, `docs/user/docs/installation.md`) because HA 2026.9 replaced voluptuous with Probatio. The integration writes `import probatio as vol`, never `import voluptuous`: HA aliases the old name at runtime, but type checkers don't see the alias and HA's signatures are typed against `probatio.Schema`.
 
 **Python Virtual Environment:**
 

@@ -29,7 +29,7 @@ from datetime import datetime, time as dt_time, timedelta
 import re
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.exceptions import ServiceValidationError

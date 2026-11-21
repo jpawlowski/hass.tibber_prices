@@ -254,7 +254,7 @@ ignore = [
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
 # Commonly used Home Assistant imports
-voluptuous = "vol"
+probatio = "vol"
 "homeassistant.helpers.config_validation" = "cv"
 "homeassistant.helpers.device_registry" = "dr"
 "homeassistant.helpers.entity_registry" = "er"

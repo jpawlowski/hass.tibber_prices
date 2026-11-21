@@ -24,7 +24,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import DOMAIN
 

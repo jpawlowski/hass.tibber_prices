@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler
 from custom_components.tibber_prices.config_flow_handlers.schemas import (

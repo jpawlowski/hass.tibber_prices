@@ -13,7 +13,7 @@ import logging
 import math
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import DOMAIN, get_display_unit_factor, get_display_unit_string
 from custom_components.tibber_prices.utils.price_window import (

@@ -17,7 +17,7 @@ import logging
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
-import voluptuous as vol
+import probatio as vol
 
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.exceptions import ServiceValidationError

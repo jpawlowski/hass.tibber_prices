@@ -25,7 +25,7 @@ from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Any, Final
 
-import voluptuous as vol
+import probatio as vol
 import yaml
 
 from custom_components.tibber_prices.const import (
