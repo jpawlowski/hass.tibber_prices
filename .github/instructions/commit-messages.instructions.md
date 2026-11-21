@@ -33,6 +33,10 @@ Impact: <user-facing outcome>
 - Use perf for user-visible reliability/performance improvements.
 - Use docs, test, refactor, chore, ci, build for non-user-facing work.
 
+## Not a Breaking Change: Raising the Minimum Home Assistant Version
+
+Raising the minimum supported Home Assistant version (`hacs.json`, installation docs) is NOT a breaking change: users on an older Home Assistant are never offered the update, so nothing breaks for them. Never mark it with `!` or a `BREAKING CHANGE` trailer, and don't write "update Home Assistant first" into Impact. Use `chore(deps)` and state the new minimum in the body; the release notes still list it, which is enough.
+
 ## Critical Rule: Internal/Unreleased Fixes
 
 If a fix addresses code that was not released to users yet, DO NOT treat it as a user-facing fix.

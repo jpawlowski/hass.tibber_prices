@@ -1121,6 +1121,8 @@ If you want better release notes after the automated release:
   - New features → bump MINOR (0.x.0)
   - Bug fixes → bump PATCH (0.0.x)
 
+- **Raising the minimum Home Assistant version is not a breaking change**: the store only offers an update to instances that meet `hacs.json`, so users on older versions never see it and nothing breaks for them. No `!`, no `BREAKING CHANGE`, no MAJOR/MINOR bump for it alone (details in `.github/instructions/commit-messages.instructions.md`).
+
 **Alternative: Manual Bump (with Auto-Tag Safety Net):**
 
 ```bash
