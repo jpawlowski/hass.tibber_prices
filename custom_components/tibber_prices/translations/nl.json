@@ -2052,6 +2052,12 @@
           },
           "threshold_falling_strongly_percent": {
             "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_2h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 2-uursvenster"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
           }
         }
       },
@@ -3010,6 +3016,9 @@
           },
           "interval_count": {
             "name": "Aantal intervallen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
           }
         }
       },
@@ -3069,6 +3078,9 @@
           },
           "interval_count": {
             "name": "Aantal intervallen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
           }
         }
       },
@@ -3128,6 +3140,9 @@
           },
           "interval_count": {
             "name": "Aantal intervallen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
           }
         }
       },
@@ -3187,6 +3202,9 @@
           },
           "interval_count": {
             "name": "Aantal intervallen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
           },
           "today_volatility": {
             "name": "Volatiliteit vandaag"
@@ -4253,6 +4271,9 @@
           "usage_tips": {
             "name": "Gebruikstips"
           },
+          "data": {
+            "name": "Grafiekgegevens"
+          },
           "currency": {
             "name": "Valuta"
           },
@@ -4838,6 +4859,18 @@
           "period_price_diff_from_daily_max_percent": {
             "name": "Afwijking van het dagmaximum (%)"
           },
+          "day_price_min": {
+            "name": "Laagste prijs van de dag"
+          },
+          "day_price_max": {
+            "name": "Hoogste prijs van de dag"
+          },
+          "day_price_span": {
+            "name": "Prijsspreiding van de dag"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
           "period_interval_count": {
             "name": "Intervallen in de periode"
           },
@@ -4953,6 +4986,18 @@
           },
           "period_price_diff_from_daily_max_percent": {
             "name": "Afwijking van het dagmaximum (%)"
+          },
+          "day_price_min": {
+            "name": "Laagste prijs van de dag"
+          },
+          "day_price_max": {
+            "name": "Hoogste prijs van de dag"
+          },
+          "day_price_span": {
+            "name": "Prijsspreiding van de dag"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
           },
           "period_interval_count": {
             "name": "Intervallen in de periode"

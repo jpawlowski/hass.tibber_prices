@@ -2052,6 +2052,12 @@
           },
           "threshold_falling_strongly_percent": {
             "name": "Strongly falling threshold (%)"
+          },
+          "second_half_2h_avg": {
+            "name": "Average price, second half of the 2 h window"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Second half vs. current price (%)"
           }
         }
       },
@@ -3010,6 +3016,9 @@
           },
           "interval_count": {
             "name": "Interval count"
+          },
+          "icon_color": {
+            "name": "Icon color"
           }
         }
       },
@@ -3069,6 +3078,9 @@
           },
           "interval_count": {
             "name": "Interval count"
+          },
+          "icon_color": {
+            "name": "Icon color"
           }
         }
       },
@@ -3128,6 +3140,9 @@
           },
           "interval_count": {
             "name": "Interval count"
+          },
+          "icon_color": {
+            "name": "Icon color"
           }
         }
       },
@@ -3187,6 +3202,9 @@
           },
           "interval_count": {
             "name": "Interval count"
+          },
+          "icon_color": {
+            "name": "Icon color"
           },
           "today_volatility": {
             "name": "Volatility today"
@@ -4253,6 +4271,9 @@
           "usage_tips": {
             "name": "Usage tips"
           },
+          "data": {
+            "name": "Chart data"
+          },
           "currency": {
             "name": "Currency"
           },
@@ -4838,6 +4859,18 @@
           "period_price_diff_from_daily_max_percent": {
             "name": "Difference from daily maximum (%)"
           },
+          "day_price_min": {
+            "name": "Lowest price of the day"
+          },
+          "day_price_max": {
+            "name": "Highest price of the day"
+          },
+          "day_price_span": {
+            "name": "Price span of the day"
+          },
+          "icon_color": {
+            "name": "Icon color"
+          },
           "period_interval_count": {
             "name": "Intervals in the period"
           },
@@ -4953,6 +4986,18 @@
           },
           "period_price_diff_from_daily_max_percent": {
             "name": "Difference from daily maximum (%)"
+          },
+          "day_price_min": {
+            "name": "Lowest price of the day"
+          },
+          "day_price_max": {
+            "name": "Highest price of the day"
+          },
+          "day_price_span": {
+            "name": "Price span of the day"
+          },
+          "icon_color": {
+            "name": "Icon color"
           },
           "period_interval_count": {
             "name": "Intervals in the period"

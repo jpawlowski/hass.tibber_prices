@@ -550,8 +550,7 @@ def get_display_unit_string(config_entry: ConfigEntry, currency_code: str | None
 # Price Level, Rating, and Volatility Constants
 # ============================================================================
 # IMPORTANT: These string constants are the single source of truth for
-# valid enum values. The Literal types in sensor/types.py and binary_sensor/types.py
-# should be kept in sync with these values manually.
+# valid enum values.
 
 # Price level constants (from Tibber API)
 PRICE_LEVEL_VERY_CHEAP = "VERY_CHEAP"

@@ -18,8 +18,56 @@ Organization by calculation pattern:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
+from custom_components.tibber_prices.sensor.attribute_sets import (
+    CHART_DATA_EXPORT,
+    CHART_METADATA,
+    CURRENT_INTERVAL_PRICE,
+    CURRENT_PRICE_LEVEL,
+    CURRENT_PRICE_TREND,
+    DAILY_STATISTICS,
+    DATA_LIFECYCLE,
+    DAY_PATTERN,
+    HOUR_AVERAGE_PRICE,
+    HOUR_PRICE_LEVEL,
+    HOUR_PRICE_RATING,
+    INTERVAL_PRICE,
+    NEXT_AVERAGE,
+    PERIOD_TIMING,
+    PHASE_TIMING,
+    PRICE_LEVEL,
+    PRICE_PHASE,
+    PRICE_RATING,
+    TODAY_TOMORROW_VOLATILITY,
+    TREND_CHANGE,
+    VOLATILITY,
+    WINDOW_STATISTICS,
+    outlook_attributes,
+    rank_attributes,
+    trajectory_attributes,
+)
+from custom_components.tibber_prices.utils.attribute_specs import TibberPricesAttribute
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription, SensorStateClass
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfElectricCurrent, UnitOfEnergy, UnitOfTime
+
+
+@dataclass(frozen=True, kw_only=True)
+class TibberPricesSensorDescription(SensorEntityDescription):
+    """
+    A sensor description that also declares the attributes the sensor exposes.
+
+    `attributes` lists what the attribute builders add beyond the common ones (see
+    utils/attribute_specs.py). `open_attributes` is for the one sensor whose attributes are
+    a service's result and can't be listed (chart_data_export).
+    """
+
+    attributes: tuple[TibberPricesAttribute, ...] = ()
+    open_attributes: bool = False
+    # The state is a mean or median price: the attribute of the same average is left out of the recorder (see
+    # TibberPricesSensor._configure_average_sensor_exclusions), so the value isn't stored twice
+    state_is_average: bool = False
+
 
 # ============================================================================
 # SENSOR DEFINITIONS - Grouped by calculation method
@@ -47,33 +95,37 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfEl
 # Shared handler: _get_interval_value(interval_offset, value_type)
 
 INTERVAL_PRICE_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_interval_price",
         translation_key="current_interval_price",
+        attributes=CURRENT_INTERVAL_PRICE,
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_interval_price_base",
         translation_key="current_interval_price_base",
+        attributes=INTERVAL_PRICE,
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # MONETARY requires TOTAL or None for Energy Dashboard
         suggested_display_precision=4,  # More precision for base currency (e.g., 0.2534 EUR/kWh)
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_interval_price",
         translation_key="next_interval_price",
+        attributes=INTERVAL_PRICE,
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future value: historical chart not useful
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="previous_interval_price",
         translation_key="previous_interval_price",
+        attributes=INTERVAL_PRICE,
         icon="mdi:cash-refund",  # Static: arrow back indicates "past"
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Past snapshot: historical chart not useful
@@ -86,23 +138,26 @@ INTERVAL_PRICE_SENSORS = (
 # import timing issues with Home Assistant's entity platform initialization.
 # Keep in sync with PRICE_LEVEL_* constants in const.py!
 INTERVAL_LEVEL_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_interval_price_level",
         translation_key="current_interval_price_level",
+        attributes=CURRENT_PRICE_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_interval_price_level",
         translation_key="next_interval_price_level",
+        attributes=PRICE_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="previous_interval_price_level",
         translation_key="previous_interval_price_level",
+        attributes=PRICE_LEVEL,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -114,25 +169,28 @@ INTERVAL_LEVEL_SENSORS = (
 # import timing issues with Home Assistant's entity platform initialization.
 # Keep in sync with PRICE_RATING_* constants in const.py!
 INTERVAL_RATING_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_interval_price_rating",
         translation_key="current_interval_price_rating",
+        attributes=PRICE_RATING,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
         entity_registry_enabled_default=False,  # Level is more commonly used
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_interval_price_rating",
         translation_key="next_interval_price_rating",
+        attributes=PRICE_RATING,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
         entity_registry_enabled_default=False,  # Level is more commonly used
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="previous_interval_price_rating",
         translation_key="previous_interval_price_rating",
+        attributes=PRICE_RATING,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -158,17 +216,21 @@ ROLLING_HOUR_SENSOR_WINDOWS: dict[str, tuple[int, str]] = {
 }
 
 ROLLING_HOUR_PRICE_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_hour_average_price",
         translation_key="current_hour_average_price",
+        attributes=HOUR_AVERAGE_PRICE,
+        state_is_average=True,
         icon="mdi:cash",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Rolling derived value: historical chart not useful
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_hour_average_price",
         translation_key="next_hour_average_price",
+        attributes=HOUR_AVERAGE_PRICE,
+        state_is_average=True,
         icon="mdi:cash-fast",  # Dynamic: shows cash-multiple/plus/cash/minus/remove based on aggregated price level
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future derived value: historical chart not useful
@@ -180,16 +242,18 @@ ROLLING_HOUR_PRICE_SENSORS = (
 # import timing issues with Home Assistant's entity platform initialization.
 # Keep in sync with PRICE_LEVEL_* constants in const.py!
 ROLLING_HOUR_LEVEL_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_hour_price_level",
         translation_key="current_hour_price_level",
+        attributes=HOUR_PRICE_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_hour_price_level",
         translation_key="next_hour_price_level",
+        attributes=HOUR_PRICE_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -200,17 +264,19 @@ ROLLING_HOUR_LEVEL_SENSORS = (
 # import timing issues with Home Assistant's entity platform initialization.
 # Keep in sync with PRICE_RATING_* constants in const.py!
 ROLLING_HOUR_RATING_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_hour_price_rating",
         translation_key="current_hour_price_rating",
+        attributes=HOUR_PRICE_RATING,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
         entity_registry_enabled_default=False,  # Level is more commonly used
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_hour_price_rating",
         translation_key="next_hour_price_rating",
+        attributes=HOUR_PRICE_RATING,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -224,49 +290,57 @@ ROLLING_HOUR_RATING_SENSORS = (
 # Calculate statistics for specific calendar days (today/tomorrow)
 
 DAILY_STAT_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="lowest_price_today",
         translation_key="lowest_price_today",
+        attributes=DAILY_STATISTICS,
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Daily snapshot: stays constant most of the day
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="highest_price_today",
         translation_key="highest_price_today",
+        attributes=DAILY_STATISTICS,
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Daily snapshot: stays constant most of the day
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="average_price_today",
         translation_key="average_price_today",
+        attributes=DAILY_STATISTICS,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=SensorStateClass.TOTAL,  # Keep TOTAL: useful to track daily avg over weeks/months
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="lowest_price_tomorrow",
         translation_key="lowest_price_tomorrow",
+        attributes=DAILY_STATISTICS,
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future data: historical chart not useful
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="highest_price_tomorrow",
         translation_key="highest_price_tomorrow",
+        attributes=DAILY_STATISTICS,
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future data: historical chart not useful
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="average_price_tomorrow",
         translation_key="average_price_tomorrow",
+        attributes=DAILY_STATISTICS,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future data: historical chart not useful
@@ -278,24 +352,27 @@ DAILY_STAT_SENSORS = (
 # import timing issues with Home Assistant's entity platform initialization.
 # Keep in sync with PRICE_LEVEL_* constants in const.py!
 DAILY_LEVEL_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="yesterday_price_level",
         translation_key="yesterday_price_level",
+        attributes=PRICE_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="today_price_level",
         translation_key="today_price_level",
+        attributes=PRICE_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="tomorrow_price_level",
         translation_key="tomorrow_price_level",
+        attributes=PRICE_LEVEL,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -306,25 +383,28 @@ DAILY_LEVEL_SENSORS = (
 # import timing issues with Home Assistant's entity platform initialization.
 # Keep in sync with PRICE_RATING_* constants in const.py!
 DAILY_RATING_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="yesterday_price_rating",
         translation_key="yesterday_price_rating",
+        attributes=PRICE_RATING,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="today_price_rating",
         translation_key="today_price_rating",
+        attributes=PRICE_RATING,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
         entity_registry_enabled_default=False,  # Level is more commonly used
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="tomorrow_price_rating",
         translation_key="tomorrow_price_rating",
+        attributes=PRICE_RATING,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -338,54 +418,62 @@ DAILY_RATING_SENSORS = (
 # Calculate statistics over sliding 24-hour windows
 
 WINDOW_24H_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="trailing_price_average",
         translation_key="trailing_price_average",
+        attributes=WINDOW_STATISTICS,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="leading_price_average",
         translation_key="leading_price_average",
+        attributes=WINDOW_STATISTICS,
+        state_is_average=True,
         icon="mdi:chart-line-variant",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="trailing_price_min",
         translation_key="trailing_price_min",
+        attributes=WINDOW_STATISTICS,
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="trailing_price_max",
         translation_key="trailing_price_max",
+        attributes=WINDOW_STATISTICS,
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="leading_price_min",
         translation_key="leading_price_min",
+        attributes=WINDOW_STATISTICS,
         icon="mdi:arrow-collapse-down",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
         entity_registry_enabled_default=False,  # Advanced use case
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="leading_price_max",
         translation_key="leading_price_max",
+        attributes=WINDOW_STATISTICS,
         icon="mdi:arrow-collapse-up",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Rolling window: value shifts every 15min, history chart misleading
@@ -401,45 +489,55 @@ WINDOW_24H_SENSORS = (
 
 FUTURE_MEAN_SENSORS = (
     # Default enabled: 1h-5h
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_1h",
         translation_key="next_avg_1h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_2h",
         translation_key="next_avg_2h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_3h",
         translation_key="next_avg_3h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_4h",
         translation_key="next_avg_4h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_5h",
         translation_key="next_avg_5h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
@@ -447,27 +545,33 @@ FUTURE_MEAN_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     # Disabled by default: 6h, 8h, 12h (advanced use cases)
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_6h",
         translation_key="next_avg_6h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_8h",
         translation_key="next_avg_8h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_avg_12h",
         translation_key="next_avg_12h",
+        attributes=NEXT_AVERAGE,
+        state_is_average=True,
         icon="mdi:chart-line",
         device_class=SensorDeviceClass.MONETARY,
         state_class=None,  # Future forecast: historical chart not useful
@@ -476,15 +580,12 @@ FUTURE_MEAN_SENSORS = (
     ),
 )
 
-# Hour counts of the price_outlook_<h>h and price_trajectory_<h>h sensors (the trend attributes carry the hour
-# in their name, e.g. second_half_<h>h_avg); tests/test_recorder_exclusions.py keeps this in step with the keys below
-TREND_HOURS = (1, 2, 3, 4, 5, 6, 8, 12)
-
 FUTURE_TREND_SENSORS = (
     # Current trend sensor (what is the trend right now, valid until next change?)
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_price_trend",
         translation_key="current_price_trend",
+        attributes=CURRENT_PRICE_TREND,
         icon="mdi:trending-up",  # Dynamic: trending-up/trending-down/trending-neutral based on current trend
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -492,18 +593,20 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     # Next trend change sensor (when will trend change?)
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_price_trend_change",
         translation_key="next_price_trend_change",
+        attributes=TREND_CHANGE,
         icon="mdi:clock-alert",  # Dynamic: trending-up/trending-down/trending-neutral based on direction
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,  # Timestamp: no statistics
         entity_registry_enabled_default=True,
     ),
     # Trend change countdown sensor (how long until trend changes?)
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_price_trend_change_in",
         translation_key="next_price_trend_change_in",
+        attributes=TREND_CHANGE,
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -514,45 +617,50 @@ FUTURE_TREND_SENSORS = (
     ),
     # Price outlook forecast sensors (is the average of the next Xh cheaper/more expensive than now?)
     # Default enabled: 1h-5h
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_1h",
         translation_key="price_outlook_1h",
+        attributes=outlook_attributes(1),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_2h",
         translation_key="price_outlook_2h",
+        attributes=outlook_attributes(2),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_3h",
         translation_key="price_outlook_3h",
+        attributes=outlook_attributes(3),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_4h",
         translation_key="price_outlook_4h",
+        attributes=outlook_attributes(4),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_5h",
         translation_key="price_outlook_5h",
+        attributes=outlook_attributes(5),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -560,27 +668,30 @@ FUTURE_TREND_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     # Disabled by default: 6h, 8h, 12h
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_6h",
         translation_key="price_outlook_6h",
+        attributes=outlook_attributes(6),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_8h",
         translation_key="price_outlook_8h",
+        attributes=outlook_attributes(8),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_outlook_12h",
         translation_key="price_outlook_12h",
+        attributes=outlook_attributes(12),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -604,36 +715,40 @@ FUTURE_TREND_SENSORS = (
 # Default enabled: 2h-5h
 
 PRICE_TRAJECTORY_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_trajectory_2h",
         translation_key="price_trajectory_2h",
+        attributes=trajectory_attributes(2),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_trajectory_3h",
         translation_key="price_trajectory_3h",
+        attributes=trajectory_attributes(3),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_trajectory_4h",
         translation_key="price_trajectory_4h",
+        attributes=trajectory_attributes(4),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_trajectory_5h",
         translation_key="price_trajectory_5h",
+        attributes=trajectory_attributes(5),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -641,27 +756,30 @@ PRICE_TRAJECTORY_SENSORS = (
         entity_registry_enabled_default=True,
     ),
     # Disabled by default: 6h, 8h, 12h
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_trajectory_6h",
         translation_key="price_trajectory_6h",
+        attributes=trajectory_attributes(6),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_trajectory_8h",
         translation_key="price_trajectory_8h",
+        attributes=trajectory_attributes(8),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["strongly_falling", "falling", "stable", "rising", "strongly_rising"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_trajectory_12h",
         translation_key="price_trajectory_12h",
+        attributes=trajectory_attributes(12),
         icon="mdi:trending-up",  # Dynamic: shows trending-up/trending-down/trending-neutral based on trend value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -678,32 +796,36 @@ PRICE_TRAJECTORY_SENSORS = (
 # Keep in sync with VOLATILITY_* constants in const.py!
 
 VOLATILITY_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="today_volatility",
         translation_key="today_volatility",
+        attributes=VOLATILITY,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="tomorrow_volatility",
         translation_key="tomorrow_volatility",
+        attributes=VOLATILITY,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
         entity_registry_enabled_default=False,  # Today's volatility is usually sufficient
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_24h_volatility",
         translation_key="next_24h_volatility",
+        attributes=VOLATILITY,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
         entity_registry_enabled_default=False,  # Advanced use case
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="today_tomorrow_volatility",
         translation_key="today_tomorrow_volatility",
+        attributes=TODAY_TOMORROW_VOLATILITY,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
@@ -735,26 +857,29 @@ PERCENTILE_RANK_SENSORS = (
     # ----------------------------------------------------------------
     # Current interval rank sensors
     # ----------------------------------------------------------------
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_interval_price_rank_today",
         translation_key="current_interval_price_rank_today",
+        attributes=rank_attributes("current_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Position metric: no statistics
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_interval_price_rank_tomorrow",
         translation_key="current_interval_price_rank_tomorrow",
+        attributes=rank_attributes("current_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Position metric: no statistics
         suggested_display_precision=0,
         entity_registry_enabled_default=False,  # Available once tomorrow's data arrives
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_interval_price_rank_today_tomorrow",
         translation_key="current_interval_price_rank_today_tomorrow",
+        attributes=rank_attributes("current_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Position metric: no statistics
@@ -764,18 +889,20 @@ PERCENTILE_RANK_SENSORS = (
     # ----------------------------------------------------------------
     # Next interval rank sensors
     # ----------------------------------------------------------------
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_interval_price_rank_today",
         translation_key="next_interval_price_rank_today",
+        attributes=rank_attributes("next_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_interval_price_rank_today_tomorrow",
         translation_key="next_interval_price_rank_today_tomorrow",
+        attributes=rank_attributes("next_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
@@ -785,18 +912,20 @@ PERCENTILE_RANK_SENSORS = (
     # ----------------------------------------------------------------
     # Previous interval rank sensors
     # ----------------------------------------------------------------
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="previous_interval_price_rank_today",
         translation_key="previous_interval_price_rank_today",
+        attributes=rank_attributes("previous_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="previous_interval_price_rank_today_tomorrow",
         translation_key="previous_interval_price_rank_today_tomorrow",
+        attributes=rank_attributes("previous_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
@@ -806,36 +935,40 @@ PERCENTILE_RANK_SENSORS = (
     # ----------------------------------------------------------------
     # Rolling-hour rank sensors (rank of 1h rolling average)
     # ----------------------------------------------------------------
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_hour_price_rank_today",
         translation_key="current_hour_price_rank_today",
+        attributes=rank_attributes("current_hour_avg_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_hour_price_rank_today_tomorrow",
         translation_key="current_hour_price_rank_today_tomorrow",
+        attributes=rank_attributes("current_hour_avg_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_hour_price_rank_today",
         translation_key="next_hour_price_rank_today",
+        attributes=rank_attributes("next_hour_avg_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
         suggested_display_precision=0,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_hour_price_rank_today_tomorrow",
         translation_key="next_hour_price_rank_today_tomorrow",
+        attributes=rank_attributes("next_hour_avg_price"),
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,
@@ -862,16 +995,18 @@ PERCENTILE_RANK_SENSORS = (
 # All return None/Unknown when no period is active/scheduled.
 
 BEST_PRICE_TIMING_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="best_price_end_time",
         translation_key="best_price_end_time",
+        attributes=PERIOD_TIMING,
         icon="mdi:clock-end",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,  # Timestamps: no statistics
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="best_price_period_duration",
         translation_key="best_price_period_duration",
+        attributes=PERIOD_TIMING,
         icon="mdi:timer",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -880,9 +1015,10 @@ BEST_PRICE_TIMING_SENSORS = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="best_price_remaining_minutes",
         translation_key="best_price_remaining_minutes",
+        attributes=PERIOD_TIMING,
         icon="mdi:timer-sand",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -890,24 +1026,27 @@ BEST_PRICE_TIMING_SENSORS = (
         state_class=None,  # Countdown timers excluded from statistics
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="best_price_progress",
         translation_key="best_price_progress",
+        attributes=PERIOD_TIMING,
         icon="mdi:percent",  # Dynamic: mdi:percent-0 to mdi:percent-100
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Progress counter: no statistics
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="best_price_next_start_time",
         translation_key="best_price_next_start_time",
+        attributes=PERIOD_TIMING,
         icon="mdi:clock-start",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,  # Timestamps: no statistics
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="best_price_next_in_minutes",
         translation_key="best_price_next_in_minutes",
+        attributes=PERIOD_TIMING,
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -918,16 +1057,18 @@ BEST_PRICE_TIMING_SENSORS = (
 )
 
 PEAK_PRICE_TIMING_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="peak_price_end_time",
         translation_key="peak_price_end_time",
+        attributes=PERIOD_TIMING,
         icon="mdi:clock-end",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,  # Timestamps: no statistics
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="peak_price_period_duration",
         translation_key="peak_price_period_duration",
+        attributes=PERIOD_TIMING,
         icon="mdi:timer",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -936,9 +1077,10 @@ PEAK_PRICE_TIMING_SENSORS = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="peak_price_remaining_minutes",
         translation_key="peak_price_remaining_minutes",
+        attributes=PERIOD_TIMING,
         icon="mdi:timer-sand",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -946,24 +1088,27 @@ PEAK_PRICE_TIMING_SENSORS = (
         state_class=None,  # Countdown timers excluded from statistics
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="peak_price_progress",
         translation_key="peak_price_progress",
+        attributes=PERIOD_TIMING,
         icon="mdi:percent",  # Dynamic: mdi:percent-0 to mdi:percent-100
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Progress counter: no statistics
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="peak_price_next_start_time",
         translation_key="peak_price_next_start_time",
+        attributes=PERIOD_TIMING,
         icon="mdi:clock-start",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,  # Timestamps: no statistics
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="peak_price_next_in_minutes",
         translation_key="peak_price_next_in_minutes",
+        attributes=PERIOD_TIMING,
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -977,9 +1122,10 @@ PEAK_PRICE_TIMING_SENSORS = (
 # ----------------------------------------------------------------------------
 
 DAY_PATTERN_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="day_pattern_yesterday",
         translation_key="day_pattern_yesterday",
+        attributes=DAY_PATTERN,
         icon="mdi:chart-bell-curve",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -995,9 +1141,10 @@ DAY_PATTERN_SENSORS = (
         state_class=None,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="day_pattern_today",
         translation_key="day_pattern_today",
+        attributes=DAY_PATTERN,
         icon="mdi:chart-bell-curve",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -1013,9 +1160,10 @@ DAY_PATTERN_SENSORS = (
         state_class=None,
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="day_pattern_tomorrow",
         translation_key="day_pattern_tomorrow",
+        attributes=DAY_PATTERN,
         icon="mdi:chart-bell-curve",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -1037,18 +1185,20 @@ DAY_PATTERN_SENSORS = (
 # ----------------------------------------------------------------------------
 
 PRICE_PHASE_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_price_phase",
         translation_key="current_price_phase",
+        attributes=PRICE_PHASE,
         icon="mdi:chart-timeline-variant",
         device_class=SensorDeviceClass.ENUM,
         options=["rising", "falling", "flat"],
         state_class=None,
         entity_registry_enabled_default=True,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_price_phase",
         translation_key="next_price_phase",
+        attributes=PRICE_PHASE,
         icon="mdi:chart-timeline-variant",
         device_class=SensorDeviceClass.ENUM,
         options=["rising", "falling", "flat"],
@@ -1073,16 +1223,18 @@ PRICE_PHASE_SENSORS = (
 # All return None/Unknown when no segment data is available.
 
 PRICE_PHASE_TIMING_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_price_phase_end_time",
         translation_key="current_price_phase_end_time",
+        attributes=PHASE_TIMING,
         icon="mdi:clock-end",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,  # Timestamps: no statistics
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_price_phase_remaining_minutes",
         translation_key="current_price_phase_remaining_minutes",
+        attributes=PHASE_TIMING,
         icon="mdi:timer-sand",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -1090,9 +1242,10 @@ PRICE_PHASE_TIMING_SENSORS = (
         state_class=None,  # Countdown timers excluded from statistics
         suggested_display_precision=2,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_price_phase_duration",
         translation_key="current_price_phase_duration",
+        attributes=PHASE_TIMING,
         icon="mdi:timer",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -1101,9 +1254,10 @@ PRICE_PHASE_TIMING_SENSORS = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="current_price_phase_progress",
         translation_key="current_price_phase_progress",
+        attributes=PHASE_TIMING,
         icon="mdi:percent",
         native_unit_of_measurement=PERCENTAGE,
         state_class=None,  # Progress counter: no statistics
@@ -1111,33 +1265,37 @@ PRICE_PHASE_TIMING_SENSORS = (
         entity_registry_enabled_default=False,
     ),
     # Next occurrence of each phase type (across remaining today + tomorrow)
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_rising_phase_start_time",
         translation_key="next_rising_phase_start_time",
+        attributes=PHASE_TIMING,
         icon="mdi:trending-up",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_falling_phase_start_time",
         translation_key="next_falling_phase_start_time",
+        attributes=PHASE_TIMING,
         icon="mdi:trending-down",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_flat_phase_start_time",
         translation_key="next_flat_phase_start_time",
+        attributes=PHASE_TIMING,
         icon="mdi:trending-neutral",
         device_class=SensorDeviceClass.TIMESTAMP,
         state_class=None,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_rising_phase_in_minutes",
         translation_key="next_rising_phase_in_minutes",
+        attributes=PHASE_TIMING,
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -1146,9 +1304,10 @@ PRICE_PHASE_TIMING_SENSORS = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_falling_phase_in_minutes",
         translation_key="next_falling_phase_in_minutes",
+        attributes=PHASE_TIMING,
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -1157,9 +1316,10 @@ PRICE_PHASE_TIMING_SENSORS = (
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="next_flat_phase_in_minutes",
         translation_key="next_flat_phase_in_minutes",
+        attributes=PHASE_TIMING,
         icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
@@ -1177,9 +1337,10 @@ PRICE_DEPENDENT_DIAGNOSTIC_KEYS = frozenset({"chart_data_export", "chart_metadat
 # ----------------------------------------------------------------------------
 
 DIAGNOSTIC_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="data_lifecycle_status",
         translation_key="data_lifecycle_status",
+        attributes=DATA_LIFECYCLE,
         icon="mdi:database-sync",
         device_class=SensorDeviceClass.ENUM,
         options=[
@@ -1197,7 +1358,7 @@ DIAGNOSTIC_SENSORS = (
         entity_registry_enabled_default=True,  # Critical for debugging
     ),
     # Home metadata from user data
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="home_type",
         translation_key="home_type",
         icon="mdi:home-variant",
@@ -1206,7 +1367,7 @@ DIAGNOSTIC_SENSORS = (
         options=["apartment", "rowhouse", "house", "cottage"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="home_size",
         translation_key="home_size",
         icon="mdi:ruler-square",
@@ -1216,7 +1377,7 @@ DIAGNOSTIC_SENSORS = (
         entity_registry_enabled_default=False,
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="main_fuse_size",
         translation_key="main_fuse_size",
         icon="mdi:fuse",
@@ -1227,7 +1388,7 @@ DIAGNOSTIC_SENSORS = (
         entity_registry_enabled_default=False,
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="number_of_residents",
         translation_key="number_of_residents",
         icon="mdi:account-group",
@@ -1236,7 +1397,7 @@ DIAGNOSTIC_SENSORS = (
         entity_registry_enabled_default=False,
         suggested_display_precision=0,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="primary_heating_source",
         translation_key="primary_heating_source",
         icon="mdi:heating-coil",
@@ -1263,55 +1424,55 @@ DIAGNOSTIC_SENSORS = (
         entity_registry_enabled_default=False,
     ),
     # Metering point data
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="grid_company",
         translation_key="grid_company",
         icon="mdi:transmission-tower",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="grid_area_code",
         translation_key="grid_area_code",
         icon="mdi:map-marker",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="price_area_code",
         translation_key="price_area_code",
         icon="mdi:currency-eur",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="consumption_ean",
         translation_key="consumption_ean",
         icon="mdi:barcode",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="production_ean",
         translation_key="production_ean",
         icon="mdi:solar-power",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="energy_tax_type",
         translation_key="energy_tax_type",
         icon="mdi:cash",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="vat_type",
         translation_key="vat_type",
         icon="mdi:percent",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="estimated_annual_consumption",
         translation_key="estimated_annual_consumption",
         icon="mdi:lightning-bolt",
@@ -1322,7 +1483,7 @@ DIAGNOSTIC_SENSORS = (
         suggested_display_precision=0,
     ),
     # Subscription data
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="subscription_status",
         translation_key="subscription_status",
         icon="mdi:file-document-check",
@@ -1331,18 +1492,21 @@ DIAGNOSTIC_SENSORS = (
         options=["running", "ended", "pending", "awaiting_market", "unknown"],
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="chart_data_export",
         translation_key="chart_data_export",
+        attributes=CHART_DATA_EXPORT,
+        open_attributes=True,
         icon="mdi:database-export",
         device_class=SensorDeviceClass.ENUM,
         options=["pending", "ready", "error"],
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,  # Opt-in
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="chart_metadata",
         translation_key="chart_metadata",
+        attributes=CHART_METADATA,
         icon="mdi:chart-box-outline",
         device_class=SensorDeviceClass.ENUM,
         options=["pending", "ready", "error"],
@@ -1358,7 +1522,7 @@ DIAGNOSTIC_SENSORS = (
 # chart needs. All opt-in - they are configuration echoes, not measurements.
 
 TIME_TRAVEL_SENSORS = (
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="entry_mode",
         translation_key="entry_mode",
         icon="mdi:clock-outline",
@@ -1367,7 +1531,7 @@ TIME_TRAVEL_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="time_travel_reference_time",
         translation_key="time_travel_reference_time",
         icon="mdi:calendar-clock",
@@ -1375,7 +1539,7 @@ TIME_TRAVEL_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="time_travel_days_offset",
         translation_key="time_travel_days_offset",
         icon="mdi:calendar-minus",
@@ -1384,7 +1548,7 @@ TIME_TRAVEL_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="time_travel_years_offset",
         translation_key="time_travel_years_offset",
         icon="mdi:calendar-minus",
@@ -1392,14 +1556,14 @@ TIME_TRAVEL_SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="time_travel_time_offset",
         translation_key="time_travel_time_offset",
         icon="mdi:clock-minus",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
+    TibberPricesSensorDescription(
         key="headless_mode",
         translation_key="headless_mode",
         icon="mdi:eye-off-outline",

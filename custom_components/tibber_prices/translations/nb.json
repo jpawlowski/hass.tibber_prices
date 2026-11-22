@@ -2052,6 +2052,12 @@
           },
           "threshold_falling_strongly_percent": {
             "name": "Terskel sterkt fallende (%)"
+          },
+          "second_half_2h_avg": {
+            "name": "Gjennomsnittspris, andre halvdel av 2-timersvinduet"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Andre halvdel mot nåværende pris (%)"
           }
         }
       },
@@ -3010,6 +3016,9 @@
           },
           "interval_count": {
             "name": "Antall intervaller"
+          },
+          "icon_color": {
+            "name": "Ikonfarge"
           }
         }
       },
@@ -3069,6 +3078,9 @@
           },
           "interval_count": {
             "name": "Antall intervaller"
+          },
+          "icon_color": {
+            "name": "Ikonfarge"
           }
         }
       },
@@ -3128,6 +3140,9 @@
           },
           "interval_count": {
             "name": "Antall intervaller"
+          },
+          "icon_color": {
+            "name": "Ikonfarge"
           }
         }
       },
@@ -3187,6 +3202,9 @@
           },
           "interval_count": {
             "name": "Antall intervaller"
+          },
+          "icon_color": {
+            "name": "Ikonfarge"
           },
           "today_volatility": {
             "name": "Volatilitet i dag"
@@ -4253,6 +4271,9 @@
           "usage_tips": {
             "name": "Brukstips"
           },
+          "data": {
+            "name": "Diagramdata"
+          },
           "currency": {
             "name": "Valuta"
           },
@@ -4838,6 +4859,18 @@
           "period_price_diff_from_daily_max_percent": {
             "name": "Avvik fra dagens maksimum (%)"
           },
+          "day_price_min": {
+            "name": "Laveste pris for dagen"
+          },
+          "day_price_max": {
+            "name": "Høyeste pris for dagen"
+          },
+          "day_price_span": {
+            "name": "Prisspenn for dagen"
+          },
+          "icon_color": {
+            "name": "Ikonfarge"
+          },
           "period_interval_count": {
             "name": "Intervaller i perioden"
           },
@@ -4953,6 +4986,18 @@
           },
           "period_price_diff_from_daily_max_percent": {
             "name": "Avvik fra dagens maksimum (%)"
+          },
+          "day_price_min": {
+            "name": "Laveste pris for dagen"
+          },
+          "day_price_max": {
+            "name": "Høyeste pris for dagen"
+          },
+          "day_price_span": {
+            "name": "Prisspenn for dagen"
+          },
+          "icon_color": {
+            "name": "Ikonfarge"
           },
           "period_interval_count": {
             "name": "Intervaller i perioden"

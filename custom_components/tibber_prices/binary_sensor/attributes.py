@@ -572,69 +572,6 @@ def build_final_attributes_simple(
     return result
 
 
-async def build_async_extra_state_attributes(
-    entity_key: str,
-    translation_key: str | None,
-    hass: HomeAssistant,
-    *,
-    time: TibberPricesTimeService,
-    config_entry: TibberPricesConfigEntry,
-    sensor_attrs: dict | None = None,
-    is_on: bool | None = None,
-) -> dict | None:
-    """
-    Build async extra state attributes for binary sensors.
-
-    Adds icon_color and translated descriptions.
-
-    Args:
-        entity_key: Entity key (e.g., "best_price_period")
-        translation_key: Translation key for entity
-        hass: Home Assistant instance
-        time: TibberPricesTimeService instance (required)
-        config_entry: Config entry with options (keyword-only)
-        sensor_attrs: Sensor-specific attributes (keyword-only)
-        is_on: Binary sensor state (keyword-only)
-
-    Returns:
-        Complete attributes dict with descriptions (synchronous)
-
-    """
-    # Calculate default timestamp: current time rounded to nearest quarter hour
-    # This ensures all binary sensors have a consistent reference time for when calculations were made
-    # Individual sensors can override this via sensor_attrs if needed
-    now = time.now()
-    default_timestamp = time.round_to_nearest_quarter(now)
-
-    attributes = {
-        "timestamp": default_timestamp,
-    }
-
-    # Add sensor-specific attributes (may override timestamp)
-    if sensor_attrs:
-        # Copy and remove internal fields before exposing to user
-        clean_attrs = {k: v for k, v in sensor_attrs.items() if not k.startswith("_")}
-        # Merge sensor attributes (can override default timestamp)
-        attributes.update(clean_attrs)
-
-    # Add icon_color for best/peak price period sensors using shared utility
-    add_icon_color_attribute(attributes, entity_key, is_on=is_on)
-
-    # Add description attributes (always last, via central utility)
-    from ..entity_utils import async_add_description_attributes  # noqa: PLC0415, TID252
-
-    await async_add_description_attributes(
-        attributes,
-        "binary_sensor",
-        translation_key,
-        hass,
-        config_entry,
-        position="end",
-    )
-
-    return attributes or None
-
-
 def build_sync_extra_state_attributes(
     entity_key: str,
     translation_key: str | None,

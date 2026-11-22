@@ -29,9 +29,10 @@ from custom_components.tibber_prices.entity_utils.icons import (
     get_dynamic_icon,
     uses_icons_json,
 )
+from custom_components.tibber_prices.utils.attribute_specs import report_undeclared
 from custom_components.tibber_prices.utils.average import calculate_next_n_hours_mean
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
-from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntityDescription
+from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import callback
 
@@ -59,7 +60,7 @@ from .chart_metadata import (
     call_chartdata_service_for_metadata_async,
     get_chart_metadata_state,
 )
-from .definitions import TREND_HOURS
+from .definitions import TibberPricesSensorDescription
 from .helpers import aggregate_level_data, aggregate_rating_data, normalize_enum_state
 from .value_getters import get_value_getter_mapping
 
@@ -74,11 +75,6 @@ HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
-
-
-def _per_hour(*templates: str) -> set[str]:
-    """Return the attribute keys of `templates` ({h} = hour count) for every trend hour count."""
-    return {template.format(h=hours) for template in templates for hours in TREND_HOURS}
 
 
 # Sentinel for _last_written_value: forces first write after init or coordinator update
@@ -104,165 +100,12 @@ def _extract_percentile_rank_type(key: str) -> str | None:
 class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     """tibber_prices Sensor class with state restoration."""
 
-    # Base attributes excluded from recorder history (shared across all sensors)
-    # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
-    _unrecorded_attributes = frozenset(
-        {
-            "timestamp",
-            # Descriptions/Help Text (static, large)
-            "description",
-            "usage_tips",
-            # Large Nested Structures
-            "trend_attributes",
-            "current_trend_attributes",
-            "trend_change_attributes",
-            "volatility_attributes",
-            "data",  # chart_data_export large nested data
-            # Frequently Changing Diagnostics
-            "icon_color",
-            "cache_age",
-            "cache_validity",
-            "data_completeness",
-            "data_status",
-            "threshold_rising_percent",
-            "threshold_rising_strongly_percent",
-            "threshold_falling_percent",
-            "threshold_falling_strongly_percent",
-            "volatility_factor",
-            "interval_count",
-            "price_direction_since",
-            "price_now",
-            "trend_diff_percent",
-            # Static/Rarely Changing
-            "tomorrow_expected_after",
-            "energy_price",
-            "energy_price_mean",
-            "energy_price_median",
-            "tax",
-            "tax_mean",
-            "tax_median",
-            "level_value",
-            "rating_value",
-            "level_id",
-            "rating_id",
-            "currency",
-            "resolution",
-            "yaxis_min",
-            "yaxis_max",
-            # Temporary/Time-Bound
-            "next_api_poll",
-            "next_midnight_turnover",
-            "last_update",  # Lifecycle sensor last update timestamp
-            "last_turnover",
-            "last_error",
-            "error",
-            "cheap_until",  # Current price level: forward-looking, derivable from price data
-            "next_cheap_start",
-            "expensive_until",
-            "next_expensive_start",
-            "window_start",  # Rolling hour sensors: derivable from timestamp
-            "window_end",
-            "clock_hour_start",
-            "clock_hour_end",
-            "outlook_hours",  # Current price: forecast-style lists, derivable from price data
-            "outlook_day_parts",
-            "outlook_days",
-            "outlook_units",
-            "outlook_day_part_hours",
-            "outlook_quarters",
-            "outlook_past_periods",
-            "outlook_yesterday",
-            # Relaxation Details
-            "relaxation_level",
-            "relaxation_threshold_original_percent",
-            "relaxation_threshold_applied_percent",
-            # Redundant/Derived (removed from attributes, kept here for safety)
-            "volatility",
-            "diff_percent",
-            "rating_difference_percent",
-            "period_price_diff_from_daily_min",
-            "period_price_diff_from_daily_min_percent",
-            "period_count_total",
-            "period_count_remaining",
-            # Chart metadata: per-source axis bounds, like yaxis_min/yaxis_max above
-            "yaxis_min_energy",
-            "yaxis_max_energy",
-            "yaxis_min_tax",
-            "yaxis_max_tax",
-            # Trend/outlook: derived from the averages and the current price, or changing every update
-            "trend_value",
-            "minutes_until_change",
-            "price_direction_duration_minutes",
-            "price_at_change",
-            "price_avg_after_change",
-            "first_half_interval_count",
-            "second_half_interval_count",
-            # Volatility: statistics of the same prices, the level and its coefficient stay
-            "price_volatility",
-            "price_spread",
-            "price_q25",
-            "price_q75",
-            "price_typical_spread",
-            "price_typical_spread_percent",
-            "price_spike_count",
-            "today_volatility",
-            "tomorrow_volatility",
-            "interval_count_today",
-            "interval_count_tomorrow",
-            # Price rank: reference statistics of the day and the price of the interval (own sensors)
-            "prices_below_count",
-            "reference_min",
-            "reference_max",
-            "reference_mean",
-            "current_price",
-            "next_price",
-            "previous_price",
-            "current_hour_avg_price",
-            "next_hour_avg_price",
-            # Timing sensors: the attribute repeats the state (in minutes)
-            "period_duration_minutes",
-            "phase_duration_minutes",
-            "remaining_minutes",
-            "next_in_minutes",
-            # Day pattern and price phases: derivable from the price data, large or changing daily.
-            # Per class: a sensor that gets a top-level start/end/hours of its own loses it from history too
-            "confidence",
-            "day_cv_percent",
-            "extreme_time",
-            "valley_start",
-            "valley_end",
-            "peak_start",
-            "peak_end",
-            "segments",
-            "all_segments",
-            "segment_index",
-            "segment_count",
-            "is_tomorrow",
-            "start",
-            "end",
-            # Rolling hour and window sensors: the clock hour's statistics, constant counts
-            "clock_hour_price_mean",
-            "clock_hour_price_median",
-            "hours",
-            # Trend hour variants (the hour count is part of the key): the half-window averages and the
-            # trend itself are means and differences of the price series (recorded by the price sensors);
-            # the trend decision stays visible in the recorded state
-            *_per_hour(
-                "trend_{h}h_percent",
-                "trajectory_{h}h_percent",
-                "next_{h}h_avg",
-                "first_half_{h}h_avg",
-                "second_half_{h}h_avg",
-                "first_half_{h}h_diff_from_current_percent",
-                "second_half_{h}h_diff_from_current_percent",
-            ),
-        }
-    )
+    entity_description: TibberPricesSensorDescription
 
     def __init__(
         self,
         coordinator: TibberPricesDataUpdateCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: TibberPricesSensorDescription,
         subentry: ConfigSubentry | None = None,
     ) -> None:
         """Initialize the sensor class."""
@@ -305,8 +148,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         """When entity is added to hass."""
         await super().async_added_to_hass()
 
-        # Configure dynamic attribute exclusion for average sensors
-        self._configure_average_sensor_exclusions()
+        # What the recorder leaves out follows the sensor's attribute declaration
+        self._configure_recorder_exclusions()
 
         # Restore last state if available
         await self._restore_last_state()
@@ -317,33 +160,18 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         # Trigger initial chart data loads as background tasks
         self._trigger_chart_data_loads()
 
-    def _configure_average_sensor_exclusions(self) -> None:
-        """Configure dynamic attribute exclusions for average sensors."""
-        # Dynamically exclude average attribute that matches state value
-        # (to avoid recording the same value twice: once as state, once as attribute)
-        key = self.entity_description.key
-        if key in (
-            "average_price_today",
-            "average_price_tomorrow",
-            "trailing_price_average",
-            "leading_price_average",
-            "current_hour_average_price",
-            "next_hour_average_price",
-        ) or key.startswith("next_avg_"):  # Future average sensors
-            display_mode = self.coordinator.config_entry.options.get(
-                CONF_AVERAGE_SENSOR_DISPLAY,
-                DEFAULT_AVERAGE_SENSOR_DISPLAY,
-            )
-            # Modify _state_info to add dynamic exclusion
-            if self._state_info is None:
-                self._state_info = {"unrecorded_attributes": frozenset()}
-            current_unrecorded = self._state_info.get("unrecorded_attributes", frozenset())
-            # State shows median → exclude price_median from attributes
-            # State shows mean → exclude price_mean from attributes
-            if display_mode == "median":
-                self._state_info["unrecorded_attributes"] = current_unrecorded | {"price_median"}
-            else:
-                self._state_info["unrecorded_attributes"] = current_unrecorded | {"price_mean"}
+    def _configure_recorder_exclusions(self) -> None:
+        """Leave out what the description doesn't keep, and the average the state already shows."""
+        # An average sensor's state is its mean or median: the attribute of the same average would store
+        # the value twice, once as state and once as attribute
+        if not self.entity_description.state_is_average:
+            self._apply_recorder_exclusions()
+            return
+        display_mode = self.coordinator.config_entry.options.get(
+            CONF_AVERAGE_SENSOR_DISPLAY,
+            DEFAULT_AVERAGE_SENSOR_DISPLAY,
+        )
+        self._apply_recorder_exclusions("price_median" if display_mode == "median" else "price_mean")
 
     async def _restore_last_state(self) -> None:
         """Restore last state if available."""
@@ -1129,7 +957,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             time = self.coordinator.time
 
             # Build complete attributes using unified builder
-            return build_extra_state_attributes(
+            attributes = build_extra_state_attributes(
                 entity_key=self.entity_description.key,
                 translation_key=self.entity_description.translation_key,
                 hass=self.hass,
@@ -1148,6 +976,10 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
                 },
             )
             return None
+
+        if attributes:
+            report_undeclared(self.entity_description, attributes, self._declared_attribute_keys)
+        return attributes
 
     def _get_sensor_attributes(self) -> dict | None:
         """Get attributes based on sensor type."""

@@ -10,13 +10,13 @@ from custom_components.tibber_prices.coordinator.helpers import get_intervals_fo
 from custom_components.tibber_prices.device import entity_unique_id
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
+from custom_components.tibber_prices.utils.attribute_specs import report_undeclared
 from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .attributes import (
-    build_async_extra_state_attributes,
     build_sync_extra_state_attributes,
     get_current_phase_type,
     get_phase_attributes,
@@ -39,48 +39,6 @@ _SENTINEL = object()
 class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEntity):
     """tibber_prices binary_sensor class with state restoration."""
 
-    # Attributes excluded from recorder history
-    # See: https://developers.home-assistant.io/docs/core/entity/#excluding-state-attributes-from-recorder-history
-    _unrecorded_attributes = frozenset(
-        {
-            "timestamp",
-            # Descriptions/Help Text (static, large)
-            "description",
-            "usage_tips",
-            # Large Nested Structures
-            "periods",  # Array of all period summaries
-            # Frequently Changing Diagnostics
-            "icon_color",
-            "data_status",
-            # Connection diagnostics (time-bound, not useful in long-term history)
-            "last_successful_update",
-            # Static/Rarely Changing
-            "level_value",
-            "rating_value",
-            "level_id",
-            "rating_id",
-            # Relaxation Details (per-period)
-            "relaxation_level",
-            "relaxation_threshold_original_percent",
-            "relaxation_threshold_applied_percent",
-            # Calculation Summary (diagnostic, changes daily → not useful in history)
-            "min_periods_configured",
-            "flat_days_detected",
-            "relaxation_incomplete",
-            # Redundant/Derived
-            "price_spread",
-            "volatility",
-            "rating_difference_percent",
-            "period_price_diff_from_daily_min",
-            "period_price_diff_from_daily_min_percent",
-            "period_count_total",
-            "period_count_remaining",
-            "period_price_diff_from_daily_max",
-            "period_price_diff_from_daily_max_percent",
-            "day_volatility_percent",
-        }
-    )
-
     def __init__(
         self,
         coordinator: TibberPricesDataUpdateCoordinator,
@@ -99,6 +57,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
+
+        # What the recorder leaves out follows the binary sensor's attribute declaration
+        self._apply_recorder_exclusions()
 
         # Restore last state if available
         if (last_state := await self.async_get_last_state()) is not None and last_state.state in ("on", "off"):
@@ -423,37 +384,6 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         return False
 
     @property
-    async def async_extra_state_attributes(self) -> dict | None:
-        """Return additional state attributes asynchronously."""
-        try:
-            # Get the sensor-specific attributes
-            if not self.coordinator.data:
-                return None
-
-            sensor_attrs = self._get_sensor_attributes()
-
-            # Use extracted function to build all attributes
-            return await build_async_extra_state_attributes(
-                self.entity_description.key,
-                self.entity_description.translation_key,
-                self.hass,
-                config_entry=self.coordinator.config_entry,
-                sensor_attrs=sensor_attrs,
-                is_on=self.is_on,
-                time=self.coordinator.time,
-            )
-
-        except (KeyError, ValueError, TypeError) as ex:
-            self.coordinator.logger.exception(
-                "Error getting binary sensor attributes",
-                extra={
-                    "error": str(ex),
-                    "entity": self.entity_description.key,
-                },
-            )
-            return None
-
-    @property
     def extra_state_attributes(self) -> dict | None:
         """Return additional state attributes synchronously."""
         try:
@@ -464,7 +394,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             sensor_attrs = self._get_sensor_attributes()
 
             # Use extracted function to build all attributes
-            return build_sync_extra_state_attributes(
+            attributes = build_sync_extra_state_attributes(
                 self.entity_description.key,
                 self.entity_description.translation_key,
                 self.hass,
@@ -483,6 +413,10 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
                 },
             )
             return None
+
+        if attributes:
+            report_undeclared(self.entity_description, attributes, self._declared_attribute_keys)
+        return attributes
 
     async def async_update(self) -> None:
         """Force a refresh when homeassistant.update_entity is called."""
