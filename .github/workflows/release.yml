@@ -214,12 +214,11 @@ jobs:
       - name: Delete inappropriate version tag
         if: steps.version_check.outputs.warning != ''
         run: |
-          TAG_NAME="${TAG}"
-          echo "❌ Deleting tag $TAG_NAME (version not appropriate for changes)"
+          echo "❌ Deleting tag ${TAG} (version not appropriate for changes)"
           echo ""
           echo "${{ steps.version_check.outputs.warning }}"
           echo ""
-          git push origin --delete "$TAG_NAME"
+          git push origin --delete "${TAG}"
           exit 1
 
       - name: Install git-cliff (mise.toml)
@@ -263,16 +262,16 @@ jobs:
         run: |
           # The store installs this asset (hacs.json: zip_release + filename) by unpacking it into
           # custom_components/tibber_prices/, so the zip root is the integration, and counts its downloads.
-          # Built from the tag, not from main: main may be ahead of it. The tag is fetched again because
-          # sync-manifest may have moved it. git archive packs tracked files only.
-          git fetch --force --tags origin
+          # Built from the tag, not from main: main may be ahead of it. The checkout above fetched all tags
+          # after sync-manifest ran, so a moved tag is the current one. git archive packs tracked files only.
           git archive --format=zip -o tibber_prices.zip "refs/tags/${TAG}:custom_components/tibber_prices"
 
           # A zip with a wrong layout breaks the install for every user: check what the store needs
           unzip -p tibber_prices.zip manifest.json | grep -qF "\"version\": \"${TAG#v}\"" \
             || { echo "::error::tibber_prices.zip has no manifest.json at its root with version ${TAG#v}"; exit 1; }
+          entries=$(unzip -Z1 tibber_prices.zip)
           for required in __init__.py frontend/cards/tibber-prices-cards.js; do
-            unzip -l tibber_prices.zip | grep -qE " ${required}\$" \
+            grep -qxF "${required}" <<< "${entries}" \
               || { echo "::error::tibber_prices.zip lacks ${required}"; exit 1; }
           done
 
