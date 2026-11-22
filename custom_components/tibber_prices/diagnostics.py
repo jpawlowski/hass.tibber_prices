@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.util import dt as dt_util
 
 from .time_travel import tomorrow_arrival_hour, uses_realistic_tomorrow
@@ -17,6 +18,42 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
     from .data import TibberPricesConfigEntry, TibberPricesSubentryData
+
+
+# Diagnostics files get attached to public issues. Titles are built from the home's address
+# (see user_flow `_get_entry_title`), so they go too, as do the home id and anything that
+# identifies a person, a place or a credential. Matching is by key name at any depth.
+TO_REDACT = {
+    "title",
+    "home_id",
+    "homeId",
+    "id",
+    "address",
+    "address1",
+    "address2",
+    "address3",
+    "postalCode",
+    "city",
+    "latitude",
+    "longitude",
+    "firstName",
+    "lastName",
+    "name",
+    "email",
+    "login",
+    "userId",
+    "appAvatar",
+    "mobile",
+    "appNickname",
+    "gridCompany",
+    "gridAreaCode",
+    "consumptionEan",
+    "productionEan",
+    "access_token",
+    "token",
+    "api_token",
+    "password",
+}
 
 
 def _view_diagnostics(subentry_id: str, view: TibberPricesSubentryData) -> dict[str, Any]:
@@ -74,6 +111,28 @@ async def async_get_config_entry_diagnostics(
     entry: TibberPricesConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
+    data = _collect_entry_diagnostics(entry)
+    # Key-based redaction can't see a home id or an address inside a message (e.g. an exception text)
+    secrets = {str(entry.data.get("home_id", "")), entry.title}
+    secrets.update(view.subentry.title for view in entry.runtime_data.subentries.values())
+    return _scrub_strings(async_redact_data(data, TO_REDACT), {value for value in secrets if value})
+
+
+def _scrub_strings(value: Any, secrets: set[str]) -> Any:
+    """Replace every occurrence of a secret inside the strings of a nested structure."""
+    if isinstance(value, str):
+        for secret in secrets:
+            value = value.replace(secret, "**REDACTED**")
+        return value
+    if isinstance(value, dict):
+        return {key: _scrub_strings(item, secrets) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_scrub_strings(item, secrets) for item in value]
+    return value
+
+
+def _collect_entry_diagnostics(entry: TibberPricesConfigEntry) -> dict[str, Any]:
+    """Collect the raw diagnostics of a config entry, before redaction."""
     coordinator = entry.runtime_data.coordinator
 
     # Get period metadata from coordinator data
