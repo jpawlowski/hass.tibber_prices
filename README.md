@@ -5,6 +5,7 @@
 </p>
 
 <!-- ha-marketplace:exclude-start -->
+
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
@@ -79,6 +80,7 @@ Home Assistant 2026.11 or newer (built-in Marketplace):
 [![Open your Home Assistant instance and open a repository inside the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
 
 <!-- ha-marketplace:exclude-start -->
+
 Older versions with HACS:
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
@@ -87,6 +89,7 @@ Older versions with HACS:
 Click "Download" to install.
 
 <!-- ha-marketplace:exclude-start -->
+
 With HACS, **restart Home Assistant** afterwards ([details](https://jpawlowski.github.io/hass.tibber_prices/user/installation)).
 <!-- ha-marketplace:exclude-end -->
 
