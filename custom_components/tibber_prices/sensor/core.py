@@ -245,7 +245,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "clock_hour_price_median",
             "hours",
             # Trend hour variants (the hour count is part of the key): the half-window averages and the
-            # trend itself are computed from the price series, which is recorded by the price sensors
+            # trend itself are means and differences of the price series (recorded by the price sensors);
+            # the trend decision stays visible in the recorded state
             *_per_hour(
                 "trend_{h}h_percent",
                 "trajectory_{h}h_percent",
