@@ -11,8 +11,8 @@
  *
  * Each module imports only from those before it: util → time → data → ui → config → strings,
  * styles → reload → base → the cards (forecast → now, chart → energy) → this entry; the tile
- * feature (outlook-feature) needs only util to config, strings and reload. The editors (editors.js) come after
- * the cards and are loaded on demand only, by import() from base.js.
+ * feature (outlook-feature) needs only util to config, strings and reload. The editors
+ * (editors.js) come after the cards and are loaded on demand only, by import() from base.js.
  */
 
 import { FEATURE_NAMES, languageStrings } from "./strings.js";
