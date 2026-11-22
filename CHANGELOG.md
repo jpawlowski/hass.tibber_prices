@@ -2,26 +2,23 @@
 
 ## [0.40.0](https://github.com/jpawlowski/hass.tibber_prices/compare/v0.39.1...v0.40.0) (2026-11-22)
 
+### ⚠️ Before You Update: Some Attribute Names Change
 
-### ⚠ BREAKING CHANGES
+- **Attributes that ended in `_%` now end in `_percent`**, for example `rating_difference_%` → `rating_difference_percent`. They belong to the best and peak price period sensors and to the trend, rating and volatility sensors.
 
-* **attributes:** templates, automations and dashboards that read an attribute ending in "_%" must use the "_percent" name.
+**What this means for you:** If a template, automation or dashboard card reads one of these attributes, change the name. After the update, a notice in **Settings → Repairs** lists every renamed attribute.
 
 ### 🎉 What's New
 
-* **translations:** translate attribute names in the more-info dialog ([3a37c02](https://github.com/jpawlowski/hass.tibber_prices/commit/3a37c0242e363090769c414efd9e9864c8048aaf))
-
+- **Attribute names in your language.** The more-info dialog now shows attribute names translated into English, German, Norwegian, Dutch and Swedish instead of the technical key, for example "Difference from daily maximum (%)". The dialog sorts attributes by their displayed name, so the order differs per language.
 
 ### 🐛 Fixed
 
-* **attributes:** leave undeclared attributes out of the recorder, share the half-window threshold ([7cb380f](https://github.com/jpawlowski/hass.tibber_prices/commit/7cb380fa67b8f9bab93831a4a179c4a160d2b940))
-* **diagnostics:** redact identifying data from the diagnostics download ([3942f87](https://github.com/jpawlowski/hass.tibber_prices/commit/3942f87e870df5d057d6e4286c866151256c3a03))
-* **hacs:** hide the default branch, it cannot install with zip_release ([697d221](https://github.com/jpawlowski/hass.tibber_prices/commit/697d221b535ccd995856d4ac2e6d0ce19f948e92)), closes [#270](https://github.com/jpawlowski/hass.tibber_prices/issues/270)
-* **i18n:** name the connection and chart export attributes, tidy the source ([5edcb7e](https://github.com/jpawlowski/hass.tibber_prices/commit/5edcb7e190a6bb3ce008a4b9d1e6cc86494d69b0))
-* **i18n:** translate the rating sensors hint in the attribute rename notice ([a424821](https://github.com/jpawlowski/hass.tibber_prices/commit/a424821dfcfc52f7d4985644c41d6eaa208127e3))
-
+- **Diagnostics files no longer contain personal data.** The home's address, coordinates, home ID, names and account email are removed from the diagnostics download, so you can attach it to a public issue.
+- **The connection sensor and the chart export show readable attribute names** instead of raw keys.
+- **The chart export no longer fills the database.** Its full result was stored in the history; now only the attributes it declares are kept, and unknown attributes of other entities aren't stored either.
+- **The attribute rename notice reads fully in your language.** Its hint about the rating sensors was still in English in the German, Norwegian, Dutch and Swedish texts.
 
 ### ⚡ More Reliable
 
-* **recorder:** also exclude the trend percentages and next-hours averages ([8fd78e8](https://github.com/jpawlowski/hass.tibber_prices/commit/8fd78e82dee69eaa27cd19a1a3d92d4b923b2215))
-* **recorder:** exclude more derived and repeated attributes from history ([98acc38](https://github.com/jpawlowski/hass.tibber_prices/commit/98acc3826d9f103a16800059d9f4fc1d2b348347))
+- **The Home Assistant database grows more slowly.** Attributes that repeat the state or can be recalculated from the recorded prices are no longer kept in the history, for example the trend percentages, next-hours averages, volatility statistics and timing minutes. The states and the main numbers stay in the history, and rows already stored are unchanged.
