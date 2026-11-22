@@ -1,5 +1,5 @@
 ---
-description: "Use when writing or suggesting git commit messages, deciding commit type/scope, or preparing release-note-relevant commit trailers."
+description: "Use when writing or suggesting git commit messages or pull request titles, or deciding commit type/scope (the type decides what appears in the release notes)."
 ---
 
 # Commit Message Rules (Release-Notes Aware)
@@ -25,31 +25,29 @@ Impact: <user-facing outcome>
 - Keep summary imperative and concise.
 - Keep body technical (what changed and why).
 - Keep Impact user-facing (what users notice).
+- The subject is the line users read in the release notes (release-please lists subjects only), so write it for them; Impact stays in the body for reviewers and the history.
 
 ## Type Selection
 
-- Use feat for new user-visible capability.
-- Use fix only for user-visible bug fixes.
-- Use perf for user-visible reliability/performance improvements.
-- Use docs, test, refactor, chore, ci, build for non-user-facing work.
+Release notes come from release-please (`release-please-config.json`), which reads the commits on main and sorts them **by type only** (it ignores scopes and trailers):
+
+- `feat` → "What's New": new user-visible capability.
+- `fix` → "Fixed": user-visible bug fixes only.
+- `perf` → "More Reliable": user-visible reliability/performance improvements.
+- `build` → "Updated Dependencies": only as `build(deps)`, for requirements of the integration itself (`manifest.json`), which reach users. Renovate writes these; `pr-title.yml` rejects any other `build` scope. Packaging and tooling are `chore` or `ci`.
+- `docs`, `test`, `refactor`, `style`, `ci`, `chore`, `revert` are hidden: use them for everything users don't notice.
+
+The type decides whether a change appears in the release notes, so pick it for the reader of the release notes. A pull request title becomes the commit on main (squash merge), so the same rules apply to it (checked by `.github/workflows/pr-title.yml`).
 
 ## Not a Breaking Change: Raising the Minimum Home Assistant Version
 
-Raising the minimum supported Home Assistant version (`hacs.json`, installation docs) is NOT a breaking change: users on an older Home Assistant are never offered the update, so nothing breaks for them. Never mark it with `!` or a `BREAKING CHANGE` trailer, and don't write "update Home Assistant first" into Impact. Use `chore(deps)` and state the new minimum in the body; the release notes still list it, which is enough.
+Raising the minimum supported Home Assistant version (`hacs.json`, installation docs) is NOT a breaking change: users on an older Home Assistant are never offered the update, so nothing breaks for them. Never mark it with `!` or a `BREAKING CHANGE` trailer, and don't write "update Home Assistant first" into Impact. Use `build(deps)` and state the new minimum in the subject or body; the release notes list it, which is enough.
 
 ## Critical Rule: Internal/Unreleased Fixes
 
-If a fix addresses code that was not released to users yet, DO NOT treat it as a user-facing fix.
+If a fix addresses code that was not released to users yet, DO NOT treat it as a user-facing fix: use `chore(...)`, `refactor(...)` or `test(...)` instead of `fix(...)`, so release-please leaves it out. Trailers such as `Release-Notes: skip` have no effect any more.
 
-In that case:
-
-- Prefer chore(...) or refactor(...) instead of fix(...), and/or
-- Add an explicit trailer in the commit body:
-  - Release-Notes: skip
-  - User-Impact: none
-  - Released-Bug: no
-
-Any one of these trailers is enough.
+To change a line after the fact, put a `BEGIN_COMMIT_OVERRIDE` … `END_COMMIT_OVERRIDE` block into the body of the squash-merged pull request (release-please reads it instead of the commit message); for a commit pushed directly to main there is no such way, so get the type right before committing.
 
 ## How To Decide Released vs Unreleased
 
@@ -61,16 +59,6 @@ Interpretation:
 
 - NOT RELEASED -> treat as internal/non-user-facing.
 - ALREADY RELEASED -> user-facing fix is possible.
-
-## Release Notes Alignment
-
-This repository's release notes generator excludes commits with any of these trailers:
-
-- Release-Notes: skip
-- User-Impact: none
-- Released-Bug: no
-
-Therefore, add one of them whenever you intentionally want to exclude a commit from release notes.
 
 ## Examples
 
@@ -87,13 +75,3 @@ Impact: Setup wizard no longer fails for users when home data changes during con
 chore(periods): adjust extension guard for new geometric matcher
 
 Tune guard conditions in the new matcher implementation to avoid edge-case misclassification during development.
-
-User-Impact: none
-
-### Alternative with explicit skip marker
-
-fix(periods): correct follow-up edge case in unreleased geometric matcher
-
-Adjust comparison threshold in iterative matcher pass.
-
-Release-Notes: skip

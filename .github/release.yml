@@ -1,5 +1,7 @@
 # Configuration for GitHub's automatic release notes generation
 # https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+# Used for the notes of beta pre-releases (release.yml, gh release create --generate-notes);
+# stable releases take theirs from release-please (CHANGELOG.md).
 
 changelog:
   exclude:

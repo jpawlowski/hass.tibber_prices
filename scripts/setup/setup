@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# script/setup: Setup script used by DevContainers to prepare the project
+# scripts/setup/setup: Setup script used by DevContainers to prepare the project
 #
 # Installs the development tools pinned in mise.toml (Python, Node, uv,
-# pyright, prettier, git-cliff, shellcheck, shfmt, yq) via mise, plus the
-# optional AI release note backends (Claude Code CLI, GitHub Copilot CLI), then
+# pyright, prettier, shellcheck, shfmt, yq) via mise, plus the
+# optional AI coding assistants (Claude Code CLI, GitHub Copilot CLI), then
 # runs bootstrap. Called automatically by DevContainer postCreateCommand.
 #
 # Usage:
@@ -33,18 +33,18 @@ mise install
 # The DevContainer puts the shims on PATH (remoteEnv); this makes sure of it here too
 export PATH="${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims:$PATH"
 
-# Install optional release note backend: Claude Code CLI (AI-powered, preferred)
+# Install optional AI coding assistant: Claude Code CLI
 if command -v npm >/dev/null 2>&1 && ! command -v claude >/dev/null 2>&1; then
-    log_header "Installing Claude Code CLI for AI-powered release notes"
+    log_header "Installing Claude Code CLI"
     npm install -g @anthropic-ai/claude-code 2>/dev/null || {
         log_warning "Claude Code CLI installation failed (optional)"
         log_info "You can install it manually: ${BOLD}npm install -g @anthropic-ai/claude-code${NC}"
     }
 fi
 
-# Install optional release note backend: GitHub Copilot CLI (AI-powered)
+# Install optional AI coding assistant: GitHub Copilot CLI
 if command -v npm >/dev/null 2>&1 && ! command -v copilot >/dev/null 2>&1; then
-    log_header "Installing GitHub Copilot CLI for AI-powered release notes"
+    log_header "Installing GitHub Copilot CLI"
     npm install -g @github/copilot 2>/dev/null || {
         log_warning "GitHub Copilot CLI installation failed (optional)"
         log_info "You can install it manually: ${BOLD}npm install -g @github/copilot${NC}"

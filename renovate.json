@@ -34,8 +34,9 @@
       "enabled": false
     },
     {
-      "description": "Requirements of the integration itself reach users: listed in the release notes (chore(deps)), unlike all other updates here",
+      "description": "Requirements of the integration itself reach users: build(deps) is listed in the release notes (release-please-config.json), chore(dev-deps) of all other updates here is not",
       "matchManagers": ["homeassistant-manifest"],
+      "semanticCommitType": "build",
       "semanticCommitScope": "deps"
     },
     {

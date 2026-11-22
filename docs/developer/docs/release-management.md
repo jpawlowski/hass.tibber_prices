@@ -2,359 +2,116 @@
 comments: false
 ---
 
-# Release Notes Generation
+# Release Management
 
-This project supports **three ways** to generate release notes from conventional commits, plus **automatic version management**.
+Releases come from [release-please](https://github.com/googleapis/release-please). Nobody picks a
+version or runs a release script: the version and the release notes follow from the
+[Conventional Commits](https://www.conventionalcommits.org/) on `main`.
 
-## 🚀 Quick Start: Preparing a Release
+## 🚀 How a Release Happens
 
-**Recommended workflow (automatic & foolproof):**
+1. **Every push to `main`** updates one open **release pull request** (`chore(main): release X.Y.Z`).
+   It shows the next version and the `CHANGELOG.md` section that will become the release notes,
+   so you always see what the next release would contain.
+2. **Merging the release pull request** writes the version into `manifest.json` and
+   `.release-please-manifest.json`, creates the tag `vX.Y.Z` and a **draft** GitHub release.
+3. The **Release** workflow (`.github/workflows/release.yml`) then:
+    - **build** (read-only): `./scripts/release/build-asset` packs `custom_components/tibber_prices/`
+      of the tag into `tibber_prices.zip` and checks its version and the layout the store installs
+    - **publish**: attaches the zip and publishes the release (a draft until then, so no install
+      ever finds the asset missing)
+    - **docs**: starts `docusaurus.yml` to version the docs
 
-```bash
-# 1. Use the helper script to prepare release
-./scripts/release/prepare 0.3.0
+The repository setting "Allow GitHub Actions to create and approve pull requests" (Settings →
+Actions → General) must be on, or release-please can't open its pull request.
 
-# This will:
-#   - Update manifest.json version to 0.3.0
-#   - Create commit: "chore(release): bump version to 0.3.0"
-#   - Create tag: v0.3.0
-#   - Show you what will be pushed
+### Which version comes next
 
-# 2. Review and push when ready
-git push origin main v0.3.0
+| Commits since the last release           | Next version (before 1.0) |
+| ---------------------------------------- | ------------------------- |
+| a breaking change (`feat!:`, `BREAKING CHANGE:`) | MINOR (0.x.0)     |
+| at least one `feat`                      | MINOR (0.x.0)             |
+| only `fix`, `perf`, …                    | PATCH (0.0.x)             |
 
-# 3. CI/CD automatically:
-#   - Detects the new tag
-#   - Generates release notes (excluding version bump commit)
-#   - Creates GitHub release
-```
+To force a version, put `Release-As: 0.41.0` into the body of a commit on `main`.
 
-**If you forget to bump manifest.json:**
+### What appears in the release notes
 
-```bash
-# Just edit manifest.json manually and commit
-vim custom_components/tibber_prices/manifest.json  # "version": "0.3.0"
-git commit -am "chore(release): bump version to 0.3.0"
-git push
+release-please sorts the commits **by type**, never by scope:
 
-# Auto-Tag workflow detects manifest.json change and creates tag automatically!
-# Then Release workflow kicks in and creates the GitHub release
-```
+| Type                                     | Section                |
+| ---------------------------------------- | ---------------------- |
+| `feat`                                   | 🎉 What's New          |
+| `fix`                                    | 🐛 Fixed               |
+| `perf`                                   | ⚡ More Reliable       |
+| `build(deps)` (the integration's requirements; other `build` scopes are rejected) | 📦 Updated Dependencies |
+| `docs`, `test`, `refactor`, `style`, `ci`, `chore`, `revert` | hidden |
 
----
+Each commit is one line, its subject. So:
 
-## 📋 Release Options
-
-### 1. GitHub UI Button (Easiest)
-
-Use GitHub's built-in release notes generator:
-
-1. Go to [Releases](https://github.com/jpawlowski/hass.tibber_prices/releases)
-2. Click "Draft a new release"
-3. Select your tag
-4. Click "Generate release notes" button
-5. Edit if needed and publish
-
-**Uses:** `.github/release.yml` configuration
-**Best for:** Quick releases, works with PRs that have labels
-**Note:** Direct commits appear in "Other Changes" category
-
----
-
-### 2. Local Script (Intelligent)
-
-Run `./scripts/release/generate-notes` to parse conventional commits locally.
-
-**Automatic backend detection:**
-
-```bash
-# Generate from latest tag to HEAD
-./scripts/release/generate-notes
-
-# Generate between specific tags
-./scripts/release/generate-notes v1.0.0 v1.1.0
-
-# Generate from tag to HEAD
-./scripts/release/generate-notes v1.0.0 HEAD
-```
-
-**Force specific backend:**
-
-```bash
-# Use AI (GitHub Copilot CLI)
-RELEASE_NOTES_BACKEND=copilot ./scripts/release/generate-notes
-
-# Use git-cliff (template-based)
-RELEASE_NOTES_BACKEND=git-cliff ./scripts/release/generate-notes
-
-# Use manual parsing (grep/awk fallback)
-RELEASE_NOTES_BACKEND=manual ./scripts/release/generate-notes
-```
-
-**Disable AI** (useful for CI/CD):
-
-```bash
-USE_AI=false ./scripts/release/generate-notes
-```
-
-#### Backend Priority
-
-The script automatically selects the best available backend:
-
-1. **GitHub Copilot CLI** - AI-powered, context-aware (best quality)
-2. **git-cliff** - Fast Rust tool with templates (reliable)
-3. **Manual** - Simple grep/awk parsing (always works)
-
-In CI/CD (`$CI` or `$GITHUB_ACTIONS`), AI is automatically disabled.
-
-#### Installing Optional Backends
-
-**In DevContainer (automatic):**
-
-git-cliff is pinned in `mise.toml` and installed by mise when the DevContainer is built (`scripts/setup/setup`). CI installs the same version.
-
-**Manual installation (outside DevContainer):**
-
-```bash
-# With mise installed (https://mise.jdx.dev), in the project root:
-mise install git-cliff
-```
+- **Use pull requests and squash-merge them.** The pull request title becomes the commit on
+  `main` and thus one line in the release notes, however many commits the branch had. A check
+  (`.github/workflows/pr-title.yml`) makes sure the title is a Conventional Commit.
+- **Pick the type for the reader of the release notes.** A fix for something that was never
+  released is `chore`/`refactor`, not `fix` (`./scripts/release/check-if-released <commit>` tells).
+- **To change a line before the release**, edit the body of the merged pull request and add
+  `BEGIN_COMMIT_OVERRIDE` … `END_COMMIT_OVERRIDE` with the replacement message; release-please
+  picks it up on the next push. A commit pushed directly to `main` has no such way back.
+- **Breaking changes** get their own section at the top of the notes, with the text of the
+  `BREAKING CHANGE:` footer: write there what users have to do.
 
 ---
 
-### 3. CI/CD Automation
+## 🧪 Beta Releases
 
-Automatic release notes on tag push.
-
-**Workflow:** `.github/workflows/release.yml`
-
-**Triggers:** Version tags (`v1.0.0`, `v2.1.3`, etc.)
+A beta skips the release pull request: tag a commit on `main` by hand.
 
 ```bash
-# Create and push a tag to trigger automatic release
-git tag v1.0.0
-git push origin v1.0.0
-
-# GitHub Actions will:
-# 1. Detect the new tag
-# 2. Generate release notes using git-cliff
-# 3. Create a GitHub release automatically
+git tag -a v0.40.0b0 -m "v0.40.0b0"
+git push origin v0.40.0b0
 ```
 
-**Backend:** Uses `git-cliff` (AI disabled in CI for reliability)
+The Release workflow builds the zip with the beta version (`build-asset` writes it into
+`manifest.json`) and creates a **pre-release**, so the stores offer it only with "show beta". Its
+notes are GitHub's generated list. release-please ignores beta tags; the next release pull
+request still counts from the last stable release. The docs are not versioned for betas.
 
 ---
 
-## 📝 Output Format
+## 📦 The Release Asset
 
-All methods produce GitHub-flavored Markdown with emoji categories:
-
-```markdown
-## 🎉 New Features
-
-- **scope**: Description ([abc1234](link-to-commit))
-
-## 🐛 Bug Fixes
-
-- **scope**: Description ([def5678](link-to-commit))
-
-## 📚 Documentation
-
-- **scope**: Description ([ghi9012](link-to-commit))
-
-## 🔧 Maintenance & Refactoring
-
-- **scope**: Description ([jkl3456](link-to-commit))
-
-## 🧪 Testing
-
-- **scope**: Description ([mno7890](link-to-commit))
-```
-
----
-
-## 🎯 When to Use Which
-
-| Method                | Use Case              | Pros                          | Cons                     |
-| --------------------- | --------------------- | ----------------------------- | ------------------------ |
-| **Helper Script**     | Normal releases       | Foolproof, automatic          | Requires script          |
-| **Auto-Tag Workflow** | Forgot script         | Safety net, automatic tagging | Still need manifest bump |
-| **GitHub Button**     | Manual quick release  | Easy, no script               | Limited categorization   |
-| **Local Script**      | Testing release notes | Preview before release        | Manual process           |
-| **CI/CD**             | After tag push        | Fully automatic               | Needs tag first          |
-
----
-
-## 🔄 Complete Release Workflows
-
-### Workflow A: Using Helper Script (Recommended)
+`hacs.json` sets `zip_release` and `filename`, so the store installs every version from the
+release asset, never from the repository (the default branch is hidden with
+`hide_default_branch`). To see exactly what a release would ship:
 
 ```bash
-# Step 1: Prepare release (all-in-one)
-./scripts/release/prepare 0.3.0
-
-# Step 2: Review changes
-git log -1 --stat
-git show v0.3.0
-
-# Step 3: Push when ready
-git push origin main v0.3.0
-
-# Done! CI/CD creates the release automatically
+./scripts/release/build-asset v0.40.0 dist   # needs the tag locally
+unzip -l dist/tibber_prices.zip
 ```
 
-**What happens:**
-
-1. Script bumps manifest.json → commits → creates tag locally
-2. You push commit + tag together
-3. Release workflow sees tag → generates notes → creates release
-
----
-
-### Workflow B: Manual (with Auto-Tag Safety Net)
-
-```bash
-# Step 1: Bump version manually
-vim custom_components/tibber_prices/manifest.json
-# Change: "version": "0.3.0"
-
-# Step 2: Commit
-git commit -am "chore(release): bump version to 0.3.0"
-git push
-
-# Step 3: Wait for Auto-Tag workflow
-# GitHub Actions automatically creates v0.3.0 tag
-# Then Release workflow creates the release
-```
-
-**What happens:**
-
-1. You push manifest.json change
-2. Auto-Tag workflow detects change → creates tag automatically
-3. Release workflow sees new tag → creates release
-
----
-
-### Workflow C: Manual Tag (Old Way)
-
-```bash
-# Step 1: Bump version
-vim custom_components/tibber_prices/manifest.json
-git commit -am "chore(release): bump version to 0.3.0"
-
-# Step 2: Create tag manually
-git tag v0.3.0
-git push origin main v0.3.0
-
-# Release workflow creates release
-```
-
-**What happens:**
-
-1. You create and push tag manually
-2. Release workflow creates release
-3. Auto-Tag workflow skips (tag already exists)
-
----
-
-## ⚙️ Configuration Files
-
-- `scripts/release/prepare` - Helper script to bump version + create tag
-- `.github/workflows/auto-tag.yml` - Automatic tag creation on manifest.json change
-- `.github/workflows/release.yml` - Automatic release on tag push
-- `.github/release.yml` - GitHub UI button configuration
-- `cliff.toml` - git-cliff template (filters out version bumps)
-
----
-
-## 🛡️ Safety Features
-
-### 1. **Version Validation**
-
-Both helper script and auto-tag workflow validate version format (X.Y.Z).
-
-### 2. **No Duplicate Tags**
-
-- Helper script checks if tag exists (local + remote)
-- Auto-tag workflow checks if tag exists before creating
-
-### 3. **Atomic Operations**
-
-Helper script creates commit + tag locally. You decide when to push.
-
-### 4. **Version Bumps Filtered**
-
-Release notes automatically exclude `chore(release): bump version` commits.
-
-### 5. **Rollback Instructions**
-
-Helper script shows how to undo if you change your mind.
+**Don't create releases with GitHub's "Draft a new release" button**: a release without
+`tibber_prices.zip` can't be installed by the store.
 
 ---
 
 ## 🐛 Troubleshooting
 
-**"Tag already exists" error:**
+**No release pull request appears:** check the Release workflow run on `main`, and the setting
+"Allow GitHub Actions to create and approve pull requests". With only hidden types since the last
+release (`docs`, `chore`, …) there is nothing to release, so there is no pull request either.
 
-```bash
-# Local tag
-git tag -d v0.3.0
+**The release is still a draft / has no asset:** re-run the asset jobs for the tag (Actions →
+"Release" → Run workflow, tag `v0.40.0`). They upload the asset again and publish.
 
-# Remote tag (only if you need to recreate)
-git push origin :refs/tags/v0.3.0
-```
-
-**Manifest version doesn't match tag:**
-
-This shouldn't happen with the new workflows, but if it does:
-
-```bash
-# 1. Fix manifest.json
-vim custom_components/tibber_prices/manifest.json
-
-# 2. Amend the commit
-git commit --amend -am "chore(release): bump version to 0.3.0"
-
-# 3. Move the tag
-git tag -f v0.3.0
-git push -f origin main v0.3.0
-```
-
-**Auto-tag didn't create tag:**
-
-Check workflow runs in GitHub Actions. Common causes:
-
-- Tag already exists remotely
-- Invalid version format in manifest.json
-- manifest.json not in the commit that was pushed
+**Checks don't run on the release pull request:** pull requests opened with `GITHUB_TOKEN` start
+no workflows. The release pull request only changes `CHANGELOG.md` and version numbers; the
+commits it releases were checked on `main`.
 
 ---
 
 ## 🔍 Format Requirements
 
-**HACS:** No specific format required, uses GitHub releases as-is
+**HACS / Marketplace:** No specific format required, uses GitHub releases as-is; the update
+entity shows the release body
 **Home Assistant:** No specific format required for custom integrations
 **Markdown:** Standard GitHub-flavored Markdown supported
-**HTML:** Can include `<ha-alert>` tags if needed
-
----
-
-## 💡 Tips
-
-1. **Conventional Commits:** Use proper commit format for best results:
-
-    ```
-    feat(scope): Add new feature
-
-    Detailed description of what changed.
-
-    Impact: Users can now do X and Y.
-    ```
-
-2. **Impact Section:** Add `Impact:` in commit body for user-friendly descriptions
-
-3. **Test Locally:** Run `./scripts/release/generate-notes` before creating release
-
-4. **AI vs Template:** GitHub Copilot CLI provides better descriptions, git-cliff is faster and more reliable
-
-5. **CI/CD:** Tag push triggers automatic release - no manual intervention needed

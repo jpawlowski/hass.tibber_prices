@@ -23,3 +23,6 @@ docs/
 
 # Ignore Claude Code worktrees (full copies of the repository)
 .claude/
+
+# Written by release-please, which formats it its own way
+CHANGELOG.md

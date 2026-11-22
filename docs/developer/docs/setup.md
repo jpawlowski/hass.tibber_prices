@@ -30,7 +30,7 @@ The DevContainer includes:
 - `uv` package manager (fast, modern Python tooling)
 - Home Assistant development dependencies
 - Ruff linter/formatter
-- Git, GitHub CLI, Node.js, pyright, git-cliff, shellcheck, shfmt, yq
+- Git, GitHub CLI, Node.js, pyright, shellcheck, shfmt, yq
 
 ### Tool Versions (mise)
 

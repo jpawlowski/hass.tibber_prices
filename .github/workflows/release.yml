@@ -1,314 +1,149 @@
-name: Generate Release Notes
+name: Release
+
+# Releases come from release-please (release-please-config.json): every push to main updates
+# one open release pull request with the next version and its CHANGELOG.md section. Merging
+# that pull request writes the version into manifest.json, creates the tag and a draft release;
+# the jobs below then build tibber_prices.zip from the tag, attach it and publish the release.
+# The release stays a draft until its asset is attached, so no install ever finds it missing.
+#
+# A beta is a tag pushed by hand (vX.Y.ZbN, e.g. v0.40.0b0) on a commit on main: it skips the
+# release pull request and becomes a pre-release with the same asset. release-please ignores it,
+# since it reads the released version from .release-please-manifest.json.
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - "v*.*.*" # Triggers on version tags like v1.0.0, v2.1.3, etc.
+      - "v*.*.*b*"
+  # Re-runs the asset job for a release whose upload failed; "Re-run all jobs" would create no
+  # release and skip it.
   workflow_dispatch:
     inputs:
       tag:
-        description: "Tag version to release (e.g., v0.3.0)"
+        description: "Release tag to attach the ZIP asset to and publish (e.g. v0.40.0)"
         required: true
         type: string
 
-permissions:
-  contents: write # Needed to create/update releases and push commits
+# Each job gets only what it needs (see the comment on each).
+permissions: {}
 
-env:
-  # The release tag. A tag push names it in the ref, a manual run in the input; on a manual run
-  # GITHUB_REF is the branch, so no step reads GITHUB_REF or GITHUB_REF_NAME for it.
-  TAG: ${{ inputs.tag || github.ref_name }}
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  # Note: We trust that validate.yml and lint.yml have already run on the
-  # main branch commit before the tag was created (either by prepare-release
-  # script or auto-tag workflow). This avoids duplicate workflow runs.
-
-  sync-manifest:
-    name: Sync manifest.json with tag version
-    runs-on: ubuntu-latest
+  release-please:
+    name: Release Please
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    # Also needs "Allow GitHub Actions to create and approve pull requests" under
+    # Settings > Actions > General.
+    permissions:
+      contents: write # Create tags and draft releases
+      pull-requests: write # Open and update the release pull request
     outputs:
-      updated: ${{ steps.update.outputs.updated }}
-      version: ${{ steps.tag.outputs.version }}
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
     steps:
-      - name: Checkout repository
+      - name: Run release-please
+        id: release
+        # Reads release-please-config.json and .release-please-manifest.json
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+
+  build:
+    name: Build release asset
+    needs: release-please
+    if: >-
+      !cancelled() && (needs.release-please.outputs.release_created == 'true'
+      || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/'))
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read # No write token here: a build step may run third-party code (#271)
+    env:
+      TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name || github.ref_name }}
+    outputs:
+      tag: ${{ env.TAG }}
+      prerelease: ${{ steps.kind.outputs.prerelease }}
+    steps:
+      - name: Tell a beta from a release
+        id: kind
+        run: |
+          if [[ ${TAG} =~ b[0-9]+$ ]]; then echo "prerelease=true"; else echo "prerelease=false"; fi >> "$GITHUB_OUTPUT"
+
+      - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ env.TAG }}
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract version from tag
-        id: tag
-        run: |
-          TAG_VERSION="${TAG#v}"
-          echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
-          echo "Tag version: v$TAG_VERSION"
-
-      - name: Check manifest.json version
-        id: manifest
-        run: |
-          MANIFEST_VERSION=$(grep -o '"version": "[^"]*"' custom_components/tibber_prices/manifest.json | cut -d'"' -f4)
-          echo "version=$MANIFEST_VERSION" >> $GITHUB_OUTPUT
-          echo "Manifest version: $MANIFEST_VERSION"
-
-      - name: Update manifest.json if needed
-        id: update
-        run: |
-          TAG_VERSION="${{ steps.tag.outputs.version }}"
-          MANIFEST_VERSION="${{ steps.manifest.outputs.version }}"
-
-          if [ "$TAG_VERSION" != "$MANIFEST_VERSION" ]; then
-            echo "::notice::Version mismatch detected - auto-syncing"
-            echo "  Tag: v$TAG_VERSION"
-            echo "  Manifest: $MANIFEST_VERSION"
-
-            # Update manifest.json
-            sed -i "s/\"version\": \".*\"/\"version\": \"$TAG_VERSION\"/" custom_components/tibber_prices/manifest.json
-
-            # Verify update
-            NEW_VERSION=$(grep -o '"version": "[^"]*"' custom_components/tibber_prices/manifest.json | cut -d'"' -f4)
-            if [ "$NEW_VERSION" = "$TAG_VERSION" ]; then
-              echo "✓ Successfully updated manifest.json to $TAG_VERSION"
-              echo "updated=true" >> $GITHUB_OUTPUT
-            else
-              echo "::error::Failed to update manifest.json"
-              exit 1
-            fi
-          else
-            echo "✓ Versions match - no update needed"
-            echo "updated=false" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Commit and push manifest.json update
-        if: steps.update.outputs.updated == 'true'
-        run: |
-          TAG_VERSION="v${{ steps.tag.outputs.version }}"
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          git add custom_components/tibber_prices/manifest.json
-          git commit -m "chore(release): sync manifest.json with tag ${TAG_VERSION}"
-
-          # Push to main branch
-          git push origin HEAD:main
-
-          # Delete and recreate tag on new commit
-          echo "::notice::Recreating tag ${TAG_VERSION} on updated commit"
-          git tag -d "${TAG_VERSION}"
-          git push origin :refs/tags/"${TAG_VERSION}"
-          git tag -a "${TAG_VERSION}" -m "Release ${TAG_VERSION}"
-          git push origin "${TAG_VERSION}"
-
-          # Delete existing release if present (will be recreated by release-notes job)
-          gh release delete "${TAG_VERSION}" --yes --cleanup-tag=false || echo "No existing release to delete"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  release-notes:
-    name: Generate and publish release notes
-    runs-on: ubuntu-latest
-    needs: sync-manifest # Wait for manifest sync to complete
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          fetch-depth: 0 # Fetch all history for git-cliff
-          ref: main # Use updated main branch if manifest was synced
-
-      - name: Get previous tag
-        id: previoustag
-        run: |
-          # Relative to the pushed tag, not HEAD: the job checks out main, which may be ahead of the tag
-          PREVIOUS_TAG=$(git describe --tags --abbrev=0 "${TAG}^" 2>/dev/null || echo "")
-          echo "previous_tag=${PREVIOUS_TAG}" >> $GITHUB_OUTPUT
-          echo "Previous tag: ${PREVIOUS_TAG}"
-
-      - name: Check version appropriateness
-        id: version_check
-        run: |
-          TAG_VERSION="${TAG#v}"
-          PREV_TAG="${{ steps.previoustag.outputs.previous_tag }}"
-
-          if [ -z "$PREV_TAG" ]; then
-            echo "warning=" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          # Analyze commits between tags
-          COMMITS=$(git log ${PREV_TAG}..${TAG} --format="%s" --no-merges)
-          BREAKING=$(echo "$COMMITS" | grep -cE "^[^:]+!:|^[^:]+: .+BREAKING CHANGE" || true)
-          FEAT=$(echo "$COMMITS" | grep -cE "^feat(\(.+\))?:" || true)
-          FIX=$(echo "$COMMITS" | grep -cE "^fix(\(.+\))?:" || true)
-
-          parse_version() {
-            local version="$1"
-            if [[ $version =~ ^([0-9]+)\.([0-9]+)\.([0-9]+)(b[0-9]+)?$ ]]; then
-              echo "${BASH_REMATCH[1]} ${BASH_REMATCH[2]} ${BASH_REMATCH[3]} ${BASH_REMATCH[4]}"
-            else
-              echo "Invalid version format: $version" >&2
-              exit 1
-            fi
-          }
-
-          # Parse versions (support beta/prerelease suffix like 0.25.0b0)
-          PREV_VERSION="${PREV_TAG#v}"
-          read -r PREV_MAJOR PREV_MINOR PREV_PATCH PREV_PRERELEASE <<< "$(parse_version "$PREV_VERSION")"
-          read -r MAJOR MINOR PATCH PRERELEASE <<< "$(parse_version "$TAG_VERSION")"
-
-          WARNING=""
-          SUGGESTION=""
-
-          # Pre-1.0 version rules (0.x.y)
-          if [ "$MAJOR" -eq 0 ]; then
-            if [ $BREAKING -gt 0 ] && [ "$MINOR" = "$PREV_MINOR" ]; then
-              WARNING="⚠️ **Version Warning**: $BREAKING breaking change(s) detected, but only PATCH version bumped."
-              SUGGESTION="In pre-1.0 (0.x.y), breaking changes should bump MINOR version. Consider **v0.$((MINOR + 1)).0** instead of v$TAG_VERSION"
-            elif [ $FEAT -gt 0 ] && [ "$MINOR" = "$PREV_MINOR" ] && [ "$PATCH" != "$PREV_PATCH" ]; then
-              WARNING="⚠️ **Version Warning**: $FEAT new feature(s) detected, but only PATCH version bumped."
-              SUGGESTION="New features should bump MINOR version. Consider **v0.$((MINOR + 1)).0** instead of v$TAG_VERSION"
-            fi
-          else
-            # Post-1.0 version rules (x.y.z)
-            if [ $BREAKING -gt 0 ] && [ "$MAJOR" = "$PREV_MAJOR" ]; then
-              WARNING="⚠️ **Version Warning**: $BREAKING breaking change(s) detected, but MAJOR version not bumped."
-              SUGGESTION="Breaking changes require MAJOR version bump. Consider **v$((MAJOR + 1)).0.0** instead of v$TAG_VERSION"
-            elif [ $FEAT -gt 0 ] && [ "$MINOR" = "$PREV_MINOR" ] && [ "$PATCH" != "$PREV_PATCH" ]; then
-              WARNING="⚠️ **Version Warning**: $FEAT new feature(s) detected, but only PATCH version bumped."
-              SUGGESTION="New features should bump MINOR version. Consider **v$MAJOR.$((MINOR + 1)).0** instead of v$TAG_VERSION"
-            fi
-          fi
-
-          # Output warning message
-          if [ -n "$WARNING" ]; then
-            echo "$WARNING"
-            echo "$SUGGESTION"
-            echo ""
-            echo "Commits analyzed: Breaking=$BREAKING, Features=$FEAT, Fixes=$FIX"
-
-            # Set output for later steps (using heredoc for multi-line)
-            # Use random delimiter to avoid collision if content contains 'EOF'
-            WARN_DELIM=$(openssl rand -hex 16)
-            {
-              echo "warning<<${WARN_DELIM}"
-              echo "$WARNING"
-              echo ""
-              echo "$SUGGESTION"
-              echo ""
-              echo "**Commits analyzed:** Breaking=$BREAKING, Features=$FEAT, Fixes=$FIX"
-              echo ""
-              echo "**To fix:**"
-              echo "1. Run locally: \`./scripts/release/suggest-version\`"
-              echo "2. Create correct tag: \`./scripts/release/prepare <suggested-version>\`"
-              echo "3. Push the corrected tag: \`git push origin v<suggested-version>\`"
-              echo ""
-              echo "**This tag will be automatically deleted in the next step.**"
-              echo "${WARN_DELIM}"
-            } >> $GITHUB_OUTPUT
-          else
-            echo "✓ Version bump looks appropriate for the changes"
-            echo "warning=" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Delete inappropriate version tag
-        if: steps.version_check.outputs.warning != ''
-        run: |
-          echo "❌ Deleting tag ${TAG} (version not appropriate for changes)"
-          echo ""
-          echo "${{ steps.version_check.outputs.warning }}"
-          echo ""
-          git push origin --delete "${TAG}"
-          exit 1
-
-      - name: Install git-cliff (mise.toml)
-        if: steps.version_check.outputs.warning == ''
-        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
-        with:
-          install_args: "git-cliff"
-
-      - name: Generate release notes
-        if: steps.version_check.outputs.warning == ''
-        id: release_notes
-        run: |
-          FROM_TAG="${{ steps.previoustag.outputs.previous_tag }}"
-          TO_TAG="${TAG}"
-
-          echo "Generating release notes from ${FROM_TAG} to ${TO_TAG}"
-
-          # Use our script with git-cliff backend (AI disabled in CI)
-          # git-cliff will handle filtering via cliff.toml
-          USE_AI=false ./scripts/release/generate-notes "${FROM_TAG}" "${TO_TAG}" > release-notes.md
-
-          # Extract title from release notes (first line starting with "# ")
-          TITLE=$(head -n 1 release-notes.md | sed 's/^# //')
-          if [ -z "$TITLE" ]; then
-            TITLE="Release Updates"
-          fi
-          echo "title=$TITLE" >> $GITHUB_OUTPUT
-
-          # Output for GitHub Actions
-          # Use random delimiter to avoid collision if release notes contain 'EOF'
-          NOTES_DELIM=$(openssl rand -hex 16)
-          {
-            echo "notes<<${NOTES_DELIM}"
-            cat release-notes.md
-            printf '\n'  # Ensure content ends with newline (git-cliff trim=true removes it)
-            echo "${NOTES_DELIM}"
-          } >> $GITHUB_OUTPUT
+          # Fully qualified, so the shallow fetch creates refs/tags/<tag>, which build-asset reads
+          ref: refs/tags/${{ env.TAG }}
+          persist-credentials: false
 
       - name: Build release asset
-        id: asset
-        if: steps.version_check.outputs.warning == ''
-        run: |
-          # The store installs this asset (hacs.json: zip_release + filename) by unpacking it into
-          # custom_components/tibber_prices/, so the zip root is the integration, and counts its downloads.
-          # Built from the tag, not from main: main may be ahead of it. The checkout above fetched all tags
-          # after sync-manifest ran, so a moved tag is the current one. git archive packs tracked files only.
-          # The file name comes from hacs.json of the tag (what the store reads), the one place the store reads it from: a second copy
-          # here could drift and ship an asset under a name the store never asks for (404 on install).
-          filename=$(git show "refs/tags/${TAG}:hacs.json" | jq -er '.filename') \
-            || { echo "::error::hacs.json at ${TAG} has no filename (zip_release needs one)"; exit 1; }
-          echo "filename=${filename}" >> "$GITHUB_OUTPUT"
-          git archive --format=zip -o "${filename}" "refs/tags/${TAG}:custom_components/tibber_prices"
+        # Packs the tag, checks the manifest version (writes it for a beta) and the layout the
+        # store installs
+        run: ./scripts/release/build-asset "${TAG}" dist
 
-          # A zip with a wrong layout breaks the install for every user: check what the store needs
-          unzip -p "${filename}" manifest.json | grep -qF "\"version\": \"${TAG#v}\"" \
-            || { echo "::error::${filename} has no manifest.json at its root with version ${TAG#v}"; exit 1; }
-          entries=$(unzip -Z1 "${filename}")
-          for required in __init__.py frontend/cards/tibber-prices-cards.js; do
-            grep -qxF "${required}" <<< "${entries}" \
-              || { echo "::error::${filename} lacks ${required}"; exit 1; }
-          done
-
-      - name: Create GitHub Release
-        if: steps.version_check.outputs.warning == ''
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
+      - name: Upload release asset
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          tag_name: ${{ env.TAG }}
-          files: ${{ steps.asset.outputs.filename }}
-          name: ${{ steps.release_notes.outputs.title }}
-          body: ${{ steps.release_notes.outputs.notes }}
-          draft: false
-          prerelease: ${{ contains(env.TAG, 'b') }}
-          generate_release_notes: false # We provide our own
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          name: release-asset
+          path: dist/
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Summary
-        if: steps.version_check.outputs.warning == ''
+  publish:
+    name: Attach asset and publish
+    needs: build
+    # Explicit: the default success() also counts release-please, which a beta tag or a manual
+    # run skips, and would skip this job with it
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write # Upload the asset, publish the release
+    env:
+      TAG: ${{ needs.build.outputs.tag }}
+    steps:
+      - name: Download release asset
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: release-asset
+          path: dist
+
+      - name: Attach the asset, then publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
         run: |
-          echo "✅ Release notes generated and published!" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Tag:** ${TAG}" >> $GITHUB_STEP_SUMMARY
-          echo "**Previous tag:** ${{ steps.previoustag.outputs.previous_tag }}" >> $GITHUB_STEP_SUMMARY
-          if [[ "${{ needs.sync-manifest.outputs.updated }}" == "true" ]]; then
-            echo "**Manifest sync:** Updated manifest.json to version ${{ needs.sync-manifest.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
+            # release-please's draft (or a release whose upload failed before)
+            gh release upload "${TAG}" dist/* --clobber --repo "${GITHUB_REPOSITORY}"
+            gh release edit "${TAG}" --draft=false --repo "${GITHUB_REPOSITORY}"
+          elif [[ ${PRERELEASE} == true ]]; then
+            # A beta: no release pull request, so the notes come from GitHub (.github/release.yml)
+            gh release create "${TAG}" dist/* --verify-tag --prerelease --generate-notes \
+              --title "${TAG} (beta)" --repo "${GITHUB_REPOSITORY}"
           else
-            echo "**Manifest sync:** No update needed (version already matches)" >> $GITHUB_STEP_SUMMARY
+            echo "::error::No release for ${TAG}: stable releases come from the release pull request"
+            exit 1
           fi
-          if [ -n "${{ steps.version_check.outputs.warning }}" ]; then
-            echo "**Version check:** ⚠️ Warning detected (see release notes)" >> $GITHUB_STEP_SUMMARY
-          else
-            echo "**Version check:** ✓ Version appropriate for changes" >> $GITHUB_STEP_SUMMARY
-          fi
+          {
+            echo "**Tag:** ${TAG}"
+            echo "**Asset:** $(ls dist)"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  docs:
+    name: Version the docs
+    needs: [build, publish]
+    # Betas get no docs version (docusaurus.yml skips them too)
+    if: >-
+      ${{ !cancelled() && needs.publish.result == 'success'
+      && needs.build.outputs.prerelease == 'false' }}
+    runs-on: ubuntu-24.04
+    permissions:
+      actions: write # Start docusaurus.yml: a tag created with GITHUB_TOKEN starts no workflow
+    steps:
+      - name: Start docusaurus.yml for the tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.build.outputs.tag }}
+        run: gh workflow run docusaurus.yml --ref "${TAG}" --repo "${GITHUB_REPOSITORY}"

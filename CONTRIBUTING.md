@@ -70,17 +70,11 @@ We use **Conventional Commits** format:
 Impact: <user-visible effects>
 ```
 
-**Types:** `feat`, `fix`, `docs`, `refactor`, `chore`, `test`
+**Types:** `feat`, `fix`, `perf`, `build`, `docs`, `style`, `refactor`, `test`, `ci`, `chore`, `revert`
 
-For full commit-message rules (including release-note skip trailers for internal/unreleased fixes), see:
+The type decides what appears in the release notes. Pull requests are squash-merged, so **the pull request title becomes the commit on main** and has to follow the same format (a check enforces it).
 
-- `.github/instructions/commit-messages.instructions.md`
-
-Important trailers for commits that should NOT appear in release notes:
-
-- `Release-Notes: skip`
-- `User-Impact: none`
-- `Released-Bug: no`
+For the full commit-message rules, see `.github/instructions/commit-messages.instructions.md`.
 
 **Example:**
 
@@ -100,7 +94,7 @@ See `.github/instructions/commit-messages.instructions.md` for detailed commit-m
 
 1. **Push your branch** to your fork
 2. **Create a Pull Request** on GitHub with:
-   - Clear title describing the change
+   - A Conventional Commit title (`fix(sensors): …`): it becomes the commit on main and the line in the release notes
    - Detailed description with context
    - Reference related issues (`Fixes #123`)
 3. **Wait for review** and address feedback
