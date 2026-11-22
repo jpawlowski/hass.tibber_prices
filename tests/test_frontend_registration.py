@@ -41,6 +41,27 @@ async def test_cards_are_served_and_loaded_with_version() -> None:
 
 
 @pytest.mark.unit
+async def test_open_pages_can_ask_where_the_cards_are_now() -> None:
+    """The websocket command names the URL of this start, the one cards/reload.js compares with its own."""
+    hass = MagicMock()
+    hass.data = {}
+    hass.http.async_register_static_paths = AsyncMock()
+    hass.async_add_executor_job = AsyncMock(side_effect=lambda func, *args: func(*args))
+    with (
+        patch.object(frontend, "async_get_loaded_integration", return_value=MagicMock(version="1.2.3")),
+        patch.object(frontend, "_newest_modification", return_value=1700000000),
+        patch.object(frontend, "add_extra_js_url"),
+        patch.object(frontend.websocket_api, "async_register_command") as register,
+    ):
+        await frontend.async_register_frontend(hass)
+
+    register.assert_called_once_with(hass, frontend.websocket_cards_url)
+    connection = MagicMock()
+    frontend.websocket_cards_url(hass, connection, {"id": 7, "type": "tibber_prices/frontend"})
+    connection.send_result.assert_called_once_with(7, {"url": "/tibber_prices_frontend/1.2.3-1700000000"})
+
+
+@pytest.mark.unit
 def test_stamp_is_the_newest_module(tmp_path: Path) -> None:
     """Editing any module changes the URL; files that aren't modules (the gzip copies too) don't."""
     for name, modified in (("a.js", 1000), ("b.js", 2000), ("notes.txt", 3000), ("a.js.gz", 4000)):

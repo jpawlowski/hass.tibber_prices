@@ -7,6 +7,7 @@ import { HOLD_DOUBLE_TAP, cardTitle, dialogHead, trackKeyboard } from "./ui.js";
 import { stringsFor } from "./strings.js";
 import { DEFAULTS, modeVariables } from "./config.js";
 import { CARD_WINDOW_STYLE } from "./styles.js";
+import { watchForUpdate } from "./reload.js";
 
 // The cards a card can show in a window, its options for it under their key: the element, its
 // editor (a level down in the outer card's editor) and the icon of its row there
@@ -80,6 +81,7 @@ export class TibberPricesCardBase extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    watchForUpdate(hass);
     if (this._window) this._window.hass = hass;
     if (!this._config) return;
     this._applyAppearance();
