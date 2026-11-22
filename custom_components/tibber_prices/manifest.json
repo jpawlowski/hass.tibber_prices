@@ -1,13 +1,22 @@
 {
   "domain": "tibber_prices",
   "name": "Tibber Prices & Planning",
-  "categories": ["energy.energy_prices"],
-  "codeowners": ["@jpawlowski"],
+  "categories": [
+    "energy.energy_prices"
+  ],
+  "codeowners": [
+    "@jpawlowski"
+  ],
   "config_flow": true,
-  "dependencies": ["frontend", "http"],
+  "dependencies": [
+    "frontend",
+    "http"
+  ],
   "documentation": "https://github.com/jpawlowski/hass.tibber_prices",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/jpawlowski/hass.tibber_prices/issues",
-  "requirements": ["aiofiles>=23.2.1"],
-  "version": "0.39.1"
+  "requirements": [
+    "aiofiles>=23.2.1"
+  ],
+  "version": "0.40.0"
 }
