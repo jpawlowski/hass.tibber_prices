@@ -250,8 +250,8 @@ def add_decision_attributes(attributes: dict, current_period: dict) -> None:
         attributes["level"] = current_period["level"]
     if "rating_level" in current_period:
         attributes["rating_level"] = current_period["rating_level"]
-    if "rating_difference_%" in current_period:
-        attributes["rating_difference_%"] = current_period["rating_difference_%"]
+    if "rating_difference_percent" in current_period:
+        attributes["rating_difference_percent"] = current_period["rating_difference_percent"]
 
 
 # Day context prices of a period (base currency in the period summary)
@@ -281,8 +281,8 @@ def add_price_attributes(attributes: dict, current_period: dict, factor: int) ->
         attributes["price_max"] = round(current_period["price_max"] * factor, precision)
     if "price_spread" in current_period:
         attributes["price_spread"] = round(current_period["price_spread"] * factor, precision)
-    if "price_coefficient_variation_%" in current_period:
-        attributes["price_coefficient_variation_%"] = current_period["price_coefficient_variation_%"]
+    if "price_coefficient_variation_percent" in current_period:
+        attributes["price_coefficient_variation_percent"] = current_period["price_coefficient_variation_percent"]
     if "volatility" in current_period:
         attributes["volatility"] = current_period["volatility"]  # Volatility is not a price, keep as-is
 
@@ -294,8 +294,8 @@ def add_day_statistics_attributes(attributes: dict, current_period: dict, factor
     converted to the same display unit, so price_mean and day_price_min compare directly.
     """
     precision = _SUBUNIT_PRECISION if factor == _SUBUNIT_FACTOR else _BASE_PRECISION
-    if "day_volatility_%" in current_period:
-        attributes["day_volatility_%"] = current_period["day_volatility_%"]
+    if "day_volatility_percent" in current_period:
+        attributes["day_volatility_percent"] = current_period["day_volatility_percent"]
     for field in _DAY_PRICE_FIELDS:
         if field in current_period:
             attributes[field] = round(current_period[field] * factor, precision)
@@ -318,14 +318,18 @@ def add_comparison_attributes(attributes: dict, current_period: dict, factor: in
         attributes["period_price_diff_from_daily_min"] = round(
             current_period["period_price_diff_from_daily_min"] * factor, precision
         )
-    if "period_price_diff_from_daily_min_%" in current_period:
-        attributes["period_price_diff_from_daily_min_%"] = current_period["period_price_diff_from_daily_min_%"]
+    if "period_price_diff_from_daily_min_percent" in current_period:
+        attributes["period_price_diff_from_daily_min_percent"] = current_period[
+            "period_price_diff_from_daily_min_percent"
+        ]
     if "period_price_diff_from_daily_max" in current_period:
         attributes["period_price_diff_from_daily_max"] = round(
             current_period["period_price_diff_from_daily_max"] * factor, precision
         )
-    if "period_price_diff_from_daily_max_%" in current_period:
-        attributes["period_price_diff_from_daily_max_%"] = current_period["period_price_diff_from_daily_max_%"]
+    if "period_price_diff_from_daily_max_percent" in current_period:
+        attributes["period_price_diff_from_daily_max_percent"] = current_period[
+            "period_price_diff_from_daily_max_percent"
+        ]
 
 
 def add_detail_attributes(attributes: dict, current_period: dict) -> None:
@@ -396,10 +400,12 @@ def add_relaxation_attributes(attributes: dict, current_period: dict) -> None:
         attributes["relaxation_active"] = True
         if "relaxation_level" in current_period:
             attributes["relaxation_level"] = current_period["relaxation_level"]
-        if "relaxation_threshold_original_%" in current_period:
-            attributes["relaxation_threshold_original_%"] = current_period["relaxation_threshold_original_%"]
-        if "relaxation_threshold_applied_%" in current_period:
-            attributes["relaxation_threshold_applied_%"] = current_period["relaxation_threshold_applied_%"]
+        if "relaxation_threshold_original_percent" in current_period:
+            attributes["relaxation_threshold_original_percent"] = current_period[
+                "relaxation_threshold_original_percent"
+            ]
+        if "relaxation_threshold_applied_percent" in current_period:
+            attributes["relaxation_threshold_applied_percent"] = current_period["relaxation_threshold_applied_percent"]
 
 
 def add_calculation_summary_attributes(attributes: dict, period_metadata: dict) -> None:
@@ -488,13 +494,13 @@ def build_final_attributes_simple(
 
     Attributes are ordered following the documented priority:
     1. Time information (timestamp, start, end, duration)
-    2. Core decision attributes (level, rating_level, rating_difference_%)
+    2. Core decision attributes (level, rating_level, rating_difference_percent)
     3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
-    4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
-     5. Day context (day_volatility_%, day_price_min, day_price_max, day_price_span)
+    4. Price differences (period_price_diff_from_daily_min, period_price_diff_from_daily_min_percent)
+     5. Day context (day_volatility_percent, day_price_min, day_price_max, day_price_span)
      6. Detail information (period_interval_count, period_position, period_count_total, period_count_remaining)
-     7. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_%,
-       relaxation_threshold_applied_%) - only if current period was relaxed
+     7. Relaxation information (relaxation_active, relaxation_level, relaxation_threshold_original_percent,
+       relaxation_threshold_applied_percent) - only if current period was relaxed
      8. Calculation summary (min_periods_configured, flat_days_detected,
        relaxation_incomplete) - diagnostic info about the overall calculation
      9. Meta information (periods list)

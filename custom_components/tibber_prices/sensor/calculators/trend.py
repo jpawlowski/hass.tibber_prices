@@ -182,13 +182,13 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         self._trend_attributes = {
             "timestamp": next_interval_start,
             "trend_value": trend_value,
-            f"trend_{hours}h_%": round(diff_pct, 1),
+            f"trend_{hours}h_percent": round(diff_pct, 1),
             f"next_{hours}h_avg": round(future_mean * factor, precision),
             "interval_count": lookahead_intervals,
-            "threshold_rising_%": round(threshold_rising * vol_factor, 1),
-            "threshold_rising_strongly_%": round(threshold_strongly_rising * vol_factor, 1),
-            "threshold_falling_%": round(threshold_falling * vol_factor, 1),
-            "threshold_falling_strongly_%": round(threshold_strongly_falling * vol_factor, 1),
+            "threshold_rising_percent": round(threshold_rising * vol_factor, 1),
+            "threshold_rising_strongly_percent": round(threshold_strongly_rising * vol_factor, 1),
+            "threshold_falling_percent": round(threshold_falling * vol_factor, 1),
+            "threshold_falling_strongly_percent": round(threshold_strongly_falling * vol_factor, 1),
             "volatility_factor": vol_factor,
             "icon_color": icon_color,
         }
@@ -205,7 +205,9 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                 # Example: current=-10, later=-5 → diff=5, pct=5/abs(-10)*100=+50% (correctly shows increase)
                 if current_interval_price != 0:
                     later_half_diff = ((later_half_avg - current_interval_price) / abs(current_interval_price)) * 100
-                    self._trend_attributes[f"second_half_{hours}h_diff_from_current_%"] = round(later_half_diff, 1)
+                    self._trend_attributes[f"second_half_{hours}h_diff_from_current_percent"] = round(
+                        later_half_diff, 1
+                    )
 
         # Cache the trend value for consistency
         self._cached_trend_value = trend_state
@@ -382,15 +384,15 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
         self._trajectory_attributes = {
             "timestamp": next_interval_start,
             "trend_value": trend_value,
-            f"trajectory_{hours}h_%": round(diff_pct, 1),
+            f"trajectory_{hours}h_percent": round(diff_pct, 1),
             f"first_half_{hours}h_avg": round(first_half_avg * factor, precision),
             f"second_half_{hours}h_avg": round(second_half_avg * factor, precision),
-            f"first_half_{hours}h_diff_from_current_%": round(
+            f"first_half_{hours}h_diff_from_current_percent": round(
                 ((first_half_avg - current_interval_price) / abs(current_interval_price)) * 100, 1
             )
             if current_interval_price != 0
             else None,
-            f"second_half_{hours}h_diff_from_current_%": round(
+            f"second_half_{hours}h_diff_from_current_percent": round(
                 ((second_half_avg - current_interval_price) / abs(current_interval_price)) * 100, 1
             )
             if current_interval_price != 0
@@ -595,7 +597,7 @@ class TibberPricesTrendCalculator(TibberPricesBaseCalculator):
                     all_intervals[change_index + 1 : change_index + PRICE_AVG_AFTER_CHANGE_INTERVALS + 1],
                     self.config_entry,
                 )[0],
-                "trend_diff_%": round(timeline.change.change.diff_pct, 1),
+                "trend_diff_percent": round(timeline.change.change.diff_pct, 1),
                 **thresholds.effective(timeline.change.volatility_factor),
                 "volatility_factor": timeline.change.volatility_factor,
             }

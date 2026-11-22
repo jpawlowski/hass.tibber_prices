@@ -357,22 +357,22 @@
     },
     "today_volatility": {
       "description": "Hvor mye strømprisene endrer seg i dag",
-      "long_description": "Viser om dagens priser er stabile eller har store svingninger. Lav volatilitet betyr ganske jevne priser – timing betyr lite. Høy volatilitet betyr tydelige prisforskjeller gjennom dagen – en god sjanse til å flytte forbruk til billigere perioder. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+      "long_description": "Viser om dagens priser er stabile eller har store svingninger. Lav volatilitet betyr ganske jevne priser – timing betyr lite. Høy volatilitet betyr tydelige prisforskjeller gjennom dagen – en god sjanse til å flytte forbruk til billigere perioder. `price_coefficient_variation_percent` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
       "usage_tips": "Bruk dette for å avgjøre om optimalisering er verdt innsatsen. Ved lav volatilitet kan du kjøre enheter når som helst. Ved høy volatilitet sparer du merkbart ved å følge Best Price-perioder."
     },
     "tomorrow_volatility": {
       "description": "Hvor mye strømprisene vil endre seg i morgen",
-      "long_description": "Viser om prisene i morgen blir stabile eller får store svingninger. Tilgjengelig når morgendagens data er publisert (vanligvis 13:00–14:00 CET). Lav volatilitet betyr jevne priser – timing er ikke kritisk. Høy volatilitet betyr tydelige prisforskjeller gjennom dagen – en god mulighet til å planlegge energikrevende oppgaver. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+      "long_description": "Viser om prisene i morgen blir stabile eller får store svingninger. Tilgjengelig når morgendagens data er publisert (vanligvis 13:00–14:00 CET). Lav volatilitet betyr jevne priser – timing er ikke kritisk. Høy volatilitet betyr tydelige prisforskjeller gjennom dagen – en god mulighet til å planlegge energikrevende oppgaver. `price_coefficient_variation_percent` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
       "usage_tips": "Bruk dette til å planlegge morgendagens forbruk. Høy volatilitet? Planlegg fleksible laster i Best Price-perioder. Lav volatilitet? Kjør enheter når det passer deg."
     },
     "next_24h_volatility": {
       "description": "Hvor mye prisene endrer seg de neste 24 timene",
-      "long_description": "Viser prisvolatilitet for et rullerende 24-timers vindu fra nå (oppdateres hvert 15. minutt). Lav volatilitet betyr jevne priser. Høy volatilitet betyr merkbare prissvingninger og mulighet for optimalisering. I motsetning til i dag/i morgen-sensorer krysser denne daggrenser og gir en kontinuerlig fremoverskuende vurdering. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+      "long_description": "Viser prisvolatilitet for et rullerende 24-timers vindu fra nå (oppdateres hvert 15. minutt). Lav volatilitet betyr jevne priser. Høy volatilitet betyr merkbare prissvingninger og mulighet for optimalisering. I motsetning til i dag/i morgen-sensorer krysser denne daggrenser og gir en kontinuerlig fremoverskuende vurdering. `price_coefficient_variation_percent` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
       "usage_tips": "Best for beslutninger i sanntid. Bruk når du planlegger batterilading eller andre fleksible laster som kan gå over midnatt. Gir et konsistent 24t-bilde uavhengig av kalenderdag."
     },
     "today_tomorrow_volatility": {
       "description": "Kombinert prisvolatilitet for i dag og i morgen",
-      "long_description": "Viser samlet volatilitet når i dag og i morgen sees sammen (når morgendata er tilgjengelig). Viser om det finnes klare prisforskjeller over dagsgrensen. Faller tilbake til kun i dag hvis morgendata mangler. Nyttig for flerdagers optimalisering. `price_coefficient_variation_%` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
+      "long_description": "Viser samlet volatilitet når i dag og i morgen sees sammen (når morgendata er tilgjengelig). Viser om det finnes klare prisforskjeller over dagsgrensen. Faller tilbake til kun i dag hvis morgendata mangler. Nyttig for flerdagers optimalisering. `price_coefficient_variation_percent` viser prosentverdien, `price_spread` viser den absolutte prisspennet.",
       "usage_tips": "Bruk for oppgaver som går over flere dager. Sjekk om prisforskjellene er store nok til å planlegge etter. De enkelte dagssensorene viser bidrag per dag om du trenger mer detalj."
     },
     "data_lifecycle_status": {

@@ -134,7 +134,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 ### 6. Relaxation Details
 
-**Attributes:** `relaxation_level`, `relaxation_threshold_original_%`, `relaxation_threshold_applied_%`
+**Attributes:** `relaxation_level`, `relaxation_threshold_original_percent`, `relaxation_threshold_applied_percent`
 
 **Reason:**
 
@@ -146,7 +146,7 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 ### 7. Redundant/Derived Data
 
-**Attributes:** `price_spread`, `volatility`, `diff_%`, `rating_difference_%`, `period_price_diff_from_daily_min`, `period_price_diff_from_daily_min_%`, `period_count_total`, `period_count_remaining`
+**Attributes:** `price_spread`, `volatility`, `diff_percent`, `rating_difference_percent`, `period_price_diff_from_daily_min`, `period_price_diff_from_daily_min_percent`, `period_count_total`, `period_count_remaining`
 
 **Reason:**
 

@@ -1347,7 +1347,7 @@ This explains why absolute prices jump at midnight despite minimal demand change
 
 Added per-period day volatility attributes to detect when classification changes are meaningful:
 
-- `day_volatility_%`: Percentage spread (span/avg × 100)
+- `day_volatility_percent`: Percentage spread (span/avg × 100)
 - `day_price_min`, `day_price_max`, `day_price_span`: Daily price range (display unit, same as `price_mean`)
 
 Automations can check volatility before acting:
@@ -1356,7 +1356,7 @@ Automations can check volatility before acting:
 condition:
     - condition: template
       value_template: >
-          {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_%') | float(0) > 15 }}
+          {{ state_attr('binary_sensor.tibber_home_best_price_period', 'day_volatility_percent') | float(0) > 15 }}
 ```
 
 Low volatility (< 15%) means classification changes are less economically significant.

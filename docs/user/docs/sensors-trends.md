@@ -73,13 +73,13 @@ stateDiagram-v2
 | Attribute | Description | Example |
 |-----------|-------------|---------|
 | `trend_value` | Numeric value for automations (-2 to +2) | `-1` |
-| `trend_Nh_%` | Percentage difference from current price | `-12.3` |
+| `trend_Nh_percent` | Percentage difference from current price | `-12.3` |
 | `next_Nh_avg` | Average price in the future window | `18.5` |
 | `second_half_Nh_avg` | Average price in later half of window | `16.2` |
-| `threshold_rising_%` | Active rising threshold after volatility adjustment | `3.0` |
-| `threshold_rising_strongly_%` | Active strongly-rising threshold after volatility adjustment | `4.8` |
-| `threshold_falling_%` | Active falling threshold after volatility adjustment | `-3.0` |
-| `threshold_falling_strongly_%` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
+| `threshold_rising_percent` | Active rising threshold after volatility adjustment | `3.0` |
+| `threshold_rising_strongly_percent` | Active strongly-rising threshold after volatility adjustment | `4.8` |
+| `threshold_falling_percent` | Active falling threshold after volatility adjustment | `-3.0` |
+| `threshold_falling_strongly_percent` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
 | `volatility_factor` | Applied multiplier (0.6 = low, 1.0 = moderate, 1.4 = high volatility) | `0.8` |
 
 **Tip:** The `trend_value` attribute (`-2` to `+2`) is ideal for automations — use numeric comparisons instead of matching translated state strings.
@@ -118,9 +118,10 @@ These sensors compare the **first half** of the future window against the **seco
 | Attribute | Description | Example |
 |-----------|-------------|---------|
 | `trend_value` | Numeric value for automations (-2 to +2) | `1` |
-| `first_half_avg` | Average price in first half of window | `12.4` |
-| `second_half_avg` | Average price in second half of window | `18.1` |
-| `half_diff_%` | Percentage difference (second vs first half) | `46.0` |
+| `first_half_4h_avg` | Average price in first half of the window (hour count in the name) | `12.4` |
+| `second_half_4h_avg` | Average price in second half of the window | `18.1` |
+| `first_half_4h_diff_from_current_percent` | First half vs current price, in percent | `-3.2` |
+| `second_half_4h_diff_from_current_percent` | Second half vs current price, in percent | `46.0` |
 
 ---
 
@@ -182,10 +183,10 @@ A change from `rising` to `strongly_rising` (same direction) is **not** reported
 | `minutes_until_change` | Minutes until trend changes | `90` |
 | `price_at_change` | Price at the change point | `13.8` |
 | `price_avg_after_change` | Average price of the 3 hours after the change | `18.1` |
-| `threshold_rising_%` | Active rising threshold after volatility adjustment | `3.0` |
-| `threshold_rising_strongly_%` | Active strongly-rising threshold after volatility adjustment | `4.8` |
-| `threshold_falling_%` | Active falling threshold after volatility adjustment | `-3.0` |
-| `threshold_falling_strongly_%` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
+| `threshold_rising_percent` | Active rising threshold after volatility adjustment | `3.0` |
+| `threshold_rising_strongly_percent` | Active strongly-rising threshold after volatility adjustment | `4.8` |
+| `threshold_falling_percent` | Active falling threshold after volatility adjustment | `-3.0` |
+| `threshold_falling_strongly_percent` | Active strongly-falling threshold after volatility adjustment | `-4.8` |
 | `volatility_factor` | Applied multiplier (0.6 = low, 1.0 = moderate, 1.4 = high volatility) | `0.8` |
 
 :::info How the detection works — one trend timeline

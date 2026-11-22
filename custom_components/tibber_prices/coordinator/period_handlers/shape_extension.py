@@ -361,14 +361,14 @@ def _extend_period_edges(
         # Core decision attributes
         "level": new_level,
         "rating_level": new_rating,
-        "rating_difference_%": rating_diff_pct,
+        "rating_difference_percent": rating_diff_pct,
         # Price statistics
         "price_mean": price_stats["price_mean"],
         "price_median": price_stats["price_median"],
         "price_min": price_stats["price_min"],
         "price_max": price_stats["price_max"],
         "price_spread": price_stats["price_spread"],
-        "price_coefficient_variation_%": cv_pct,
+        "price_coefficient_variation_percent": cv_pct,
         # Detail
         "period_interval_count": new_interval_count,
         # Extension metadata
@@ -378,18 +378,18 @@ def _extend_period_edges(
     # Refresh period price diff (replaces old value from base period)
     if reverse_sort:
         updated.pop("period_price_diff_from_daily_min", None)
-        updated.pop("period_price_diff_from_daily_min_%", None)
+        updated.pop("period_price_diff_from_daily_min_percent", None)
         if period_price_diff is not None:
             updated["period_price_diff_from_daily_max"] = period_price_diff
             if period_price_diff_pct is not None:
-                updated["period_price_diff_from_daily_max_%"] = period_price_diff_pct
+                updated["period_price_diff_from_daily_max_percent"] = period_price_diff_pct
     else:
         updated.pop("period_price_diff_from_daily_max", None)
-        updated.pop("period_price_diff_from_daily_max_%", None)
+        updated.pop("period_price_diff_from_daily_max_percent", None)
         if period_price_diff is not None:
             updated["period_price_diff_from_daily_min"] = period_price_diff
             if period_price_diff_pct is not None:
-                updated["period_price_diff_from_daily_min_%"] = period_price_diff_pct
+                updated["period_price_diff_from_daily_min_percent"] = period_price_diff_pct
 
     return updated
 

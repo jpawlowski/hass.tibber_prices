@@ -1297,6 +1297,17 @@
           }
         }
       }
+    },
+    "attribute_percent_renamed": {
+      "title": "Tibber Prices: attribuutnamen die op % eindigen zijn hernoemd ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Attributen hernoemd: % wordt _percent",
+            "description": "Attribuutnamen van **{home_name}** die op `_%` eindigden, eindigen nu op `_percent`, omdat vertaalde attribuutnamen geen `%` mogen bevatten. Betreft: rating_difference_%, diff_% (rating sensors), price_coefficient_variation_%, day_volatility_%, period_price_diff_from_daily_min_%, period_price_diff_from_daily_max_%, relaxation_threshold_original_%, relaxation_threshold_applied_%, price_typical_spread_%, trend_diff_%, threshold_rising_%, threshold_rising_strongly_%, threshold_falling_%, threshold_falling_strongly_%, de uurvarianten zoals trend_3h_%, trajectory_4h_% en second_half_4h_diff_from_current_% en ook first_half_*. Voorbeeld: `rating_difference_%` heet nu `rating_difference_percent`.\n\nControleer templates, automatiseringen en dashboards die deze attributen lezen en bevestig daarna deze melding: ze wordt definitief verwijderd."
+          }
+        }
+      }
     }
   },
   "exceptions": {

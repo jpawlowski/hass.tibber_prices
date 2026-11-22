@@ -963,7 +963,7 @@ def _build_bridged_period(
     bridged["price_max"] = max(combined_prices)
     bridged["price_mean"] = sum(combined_prices) / len(combined_prices)
     bridged["price_spread"] = bridged["price_max"] - bridged["price_min"]
-    bridged["price_coefficient_variation_%"] = round(combined_cv, 1)
+    bridged["price_coefficient_variation_percent"] = round(combined_cv, 1)
 
     return bridged
 

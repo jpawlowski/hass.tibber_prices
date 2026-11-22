@@ -85,8 +85,7 @@ All min/max sensors include:
 | Attribute | Description |
 |-----------|-------------|
 | `timestamp` | When the extreme price occurs/occurred |
-| `price_diff_from_daily_min` | Difference from daily minimum |
-| `price_diff_from_daily_min_%` | Percentage difference |
+| `interval_count` | Number of intervals the value is calculated from (24 h window sensors) |
 
 ## Diagnostic Sensors
 

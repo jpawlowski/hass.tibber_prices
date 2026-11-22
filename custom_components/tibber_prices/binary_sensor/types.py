@@ -87,7 +87,7 @@ class PeriodSummary(TypedDict, total=False):
     # Core decision attributes (priority 2)
     level: PriceLevel  # Price level classification
     rating_level: PriceRating  # Price rating classification
-    rating_difference_pct: float  # Difference from daily average (%)
+    rating_difference_percent: float  # Difference from daily average (%)
 
     # Price statistics (priority 3)
     price_mean: float  # Arithmetic mean price in period
@@ -99,10 +99,10 @@ class PeriodSummary(TypedDict, total=False):
 
     # Price comparison (priority 4)
     period_price_diff_from_daily_min: float  # Difference from daily min
-    period_price_diff_from_daily_min_pct: float  # Difference from daily min (%)
+    period_price_diff_from_daily_min_percent: float  # Difference from daily min (%)
 
     # Day context (priority 5)
-    day_volatility_pct: float | None  # Volatility of the period's day (%), None for zero-average days
+    day_volatility_percent: float | None  # Volatility of the period's day (%), None for zero-average days
     day_price_min: float  # Daily minimum price in display unit (same as price_mean)
     day_price_max: float  # Daily maximum price in display unit
     day_price_span: float  # Daily price span in display unit
@@ -116,8 +116,8 @@ class PeriodSummary(TypedDict, total=False):
     # Relaxation information (priority 7 - only if period was relaxed)
     relaxation_active: bool  # Whether this period was found via relaxation
     relaxation_level: int  # Relaxation level used (1-based)
-    relaxation_threshold_original_pct: float  # Original flex threshold (%)
-    relaxation_threshold_applied_pct: float  # Applied flex threshold after relaxation (%)
+    relaxation_threshold_original_percent: float  # Original flex threshold (%)
+    relaxation_threshold_applied_percent: float  # Applied flex threshold after relaxation (%)
 
 
 class PeriodAttributes(BaseAttributes, total=False):
@@ -128,10 +128,10 @@ class PeriodAttributes(BaseAttributes, total=False):
 
     Attributes follow priority ordering:
     1. Time information (timestamp, start, end, duration_minutes)
-    2. Core decision attributes (level, rating_level, rating_difference_%)
+    2. Core decision attributes (level, rating_level, rating_difference_percent)
     3. Price statistics (price_mean, price_median, price_min, price_max, price_spread, volatility)
-    4. Price comparison (period_price_diff_from_daily_min, period_price_diff_from_daily_min_%)
-    5. Day context (day_volatility_%, day_price_min, day_price_max, day_price_span)
+    4. Price comparison (period_price_diff_from_daily_min, period_price_diff_from_daily_min_percent)
+    5. Day context (day_volatility_percent, day_price_min, day_price_max, day_price_span)
     6. Detail information (period_interval_count, period_position, period_count_total, period_count_remaining)
     7. Relaxation information (only if period was relaxed)
     8. Meta information (periods list)
@@ -145,7 +145,7 @@ class PeriodAttributes(BaseAttributes, total=False):
     # Core decision attributes (priority 2)
     level: PriceLevel  # Price level of current/next period
     rating_level: PriceRating  # Price rating of current/next period
-    rating_difference_pct: float  # Difference from daily average (%)
+    rating_difference_percent: float  # Difference from daily average (%)
 
     # Price statistics (priority 3)
     price_mean: float  # Arithmetic mean price in current/next period
@@ -157,10 +157,10 @@ class PeriodAttributes(BaseAttributes, total=False):
 
     # Price comparison (priority 4)
     period_price_diff_from_daily_min: float  # Difference from daily min
-    period_price_diff_from_daily_min_pct: float  # Difference from daily min (%)
+    period_price_diff_from_daily_min_percent: float  # Difference from daily min (%)
 
     # Day context (priority 5)
-    day_volatility_pct: float | None  # Volatility of the period's day (%), None for zero-average days
+    day_volatility_percent: float | None  # Volatility of the period's day (%), None for zero-average days
     day_price_min: float  # Daily minimum price in display unit (same as price_mean)
     day_price_max: float  # Daily maximum price in display unit
     day_price_span: float  # Daily price span in display unit
@@ -174,8 +174,8 @@ class PeriodAttributes(BaseAttributes, total=False):
     # Relaxation information (priority 7 - only if period was relaxed)
     relaxation_active: bool  # Whether current/next period was found via relaxation
     relaxation_level: int  # Relaxation level used (1-based)
-    relaxation_threshold_original_pct: float  # Original flex threshold (%)
-    relaxation_threshold_applied_pct: float  # Applied flex threshold after relaxation (%)
+    relaxation_threshold_original_percent: float  # Original flex threshold (%)
+    relaxation_threshold_applied_percent: float  # Applied flex threshold after relaxation (%)
 
     # Meta information (priority 8)
     periods: list[PeriodSummary]  # All periods found (sorted by start time)

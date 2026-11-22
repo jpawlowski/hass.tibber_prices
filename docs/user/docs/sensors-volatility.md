@@ -44,7 +44,7 @@ All volatility sensors provide these attributes:
 | Attribute                       | Description                                                      | Example      |
 | ------------------------------- | ---------------------------------------------------------------- | ------------ |
 | `price_volatility`              | Volatility level (language-independent, always English)          | `"moderate"` |
-| `price_coefficient_variation_%` | The calculated Coefficient of Variation                          | `23.5`       |
+| `price_coefficient_variation_percent` | The calculated Coefficient of Variation                          | `23.5`       |
 | `price_spread`                  | The difference between the highest and lowest price              | `12.3`       |
 | `price_min`                     | The lowest price in the period                                   | `10.2`       |
 | `price_max`                     | The highest price in the period                                  | `22.5`       |
@@ -53,7 +53,7 @@ All volatility sensors provide these attributes:
 | `price_q25`                     | 25th percentile — lower quartile price                           | `11.0`       |
 | `price_q75`                     | 75th percentile — upper quartile price                           | `19.5`       |
 | `price_typical_spread`          | Typical price band width — IQR (Q75 − Q25, the middle 50% of prices)         | `8.5`        |
-| `price_typical_spread_%`        | Typical price band as a percentage of the median (IQR%)                      | `57.4`       |
+| `price_typical_spread_percent`        | Typical price band as a percentage of the median (IQR%)                      | `57.4`       |
 | `price_spike_count`             | Intervals outside the Tukey fence (Q25−1.5×IQR … Q75+1.5×IQR) — spikes/dips | `3`          |
 | `interval_count`                | Number of price intervals included in the calculation            | `96`         |
 
@@ -91,7 +91,7 @@ automation:
 
 ### Avoid Hard-Coding Numeric Thresholds
 
-You might be tempted to use the numeric `price_coefficient_variation_%` attribute directly in your automations. This is not recommended.
+You might be tempted to use the numeric `price_coefficient_variation_percent` attribute directly in your automations. This is not recommended.
 
 - **Why?** The integration provides central configuration options for the volatility thresholds. By using the classified `price_volatility` attribute, your automations automatically adapt if you decide to change what you consider "high" volatility (e.g., changing the threshold from 30% to 35%). Hard-coding values means you would have to find and update them in every single automation.
 
@@ -110,7 +110,7 @@ automation:
           #
           - platform: numeric_state
             entity_id: sensor.<home_name>_today_s_price_volatility
-            attribute: price_coefficient_variation_%
+            attribute: price_coefficient_variation_percent
             above: 30
       action:
           - service: input_boolean.turn_on
@@ -131,7 +131,7 @@ In addition to the CV-based volatility level, every volatility sensor provides *
 | Use for optimization? | "Is today worth optimizing?"              | "How wide is the core price band?" |
 | Best for              | Triggering battery/EV charging strategies | Understanding price structure      |
 
-The `price_typical_spread_%` attribute (IQR as a percentage of the median) tells you how wide the **core** price band is relative to the median. Even on a high-CV day with isolated spikes, a low `price_typical_spread_%` means most of the day has stable prices — only a few intervals are outliers.
+The `price_typical_spread_percent` attribute (IQR as a percentage of the median) tells you how wide the **core** price band is relative to the median. Even on a high-CV day with isolated spikes, a low `price_typical_spread_percent` means most of the day has stable prices — only a few intervals are outliers.
 
 The `price_spike_count` attribute (Tukey fence method: Q25 − 1.5×IQR to Q75 + 1.5×IQR) tells you how many intervals fall outside the normal range. A high `price_spike_count` day with a high CV is a classic "spiky" day: mostly stable prices with a few expensive or cheap peaks.
 

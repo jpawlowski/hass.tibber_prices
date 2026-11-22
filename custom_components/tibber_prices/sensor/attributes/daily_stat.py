@@ -6,7 +6,6 @@ from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import PRICE_RATING_MAPPING, get_display_precision, get_display_unit_factor
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
-from homeassistant.const import PERCENTAGE
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -146,7 +145,7 @@ def add_statistics_attributes(
     # Current interval price rating - add rating attributes
     if key == "current_interval_price_rating":
         if cached_data.get("last_rating_difference") is not None:
-            attributes["diff_" + PERCENTAGE] = cached_data["last_rating_difference"]
+            attributes["diff_percent"] = cached_data["last_rating_difference"]
         if cached_data.get("last_rating_level") is not None:
             attributes["level_id"] = cached_data["last_rating_level"]
             attributes["level_value"] = PRICE_RATING_MAPPING.get(

@@ -357,22 +357,22 @@
     },
     "today_volatility": {
       "description": "Hur mycket elpriserna varierar idag",
-      "long_description": "Visar om dagens priser är stabila eller har stora svängningar. Låg volatilitet innebär ganska jämna priser – timing spelar liten roll. Hög volatilitet innebär tydliga prisskillnader under dagen – bra tillfälle att flytta förbrukning till billigare perioder. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "long_description": "Visar om dagens priser är stabila eller har stora svängningar. Låg volatilitet innebär ganska jämna priser – timing spelar liten roll. Hög volatilitet innebär tydliga prisskillnader under dagen – bra tillfälle att flytta förbrukning till billigare perioder. `price_coefficient_variation_percent` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
       "usage_tips": "Använd detta för att avgöra om optimering är värt besväret. Vid låg volatilitet kan du köra enheter när som helst. Vid hög volatilitet sparar du märkbart genom att följa Best Price-perioder."
     },
     "tomorrow_volatility": {
       "description": "Hur mycket elpriserna kommer att variera i morgon",
-      "long_description": "Visar om priserna i morgon blir stabila eller får stora svängningar. Tillgänglig när morgondagens data är publicerad (vanligen 13:00–14:00 CET). Låg volatilitet innebär ganska jämna priser – timing är inte kritisk. Hög volatilitet innebär tydliga prisskillnader under dagen – bra läge att planera energikrävande uppgifter. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "long_description": "Visar om priserna i morgon blir stabila eller får stora svängningar. Tillgänglig när morgondagens data är publicerad (vanligen 13:00–14:00 CET). Låg volatilitet innebär ganska jämna priser – timing är inte kritisk. Hög volatilitet innebär tydliga prisskillnader under dagen – bra läge att planera energikrävande uppgifter. `price_coefficient_variation_percent` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
       "usage_tips": "Använd för att planera morgondagens förbrukning. Hög volatilitet? Planera flexibla laster i Best Price-perioder. Låg volatilitet? Kör enheter när det passar dig."
     },
     "next_24h_volatility": {
       "description": "Hur mycket priserna varierar de kommande 24 timmarna",
-      "long_description": "Visar prisvolatilitet för ett rullande 24-timmarsfönster från nu (uppdateras var 15:e minut). Låg volatilitet innebär ganska jämna priser. Hög volatilitet innebär märkbara prissvängningar och därmed optimeringsmöjligheter. Till skillnad från idag/i morgon-sensorer korsar den här dagsgränser och ger en kontinuerlig framåtblickande bedömning. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "long_description": "Visar prisvolatilitet för ett rullande 24-timmarsfönster från nu (uppdateras var 15:e minut). Låg volatilitet innebär ganska jämna priser. Hög volatilitet innebär märkbara prissvängningar och därmed optimeringsmöjligheter. Till skillnad från idag/i morgon-sensorer korsar den här dagsgränser och ger en kontinuerlig framåtblickande bedömning. `price_coefficient_variation_percent` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
       "usage_tips": "Bäst för beslut i realtid. Använd vid planering av batteriladdning eller andra flexibla laster som kan gå över midnatt. Ger en konsekvent 24h-bild oberoende av kalenderdag."
     },
     "today_tomorrow_volatility": {
       "description": "Kombinerad prisvolatilitet för idag och imorgon",
-      "long_description": "Visar den samlade volatiliteten när idag och imorgon ses tillsammans (när morgondatan finns). Visar om det finns tydliga prisskillnader över dagsgränsen. Faller tillbaka till endast idag om morgondatan saknas. Nyttig för flerdagarsoptimering. `price_coefficient_variation_%` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
+      "long_description": "Visar den samlade volatiliteten när idag och imorgon ses tillsammans (när morgondatan finns). Visar om det finns tydliga prisskillnader över dagsgränsen. Faller tillbaka till endast idag om morgondatan saknas. Nyttig för flerdagarsoptimering. `price_coefficient_variation_percent` visar procentvärdet, `price_spread` visar den absoluta prisspannet.",
       "usage_tips": "Använd för uppgifter som sträcker sig över flera dagar. Kontrollera om prisskillnaderna är stora nog för att planera efter. De enskilda dag-sensorerna visar bidrag per dag om du behöver mer detaljer."
     },
     "data_lifecycle_status": {

@@ -59,17 +59,17 @@ class TestResolvePeriodOverlaps:
             "duration_minutes": 75,
             "level": "cheap",
             "rating_level": "low",
-            "rating_difference_%": -9.2,
+            "rating_difference_percent": -9.2,
             "price_mean": 0.108,
             "price_median": 0.11,
             "price_min": 0.10,
             "price_max": 0.12,
             "price_spread": 0.02,
-            "price_coefficient_variation_%": 7.7,
+            "price_coefficient_variation_percent": 7.7,
             "volatility": "low",
             "period_interval_count": 5,
             "period_price_diff_from_daily_min": 0.008,
-            "period_price_diff_from_daily_min_%": 8.0,
+            "period_price_diff_from_daily_min_percent": 8.0,
             "period_position": 1,
             "period_count_total": 1,
             "period_count_remaining": 0,
@@ -80,17 +80,17 @@ class TestResolvePeriodOverlaps:
             "duration_minutes": 60,
             "level": "normal",
             "rating_level": "normal",
-            "rating_difference_%": 0.0,
+            "rating_difference_percent": 0.0,
             "price_mean": 0.13,
             "price_median": 0.13,
             "price_min": 0.12,
             "price_max": 0.14,
             "price_spread": 0.02,
-            "price_coefficient_variation_%": 5.8,
+            "price_coefficient_variation_percent": 5.8,
             "volatility": "low",
             "period_interval_count": 4,
             "period_price_diff_from_daily_min": 0.03,
-            "period_price_diff_from_daily_min_%": 30.0,
+            "period_price_diff_from_daily_min_percent": 30.0,
             "period_position": 1,
             "period_count_total": 1,
             "period_count_remaining": 0,
@@ -123,12 +123,12 @@ class TestResolvePeriodOverlaps:
         assert merged["price_min"] == 0.10
         assert merged["price_max"] == 0.14
         assert merged["price_spread"] == 0.04
-        assert merged["price_coefficient_variation_%"] == round(expected_cv, 1)
+        assert merged["price_coefficient_variation_percent"] == round(expected_cv, 1)
         assert merged["level"] == "normal"
         assert merged["rating_level"] == "normal"
-        assert merged["rating_difference_%"] == -5.25
+        assert merged["rating_difference_percent"] == -5.25
         assert merged["period_price_diff_from_daily_min"] == 0.0175
-        assert merged["period_price_diff_from_daily_min_%"] == 17.5
+        assert merged["period_price_diff_from_daily_min_percent"] == 17.5
         assert merged["relaxation_active"] is True
         assert merged["relaxation_level"] == "flex=18.0% +level_any"
         assert "merged_from" in merged

@@ -61,8 +61,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             "rating_id",
             # Relaxation Details (per-period)
             "relaxation_level",
-            "relaxation_threshold_original_%",
-            "relaxation_threshold_applied_%",
+            "relaxation_threshold_original_percent",
+            "relaxation_threshold_applied_percent",
             # Calculation Summary (diagnostic, changes daily → not useful in history)
             "min_periods_configured",
             "flat_days_detected",
@@ -70,9 +70,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             # Redundant/Derived
             "price_spread",
             "volatility",
-            "rating_difference_%",
+            "rating_difference_percent",
             "period_price_diff_from_daily_min",
-            "period_price_diff_from_daily_min_%",
+            "period_price_diff_from_daily_min_percent",
             "period_count_total",
             "period_count_remaining",
         }

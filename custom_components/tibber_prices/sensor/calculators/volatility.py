@@ -95,7 +95,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
         # Build attributes with all price_* together, interval_count last
         attrs: dict[str, Any] = {
             "price_volatility": volatility.lower(),
-            "price_coefficient_variation_%": round(cv, 2) if cv is not None else None,
+            "price_coefficient_variation_percent": round(cv, 2) if cv is not None else None,
             "price_spread": round(spread_display, precision),
             "price_min": round(price_min * factor, precision),
             "price_max": round(price_max * factor, precision),
@@ -109,7 +109,7 @@ class TibberPricesVolatilityCalculator(TibberPricesBaseCalculator):
             attrs["price_q75"] = round(iqr_stats["q75"] * factor, precision)
             attrs["price_typical_spread"] = round(iqr_stats["iqr"] * factor, precision)
             if iqr_stats["iqr_pct"] is not None:
-                attrs["price_typical_spread_%"] = round(iqr_stats["iqr_pct"], 2)
+                attrs["price_typical_spread_percent"] = round(iqr_stats["iqr_pct"], 2)
             attrs["price_spike_count"] = iqr_stats["outlier_count"]
 
         attrs["interval_count"] = len(prices_to_analyze)

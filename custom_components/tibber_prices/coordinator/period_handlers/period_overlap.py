@@ -100,7 +100,7 @@ def _merge_adjacent_periods_from_summaries(period1: dict, period2: dict) -> dict
       weighted by duration_minutes (kept simple - exact mean would require
       raw interval prices that aren't carried in the period dict).
 
-    Note: price_median and price_coefficient_variation_% are intentionally NOT
+    Note: price_median and price_coefficient_variation_percent are intentionally NOT
     recomputed because they cannot be derived from summary stats. They retain
     period1's values; downstream consumers must treat them as approximate for
     merged periods (the `merged_from` marker indicates this).
@@ -108,8 +108,8 @@ def _merge_adjacent_periods_from_summaries(period1: dict, period2: dict) -> dict
     Relaxation attributes from the newer period (period2) override those from period1:
     - relaxation_active
     - relaxation_level
-    - relaxation_threshold_original_%
-    - relaxation_threshold_applied_%
+    - relaxation_threshold_original_percent
+    - relaxation_threshold_applied_percent
     - period_interval_level_gap_count
     - period_interval_smoothed_count
 
@@ -164,8 +164,8 @@ def _merge_adjacent_periods_from_summaries(period1: dict, period2: dict) -> dict
     relaxation_attrs = [
         "relaxation_active",
         "relaxation_level",
-        "relaxation_threshold_original_%",
-        "relaxation_threshold_applied_%",
+        "relaxation_threshold_original_percent",
+        "relaxation_threshold_applied_percent",
         "period_interval_level_gap_count",
         "period_interval_smoothed_count",
     ]
@@ -175,7 +175,7 @@ def _merge_adjacent_periods_from_summaries(period1: dict, period2: dict) -> dict
             merged[attr] = period2[attr]
 
     # Mark as merged (for debugging) - downstream consumers can detect that
-    # price_median / price_coefficient_variation_% are approximate.
+    # price_median / price_coefficient_variation_percent are approximate.
     merged["merged_from"] = {
         "period1_start": period1["start"].isoformat(),
         "period1_end": period1["end"].isoformat(),
@@ -353,8 +353,8 @@ def _rebuild_merged_period_from_raw(
 
     for attr in (
         "relaxation_level",
-        "relaxation_threshold_original_%",
-        "relaxation_threshold_applied_%",
+        "relaxation_threshold_original_percent",
+        "relaxation_threshold_applied_percent",
         "duration_fallback_active",
         "duration_fallback_min_length",
     ):

@@ -31,7 +31,13 @@ _LOGGER = logging.getLogger(__name__)
 # to ignore it, and deletes it once confirmed (with no repairs platform, HA's own confirm flow
 # shows the fix_flow text). Ignored, it would stay in the registry for good
 NOTICES: frozenset[str] = frozenset(
-    {"entity_migration", "period_day_price_unit", "currency_display_mode_changed", "period_flex_base"}
+    {
+        "entity_migration",
+        "period_day_price_unit",
+        "currency_display_mode_changed",
+        "period_flex_base",
+        "attribute_percent_renamed",
+    }
 )
 
 
@@ -161,10 +167,25 @@ def _auto_migrate_entity_keys(
     return migrated
 
 
+def _notify(hass: HomeAssistant, entry: ConfigEntry, key: str) -> None:
+    """Create the confirmable notice `key` for this entry (see NOTICES)."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{key}_{entry.entry_id}",
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=key,
+        translation_placeholders={"home_name": entry.title},
+        learn_more_url="https://github.com/jpawlowski/hass.tibber_prices/releases",
+    )
+
+
 @callback
 def async_migrate_entry_version(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """
-    Bring a config entry from an older version to the current one (VERSION 1, MINOR_VERSION 2).
+    Bring a config entry from an older version to the current one (VERSION 1, MINOR_VERSION 3).
 
     1.0 -> 1.1: day_price_min, day_price_max and day_price_span of the best/peak price periods
     are in the display unit like price_mean, no longer always in ct/øre. That changes their
@@ -173,38 +194,22 @@ def async_migrate_entry_version(hass: HomeAssistant, entry: ConfigEntry) -> bool
     1.1 -> 1.2: period flex is a share of the gap between the daily min/max and the mean (#259),
     so the same setting gives narrower best/peak price periods (peak on every day, best on flat
     days). Every home gets a notice to review flex and automations.
+    1.2 -> 1.3: attribute names ending in `_%` (rating_difference_%, ...) now end in `_percent`,
+    because translated attribute names allow no `%` in their key (#267). Every home gets a notice
+    to review templates and automations that read them.
     New entries start at the current version and never see these notices.
     """
     if entry.version > 1:
         # A newer version of the integration was installed before: can't go back
         return False
-    if entry.minor_version < 1:
-        if entry.options.get(CONF_CURRENCY_DISPLAY_MODE) == DISPLAY_MODE_BASE:
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                f"period_day_price_unit_{entry.entry_id}",
-                is_fixable=True,  # A notice to confirm (see NOTICES)
-                is_persistent=True,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="period_day_price_unit",
-                translation_placeholders={"home_name": entry.title},
-                learn_more_url="https://github.com/jpawlowski/hass.tibber_prices/releases",
-            )
+    if entry.minor_version < 1 and entry.options.get(CONF_CURRENCY_DISPLAY_MODE) == DISPLAY_MODE_BASE:
+        _notify(hass, entry, "period_day_price_unit")
     if entry.minor_version < 2:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"period_flex_base_{entry.entry_id}",
-            is_fixable=True,  # A notice to confirm (see NOTICES)
-            is_persistent=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="period_flex_base",
-            translation_placeholders={"home_name": entry.title},
-            learn_more_url="https://github.com/jpawlowski/hass.tibber_prices/releases",
-        )
-        _LOGGER.info("[%s] Migrated config entry to version 1.2", entry.title)
-        hass.config_entries.async_update_entry(entry, minor_version=2)
+        _notify(hass, entry, "period_flex_base")
+    if entry.minor_version < 3:
+        _notify(hass, entry, "attribute_percent_renamed")
+        _LOGGER.info("[%s] Migrated config entry to version 1.3", entry.title)
+        hass.config_entries.async_update_entry(entry, minor_version=3)
     return True
 
 

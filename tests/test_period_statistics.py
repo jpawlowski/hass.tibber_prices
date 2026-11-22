@@ -44,7 +44,7 @@ def _build_period_data(day: datetime) -> TibberPricesPeriodData:
 
 @pytest.mark.unit
 class TestPeriodSummaryDayVolatility:
-    """Validate day_volatility_% semantics on extreme price days."""
+    """Validate day_volatility_percent semantics on extreme price days."""
 
     def test_day_volatility_uses_absolute_average_for_negative_price_days(self) -> None:
         """Negative-average days should still report meaningful volatility percentage."""
@@ -65,7 +65,7 @@ class TestPeriodSummaryDayVolatility:
             },
         )
 
-        assert summary["day_volatility_%"] == 400.0
+        assert summary["day_volatility_percent"] == 400.0
         assert summary["day_price_min"] == -0.3
         assert summary["day_price_max"] == 0.1
         assert summary["day_price_span"] == 0.4
@@ -88,7 +88,7 @@ class TestPeriodSummaryDayVolatility:
             },
         )
 
-        assert summary["day_volatility_%"] is None
+        assert summary["day_volatility_percent"] is None
         assert summary["day_price_min"] == -0.2
         assert summary["day_price_max"] == 0.2
         assert summary["day_price_span"] == 0.4

@@ -143,7 +143,7 @@ class DailyStatRatingAttributes(BaseAttributes, total=False):
     These sensors show rating statistics for a full calendar day.
     """
 
-    diff_percent: str  # Key is actually "diff_%" - percentage difference
+    diff_percent: str  # Percentage difference
     level_id: PriceRating  # Rating level identifier
     level_value: int  # Numeric rating value (1-3)
 

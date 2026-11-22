@@ -88,10 +88,10 @@ class TibberPricesTrendThresholds(NamedTuple):
     def effective(self, volatility_factor: float) -> dict[str, float]:
         """Percentage thresholds after the volatility adjustment, as shown in attributes."""
         return {
-            "threshold_rising_%": round(self.rising * volatility_factor, 1),
-            "threshold_rising_strongly_%": round(self.strongly_rising * volatility_factor, 1),
-            "threshold_falling_%": round(self.falling * volatility_factor, 1),
-            "threshold_falling_strongly_%": round(self.strongly_falling * volatility_factor, 1),
+            "threshold_rising_percent": round(self.rising * volatility_factor, 1),
+            "threshold_rising_strongly_percent": round(self.strongly_rising * volatility_factor, 1),
+            "threshold_falling_percent": round(self.falling * volatility_factor, 1),
+            "threshold_falling_strongly_percent": round(self.strongly_falling * volatility_factor, 1),
         }
 
 

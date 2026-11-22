@@ -161,14 +161,14 @@ def build_period_summary_dict(
         # 2. Core decision attributes (what should I do?)
         "level": stats.aggregated_level,
         "rating_level": stats.aggregated_rating,
-        "rating_difference_%": stats.rating_difference_pct,
+        "rating_difference_percent": stats.rating_difference_pct,
         # 3. Price statistics (how much does it cost?)
         "price_mean": stats.price_mean,
         "price_median": stats.price_median,
         "price_min": stats.price_min,
         "price_max": stats.price_max,
         "price_spread": stats.price_spread,
-        "price_coefficient_variation_%": stats.coefficient_of_variation,
+        "price_coefficient_variation_percent": stats.coefficient_of_variation,
         "volatility": stats.volatility,
         # 4. Price differences will be added below if available
         # 5. Detail information (additional context)
@@ -184,12 +184,12 @@ def build_period_summary_dict(
             # Peak price sensor: compare to daily maximum
             summary["period_price_diff_from_daily_max"] = stats.period_price_diff
             if stats.period_price_diff_pct is not None:
-                summary["period_price_diff_from_daily_max_%"] = stats.period_price_diff_pct
+                summary["period_price_diff_from_daily_max_percent"] = stats.period_price_diff_pct
         else:
             # Best price sensor: compare to daily minimum
             summary["period_price_diff_from_daily_min"] = stats.period_price_diff
             if stats.period_price_diff_pct is not None:
-                summary["period_price_diff_from_daily_min_%"] = stats.period_price_diff_pct
+                summary["period_price_diff_from_daily_min_percent"] = stats.period_price_diff_pct
 
     # Add day volatility and price statistics (for understanding midnight classification changes)
     if price_context:
@@ -212,7 +212,7 @@ def build_period_summary_dict(
             day_volatility_pct = round((day_span / abs(day_avg) * 100), 1) if day_avg != 0 else None
 
             # Base currency like the other price fields; the attribute layer converts to the display unit
-            summary["day_volatility_%"] = day_volatility_pct
+            summary["day_volatility_percent"] = day_volatility_pct
             summary["day_price_min"] = round(day_min, 4)
             summary["day_price_max"] = round(day_max, 4)
             summary["day_price_span"] = round(day_span, 4)

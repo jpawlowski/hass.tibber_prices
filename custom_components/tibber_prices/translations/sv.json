@@ -1297,6 +1297,17 @@
           }
         }
       }
+    },
+    "attribute_percent_renamed": {
+      "title": "Tibber Prices: attributnamn som slutar på % har bytt namn ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Attribut omdöpta: % blir _percent",
+            "description": "Attributnamn för **{home_name}** som slutade på `_%` slutar nu på `_percent`, eftersom översatta attributnamn inte kan innehålla `%`. Berörda: rating_difference_%, diff_% (rating sensors), price_coefficient_variation_%, day_volatility_%, period_price_diff_from_daily_min_%, period_price_diff_from_daily_max_%, relaxation_threshold_original_%, relaxation_threshold_applied_%, price_typical_spread_%, trend_diff_%, threshold_rising_%, threshold_rising_strongly_%, threshold_falling_%, threshold_falling_strongly_%, timvarianterna som trend_3h_%, trajectory_4h_% och second_half_4h_diff_from_current_% samt på samma sätt first_half_*. Exempel: `rating_difference_%` heter nu `rating_difference_percent`.\n\nKontrollera mallar, automationer och instrumentpaneler som läser dessa attribut och bekräfta sedan den här aviseringen: Den tas bort för gott."
+          }
+        }
+      }
     }
   },
   "exceptions": {

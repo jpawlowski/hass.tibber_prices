@@ -244,8 +244,8 @@ def mark_periods_with_relaxation(
         # Convert decimal to percentage for display
         # For Peak Prices: Store as negative to match user's config semantics
         sign = -1 if reverse_sort else 1
-        period["relaxation_threshold_original_%"] = round(original_threshold * 100 * sign, 1)
-        period["relaxation_threshold_applied_%"] = round(applied_threshold * 100 * sign, 1)
+        period["relaxation_threshold_original_percent"] = round(original_threshold * 100 * sign, 1)
+        period["relaxation_threshold_applied_percent"] = round(applied_threshold * 100 * sign, 1)
 
 
 def group_prices_by_day(all_prices: list[dict], *, time: TibberPricesTimeService) -> dict[date, list[dict]]:

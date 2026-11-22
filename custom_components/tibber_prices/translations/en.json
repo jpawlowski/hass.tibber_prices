@@ -1297,6 +1297,17 @@
           }
         }
       }
+    },
+    "attribute_percent_renamed": {
+      "title": "Tibber Prices: attribute names ending in % were renamed ({home_name})",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "Attributes renamed: % becomes _percent",
+            "description": "Attribute names ending in `_%` of **{home_name}** now end in `_percent`, because translated attribute names can't contain a `%`. Affected: rating_difference_%, diff_% (rating sensors), price_coefficient_variation_%, day_volatility_%, period_price_diff_from_daily_min_%, period_price_diff_from_daily_max_%, relaxation_threshold_original_%, relaxation_threshold_applied_%, price_typical_spread_%, trend_diff_%, threshold_rising_%, threshold_rising_strongly_%, threshold_falling_%, threshold_falling_strongly_%, the hour variants such as trend_3h_%, trajectory_4h_% and second_half_4h_diff_from_current_%, and likewise first_half_*. Example: `rating_difference_%` is now `rating_difference_percent`.\n\nCheck templates, automations and dashboards that read these attributes, then confirm this notice: it's removed for good."
+          }
+        }
+      }
     }
   },
   "exceptions": {
