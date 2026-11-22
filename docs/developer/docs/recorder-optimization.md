@@ -164,10 +164,10 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 - **Statistics of the same prices or derivable from them:** volatility `price_spread`, `price_q25`, `price_q75`, `price_typical_spread(_percent)`, `price_spike_count`, `interval_count_today/_tomorrow`; rank `prices_below_count`, `reference_min/_max/_mean`; `clock_hour_price_mean/_median`; day pattern `confidence`, `day_cv_percent`, `extreme_time`, `valley_*`, `peak_*`; price phases `start`, `end`, `segment_index`, `segment_count`, `is_tomorrow`; `hours`; binary period `period_price_diff_from_daily_max(_percent)`, `day_volatility_percent`
 - **Large:** `segments`, `all_segments`
 - **Changing every update:** `trend_value`, `minutes_until_change`, `price_direction_duration_minutes`, `price_at_change`, `price_avg_after_change`, `first_half_interval_count`, `second_half_interval_count`
-- **Trend hour variants** (`first_half_<h>h_avg`, `second_half_<h>h_avg` and their `_diff_from_current_percent`): generated from `TREND_HOURS` in `sensor/definitions.py`, so a new hour count can't be missed
+- **Trend hour variants** (`trend_<h>h_percent`, `trajectory_<h>h_percent`, `next_<h>h_avg`, `first_half_<h>h_avg`, `second_half_<h>h_avg` and their `_diff_from_current_percent`): all computed from the price series, which the price sensors record, and the categorical trend state is recorded too. Generated from `TREND_HOURS` in `sensor/definitions.py`, so a new hour count can't be missed
 - Chart axis bounds per source: `yaxis_min/max_energy`, `yaxis_min/max_tax`
 
-Kept on purpose: `trend_<h>h_percent`, `trajectory_<h>h_percent`, `next_<h>h_avg` (the numbers behind a categorical trend state), `price_coefficient_variation_percent`, `price_min/max/mean/median`.
+Kept on purpose: `price_coefficient_variation_percent` (the number behind the volatility level), `price_min/max/mean/median` (values the price sensors' states don't carry), and `start`/`end` of the three `in_*_price_phase` binary sensors (`_unrecorded_attributes` is per class, and the best/peak price periods need `start`/`end`; they change only when a phase changes).
 
 ## Attributes That ARE Recorded
 

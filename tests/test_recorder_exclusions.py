@@ -31,16 +31,17 @@ def test_trend_hours_match_the_trend_sensors() -> None:
 @pytest.mark.unit
 @pytest.mark.parametrize("hours", TREND_HOURS)
 def test_derived_trend_hour_attributes_are_not_recorded(hours: int) -> None:
-    """The half-window averages and their differences are excluded for every hour count; the trend itself is kept."""
+    """Every trend attribute that carries the hour count is excluded: all are computed from the recorded prices."""
     for key in (
+        f"trend_{hours}h_percent",
+        f"trajectory_{hours}h_percent",
+        f"next_{hours}h_avg",
         f"first_half_{hours}h_avg",
         f"second_half_{hours}h_avg",
         f"first_half_{hours}h_diff_from_current_percent",
         f"second_half_{hours}h_diff_from_current_percent",
     ):
         assert key in UNRECORDED
-    assert f"trend_{hours}h_percent" not in UNRECORDED
-    assert f"trajectory_{hours}h_percent" not in UNRECORDED
 
 
 @pytest.mark.unit
