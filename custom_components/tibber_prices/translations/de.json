@@ -442,22 +442,202 @@
   "entity": {
     "sensor": {
       "current_interval_price": {
-        "name": "Aktueller Strompreis"
+        "name": "Aktueller Strompreis",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "outlook_units": {
+            "name": "Einheiten der Vorschau"
+          },
+          "outlook_day_part_hours": {
+            "name": "Stunden der Tageszeiten in der Vorschau"
+          },
+          "outlook_hours": {
+            "name": "Vorschau nach Stunden"
+          },
+          "outlook_days": {
+            "name": "Vorschau nach Tagen"
+          },
+          "outlook_day_parts": {
+            "name": "Vorschau nach Tageszeiten"
+          },
+          "outlook_yesterday": {
+            "name": "Vorschau, gestern"
+          },
+          "outlook_quarters": {
+            "name": "Vorschau nach Viertelstunden"
+          },
+          "outlook_past_periods": {
+            "name": "Vorschau, vergangene Perioden"
+          }
+        }
       },
       "current_interval_price_base": {
-        "name": "Aktueller Strompreis (Energie-Dashboard)"
+        "name": "Aktueller Strompreis (Energie-Dashboard)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
+        }
       },
       "next_interval_price": {
-        "name": "Nächster Strompreis"
+        "name": "Nächster Strompreis",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
+        }
       },
       "previous_interval_price": {
-        "name": "Vorheriger Strompreis"
+        "name": "Vorheriger Strompreis",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
+        }
       },
       "current_hour_average_price": {
-        "name": "⌀ Stunden-Preis aktuell"
+        "name": "⌀ Stunden-Preis aktuell",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "window_start": {
+            "name": "Fensterbeginn"
+          },
+          "window_end": {
+            "name": "Fensterende"
+          },
+          "clock_hour_start": {
+            "name": "Beginn der vollen Stunde"
+          },
+          "clock_hour_end": {
+            "name": "Ende der vollen Stunde"
+          },
+          "clock_hour_price_mean": {
+            "name": "Mittlerer Preis der vollen Stunde"
+          },
+          "clock_hour_price_median": {
+            "name": "Medianpreis der vollen Stunde"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
+        }
       },
       "next_hour_average_price": {
-        "name": "⌀ Stunden-Preis nächste Stunde"
+        "name": "⌀ Stunden-Preis nächste Stunde",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "window_start": {
+            "name": "Fensterbeginn"
+          },
+          "window_end": {
+            "name": "Fensterende"
+          },
+          "clock_hour_start": {
+            "name": "Beginn der vollen Stunde"
+          },
+          "clock_hour_end": {
+            "name": "Ende der vollen Stunde"
+          },
+          "clock_hour_price_mean": {
+            "name": "Mittlerer Preis der vollen Stunde"
+          },
+          "clock_hour_price_median": {
+            "name": "Medianpreis der vollen Stunde"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
+        }
       },
       "current_interval_price_level": {
         "name": "Aktuelles Preisniveau",
@@ -467,6 +647,38 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "cheap_until": {
+            "name": "Günstig bis"
+          },
+          "next_cheap_start": {
+            "name": "Nächste günstige Phase beginnt"
+          },
+          "expensive_until": {
+            "name": "Teuer bis"
+          },
+          "next_expensive_start": {
+            "name": "Nächste teure Phase beginnt"
+          }
         }
       },
       "next_interval_price_level": {
@@ -477,6 +689,26 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "previous_interval_price_level": {
@@ -487,6 +719,26 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "current_hour_price_level": {
@@ -497,6 +749,32 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "window_start": {
+            "name": "Fensterbeginn"
+          },
+          "window_end": {
+            "name": "Fensterende"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "next_hour_price_level": {
@@ -507,25 +785,261 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "window_start": {
+            "name": "Fensterbeginn"
+          },
+          "window_end": {
+            "name": "Fensterende"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "lowest_price_today": {
-        "name": "Mindestpreis heute"
+        "name": "Mindestpreis heute",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "highest_price_today": {
-        "name": "Höchstpreis heute"
+        "name": "Höchstpreis heute",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "average_price_today": {
-        "name": "⌀ Preis heute"
+        "name": "⌀ Preis heute",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "lowest_price_tomorrow": {
-        "name": "Mindestpreis morgen"
+        "name": "Mindestpreis morgen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "highest_price_tomorrow": {
-        "name": "Höchstpreis morgen"
+        "name": "Höchstpreis morgen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "average_price_tomorrow": {
-        "name": "⌀ Preis morgen"
+        "name": "⌀ Preis morgen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "energy_price": {
+            "name": "Energiepreis"
+          },
+          "tax": {
+            "name": "Steuern und Abgaben"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "yesterday_price_level": {
         "name": "Preisniveau gestern",
@@ -535,6 +1049,26 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "today_price_level": {
@@ -545,6 +1079,26 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "tomorrow_price_level": {
@@ -555,6 +1109,26 @@
           "normal": "Normal",
           "expensive": "Teuer",
           "very_expensive": "Sehr teuer"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "yesterday_price_rating": {
@@ -563,6 +1137,35 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "today_price_rating": {
@@ -571,6 +1174,35 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "tomorrow_price_rating": {
@@ -579,25 +1211,246 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "trailing_price_average": {
-        "name": "⌀ Preis nachlaufend 24h"
+        "name": "⌀ Preis nachlaufend 24h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "leading_price_average": {
-        "name": "⌀ Preis vorlaufend 24h"
+        "name": "⌀ Preis vorlaufend 24h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "trailing_price_min": {
-        "name": "24h-Mindestpreis nachlaufend"
+        "name": "24h-Mindestpreis nachlaufend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "trailing_price_max": {
-        "name": "24h-Höchstpreis nachlaufend"
+        "name": "24h-Höchstpreis nachlaufend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "leading_price_min": {
-        "name": "24h-Mindestpreis vorlaufend"
+        "name": "24h-Mindestpreis vorlaufend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "leading_price_max": {
-        "name": "24h-Höchstpreis vorlaufend"
+        "name": "24h-Höchstpreis vorlaufend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "current_interval_price_rating": {
         "name": "Aktuelle Preisbewertung",
@@ -605,6 +1458,35 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "next_interval_price_rating": {
@@ -613,6 +1495,35 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "previous_interval_price_rating": {
@@ -621,6 +1532,35 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "current_hour_price_rating": {
@@ -629,6 +1569,41 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "window_start": {
+            "name": "Fensterbeginn"
+          },
+          "window_end": {
+            "name": "Fensterende"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "next_hour_price_rating": {
@@ -637,31 +1612,346 @@
           "low": "Niedrig",
           "normal": "Normal",
           "high": "Hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "window_start": {
+            "name": "Fensterbeginn"
+          },
+          "window_end": {
+            "name": "Fensterende"
+          },
+          "rating_id": {
+            "name": "Preisbewertung (ID)"
+          },
+          "rating_value": {
+            "name": "Preisbewertung (Wert)"
+          },
+          "diff_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "level_id": {
+            "name": "Preisniveau (ID)"
+          },
+          "level_value": {
+            "name": "Preisniveau (Wert)"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "next_avg_1h": {
-        "name": "⌀ Preis nächste 1h"
+        "name": "⌀ Preis nächste 1h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "next_avg_2h": {
-        "name": "⌀ Preis nächste 2h"
+        "name": "⌀ Preis nächste 2h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "next_avg_3h": {
-        "name": "⌀ Preis nächste 3h"
+        "name": "⌀ Preis nächste 3h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "next_avg_4h": {
-        "name": "⌀ Preis nächste 4h"
+        "name": "⌀ Preis nächste 4h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "next_avg_5h": {
-        "name": "⌀ Preis nächste 5h"
+        "name": "⌀ Preis nächste 5h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "next_avg_6h": {
-        "name": "⌀ Preis nächste 6h"
+        "name": "⌀ Preis nächste 6h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "next_avg_8h": {
-        "name": "⌀ Preis nächste 8h"
+        "name": "⌀ Preis nächste 8h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "next_avg_12h": {
-        "name": "⌀ Preis nächste 12h"
+        "name": "⌀ Preis nächste 12h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "hours": {
+            "name": "Stunden"
+          },
+          "energy_price_mean": {
+            "name": "Mittlerer Energiepreis"
+          },
+          "energy_price_median": {
+            "name": "Energiepreis (Median)"
+          },
+          "tax_mean": {
+            "name": "Mittlere Steuern und Abgaben"
+          },
+          "tax_median": {
+            "name": "Steuern und Abgaben (Median)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          }
+        }
       },
       "price_outlook_1h": {
         "name": "Preisausblick (1h)",
@@ -671,6 +1961,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_1h_percent": {
+            "name": "Änderung in den nächsten 1 Std. (%)"
+          },
+          "next_1h_avg": {
+            "name": "Durchschnittspreis, nächste 1 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          }
         }
       },
       "price_outlook_2h": {
@@ -681,6 +2012,53 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_2h_percent": {
+            "name": "Änderung in den nächsten 2 Std. (%)"
+          },
+          "next_2h_avg": {
+            "name": "Durchschnittspreis, nächste 2 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          },
+          "second_half_2h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 2-Std.-Fensters"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          }
         }
       },
       "price_outlook_3h": {
@@ -691,6 +2069,53 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_3h_percent": {
+            "name": "Änderung in den nächsten 3 Std. (%)"
+          },
+          "next_3h_avg": {
+            "name": "Durchschnittspreis, nächste 3 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          },
+          "second_half_3h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 3-Std.-Fensters"
+          },
+          "second_half_3h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          }
         }
       },
       "price_outlook_4h": {
@@ -701,6 +2126,53 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_4h_percent": {
+            "name": "Änderung in den nächsten 4 Std. (%)"
+          },
+          "next_4h_avg": {
+            "name": "Durchschnittspreis, nächste 4 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          },
+          "second_half_4h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 4-Std.-Fensters"
+          },
+          "second_half_4h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          }
         }
       },
       "price_outlook_5h": {
@@ -711,6 +2183,53 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_5h_percent": {
+            "name": "Änderung in den nächsten 5 Std. (%)"
+          },
+          "next_5h_avg": {
+            "name": "Durchschnittspreis, nächste 5 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          },
+          "second_half_5h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 5-Std.-Fensters"
+          },
+          "second_half_5h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          }
         }
       },
       "price_outlook_6h": {
@@ -721,6 +2240,53 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_6h_percent": {
+            "name": "Änderung in den nächsten 6 Std. (%)"
+          },
+          "next_6h_avg": {
+            "name": "Durchschnittspreis, nächste 6 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          },
+          "second_half_6h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 6-Std.-Fensters"
+          },
+          "second_half_6h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          }
         }
       },
       "price_outlook_8h": {
@@ -731,6 +2297,53 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_8h_percent": {
+            "name": "Änderung in den nächsten 8 Std. (%)"
+          },
+          "next_8h_avg": {
+            "name": "Durchschnittspreis, nächste 8 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          },
+          "second_half_8h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 8-Std.-Fensters"
+          },
+          "second_half_8h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          }
         }
       },
       "price_outlook_12h": {
@@ -741,6 +2354,53 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trend_12h_percent": {
+            "name": "Änderung in den nächsten 12 Std. (%)"
+          },
+          "next_12h_avg": {
+            "name": "Durchschnittspreis, nächste 12 Std."
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          },
+          "second_half_12h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 12-Std.-Fensters"
+          },
+          "second_half_12h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          }
         }
       },
       "price_trajectory_2h": {
@@ -751,6 +2411,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trajectory_2h_percent": {
+            "name": "Verlauf über 2 Std. (%)"
+          },
+          "first_half_2h_avg": {
+            "name": "Durchschnittspreis, erste Hälfte des 2-Std.-Fensters"
+          },
+          "second_half_2h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 2-Std.-Fensters"
+          },
+          "first_half_2h_diff_from_current_percent": {
+            "name": "Erste Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervalle in der ersten Hälfte"
+          },
+          "second_half_interval_count": {
+            "name": "Intervalle in der zweiten Hälfte"
+          }
         }
       },
       "price_trajectory_3h": {
@@ -761,6 +2462,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trajectory_3h_percent": {
+            "name": "Verlauf über 3 Std. (%)"
+          },
+          "first_half_3h_avg": {
+            "name": "Durchschnittspreis, erste Hälfte des 3-Std.-Fensters"
+          },
+          "second_half_3h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 3-Std.-Fensters"
+          },
+          "first_half_3h_diff_from_current_percent": {
+            "name": "Erste Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "second_half_3h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervalle in der ersten Hälfte"
+          },
+          "second_half_interval_count": {
+            "name": "Intervalle in der zweiten Hälfte"
+          }
         }
       },
       "price_trajectory_4h": {
@@ -771,6 +2513,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trajectory_4h_percent": {
+            "name": "Verlauf über 4 Std. (%)"
+          },
+          "first_half_4h_avg": {
+            "name": "Durchschnittspreis, erste Hälfte des 4-Std.-Fensters"
+          },
+          "second_half_4h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 4-Std.-Fensters"
+          },
+          "first_half_4h_diff_from_current_percent": {
+            "name": "Erste Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "second_half_4h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervalle in der ersten Hälfte"
+          },
+          "second_half_interval_count": {
+            "name": "Intervalle in der zweiten Hälfte"
+          }
         }
       },
       "price_trajectory_5h": {
@@ -781,6 +2564,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trajectory_5h_percent": {
+            "name": "Verlauf über 5 Std. (%)"
+          },
+          "first_half_5h_avg": {
+            "name": "Durchschnittspreis, erste Hälfte des 5-Std.-Fensters"
+          },
+          "second_half_5h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 5-Std.-Fensters"
+          },
+          "first_half_5h_diff_from_current_percent": {
+            "name": "Erste Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "second_half_5h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervalle in der ersten Hälfte"
+          },
+          "second_half_interval_count": {
+            "name": "Intervalle in der zweiten Hälfte"
+          }
         }
       },
       "price_trajectory_6h": {
@@ -791,6 +2615,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trajectory_6h_percent": {
+            "name": "Verlauf über 6 Std. (%)"
+          },
+          "first_half_6h_avg": {
+            "name": "Durchschnittspreis, erste Hälfte des 6-Std.-Fensters"
+          },
+          "second_half_6h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 6-Std.-Fensters"
+          },
+          "first_half_6h_diff_from_current_percent": {
+            "name": "Erste Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "second_half_6h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervalle in der ersten Hälfte"
+          },
+          "second_half_interval_count": {
+            "name": "Intervalle in der zweiten Hälfte"
+          }
         }
       },
       "price_trajectory_8h": {
@@ -801,6 +2666,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trajectory_8h_percent": {
+            "name": "Verlauf über 8 Std. (%)"
+          },
+          "first_half_8h_avg": {
+            "name": "Durchschnittspreis, erste Hälfte des 8-Std.-Fensters"
+          },
+          "second_half_8h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 8-Std.-Fensters"
+          },
+          "first_half_8h_diff_from_current_percent": {
+            "name": "Erste Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "second_half_8h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervalle in der ersten Hälfte"
+          },
+          "second_half_interval_count": {
+            "name": "Intervalle in der zweiten Hälfte"
+          }
         }
       },
       "price_trajectory_12h": {
@@ -811,6 +2717,47 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "trend_value": {
+            "name": "Trendwert"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "trajectory_12h_percent": {
+            "name": "Verlauf über 12 Std. (%)"
+          },
+          "first_half_12h_avg": {
+            "name": "Durchschnittspreis, erste Hälfte des 12-Std.-Fensters"
+          },
+          "second_half_12h_avg": {
+            "name": "Durchschnittspreis, zweite Hälfte des 12-Std.-Fensters"
+          },
+          "first_half_12h_diff_from_current_percent": {
+            "name": "Erste Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "second_half_12h_diff_from_current_percent": {
+            "name": "Zweite Hälfte gegenüber aktuellem Preis (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervalle in der ersten Hälfte"
+          },
+          "second_half_interval_count": {
+            "name": "Intervalle in der zweiten Hälfte"
+          }
         }
       },
       "current_price_trend": {
@@ -821,19 +2768,158 @@
           "stable": "Stabil",
           "falling": "Fallend",
           "strongly_falling": "Stark fallend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "previous_direction": {
+            "name": "Vorherige Richtung"
+          },
+          "price_direction_duration_minutes": {
+            "name": "Dauer der aktuellen Richtung (Min.)"
+          },
+          "price_direction_since": {
+            "name": "Richtung seit"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          }
         }
       },
       "next_price_trend_change": {
-        "name": "Nächste Trendänderung"
+        "name": "Nächste Trendänderung",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "direction": {
+            "name": "Richtung nach der Änderung"
+          },
+          "from_direction": {
+            "name": "Richtung vor der Änderung"
+          },
+          "minutes_until_change": {
+            "name": "Minuten bis zur Änderung"
+          },
+          "price_now": {
+            "name": "Aktueller Preis"
+          },
+          "price_at_change": {
+            "name": "Preis bei der Änderung"
+          },
+          "price_avg_after_change": {
+            "name": "Durchschnittspreis nach der Änderung"
+          },
+          "trend_diff_percent": {
+            "name": "Preisänderung bei der Änderung (%)"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          }
+        }
       },
       "next_price_trend_change_in": {
-        "name": "Nächste Trendänderung in"
+        "name": "Nächste Trendänderung in",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "direction": {
+            "name": "Richtung nach der Änderung"
+          },
+          "from_direction": {
+            "name": "Richtung vor der Änderung"
+          },
+          "minutes_until_change": {
+            "name": "Minuten bis zur Änderung"
+          },
+          "price_now": {
+            "name": "Aktueller Preis"
+          },
+          "price_at_change": {
+            "name": "Preis bei der Änderung"
+          },
+          "price_avg_after_change": {
+            "name": "Durchschnittspreis nach der Änderung"
+          },
+          "trend_diff_percent": {
+            "name": "Preisänderung bei der Änderung (%)"
+          },
+          "volatility_factor": {
+            "name": "Volatilitätsfaktor"
+          },
+          "threshold_rising_percent": {
+            "name": "Schwelle steigend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Schwelle stark steigend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Schwelle fallend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Schwelle stark fallend (%)"
+          }
+        }
       },
       "daily_rating": {
-        "name": "Tägliche Preisbewertung"
+        "name": "Tägliche Preisbewertung",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "monthly_rating": {
-        "name": "Monatliche Preisbewertung"
+        "name": "Monatliche Preisbewertung",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "data_lifecycle_status": {
         "name": "Datenlebenszyklus-Status",
@@ -846,6 +2932,32 @@
           "error": "Fehler",
           "awaiting_subscription": "Wartet auf Vertragsbeginn",
           "subscription_ended": "Vertrag beendet"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "tomorrow_available": {
+            "name": "Daten für morgen verfügbar"
+          },
+          "next_api_poll": {
+            "name": "Nächste API-Abfrage"
+          },
+          "updates_today": {
+            "name": "Aktualisierungen heute"
+          },
+          "last_turnover": {
+            "name": "Letzter Tageswechsel"
+          },
+          "last_error": {
+            "name": "Letzter Fehler"
+          }
         }
       },
       "today_volatility": {
@@ -855,6 +2967,56 @@
           "moderate": "Moderat",
           "high": "Hoch",
           "very_high": "Sehr hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "price_volatility": {
+            "name": "Volatilitätsstufe"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoeffizient (%)"
+          },
+          "price_spread": {
+            "name": "Preisspanne"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "price_q25": {
+            "name": "Preis am 25. Perzentil"
+          },
+          "price_q75": {
+            "name": "Preis am 75. Perzentil"
+          },
+          "price_typical_spread": {
+            "name": "Typische Preisspanne (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische Preisspanne (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Preisspitzen"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          }
         }
       },
       "tomorrow_volatility": {
@@ -864,6 +3026,56 @@
           "moderate": "Moderat",
           "high": "Hoch",
           "very_high": "Sehr hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "price_volatility": {
+            "name": "Volatilitätsstufe"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoeffizient (%)"
+          },
+          "price_spread": {
+            "name": "Preisspanne"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "price_q25": {
+            "name": "Preis am 25. Perzentil"
+          },
+          "price_q75": {
+            "name": "Preis am 75. Perzentil"
+          },
+          "price_typical_spread": {
+            "name": "Typische Preisspanne (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische Preisspanne (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Preisspitzen"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          }
         }
       },
       "next_24h_volatility": {
@@ -873,6 +3085,56 @@
           "moderate": "Moderat",
           "high": "Hoch",
           "very_high": "Sehr hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "price_volatility": {
+            "name": "Volatilitätsstufe"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoeffizient (%)"
+          },
+          "price_spread": {
+            "name": "Preisspanne"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "price_q25": {
+            "name": "Preis am 25. Perzentil"
+          },
+          "price_q75": {
+            "name": "Preis am 75. Perzentil"
+          },
+          "price_typical_spread": {
+            "name": "Typische Preisspanne (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische Preisspanne (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Preisspitzen"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          }
         }
       },
       "today_tomorrow_volatility": {
@@ -882,43 +3144,381 @@
           "moderate": "Moderat",
           "high": "Hoch",
           "very_high": "Sehr hoch"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "price_volatility": {
+            "name": "Volatilitätsstufe"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoeffizient (%)"
+          },
+          "price_spread": {
+            "name": "Preisspanne"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "price_q25": {
+            "name": "Preis am 25. Perzentil"
+          },
+          "price_q75": {
+            "name": "Preis am 75. Perzentil"
+          },
+          "price_typical_spread": {
+            "name": "Typische Preisspanne (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische Preisspanne (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Preisspitzen"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "today_volatility": {
+            "name": "Volatilität heute"
+          },
+          "tomorrow_volatility": {
+            "name": "Volatilität morgen"
+          },
+          "interval_count_today": {
+            "name": "Intervalle heute"
+          },
+          "interval_count_tomorrow": {
+            "name": "Intervalle morgen"
+          }
         }
       },
       "best_price_end_time": {
-        "name": "Bestpreis endet"
+        "name": "Bestpreis endet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "best_price_period_duration": {
-        "name": "Bestpreis Dauer"
+        "name": "Bestpreis Dauer",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "best_price_remaining_minutes": {
-        "name": "Bestpreis verbleibend"
+        "name": "Bestpreis verbleibend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "best_price_progress": {
-        "name": "Bestpreis Fortschritt"
+        "name": "Bestpreis Fortschritt",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "best_price_next_start_time": {
-        "name": "Bestpreis startet"
+        "name": "Bestpreis startet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "best_price_next_in_minutes": {
-        "name": "Bestpreis startet in"
+        "name": "Bestpreis startet in",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "peak_price_end_time": {
-        "name": "Spitzenpreis endet"
+        "name": "Spitzenpreis endet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "peak_price_period_duration": {
-        "name": "Spitzenpreis Dauer"
+        "name": "Spitzenpreis Dauer",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "peak_price_remaining_minutes": {
-        "name": "Spitzenpreis verbleibend"
+        "name": "Spitzenpreis verbleibend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "peak_price_progress": {
-        "name": "Spitzenpreis Fortschritt"
+        "name": "Spitzenpreis Fortschritt",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "peak_price_next_start_time": {
-        "name": "Spitzenpreis startet"
+        "name": "Spitzenpreis startet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "peak_price_next_in_minutes": {
-        "name": "Spitzenpreis startet in"
+        "name": "Spitzenpreis startet in",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "period_duration_minutes": {
+            "name": "Dauer der Periode (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "home_type": {
         "name": "Wohnungstyp",
@@ -927,16 +3527,60 @@
           "rowhouse": "Reihenhaus",
           "house": "Haus",
           "cottage": "Ferienhaus"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
         }
       },
       "home_size": {
-        "name": "Wohnfläche"
+        "name": "Wohnfläche",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "main_fuse_size": {
-        "name": "Hauptsicherung"
+        "name": "Hauptsicherung",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "number_of_residents": {
-        "name": "Anzahl Bewohner"
+        "name": "Anzahl Bewohner",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "primary_heating_source": {
         "name": "Primäre Heizquelle",
@@ -956,31 +3600,130 @@
           "oil": "Öl",
           "other": "Sonstige",
           "waste": "Abwärme"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
         }
       },
       "grid_company": {
-        "name": "Netzbetreiber"
+        "name": "Netzbetreiber",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "grid_area_code": {
-        "name": "Netzgebietscode"
+        "name": "Netzgebietscode",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "price_area_code": {
-        "name": "Preiszonencode"
+        "name": "Preiszonencode",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "consumption_ean": {
-        "name": "Verbrauchs-EAN"
+        "name": "Verbrauchs-EAN",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "production_ean": {
-        "name": "Erzeugungs-EAN"
+        "name": "Erzeugungs-EAN",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "energy_tax_type": {
-        "name": "Energiesteuertyp"
+        "name": "Energiesteuertyp",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "vat_type": {
-        "name": "Mehrwertsteuertyp"
+        "name": "Mehrwertsteuertyp",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "estimated_annual_consumption": {
-        "name": "Geschätzter Jahresverbrauch"
+        "name": "Geschätzter Jahresverbrauch",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "subscription_status": {
         "name": "Abonnementstatus",
@@ -990,6 +3733,17 @@
           "pending": "Ausstehend",
           "unknown": "Unbekannt",
           "awaiting_market": "Wartet auf Markt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
         }
       },
       "day_pattern_yesterday": {
@@ -1003,6 +3757,41 @@
           "rising": "Steigend",
           "falling": "Fallend",
           "mixed": "Gemischt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "confidence": {
+            "name": "Zuverlässigkeit"
+          },
+          "day_cv_percent": {
+            "name": "Variationskoeffizient des Tages (%)"
+          },
+          "extreme_time": {
+            "name": "Zeitpunkt des Extrems"
+          },
+          "valley_start": {
+            "name": "Beginn des Tals"
+          },
+          "valley_end": {
+            "name": "Ende des Tals"
+          },
+          "peak_start": {
+            "name": "Beginn der Spitze"
+          },
+          "peak_end": {
+            "name": "Ende der Spitze"
+          },
+          "segments": {
+            "name": "Abschnitte"
+          }
         }
       },
       "day_pattern_today": {
@@ -1016,6 +3805,41 @@
           "rising": "Steigend",
           "falling": "Fallend",
           "mixed": "Gemischt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "confidence": {
+            "name": "Zuverlässigkeit"
+          },
+          "day_cv_percent": {
+            "name": "Variationskoeffizient des Tages (%)"
+          },
+          "extreme_time": {
+            "name": "Zeitpunkt des Extrems"
+          },
+          "valley_start": {
+            "name": "Beginn des Tals"
+          },
+          "valley_end": {
+            "name": "Ende des Tals"
+          },
+          "peak_start": {
+            "name": "Beginn der Spitze"
+          },
+          "peak_end": {
+            "name": "Ende der Spitze"
+          },
+          "segments": {
+            "name": "Abschnitte"
+          }
         }
       },
       "day_pattern_tomorrow": {
@@ -1029,6 +3853,41 @@
           "rising": "Steigend",
           "falling": "Fallend",
           "mixed": "Gemischt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "confidence": {
+            "name": "Zuverlässigkeit"
+          },
+          "day_cv_percent": {
+            "name": "Variationskoeffizient des Tages (%)"
+          },
+          "extreme_time": {
+            "name": "Zeitpunkt des Extrems"
+          },
+          "valley_start": {
+            "name": "Beginn des Tals"
+          },
+          "valley_end": {
+            "name": "Ende des Tals"
+          },
+          "peak_start": {
+            "name": "Beginn der Spitze"
+          },
+          "peak_end": {
+            "name": "Ende der Spitze"
+          },
+          "segments": {
+            "name": "Abschnitte"
+          }
         }
       },
       "current_price_phase": {
@@ -1037,6 +3896,44 @@
           "rising": "Steigend",
           "falling": "Fallend",
           "flat": "Flach"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "start": {
+            "name": "Beginn"
+          },
+          "end": {
+            "name": "Ende"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "segment_index": {
+            "name": "Abschnittsnummer"
+          },
+          "segment_count": {
+            "name": "Anzahl Abschnitte"
+          },
+          "all_segments": {
+            "name": "Alle Abschnitte"
+          },
+          "is_tomorrow": {
+            "name": "Beginnt morgen"
+          }
         }
       },
       "next_price_phase": {
@@ -1045,37 +3942,305 @@
           "rising": "Steigend",
           "falling": "Fallend",
           "flat": "Flach"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "start": {
+            "name": "Beginn"
+          },
+          "end": {
+            "name": "Ende"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "segment_index": {
+            "name": "Abschnittsnummer"
+          },
+          "segment_count": {
+            "name": "Anzahl Abschnitte"
+          },
+          "all_segments": {
+            "name": "Alle Abschnitte"
+          },
+          "is_tomorrow": {
+            "name": "Beginnt morgen"
+          }
         }
       },
       "current_price_phase_end_time": {
-        "name": "Aktuelle Phase Endzeit"
+        "name": "Aktuelle Phase Endzeit",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "current_price_phase_remaining_minutes": {
-        "name": "Aktuelle Phase verbleibend"
+        "name": "Aktuelle Phase verbleibend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "current_price_phase_duration": {
-        "name": "Aktuelle Phase Dauer"
+        "name": "Aktuelle Phase Dauer",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "current_price_phase_progress": {
-        "name": "Aktuelle Phase Fortschritt"
+        "name": "Aktuelle Phase Fortschritt",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "next_rising_phase_start_time": {
-        "name": "Nächste steigende Phase Start"
+        "name": "Nächste steigende Phase Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "next_falling_phase_start_time": {
-        "name": "Nächste fallende Phase Start"
+        "name": "Nächste fallende Phase Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "next_flat_phase_start_time": {
-        "name": "Nächste flache Phase Start"
+        "name": "Nächste flache Phase Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "next_rising_phase_in_minutes": {
-        "name": "Zeit bis nächste steigende Phase"
+        "name": "Zeit bis nächste steigende Phase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "next_falling_phase_in_minutes": {
-        "name": "Zeit bis nächste fallende Phase"
+        "name": "Zeit bis nächste fallende Phase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "next_flat_phase_in_minutes": {
-        "name": "Zeit bis nächste flache Phase"
+        "name": "Zeit bis nächste flache Phase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "icon_color": {
+            "name": "Symbolfarbe"
+          },
+          "phase_duration_minutes": {
+            "name": "Dauer der Phase (Min.)"
+          },
+          "remaining_minutes": {
+            "name": "Verbleibende Minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten bis zum nächsten Beginn"
+          }
+        }
       },
       "chart_data_export": {
         "name": "Diagramm-Datenexport",
@@ -1083,6 +4248,17 @@
           "pending": "Ausstehend",
           "ready": "Bereit",
           "error": "Fehler"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
         }
       },
       "chart_metadata": {
@@ -1091,40 +4267,397 @@
           "pending": "Ausstehend",
           "ready": "Bereit",
           "error": "Fehler"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "yaxis_min": {
+            "name": "Minimum der Diagrammachse"
+          },
+          "yaxis_max": {
+            "name": "Maximum der Diagrammachse"
+          },
+          "yaxis_min_energy": {
+            "name": "Minimum der Diagrammachse (Energiepreis)"
+          },
+          "yaxis_max_energy": {
+            "name": "Maximum der Diagrammachse (Energiepreis)"
+          },
+          "yaxis_min_tax": {
+            "name": "Minimum der Diagrammachse (Steuern und Abgaben)"
+          },
+          "yaxis_max_tax": {
+            "name": "Maximum der Diagrammachse (Steuern und Abgaben)"
+          },
+          "currency": {
+            "name": "Währung"
+          },
+          "resolution": {
+            "name": "Auflösung"
+          },
+          "error": {
+            "name": "Fehler"
+          }
         }
       },
       "current_interval_price_rank_today": {
-        "name": "Aktueller Preisrang (heute)"
+        "name": "Aktueller Preisrang (heute)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "current_price": {
+            "name": "Preis des aktuellen Intervalls"
+          }
+        }
       },
       "current_interval_price_rank_tomorrow": {
-        "name": "Aktueller Preisrang (morgen)"
+        "name": "Aktueller Preisrang (morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "current_price": {
+            "name": "Preis des aktuellen Intervalls"
+          }
+        }
       },
       "current_interval_price_rank_today_tomorrow": {
-        "name": "Aktueller Preisrang (heute+morgen)"
+        "name": "Aktueller Preisrang (heute+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "current_price": {
+            "name": "Preis des aktuellen Intervalls"
+          }
+        }
       },
       "next_interval_price_rank_today": {
-        "name": "Nächster Preisrang (heute)"
+        "name": "Nächster Preisrang (heute)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "next_price": {
+            "name": "Preis des nächsten Intervalls"
+          }
+        }
       },
       "next_interval_price_rank_today_tomorrow": {
-        "name": "Nächster Preisrang (heute+morgen)"
+        "name": "Nächster Preisrang (heute+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "next_price": {
+            "name": "Preis des nächsten Intervalls"
+          }
+        }
       },
       "previous_interval_price_rank_today": {
-        "name": "Vorheriger Preisrang (heute)"
+        "name": "Vorheriger Preisrang (heute)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "previous_price": {
+            "name": "Preis des vorherigen Intervalls"
+          }
+        }
       },
       "previous_interval_price_rank_today_tomorrow": {
-        "name": "Vorheriger Preisrang (heute+morgen)"
+        "name": "Vorheriger Preisrang (heute+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "previous_price": {
+            "name": "Preis des vorherigen Intervalls"
+          }
+        }
       },
       "current_hour_price_rank_today": {
-        "name": "⌀ Stündlicher Preisrang Aktuell (heute)"
+        "name": "⌀ Stündlicher Preisrang Aktuell (heute)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "current_hour_avg_price": {
+            "name": "Durchschnittspreis, aktuelle Stunde"
+          }
+        }
       },
       "current_hour_price_rank_today_tomorrow": {
-        "name": "⌀ Stündlicher Preisrang Aktuell (heute+morgen)"
+        "name": "⌀ Stündlicher Preisrang Aktuell (heute+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "current_hour_avg_price": {
+            "name": "Durchschnittspreis, aktuelle Stunde"
+          }
+        }
       },
       "next_hour_price_rank_today": {
-        "name": "⌀ Stündlicher Preisrang Nächste (heute)"
+        "name": "⌀ Stündlicher Preisrang Nächste (heute)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "next_hour_avg_price": {
+            "name": "Durchschnittspreis, nächste Stunde"
+          }
+        }
       },
       "next_hour_price_rank_today_tomorrow": {
-        "name": "⌀ Stündlicher Preisrang Nächste (heute+morgen)"
+        "name": "⌀ Stündlicher Preisrang Nächste (heute+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "prices_below_count": {
+            "name": "Günstigere Intervalle"
+          },
+          "interval_count": {
+            "name": "Anzahl Intervalle"
+          },
+          "reference_min": {
+            "name": "Niedrigster Vergleichspreis"
+          },
+          "reference_max": {
+            "name": "Höchster Vergleichspreis"
+          },
+          "reference_mean": {
+            "name": "Mittlerer Vergleichspreis"
+          },
+          "next_hour_avg_price": {
+            "name": "Durchschnittspreis, nächste Stunde"
+          }
+        }
       },
       "entry_mode": {
         "name": "Datenmodus",
@@ -1132,101 +4665,648 @@
           "live": "Live",
           "time_travel_days": "Zeitreise (Tage)",
           "time_travel_yearly": "Zeitreise (jährlich)"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
         }
       },
       "time_travel_reference_time": {
-        "name": "Angezeigte Zeit"
+        "name": "Angezeigte Zeit",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "time_travel_days_offset": {
-        "name": "Zeitreise-Versatz in Tagen"
+        "name": "Zeitreise-Versatz in Tagen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "time_travel_years_offset": {
-        "name": "Zeitreise-Versatz in Jahren"
+        "name": "Zeitreise-Versatz in Jahren",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "time_travel_time_offset": {
-        "name": "Zeitreise-Uhrzeitversatz"
+        "name": "Zeitreise-Uhrzeitversatz",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "headless_mode": {
         "name": "Headless-Modus",
         "state": {
           "on": "Ein",
           "off": "Aus"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
         }
       }
     },
     "binary_sensor": {
       "peak_price_period": {
-        "name": "Spitzenpreis-Zeitraum"
+        "name": "Spitzenpreis-Zeitraum",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "intervals_available": {
+            "name": "Verfügbare Intervalle"
+          },
+          "data_status": {
+            "name": "Datenstatus"
+          },
+          "period_position": {
+            "name": "Position in der Periode"
+          },
+          "period_count_total": {
+            "name": "Perioden gesamt"
+          },
+          "period_count_remaining": {
+            "name": "Verbleibende Perioden"
+          },
+          "start": {
+            "name": "Beginn"
+          },
+          "end": {
+            "name": "Ende"
+          },
+          "periods": {
+            "name": "Perioden"
+          },
+          "duration_minutes": {
+            "name": "Dauer (Min.)"
+          },
+          "level": {
+            "name": "Preisniveau"
+          },
+          "rating_level": {
+            "name": "Preisbewertung"
+          },
+          "rating_difference_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_spread": {
+            "name": "Preisspanne"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoeffizient (%)"
+          },
+          "volatility": {
+            "name": "Volatilität"
+          },
+          "day_volatility_percent": {
+            "name": "Volatilität des Tages (%)"
+          },
+          "period_price_diff_from_daily_min": {
+            "name": "Abweichung vom Tagesminimum"
+          },
+          "period_price_diff_from_daily_min_percent": {
+            "name": "Abweichung vom Tagesminimum (%)"
+          },
+          "period_price_diff_from_daily_max": {
+            "name": "Abweichung vom Tagesmaximum"
+          },
+          "period_price_diff_from_daily_max_percent": {
+            "name": "Abweichung vom Tagesmaximum (%)"
+          },
+          "period_interval_count": {
+            "name": "Intervalle in der Periode"
+          },
+          "period_count_today": {
+            "name": "Perioden heute"
+          },
+          "period_count_tomorrow": {
+            "name": "Perioden morgen"
+          },
+          "relaxation_active": {
+            "name": "Lockerung aktiv"
+          },
+          "relaxation_level": {
+            "name": "Lockerungsstufe"
+          },
+          "relaxation_threshold_original_percent": {
+            "name": "Ursprüngliche Flexibilität (%)"
+          },
+          "relaxation_threshold_applied_percent": {
+            "name": "Angewendete Flexibilität (%)"
+          },
+          "min_periods_configured": {
+            "name": "Konfigurierte Mindestanzahl Perioden"
+          },
+          "flat_days_detected": {
+            "name": "Flache Tage erkannt"
+          },
+          "relaxation_incomplete": {
+            "name": "Lockerung unvollständig"
+          }
+        }
       },
       "best_price_period": {
-        "name": "Bestpreis-Zeitraum"
+        "name": "Bestpreis-Zeitraum",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "intervals_available": {
+            "name": "Verfügbare Intervalle"
+          },
+          "data_status": {
+            "name": "Datenstatus"
+          },
+          "period_position": {
+            "name": "Position in der Periode"
+          },
+          "period_count_total": {
+            "name": "Perioden gesamt"
+          },
+          "period_count_remaining": {
+            "name": "Verbleibende Perioden"
+          },
+          "start": {
+            "name": "Beginn"
+          },
+          "end": {
+            "name": "Ende"
+          },
+          "periods": {
+            "name": "Perioden"
+          },
+          "duration_minutes": {
+            "name": "Dauer (Min.)"
+          },
+          "level": {
+            "name": "Preisniveau"
+          },
+          "rating_level": {
+            "name": "Preisbewertung"
+          },
+          "rating_difference_percent": {
+            "name": "Abweichung vom Durchschnitt (%)"
+          },
+          "price_mean": {
+            "name": "Mittlerer Preis"
+          },
+          "price_median": {
+            "name": "Medianpreis"
+          },
+          "price_min": {
+            "name": "Niedrigster Preis"
+          },
+          "price_max": {
+            "name": "Höchster Preis"
+          },
+          "price_spread": {
+            "name": "Preisspanne"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoeffizient (%)"
+          },
+          "volatility": {
+            "name": "Volatilität"
+          },
+          "day_volatility_percent": {
+            "name": "Volatilität des Tages (%)"
+          },
+          "period_price_diff_from_daily_min": {
+            "name": "Abweichung vom Tagesminimum"
+          },
+          "period_price_diff_from_daily_min_percent": {
+            "name": "Abweichung vom Tagesminimum (%)"
+          },
+          "period_price_diff_from_daily_max": {
+            "name": "Abweichung vom Tagesmaximum"
+          },
+          "period_price_diff_from_daily_max_percent": {
+            "name": "Abweichung vom Tagesmaximum (%)"
+          },
+          "period_interval_count": {
+            "name": "Intervalle in der Periode"
+          },
+          "period_count_today": {
+            "name": "Perioden heute"
+          },
+          "period_count_tomorrow": {
+            "name": "Perioden morgen"
+          },
+          "relaxation_active": {
+            "name": "Lockerung aktiv"
+          },
+          "relaxation_level": {
+            "name": "Lockerungsstufe"
+          },
+          "relaxation_threshold_original_percent": {
+            "name": "Ursprüngliche Flexibilität (%)"
+          },
+          "relaxation_threshold_applied_percent": {
+            "name": "Angewendete Flexibilität (%)"
+          },
+          "min_periods_configured": {
+            "name": "Konfigurierte Mindestanzahl Perioden"
+          },
+          "flat_days_detected": {
+            "name": "Flache Tage erkannt"
+          },
+          "relaxation_incomplete": {
+            "name": "Lockerung unvollständig"
+          }
+        }
       },
       "in_rising_price_phase": {
-        "name": "In steigender Preisphase"
+        "name": "In steigender Preisphase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "start": {
+            "name": "Beginn"
+          },
+          "end": {
+            "name": "Ende"
+          }
+        }
       },
       "in_falling_price_phase": {
-        "name": "In fallender Preisphase"
+        "name": "In fallender Preisphase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "start": {
+            "name": "Beginn"
+          },
+          "end": {
+            "name": "Ende"
+          }
+        }
       },
       "in_flat_price_phase": {
-        "name": "In flacher Preisphase"
+        "name": "In flacher Preisphase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "start": {
+            "name": "Beginn"
+          },
+          "end": {
+            "name": "Ende"
+          }
+        }
       },
       "connection": {
-        "name": "Tibber-API-Verbindung"
+        "name": "Tibber-API-Verbindung",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "tomorrow_data_available": {
-        "name": "Morgige Daten verfügbar"
+        "name": "Morgige Daten verfügbar",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          },
+          "intervals_available": {
+            "name": "Verfügbare Intervalle"
+          },
+          "data_status": {
+            "name": "Datenstatus"
+          }
+        }
       },
       "has_ventilation_system": {
-        "name": "Hat Lüftungsanlage"
+        "name": "Hat Lüftungsanlage",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "realtime_consumption_enabled": {
-        "name": "Echtzeitverbrauch aktiviert"
+        "name": "Echtzeitverbrauch aktiviert",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       }
     },
     "number": {
       "best_price_flex_override": {
-        "name": "Bestpreis: Flexibilität"
+        "name": "Bestpreis: Flexibilität",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "best_price_min_distance_override": {
-        "name": "Bestpreis: Mindestabstand"
+        "name": "Bestpreis: Mindestabstand",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "best_price_min_period_length_override": {
-        "name": "Bestpreis: Mindestperiodenlänge"
+        "name": "Bestpreis: Mindestperiodenlänge",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "best_price_min_periods_override": {
-        "name": "Bestpreis: Mindestperioden"
+        "name": "Bestpreis: Mindestperioden",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "best_price_relaxation_attempts_override": {
-        "name": "Bestpreis: Lockerungsversuche"
+        "name": "Bestpreis: Lockerungsversuche",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "best_price_gap_count_override": {
-        "name": "Bestpreis: Lückentoleranz"
+        "name": "Bestpreis: Lückentoleranz",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "peak_price_flex_override": {
-        "name": "Spitzenpreis: Flexibilität"
+        "name": "Spitzenpreis: Flexibilität",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "peak_price_min_distance_override": {
-        "name": "Spitzenpreis: Mindestabstand"
+        "name": "Spitzenpreis: Mindestabstand",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "peak_price_min_period_length_override": {
-        "name": "Spitzenpreis: Mindestperiodenlänge"
+        "name": "Spitzenpreis: Mindestperiodenlänge",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "peak_price_min_periods_override": {
-        "name": "Spitzenpreis: Mindestperioden"
+        "name": "Spitzenpreis: Mindestperioden",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "peak_price_relaxation_attempts_override": {
-        "name": "Spitzenpreis: Lockerungsversuche"
+        "name": "Spitzenpreis: Lockerungsversuche",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "peak_price_gap_count_override": {
-        "name": "Spitzenpreis: Lückentoleranz"
+        "name": "Spitzenpreis: Lückentoleranz",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       }
     },
     "switch": {
       "best_price_enable_relaxation_override": {
-        "name": "Bestpreis: Mindestanzahl erreichen"
+        "name": "Bestpreis: Mindestanzahl erreichen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       },
       "peak_price_enable_relaxation_override": {
-        "name": "Spitzenpreis: Mindestanzahl erreichen"
+        "name": "Spitzenpreis: Mindestanzahl erreichen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Zeitstempel"
+          },
+          "description": {
+            "name": "Beschreibung"
+          },
+          "usage_tips": {
+            "name": "Anwendungstipps"
+          }
+        }
       }
     }
   },

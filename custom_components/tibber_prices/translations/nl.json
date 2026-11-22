@@ -442,22 +442,202 @@
   "entity": {
     "sensor": {
       "current_interval_price": {
-        "name": "Huidige Elektriciteitsprijs"
+        "name": "Huidige Elektriciteitsprijs",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "outlook_units": {
+            "name": "Eenheden van de vooruitblik"
+          },
+          "outlook_day_part_hours": {
+            "name": "Uren van de dagdelen in de vooruitblik"
+          },
+          "outlook_hours": {
+            "name": "Vooruitblik per uur"
+          },
+          "outlook_days": {
+            "name": "Vooruitblik per dag"
+          },
+          "outlook_day_parts": {
+            "name": "Vooruitblik per dagdeel"
+          },
+          "outlook_yesterday": {
+            "name": "Vooruitblik, gisteren"
+          },
+          "outlook_quarters": {
+            "name": "Vooruitblik per kwartier"
+          },
+          "outlook_past_periods": {
+            "name": "Vooruitblik, eerdere periodes"
+          }
+        }
       },
       "current_interval_price_base": {
-        "name": "Huidige Elektriciteitsprijs (Energie Dashboard)"
+        "name": "Huidige Elektriciteitsprijs (Energie Dashboard)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
+        }
       },
       "next_interval_price": {
-        "name": "Volgende Elektriciteitsprijs"
+        "name": "Volgende Elektriciteitsprijs",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
+        }
       },
       "previous_interval_price": {
-        "name": "Vorige Elektriciteitsprijs"
+        "name": "Vorige Elektriciteitsprijs",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
+        }
       },
       "current_hour_average_price": {
-        "name": "⌀ Uurprijs Huidig"
+        "name": "⌀ Uurprijs Huidig",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "window_start": {
+            "name": "Begin van het venster"
+          },
+          "window_end": {
+            "name": "Einde van het venster"
+          },
+          "clock_hour_start": {
+            "name": "Start van het hele uur"
+          },
+          "clock_hour_end": {
+            "name": "Einde van het hele uur"
+          },
+          "clock_hour_price_mean": {
+            "name": "Gemiddelde prijs, heel uur"
+          },
+          "clock_hour_price_median": {
+            "name": "Mediaanprijs, heel uur"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
+        }
       },
       "next_hour_average_price": {
-        "name": "⌀ Uurprijs Volgend"
+        "name": "⌀ Uurprijs Volgend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "window_start": {
+            "name": "Begin van het venster"
+          },
+          "window_end": {
+            "name": "Einde van het venster"
+          },
+          "clock_hour_start": {
+            "name": "Start van het hele uur"
+          },
+          "clock_hour_end": {
+            "name": "Einde van het hele uur"
+          },
+          "clock_hour_price_mean": {
+            "name": "Gemiddelde prijs, heel uur"
+          },
+          "clock_hour_price_median": {
+            "name": "Mediaanprijs, heel uur"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
+        }
       },
       "current_interval_price_level": {
         "name": "Huidig Prijsniveau",
@@ -467,6 +647,38 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "cheap_until": {
+            "name": "Goedkoop tot"
+          },
+          "next_cheap_start": {
+            "name": "Volgende goedkope fase begint"
+          },
+          "expensive_until": {
+            "name": "Duur tot"
+          },
+          "next_expensive_start": {
+            "name": "Volgende dure fase begint"
+          }
         }
       },
       "next_interval_price_level": {
@@ -477,6 +689,26 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "previous_interval_price_level": {
@@ -487,6 +719,26 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "current_hour_price_level": {
@@ -497,6 +749,32 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "window_start": {
+            "name": "Begin van het venster"
+          },
+          "window_end": {
+            "name": "Einde van het venster"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "next_hour_price_level": {
@@ -507,25 +785,261 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "window_start": {
+            "name": "Begin van het venster"
+          },
+          "window_end": {
+            "name": "Einde van het venster"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "lowest_price_today": {
-        "name": "Laagste Prijs Vandaag"
+        "name": "Laagste Prijs Vandaag",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "highest_price_today": {
-        "name": "Hoogste Prijs Vandaag"
+        "name": "Hoogste Prijs Vandaag",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "average_price_today": {
-        "name": "⌀ Prijs Vandaag"
+        "name": "⌀ Prijs Vandaag",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "lowest_price_tomorrow": {
-        "name": "Laagste Prijs Morgen"
+        "name": "Laagste Prijs Morgen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "highest_price_tomorrow": {
-        "name": "Hoogste Prijs Morgen"
+        "name": "Hoogste Prijs Morgen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "average_price_tomorrow": {
-        "name": "⌀ Prijs Morgen"
+        "name": "⌀ Prijs Morgen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "energy_price": {
+            "name": "Energieprijs"
+          },
+          "tax": {
+            "name": "Belastingen en heffingen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "yesterday_price_level": {
         "name": "Gisteren Prijsniveau",
@@ -535,6 +1049,26 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "today_price_level": {
@@ -545,6 +1079,26 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "tomorrow_price_level": {
@@ -555,6 +1109,26 @@
           "normal": "Normaal",
           "expensive": "Duur",
           "very_expensive": "Zeer Duur"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "yesterday_price_rating": {
@@ -563,6 +1137,35 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "today_price_rating": {
@@ -571,6 +1174,35 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "tomorrow_price_rating": {
@@ -579,25 +1211,246 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "trailing_price_average": {
-        "name": "⌀ Prijs Afgelopen 24u"
+        "name": "⌀ Prijs Afgelopen 24u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "leading_price_average": {
-        "name": "⌀ Prijs Komende 24u"
+        "name": "⌀ Prijs Komende 24u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "trailing_price_min": {
-        "name": "Afgelopen 24u Minimumprijs"
+        "name": "Afgelopen 24u Minimumprijs",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "trailing_price_max": {
-        "name": "Afgelopen 24u Maximumprijs"
+        "name": "Afgelopen 24u Maximumprijs",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "leading_price_min": {
-        "name": "Komende 24u Minimumprijs"
+        "name": "Komende 24u Minimumprijs",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "leading_price_max": {
-        "name": "Komende 24u Maximumprijs"
+        "name": "Komende 24u Maximumprijs",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "current_interval_price_rating": {
         "name": "Huidige Prijsbeoordeling",
@@ -605,6 +1458,35 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "next_interval_price_rating": {
@@ -613,6 +1495,35 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "previous_interval_price_rating": {
@@ -621,6 +1532,35 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "current_hour_price_rating": {
@@ -629,6 +1569,41 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "window_start": {
+            "name": "Begin van het venster"
+          },
+          "window_end": {
+            "name": "Einde van het venster"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "next_hour_price_rating": {
@@ -637,31 +1612,346 @@
           "low": "Laag",
           "normal": "Normaal",
           "high": "Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "window_start": {
+            "name": "Begin van het venster"
+          },
+          "window_end": {
+            "name": "Einde van het venster"
+          },
+          "rating_id": {
+            "name": "Prijsbeoordeling (ID)"
+          },
+          "rating_value": {
+            "name": "Prijsbeoordeling (waarde)"
+          },
+          "diff_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "level_id": {
+            "name": "Prijsniveau (ID)"
+          },
+          "level_value": {
+            "name": "Prijsniveau (waarde)"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "next_avg_1h": {
-        "name": "⌀ Prijs Komende 1u"
+        "name": "⌀ Prijs Komende 1u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "next_avg_2h": {
-        "name": "⌀ Prijs Komende 2u"
+        "name": "⌀ Prijs Komende 2u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "next_avg_3h": {
-        "name": "⌀ Prijs Komende 3u"
+        "name": "⌀ Prijs Komende 3u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "next_avg_4h": {
-        "name": "⌀ Prijs Komende 4u"
+        "name": "⌀ Prijs Komende 4u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "next_avg_5h": {
-        "name": "⌀ Prijs Komende 5u"
+        "name": "⌀ Prijs Komende 5u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "next_avg_6h": {
-        "name": "⌀ Prijs Komende 6u"
+        "name": "⌀ Prijs Komende 6u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "next_avg_8h": {
-        "name": "⌀ Prijs Komende 8u"
+        "name": "⌀ Prijs Komende 8u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "next_avg_12h": {
-        "name": "⌀ Prijs Komende 12u"
+        "name": "⌀ Prijs Komende 12u",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "hours": {
+            "name": "Uren"
+          },
+          "energy_price_mean": {
+            "name": "Energieprijs, gemiddelde"
+          },
+          "energy_price_median": {
+            "name": "Energieprijs, mediaan"
+          },
+          "tax_mean": {
+            "name": "Belastingen en heffingen, gemiddelde"
+          },
+          "tax_median": {
+            "name": "Belastingen en heffingen, mediaan"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          }
+        }
       },
       "price_outlook_1h": {
         "name": "Prijsvooruitzicht (1u)",
@@ -671,6 +1961,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_1h_percent": {
+            "name": "Verandering komende 1 u (%)"
+          },
+          "next_1h_avg": {
+            "name": "Gemiddelde prijs, komende 1 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          }
         }
       },
       "price_outlook_2h": {
@@ -681,6 +2012,53 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_2h_percent": {
+            "name": "Verandering komende 2 u (%)"
+          },
+          "next_2h_avg": {
+            "name": "Gemiddelde prijs, komende 2 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_2h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 2-uursvenster"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          }
         }
       },
       "price_outlook_3h": {
@@ -691,6 +2069,53 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_3h_percent": {
+            "name": "Verandering komende 3 u (%)"
+          },
+          "next_3h_avg": {
+            "name": "Gemiddelde prijs, komende 3 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_3h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 3-uursvenster"
+          },
+          "second_half_3h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          }
         }
       },
       "price_outlook_4h": {
@@ -701,6 +2126,53 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_4h_percent": {
+            "name": "Verandering komende 4 u (%)"
+          },
+          "next_4h_avg": {
+            "name": "Gemiddelde prijs, komende 4 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_4h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 4-uursvenster"
+          },
+          "second_half_4h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          }
         }
       },
       "price_outlook_5h": {
@@ -711,6 +2183,53 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_5h_percent": {
+            "name": "Verandering komende 5 u (%)"
+          },
+          "next_5h_avg": {
+            "name": "Gemiddelde prijs, komende 5 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_5h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 5-uursvenster"
+          },
+          "second_half_5h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          }
         }
       },
       "price_outlook_6h": {
@@ -721,6 +2240,53 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_6h_percent": {
+            "name": "Verandering komende 6 u (%)"
+          },
+          "next_6h_avg": {
+            "name": "Gemiddelde prijs, komende 6 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_6h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 6-uursvenster"
+          },
+          "second_half_6h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          }
         }
       },
       "price_outlook_8h": {
@@ -731,6 +2297,53 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_8h_percent": {
+            "name": "Verandering komende 8 u (%)"
+          },
+          "next_8h_avg": {
+            "name": "Gemiddelde prijs, komende 8 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_8h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 8-uursvenster"
+          },
+          "second_half_8h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          }
         }
       },
       "price_outlook_12h": {
@@ -741,6 +2354,53 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trend_12h_percent": {
+            "name": "Verandering komende 12 u (%)"
+          },
+          "next_12h_avg": {
+            "name": "Gemiddelde prijs, komende 12 u"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          },
+          "second_half_12h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 12-uursvenster"
+          },
+          "second_half_12h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          }
         }
       },
       "price_trajectory_2h": {
@@ -751,6 +2411,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trajectory_2h_percent": {
+            "name": "Verloop over 2 u (%)"
+          },
+          "first_half_2h_avg": {
+            "name": "Gemiddelde prijs, eerste helft van het 2-uursvenster"
+          },
+          "second_half_2h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 2-uursvenster"
+          },
+          "first_half_2h_diff_from_current_percent": {
+            "name": "Eerste helft t.o.v. huidige prijs (%)"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervallen in de eerste helft"
+          },
+          "second_half_interval_count": {
+            "name": "Intervallen in de tweede helft"
+          }
         }
       },
       "price_trajectory_3h": {
@@ -761,6 +2462,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trajectory_3h_percent": {
+            "name": "Verloop over 3 u (%)"
+          },
+          "first_half_3h_avg": {
+            "name": "Gemiddelde prijs, eerste helft van het 3-uursvenster"
+          },
+          "second_half_3h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 3-uursvenster"
+          },
+          "first_half_3h_diff_from_current_percent": {
+            "name": "Eerste helft t.o.v. huidige prijs (%)"
+          },
+          "second_half_3h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervallen in de eerste helft"
+          },
+          "second_half_interval_count": {
+            "name": "Intervallen in de tweede helft"
+          }
         }
       },
       "price_trajectory_4h": {
@@ -771,6 +2513,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trajectory_4h_percent": {
+            "name": "Verloop over 4 u (%)"
+          },
+          "first_half_4h_avg": {
+            "name": "Gemiddelde prijs, eerste helft van het 4-uursvenster"
+          },
+          "second_half_4h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 4-uursvenster"
+          },
+          "first_half_4h_diff_from_current_percent": {
+            "name": "Eerste helft t.o.v. huidige prijs (%)"
+          },
+          "second_half_4h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervallen in de eerste helft"
+          },
+          "second_half_interval_count": {
+            "name": "Intervallen in de tweede helft"
+          }
         }
       },
       "price_trajectory_5h": {
@@ -781,6 +2564,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trajectory_5h_percent": {
+            "name": "Verloop over 5 u (%)"
+          },
+          "first_half_5h_avg": {
+            "name": "Gemiddelde prijs, eerste helft van het 5-uursvenster"
+          },
+          "second_half_5h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 5-uursvenster"
+          },
+          "first_half_5h_diff_from_current_percent": {
+            "name": "Eerste helft t.o.v. huidige prijs (%)"
+          },
+          "second_half_5h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervallen in de eerste helft"
+          },
+          "second_half_interval_count": {
+            "name": "Intervallen in de tweede helft"
+          }
         }
       },
       "price_trajectory_6h": {
@@ -791,6 +2615,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trajectory_6h_percent": {
+            "name": "Verloop over 6 u (%)"
+          },
+          "first_half_6h_avg": {
+            "name": "Gemiddelde prijs, eerste helft van het 6-uursvenster"
+          },
+          "second_half_6h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 6-uursvenster"
+          },
+          "first_half_6h_diff_from_current_percent": {
+            "name": "Eerste helft t.o.v. huidige prijs (%)"
+          },
+          "second_half_6h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervallen in de eerste helft"
+          },
+          "second_half_interval_count": {
+            "name": "Intervallen in de tweede helft"
+          }
         }
       },
       "price_trajectory_8h": {
@@ -801,6 +2666,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trajectory_8h_percent": {
+            "name": "Verloop over 8 u (%)"
+          },
+          "first_half_8h_avg": {
+            "name": "Gemiddelde prijs, eerste helft van het 8-uursvenster"
+          },
+          "second_half_8h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 8-uursvenster"
+          },
+          "first_half_8h_diff_from_current_percent": {
+            "name": "Eerste helft t.o.v. huidige prijs (%)"
+          },
+          "second_half_8h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervallen in de eerste helft"
+          },
+          "second_half_interval_count": {
+            "name": "Intervallen in de tweede helft"
+          }
         }
       },
       "price_trajectory_12h": {
@@ -811,6 +2717,47 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "trend_value": {
+            "name": "Trendwaarde"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "trajectory_12h_percent": {
+            "name": "Verloop over 12 u (%)"
+          },
+          "first_half_12h_avg": {
+            "name": "Gemiddelde prijs, eerste helft van het 12-uursvenster"
+          },
+          "second_half_12h_avg": {
+            "name": "Gemiddelde prijs, tweede helft van het 12-uursvenster"
+          },
+          "first_half_12h_diff_from_current_percent": {
+            "name": "Eerste helft t.o.v. huidige prijs (%)"
+          },
+          "second_half_12h_diff_from_current_percent": {
+            "name": "Tweede helft t.o.v. huidige prijs (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervallen in de eerste helft"
+          },
+          "second_half_interval_count": {
+            "name": "Intervallen in de tweede helft"
+          }
         }
       },
       "current_price_trend": {
@@ -821,19 +2768,158 @@
           "stable": "Stabiel",
           "falling": "Dalend",
           "strongly_falling": "Sterk dalend"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "previous_direction": {
+            "name": "Vorige richting"
+          },
+          "price_direction_duration_minutes": {
+            "name": "Duur van de huidige richting (min)"
+          },
+          "price_direction_since": {
+            "name": "Richting sinds"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          }
         }
       },
       "next_price_trend_change": {
-        "name": "Volgende Prijstrend Wijziging"
+        "name": "Volgende Prijstrend Wijziging",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "direction": {
+            "name": "Richting na de verandering"
+          },
+          "from_direction": {
+            "name": "Richting voor de verandering"
+          },
+          "minutes_until_change": {
+            "name": "Minuten tot verandering"
+          },
+          "price_now": {
+            "name": "Huidige prijs"
+          },
+          "price_at_change": {
+            "name": "Prijs bij de verandering"
+          },
+          "price_avg_after_change": {
+            "name": "Gemiddelde prijs na de verandering"
+          },
+          "trend_diff_percent": {
+            "name": "Prijsverandering bij de verandering (%)"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          }
+        }
       },
       "next_price_trend_change_in": {
-        "name": "Volgende Prijstrend Wijziging over"
+        "name": "Volgende Prijstrend Wijziging over",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "direction": {
+            "name": "Richting na de verandering"
+          },
+          "from_direction": {
+            "name": "Richting voor de verandering"
+          },
+          "minutes_until_change": {
+            "name": "Minuten tot verandering"
+          },
+          "price_now": {
+            "name": "Huidige prijs"
+          },
+          "price_at_change": {
+            "name": "Prijs bij de verandering"
+          },
+          "price_avg_after_change": {
+            "name": "Gemiddelde prijs na de verandering"
+          },
+          "trend_diff_percent": {
+            "name": "Prijsverandering bij de verandering (%)"
+          },
+          "volatility_factor": {
+            "name": "Volatiliteitsfactor"
+          },
+          "threshold_rising_percent": {
+            "name": "Drempel stijgend (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Drempel sterk stijgend (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Drempel dalend (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Drempel sterk dalend (%)"
+          }
+        }
       },
       "daily_rating": {
-        "name": "Dagelijkse Prijsbeoordeling"
+        "name": "Dagelijkse Prijsbeoordeling",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "monthly_rating": {
-        "name": "Maandelijkse Prijsbeoordeling"
+        "name": "Maandelijkse Prijsbeoordeling",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "data_lifecycle_status": {
         "name": "Data Levenscyclus Status",
@@ -846,6 +2932,32 @@
           "error": "Fout",
           "awaiting_subscription": "Wacht op start contract",
           "subscription_ended": "Contract beëindigd"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "tomorrow_available": {
+            "name": "Gegevens voor morgen beschikbaar"
+          },
+          "next_api_poll": {
+            "name": "Volgende API-aanvraag"
+          },
+          "updates_today": {
+            "name": "Updates vandaag"
+          },
+          "last_turnover": {
+            "name": "Laatste dagwissel"
+          },
+          "last_error": {
+            "name": "Laatste fout"
+          }
         }
       },
       "today_volatility": {
@@ -855,6 +2967,56 @@
           "moderate": "Gematigd",
           "high": "Hoog",
           "very_high": "Zeer Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "price_volatility": {
+            "name": "Volatiliteitsniveau"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variatiecoëfficiënt (%)"
+          },
+          "price_spread": {
+            "name": "Prijsspreiding"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "price_q25": {
+            "name": "Prijs op het 25e percentiel"
+          },
+          "price_q75": {
+            "name": "Prijs op het 75e percentiel"
+          },
+          "price_typical_spread": {
+            "name": "Typische prijsspreiding (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische prijsspreiding (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Prijspieken"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          }
         }
       },
       "tomorrow_volatility": {
@@ -864,6 +3026,56 @@
           "moderate": "Gematigd",
           "high": "Hoog",
           "very_high": "Zeer Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "price_volatility": {
+            "name": "Volatiliteitsniveau"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variatiecoëfficiënt (%)"
+          },
+          "price_spread": {
+            "name": "Prijsspreiding"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "price_q25": {
+            "name": "Prijs op het 25e percentiel"
+          },
+          "price_q75": {
+            "name": "Prijs op het 75e percentiel"
+          },
+          "price_typical_spread": {
+            "name": "Typische prijsspreiding (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische prijsspreiding (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Prijspieken"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          }
         }
       },
       "next_24h_volatility": {
@@ -873,6 +3085,56 @@
           "moderate": "Gematigd",
           "high": "Hoog",
           "very_high": "Zeer Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "price_volatility": {
+            "name": "Volatiliteitsniveau"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variatiecoëfficiënt (%)"
+          },
+          "price_spread": {
+            "name": "Prijsspreiding"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "price_q25": {
+            "name": "Prijs op het 25e percentiel"
+          },
+          "price_q75": {
+            "name": "Prijs op het 75e percentiel"
+          },
+          "price_typical_spread": {
+            "name": "Typische prijsspreiding (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische prijsspreiding (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Prijspieken"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          }
         }
       },
       "today_tomorrow_volatility": {
@@ -882,43 +3144,381 @@
           "moderate": "Gematigd",
           "high": "Hoog",
           "very_high": "Zeer Hoog"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "price_volatility": {
+            "name": "Volatiliteitsniveau"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variatiecoëfficiënt (%)"
+          },
+          "price_spread": {
+            "name": "Prijsspreiding"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "price_q25": {
+            "name": "Prijs op het 25e percentiel"
+          },
+          "price_q75": {
+            "name": "Prijs op het 75e percentiel"
+          },
+          "price_typical_spread": {
+            "name": "Typische prijsspreiding (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typische prijsspreiding (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Prijspieken"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "today_volatility": {
+            "name": "Volatiliteit vandaag"
+          },
+          "tomorrow_volatility": {
+            "name": "Volatiliteit morgen"
+          },
+          "interval_count_today": {
+            "name": "Intervallen vandaag"
+          },
+          "interval_count_tomorrow": {
+            "name": "Intervallen morgen"
+          }
         }
       },
       "best_price_end_time": {
-        "name": "Beste Prijs Einde"
+        "name": "Beste Prijs Einde",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "best_price_period_duration": {
-        "name": "Beste Prijs Duur"
+        "name": "Beste Prijs Duur",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "best_price_remaining_minutes": {
-        "name": "Beste Prijs Resterende Tijd"
+        "name": "Beste Prijs Resterende Tijd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "best_price_progress": {
-        "name": "Beste Prijs Voortgang"
+        "name": "Beste Prijs Voortgang",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "best_price_next_start_time": {
-        "name": "Beste Prijs Start"
+        "name": "Beste Prijs Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "best_price_next_in_minutes": {
-        "name": "Beste Prijs Start Over"
+        "name": "Beste Prijs Start Over",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "peak_price_end_time": {
-        "name": "Piekprijs Einde"
+        "name": "Piekprijs Einde",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "peak_price_period_duration": {
-        "name": "Piekprijs Duur"
+        "name": "Piekprijs Duur",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "peak_price_remaining_minutes": {
-        "name": "Piekprijs Resterende Tijd"
+        "name": "Piekprijs Resterende Tijd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "peak_price_progress": {
-        "name": "Piekprijs Voortgang"
+        "name": "Piekprijs Voortgang",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "peak_price_next_start_time": {
-        "name": "Piekprijs Start"
+        "name": "Piekprijs Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "peak_price_next_in_minutes": {
-        "name": "Piekprijs Start Over"
+        "name": "Piekprijs Start Over",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "period_duration_minutes": {
+            "name": "Duur van de periode (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "home_type": {
         "name": "Huistype",
@@ -927,16 +3527,60 @@
           "rowhouse": "Rijtjeshuis",
           "house": "Huis",
           "cottage": "Huisje"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
         }
       },
       "home_size": {
-        "name": "Huisgrootte"
+        "name": "Huisgrootte",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "main_fuse_size": {
-        "name": "Hoofdzekering Grootte"
+        "name": "Hoofdzekering Grootte",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "number_of_residents": {
-        "name": "Aantal Bewoners"
+        "name": "Aantal Bewoners",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "primary_heating_source": {
         "name": "Primaire Verwarmingsbron",
@@ -956,31 +3600,130 @@
           "oil": "Olie",
           "other": "Overig",
           "waste": "Restwarmte"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
         }
       },
       "grid_company": {
-        "name": "Netbedrijf"
+        "name": "Netbedrijf",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "grid_area_code": {
-        "name": "Netgebiedcode"
+        "name": "Netgebiedcode",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "price_area_code": {
-        "name": "Prijsgebiedcode"
+        "name": "Prijsgebiedcode",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "consumption_ean": {
-        "name": "Verbruik EAN"
+        "name": "Verbruik EAN",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "production_ean": {
-        "name": "Productie EAN"
+        "name": "Productie EAN",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "energy_tax_type": {
-        "name": "Energiebelasting Type"
+        "name": "Energiebelasting Type",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "vat_type": {
-        "name": "BTW Type"
+        "name": "BTW Type",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "estimated_annual_consumption": {
-        "name": "Geschat Jaarverbruik"
+        "name": "Geschat Jaarverbruik",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "subscription_status": {
         "name": "Abonnement Status",
@@ -990,6 +3733,17 @@
           "pending": "In Afwachting",
           "unknown": "Onbekend",
           "awaiting_market": "Wacht op markt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
         }
       },
       "day_pattern_yesterday": {
@@ -1003,6 +3757,41 @@
           "rising": "Stijgend",
           "falling": "Dalend",
           "mixed": "Gemengd"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "confidence": {
+            "name": "Betrouwbaarheid"
+          },
+          "day_cv_percent": {
+            "name": "Variatiecoëfficiënt van de dag (%)"
+          },
+          "extreme_time": {
+            "name": "Tijdstip van het extreme"
+          },
+          "valley_start": {
+            "name": "Begin van het dal"
+          },
+          "valley_end": {
+            "name": "Einde van het dal"
+          },
+          "peak_start": {
+            "name": "Begin van de piek"
+          },
+          "peak_end": {
+            "name": "Einde van de piek"
+          },
+          "segments": {
+            "name": "Segmenten"
+          }
         }
       },
       "day_pattern_today": {
@@ -1016,6 +3805,41 @@
           "rising": "Stijgend",
           "falling": "Dalend",
           "mixed": "Gemengd"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "confidence": {
+            "name": "Betrouwbaarheid"
+          },
+          "day_cv_percent": {
+            "name": "Variatiecoëfficiënt van de dag (%)"
+          },
+          "extreme_time": {
+            "name": "Tijdstip van het extreme"
+          },
+          "valley_start": {
+            "name": "Begin van het dal"
+          },
+          "valley_end": {
+            "name": "Einde van het dal"
+          },
+          "peak_start": {
+            "name": "Begin van de piek"
+          },
+          "peak_end": {
+            "name": "Einde van de piek"
+          },
+          "segments": {
+            "name": "Segmenten"
+          }
         }
       },
       "day_pattern_tomorrow": {
@@ -1029,6 +3853,41 @@
           "rising": "Stijgend",
           "falling": "Dalend",
           "mixed": "Gemengd"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "confidence": {
+            "name": "Betrouwbaarheid"
+          },
+          "day_cv_percent": {
+            "name": "Variatiecoëfficiënt van de dag (%)"
+          },
+          "extreme_time": {
+            "name": "Tijdstip van het extreme"
+          },
+          "valley_start": {
+            "name": "Begin van het dal"
+          },
+          "valley_end": {
+            "name": "Einde van het dal"
+          },
+          "peak_start": {
+            "name": "Begin van de piek"
+          },
+          "peak_end": {
+            "name": "Einde van de piek"
+          },
+          "segments": {
+            "name": "Segmenten"
+          }
         }
       },
       "current_price_phase": {
@@ -1037,6 +3896,44 @@
           "rising": "Stijgend",
           "falling": "Dalend",
           "flat": "Vlak"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Einde"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "segment_index": {
+            "name": "Segmentnummer"
+          },
+          "segment_count": {
+            "name": "Aantal segmenten"
+          },
+          "all_segments": {
+            "name": "Alle segmenten"
+          },
+          "is_tomorrow": {
+            "name": "Begint morgen"
+          }
         }
       },
       "next_price_phase": {
@@ -1045,37 +3942,305 @@
           "rising": "Stijgend",
           "falling": "Dalend",
           "flat": "Vlak"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Einde"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "segment_index": {
+            "name": "Segmentnummer"
+          },
+          "segment_count": {
+            "name": "Aantal segmenten"
+          },
+          "all_segments": {
+            "name": "Alle segmenten"
+          },
+          "is_tomorrow": {
+            "name": "Begint morgen"
+          }
         }
       },
       "current_price_phase_end_time": {
-        "name": "Huidige Fase Eindtijd"
+        "name": "Huidige Fase Eindtijd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "current_price_phase_remaining_minutes": {
-        "name": "Huidige Fase Resterend"
+        "name": "Huidige Fase Resterend",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "current_price_phase_duration": {
-        "name": "Huidige Fase Duur"
+        "name": "Huidige Fase Duur",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "current_price_phase_progress": {
-        "name": "Huidige Fase Voortgang"
+        "name": "Huidige Fase Voortgang",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "next_rising_phase_start_time": {
-        "name": "Volgende Stijgende Fase Start"
+        "name": "Volgende Stijgende Fase Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "next_falling_phase_start_time": {
-        "name": "Volgende Dalende Fase Start"
+        "name": "Volgende Dalende Fase Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "next_flat_phase_start_time": {
-        "name": "Volgende Vlakke Fase Start"
+        "name": "Volgende Vlakke Fase Start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "next_rising_phase_in_minutes": {
-        "name": "Tijd tot Volgende Stijgende Fase"
+        "name": "Tijd tot Volgende Stijgende Fase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "next_falling_phase_in_minutes": {
-        "name": "Tijd tot Volgende Dalende Fase"
+        "name": "Tijd tot Volgende Dalende Fase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "next_flat_phase_in_minutes": {
-        "name": "Tijd tot Volgende Vlakke Fase"
+        "name": "Tijd tot Volgende Vlakke Fase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "icon_color": {
+            "name": "Pictogramkleur"
+          },
+          "phase_duration_minutes": {
+            "name": "Duur van de fase (min)"
+          },
+          "remaining_minutes": {
+            "name": "Resterende minuten"
+          },
+          "next_in_minutes": {
+            "name": "Minuten tot de volgende start"
+          }
+        }
       },
       "chart_data_export": {
         "name": "Grafiekdata Export",
@@ -1083,6 +4248,17 @@
           "pending": "In Afwachting",
           "ready": "Gereed",
           "error": "Fout"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
         }
       },
       "chart_metadata": {
@@ -1091,40 +4267,397 @@
           "pending": "In Afwachting",
           "ready": "Gereed",
           "error": "Fout"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "yaxis_min": {
+            "name": "Minimum van de grafiekas"
+          },
+          "yaxis_max": {
+            "name": "Maximum van de grafiekas"
+          },
+          "yaxis_min_energy": {
+            "name": "Minimum van de grafiekas (energieprijs)"
+          },
+          "yaxis_max_energy": {
+            "name": "Maximum van de grafiekas (energieprijs)"
+          },
+          "yaxis_min_tax": {
+            "name": "Minimum van de grafiekas (belastingen en heffingen)"
+          },
+          "yaxis_max_tax": {
+            "name": "Maximum van de grafiekas (belastingen en heffingen)"
+          },
+          "currency": {
+            "name": "Valuta"
+          },
+          "resolution": {
+            "name": "Resolutie"
+          },
+          "error": {
+            "name": "Fout"
+          }
         }
       },
       "current_interval_price_rank_today": {
-        "name": "Huidige prijsrang (vandaag)"
+        "name": "Huidige prijsrang (vandaag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "current_price": {
+            "name": "Prijs van het huidige interval"
+          }
+        }
       },
       "current_interval_price_rank_tomorrow": {
-        "name": "Huidige prijsrang (morgen)"
+        "name": "Huidige prijsrang (morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "current_price": {
+            "name": "Prijs van het huidige interval"
+          }
+        }
       },
       "current_interval_price_rank_today_tomorrow": {
-        "name": "Huidige prijsrang (vandaag+morgen)"
+        "name": "Huidige prijsrang (vandaag+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "current_price": {
+            "name": "Prijs van het huidige interval"
+          }
+        }
       },
       "next_interval_price_rank_today": {
-        "name": "Volgende prijsrang (vandaag)"
+        "name": "Volgende prijsrang (vandaag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "next_price": {
+            "name": "Prijs van het volgende interval"
+          }
+        }
       },
       "next_interval_price_rank_today_tomorrow": {
-        "name": "Volgende prijsrang (vandaag+morgen)"
+        "name": "Volgende prijsrang (vandaag+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "next_price": {
+            "name": "Prijs van het volgende interval"
+          }
+        }
       },
       "previous_interval_price_rank_today": {
-        "name": "Vorige prijsrang (vandaag)"
+        "name": "Vorige prijsrang (vandaag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "previous_price": {
+            "name": "Prijs van het vorige interval"
+          }
+        }
       },
       "previous_interval_price_rank_today_tomorrow": {
-        "name": "Vorige prijsrang (vandaag+morgen)"
+        "name": "Vorige prijsrang (vandaag+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "previous_price": {
+            "name": "Prijs van het vorige interval"
+          }
+        }
       },
       "current_hour_price_rank_today": {
-        "name": "⌀ Uurlijkse prijsrang huidig (vandaag)"
+        "name": "⌀ Uurlijkse prijsrang huidig (vandaag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "current_hour_avg_price": {
+            "name": "Gemiddelde prijs, huidig uur"
+          }
+        }
       },
       "current_hour_price_rank_today_tomorrow": {
-        "name": "⌀ Uurlijkse prijsrang huidig (vandaag+morgen)"
+        "name": "⌀ Uurlijkse prijsrang huidig (vandaag+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "current_hour_avg_price": {
+            "name": "Gemiddelde prijs, huidig uur"
+          }
+        }
       },
       "next_hour_price_rank_today": {
-        "name": "⌀ Uurlijkse prijsrang volgende (vandaag)"
+        "name": "⌀ Uurlijkse prijsrang volgende (vandaag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "next_hour_avg_price": {
+            "name": "Gemiddelde prijs, volgend uur"
+          }
+        }
       },
       "next_hour_price_rank_today_tomorrow": {
-        "name": "⌀ Uurlijkse prijsrang volgende (vandaag+morgen)"
+        "name": "⌀ Uurlijkse prijsrang volgende (vandaag+morgen)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "prices_below_count": {
+            "name": "Goedkopere intervallen"
+          },
+          "interval_count": {
+            "name": "Aantal intervallen"
+          },
+          "reference_min": {
+            "name": "Laagste vergelijkingsprijs"
+          },
+          "reference_max": {
+            "name": "Hoogste vergelijkingsprijs"
+          },
+          "reference_mean": {
+            "name": "Gemiddelde vergelijkingsprijs"
+          },
+          "next_hour_avg_price": {
+            "name": "Gemiddelde prijs, volgend uur"
+          }
+        }
       },
       "entry_mode": {
         "name": "Gegevensmodus",
@@ -1132,101 +4665,648 @@
           "live": "Live",
           "time_travel_days": "Tijdreis (dagen)",
           "time_travel_yearly": "Tijdreis (jaarlijks)"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
         }
       },
       "time_travel_reference_time": {
-        "name": "Getoonde tijd"
+        "name": "Getoonde tijd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "time_travel_days_offset": {
-        "name": "Tijdreisverschuiving in dagen"
+        "name": "Tijdreisverschuiving in dagen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "time_travel_years_offset": {
-        "name": "Tijdreisverschuiving in jaren"
+        "name": "Tijdreisverschuiving in jaren",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "time_travel_time_offset": {
-        "name": "Tijdreis-tijdverschuiving"
+        "name": "Tijdreis-tijdverschuiving",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "headless_mode": {
         "name": "Headless-modus",
         "state": {
           "on": "Aan",
           "off": "Uit"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
         }
       }
     },
     "binary_sensor": {
       "peak_price_period": {
-        "name": "Piekprijs Periode"
+        "name": "Piekprijs Periode",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "intervals_available": {
+            "name": "Beschikbare intervallen"
+          },
+          "data_status": {
+            "name": "Gegevensstatus"
+          },
+          "period_position": {
+            "name": "Positie in de periode"
+          },
+          "period_count_total": {
+            "name": "Periodes in totaal"
+          },
+          "period_count_remaining": {
+            "name": "Resterende periodes"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Einde"
+          },
+          "periods": {
+            "name": "Periodes"
+          },
+          "duration_minutes": {
+            "name": "Duur (min)"
+          },
+          "level": {
+            "name": "Prijsniveau"
+          },
+          "rating_level": {
+            "name": "Prijsbeoordeling"
+          },
+          "rating_difference_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_spread": {
+            "name": "Prijsspreiding"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variatiecoëfficiënt (%)"
+          },
+          "volatility": {
+            "name": "Volatiliteit"
+          },
+          "day_volatility_percent": {
+            "name": "Volatiliteit van de dag (%)"
+          },
+          "period_price_diff_from_daily_min": {
+            "name": "Afwijking van het dagminimum"
+          },
+          "period_price_diff_from_daily_min_percent": {
+            "name": "Afwijking van het dagminimum (%)"
+          },
+          "period_price_diff_from_daily_max": {
+            "name": "Afwijking van het dagmaximum"
+          },
+          "period_price_diff_from_daily_max_percent": {
+            "name": "Afwijking van het dagmaximum (%)"
+          },
+          "period_interval_count": {
+            "name": "Intervallen in de periode"
+          },
+          "period_count_today": {
+            "name": "Periodes vandaag"
+          },
+          "period_count_tomorrow": {
+            "name": "Periodes morgen"
+          },
+          "relaxation_active": {
+            "name": "Versoepeling actief"
+          },
+          "relaxation_level": {
+            "name": "Versoepelingsniveau"
+          },
+          "relaxation_threshold_original_percent": {
+            "name": "Oorspronkelijke flexibiliteit (%)"
+          },
+          "relaxation_threshold_applied_percent": {
+            "name": "Toegepaste flexibiliteit (%)"
+          },
+          "min_periods_configured": {
+            "name": "Geconfigureerd minimum aantal periodes"
+          },
+          "flat_days_detected": {
+            "name": "Vlakke dagen gedetecteerd"
+          },
+          "relaxation_incomplete": {
+            "name": "Versoepeling onvolledig"
+          }
+        }
       },
       "best_price_period": {
-        "name": "Beste Prijs Periode"
+        "name": "Beste Prijs Periode",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "intervals_available": {
+            "name": "Beschikbare intervallen"
+          },
+          "data_status": {
+            "name": "Gegevensstatus"
+          },
+          "period_position": {
+            "name": "Positie in de periode"
+          },
+          "period_count_total": {
+            "name": "Periodes in totaal"
+          },
+          "period_count_remaining": {
+            "name": "Resterende periodes"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Einde"
+          },
+          "periods": {
+            "name": "Periodes"
+          },
+          "duration_minutes": {
+            "name": "Duur (min)"
+          },
+          "level": {
+            "name": "Prijsniveau"
+          },
+          "rating_level": {
+            "name": "Prijsbeoordeling"
+          },
+          "rating_difference_percent": {
+            "name": "Afwijking van het gemiddelde (%)"
+          },
+          "price_mean": {
+            "name": "Gemiddelde prijs"
+          },
+          "price_median": {
+            "name": "Mediaanprijs"
+          },
+          "price_min": {
+            "name": "Laagste prijs"
+          },
+          "price_max": {
+            "name": "Hoogste prijs"
+          },
+          "price_spread": {
+            "name": "Prijsspreiding"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variatiecoëfficiënt (%)"
+          },
+          "volatility": {
+            "name": "Volatiliteit"
+          },
+          "day_volatility_percent": {
+            "name": "Volatiliteit van de dag (%)"
+          },
+          "period_price_diff_from_daily_min": {
+            "name": "Afwijking van het dagminimum"
+          },
+          "period_price_diff_from_daily_min_percent": {
+            "name": "Afwijking van het dagminimum (%)"
+          },
+          "period_price_diff_from_daily_max": {
+            "name": "Afwijking van het dagmaximum"
+          },
+          "period_price_diff_from_daily_max_percent": {
+            "name": "Afwijking van het dagmaximum (%)"
+          },
+          "period_interval_count": {
+            "name": "Intervallen in de periode"
+          },
+          "period_count_today": {
+            "name": "Periodes vandaag"
+          },
+          "period_count_tomorrow": {
+            "name": "Periodes morgen"
+          },
+          "relaxation_active": {
+            "name": "Versoepeling actief"
+          },
+          "relaxation_level": {
+            "name": "Versoepelingsniveau"
+          },
+          "relaxation_threshold_original_percent": {
+            "name": "Oorspronkelijke flexibiliteit (%)"
+          },
+          "relaxation_threshold_applied_percent": {
+            "name": "Toegepaste flexibiliteit (%)"
+          },
+          "min_periods_configured": {
+            "name": "Geconfigureerd minimum aantal periodes"
+          },
+          "flat_days_detected": {
+            "name": "Vlakke dagen gedetecteerd"
+          },
+          "relaxation_incomplete": {
+            "name": "Versoepeling onvolledig"
+          }
+        }
       },
       "in_rising_price_phase": {
-        "name": "In Stijgende Prijsfase"
+        "name": "In Stijgende Prijsfase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Einde"
+          }
+        }
       },
       "in_falling_price_phase": {
-        "name": "In Dalende Prijsfase"
+        "name": "In Dalende Prijsfase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Einde"
+          }
+        }
       },
       "in_flat_price_phase": {
-        "name": "In Vlakke Prijsfase"
+        "name": "In Vlakke Prijsfase",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Einde"
+          }
+        }
       },
       "connection": {
-        "name": "Tibber API Verbinding"
+        "name": "Tibber API Verbinding",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "tomorrow_data_available": {
-        "name": "Morgen Gegevens Beschikbaar"
+        "name": "Morgen Gegevens Beschikbaar",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          },
+          "intervals_available": {
+            "name": "Beschikbare intervallen"
+          },
+          "data_status": {
+            "name": "Gegevensstatus"
+          }
+        }
       },
       "has_ventilation_system": {
-        "name": "Heeft Ventilatiesysteem"
+        "name": "Heeft Ventilatiesysteem",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "realtime_consumption_enabled": {
-        "name": "Realtime Verbruik Ingeschakeld"
+        "name": "Realtime Verbruik Ingeschakeld",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       }
     },
     "number": {
       "best_price_flex_override": {
-        "name": "Beste prijs: Flexibiliteit"
+        "name": "Beste prijs: Flexibiliteit",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "best_price_min_distance_override": {
-        "name": "Beste prijs: Minimale afstand"
+        "name": "Beste prijs: Minimale afstand",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "best_price_min_period_length_override": {
-        "name": "Beste prijs: Minimale periodelengte"
+        "name": "Beste prijs: Minimale periodelengte",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "best_price_min_periods_override": {
-        "name": "Beste prijs: Minimum periodes"
+        "name": "Beste prijs: Minimum periodes",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "best_price_relaxation_attempts_override": {
-        "name": "Beste prijs: Versoepeling pogingen"
+        "name": "Beste prijs: Versoepeling pogingen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "best_price_gap_count_override": {
-        "name": "Beste prijs: Gap tolerantie"
+        "name": "Beste prijs: Gap tolerantie",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "peak_price_flex_override": {
-        "name": "Piekprijs: Flexibiliteit"
+        "name": "Piekprijs: Flexibiliteit",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "peak_price_min_distance_override": {
-        "name": "Piekprijs: Minimale afstand"
+        "name": "Piekprijs: Minimale afstand",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "peak_price_min_period_length_override": {
-        "name": "Piekprijs: Minimale periodelengte"
+        "name": "Piekprijs: Minimale periodelengte",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "peak_price_min_periods_override": {
-        "name": "Piekprijs: Minimum periodes"
+        "name": "Piekprijs: Minimum periodes",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "peak_price_relaxation_attempts_override": {
-        "name": "Piekprijs: Versoepeling pogingen"
+        "name": "Piekprijs: Versoepeling pogingen",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "peak_price_gap_count_override": {
-        "name": "Piekprijs: Gap tolerantie"
+        "name": "Piekprijs: Gap tolerantie",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       }
     },
     "switch": {
       "best_price_enable_relaxation_override": {
-        "name": "Beste prijs: Minimum aantal bereiken"
+        "name": "Beste prijs: Minimum aantal bereiken",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       },
       "peak_price_enable_relaxation_override": {
-        "name": "Piekprijs: Minimum aantal bereiken"
+        "name": "Piekprijs: Minimum aantal bereiken",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tijdstempel"
+          },
+          "description": {
+            "name": "Beschrijving"
+          },
+          "usage_tips": {
+            "name": "Gebruikstips"
+          }
+        }
       }
     }
   },

@@ -442,22 +442,202 @@
   "entity": {
     "sensor": {
       "current_interval_price": {
-        "name": "Aktuellt elpris"
+        "name": "Aktuellt elpris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "outlook_units": {
+            "name": "Enheter för utblicken"
+          },
+          "outlook_day_part_hours": {
+            "name": "Timmar för dagsdelar i utblicken"
+          },
+          "outlook_hours": {
+            "name": "Utblick per timme"
+          },
+          "outlook_days": {
+            "name": "Utblick per dag"
+          },
+          "outlook_day_parts": {
+            "name": "Utblick per dagsdel"
+          },
+          "outlook_yesterday": {
+            "name": "Utblick, igår"
+          },
+          "outlook_quarters": {
+            "name": "Utblick per kvart"
+          },
+          "outlook_past_periods": {
+            "name": "Utblick, tidigare perioder"
+          }
+        }
       },
       "current_interval_price_base": {
-        "name": "Aktuellt elpris (Energidashboard)"
+        "name": "Aktuellt elpris (Energidashboard)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
+        }
       },
       "next_interval_price": {
-        "name": "Nästa elpris"
+        "name": "Nästa elpris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
+        }
       },
       "previous_interval_price": {
-        "name": "Föregående elpris"
+        "name": "Föregående elpris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
+        }
       },
       "current_hour_average_price": {
-        "name": "⌀ Timpris aktuell"
+        "name": "⌀ Timpris aktuell",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "window_start": {
+            "name": "Fönstrets start"
+          },
+          "window_end": {
+            "name": "Fönstrets slut"
+          },
+          "clock_hour_start": {
+            "name": "Hel timme, start"
+          },
+          "clock_hour_end": {
+            "name": "Hel timme, slut"
+          },
+          "clock_hour_price_mean": {
+            "name": "Medelpris, hel timme"
+          },
+          "clock_hour_price_median": {
+            "name": "Medianpris, hel timme"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
+        }
       },
       "next_hour_average_price": {
-        "name": "⌀ Timpris nästa"
+        "name": "⌀ Timpris nästa",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "window_start": {
+            "name": "Fönstrets start"
+          },
+          "window_end": {
+            "name": "Fönstrets slut"
+          },
+          "clock_hour_start": {
+            "name": "Hel timme, start"
+          },
+          "clock_hour_end": {
+            "name": "Hel timme, slut"
+          },
+          "clock_hour_price_mean": {
+            "name": "Medelpris, hel timme"
+          },
+          "clock_hour_price_median": {
+            "name": "Medianpris, hel timme"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
+        }
       },
       "current_interval_price_level": {
         "name": "Aktuell prisnivå",
@@ -467,6 +647,38 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "cheap_until": {
+            "name": "Billigt till"
+          },
+          "next_cheap_start": {
+            "name": "Nästa billiga fas börjar"
+          },
+          "expensive_until": {
+            "name": "Dyrt till"
+          },
+          "next_expensive_start": {
+            "name": "Nästa dyra fas börjar"
+          }
         }
       },
       "next_interval_price_level": {
@@ -477,6 +689,26 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "previous_interval_price_level": {
@@ -487,6 +719,26 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "current_hour_price_level": {
@@ -497,6 +749,32 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "window_start": {
+            "name": "Fönstrets start"
+          },
+          "window_end": {
+            "name": "Fönstrets slut"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "next_hour_price_level": {
@@ -507,25 +785,261 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "window_start": {
+            "name": "Fönstrets start"
+          },
+          "window_end": {
+            "name": "Fönstrets slut"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "lowest_price_today": {
-        "name": "Dagens lägsta pris"
+        "name": "Dagens lägsta pris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "highest_price_today": {
-        "name": "Dagens högsta pris"
+        "name": "Dagens högsta pris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "average_price_today": {
-        "name": "⌀ Pris idag"
+        "name": "⌀ Pris idag",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "lowest_price_tomorrow": {
-        "name": "Morgondagens lägsta pris"
+        "name": "Morgondagens lägsta pris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "highest_price_tomorrow": {
-        "name": "Morgondagens högsta pris"
+        "name": "Morgondagens högsta pris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "average_price_tomorrow": {
-        "name": "⌀ Pris imorgon"
+        "name": "⌀ Pris imorgon",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "energy_price": {
+            "name": "Energipris"
+          },
+          "tax": {
+            "name": "Skatter och avgifter"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "yesterday_price_level": {
         "name": "Gårdagens prisnivå",
@@ -535,6 +1049,26 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "today_price_level": {
@@ -545,6 +1079,26 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "tomorrow_price_level": {
@@ -555,6 +1109,26 @@
           "normal": "Normalt",
           "expensive": "Dyrt",
           "very_expensive": "Mycket dyrt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "yesterday_price_rating": {
@@ -563,6 +1137,35 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "today_price_rating": {
@@ -571,6 +1174,35 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "tomorrow_price_rating": {
@@ -579,25 +1211,246 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "trailing_price_average": {
-        "name": "⌀ Pris glidande 24h"
+        "name": "⌀ Pris glidande 24h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "leading_price_average": {
-        "name": "⌀ Pris framåt 24h"
+        "name": "⌀ Pris framåt 24h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "trailing_price_min": {
-        "name": "Glidande 24h minimipris"
+        "name": "Glidande 24h minimipris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "trailing_price_max": {
-        "name": "Glidande 24h maximipris"
+        "name": "Glidande 24h maximipris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "leading_price_min": {
-        "name": "Framåt 24h minimipris"
+        "name": "Framåt 24h minimipris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "leading_price_max": {
-        "name": "Framåt 24h maximipris"
+        "name": "Framåt 24h maximipris",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "current_interval_price_rating": {
         "name": "Aktuellt prisbetyg",
@@ -605,6 +1458,35 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "next_interval_price_rating": {
@@ -613,6 +1495,35 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "previous_interval_price_rating": {
@@ -621,6 +1532,35 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "current_hour_price_rating": {
@@ -629,6 +1569,41 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "window_start": {
+            "name": "Fönstrets start"
+          },
+          "window_end": {
+            "name": "Fönstrets slut"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "next_hour_price_rating": {
@@ -637,31 +1612,346 @@
           "low": "Låg",
           "normal": "Normalt",
           "high": "Hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "window_start": {
+            "name": "Fönstrets start"
+          },
+          "window_end": {
+            "name": "Fönstrets slut"
+          },
+          "rating_id": {
+            "name": "Prisbetyg (ID)"
+          },
+          "rating_value": {
+            "name": "Prisbetyg (värde)"
+          },
+          "diff_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "level_id": {
+            "name": "Prisnivå (ID)"
+          },
+          "level_value": {
+            "name": "Prisnivå (värde)"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "next_avg_1h": {
-        "name": "⌀ Pris nästa 1h"
+        "name": "⌀ Pris nästa 1h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "next_avg_2h": {
-        "name": "⌀ Pris nästa 2h"
+        "name": "⌀ Pris nästa 2h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "next_avg_3h": {
-        "name": "⌀ Pris nästa 3h"
+        "name": "⌀ Pris nästa 3h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "next_avg_4h": {
-        "name": "⌀ Pris nästa 4h"
+        "name": "⌀ Pris nästa 4h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "next_avg_5h": {
-        "name": "⌀ Pris nästa 5h"
+        "name": "⌀ Pris nästa 5h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "next_avg_6h": {
-        "name": "⌀ Pris nästa 6h"
+        "name": "⌀ Pris nästa 6h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "next_avg_8h": {
-        "name": "⌀ Pris nästa 8h"
+        "name": "⌀ Pris nästa 8h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "next_avg_12h": {
-        "name": "⌀ Pris nästa 12h"
+        "name": "⌀ Pris nästa 12h",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "hours": {
+            "name": "Timmar"
+          },
+          "energy_price_mean": {
+            "name": "Energipris, medel"
+          },
+          "energy_price_median": {
+            "name": "Energipris, median"
+          },
+          "tax_mean": {
+            "name": "Skatter och avgifter, medel"
+          },
+          "tax_median": {
+            "name": "Skatter och avgifter, median"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          }
+        }
       },
       "price_outlook_1h": {
         "name": "Prisöversikt (1h)",
@@ -671,6 +1961,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_1h_percent": {
+            "name": "Förändring kommande 1 tim (%)"
+          },
+          "next_1h_avg": {
+            "name": "Medelpris, kommande 1 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          }
         }
       },
       "price_outlook_2h": {
@@ -681,6 +2012,53 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_2h_percent": {
+            "name": "Förändring kommande 2 tim (%)"
+          },
+          "next_2h_avg": {
+            "name": "Medelpris, kommande 2 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          },
+          "second_half_2h_avg": {
+            "name": "Medelpris, andra halvan av 2-timmarsfönstret"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          }
         }
       },
       "price_outlook_3h": {
@@ -691,6 +2069,53 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_3h_percent": {
+            "name": "Förändring kommande 3 tim (%)"
+          },
+          "next_3h_avg": {
+            "name": "Medelpris, kommande 3 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          },
+          "second_half_3h_avg": {
+            "name": "Medelpris, andra halvan av 3-timmarsfönstret"
+          },
+          "second_half_3h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          }
         }
       },
       "price_outlook_4h": {
@@ -701,6 +2126,53 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_4h_percent": {
+            "name": "Förändring kommande 4 tim (%)"
+          },
+          "next_4h_avg": {
+            "name": "Medelpris, kommande 4 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          },
+          "second_half_4h_avg": {
+            "name": "Medelpris, andra halvan av 4-timmarsfönstret"
+          },
+          "second_half_4h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          }
         }
       },
       "price_outlook_5h": {
@@ -711,6 +2183,53 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_5h_percent": {
+            "name": "Förändring kommande 5 tim (%)"
+          },
+          "next_5h_avg": {
+            "name": "Medelpris, kommande 5 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          },
+          "second_half_5h_avg": {
+            "name": "Medelpris, andra halvan av 5-timmarsfönstret"
+          },
+          "second_half_5h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          }
         }
       },
       "price_outlook_6h": {
@@ -721,6 +2240,53 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_6h_percent": {
+            "name": "Förändring kommande 6 tim (%)"
+          },
+          "next_6h_avg": {
+            "name": "Medelpris, kommande 6 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          },
+          "second_half_6h_avg": {
+            "name": "Medelpris, andra halvan av 6-timmarsfönstret"
+          },
+          "second_half_6h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          }
         }
       },
       "price_outlook_8h": {
@@ -731,6 +2297,53 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_8h_percent": {
+            "name": "Förändring kommande 8 tim (%)"
+          },
+          "next_8h_avg": {
+            "name": "Medelpris, kommande 8 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          },
+          "second_half_8h_avg": {
+            "name": "Medelpris, andra halvan av 8-timmarsfönstret"
+          },
+          "second_half_8h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          }
         }
       },
       "price_outlook_12h": {
@@ -741,6 +2354,53 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trend_12h_percent": {
+            "name": "Förändring kommande 12 tim (%)"
+          },
+          "next_12h_avg": {
+            "name": "Medelpris, kommande 12 tim"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          },
+          "second_half_12h_avg": {
+            "name": "Medelpris, andra halvan av 12-timmarsfönstret"
+          },
+          "second_half_12h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          }
         }
       },
       "price_trajectory_2h": {
@@ -751,6 +2411,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trajectory_2h_percent": {
+            "name": "Utveckling över 2 tim (%)"
+          },
+          "first_half_2h_avg": {
+            "name": "Medelpris, första halvan av 2-timmarsfönstret"
+          },
+          "second_half_2h_avg": {
+            "name": "Medelpris, andra halvan av 2-timmarsfönstret"
+          },
+          "first_half_2h_diff_from_current_percent": {
+            "name": "Första halvan jämfört med nuvarande pris (%)"
+          },
+          "second_half_2h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervall i första halvan"
+          },
+          "second_half_interval_count": {
+            "name": "Intervall i andra halvan"
+          }
         }
       },
       "price_trajectory_3h": {
@@ -761,6 +2462,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trajectory_3h_percent": {
+            "name": "Utveckling över 3 tim (%)"
+          },
+          "first_half_3h_avg": {
+            "name": "Medelpris, första halvan av 3-timmarsfönstret"
+          },
+          "second_half_3h_avg": {
+            "name": "Medelpris, andra halvan av 3-timmarsfönstret"
+          },
+          "first_half_3h_diff_from_current_percent": {
+            "name": "Första halvan jämfört med nuvarande pris (%)"
+          },
+          "second_half_3h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervall i första halvan"
+          },
+          "second_half_interval_count": {
+            "name": "Intervall i andra halvan"
+          }
         }
       },
       "price_trajectory_4h": {
@@ -771,6 +2513,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trajectory_4h_percent": {
+            "name": "Utveckling över 4 tim (%)"
+          },
+          "first_half_4h_avg": {
+            "name": "Medelpris, första halvan av 4-timmarsfönstret"
+          },
+          "second_half_4h_avg": {
+            "name": "Medelpris, andra halvan av 4-timmarsfönstret"
+          },
+          "first_half_4h_diff_from_current_percent": {
+            "name": "Första halvan jämfört med nuvarande pris (%)"
+          },
+          "second_half_4h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervall i första halvan"
+          },
+          "second_half_interval_count": {
+            "name": "Intervall i andra halvan"
+          }
         }
       },
       "price_trajectory_5h": {
@@ -781,6 +2564,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trajectory_5h_percent": {
+            "name": "Utveckling över 5 tim (%)"
+          },
+          "first_half_5h_avg": {
+            "name": "Medelpris, första halvan av 5-timmarsfönstret"
+          },
+          "second_half_5h_avg": {
+            "name": "Medelpris, andra halvan av 5-timmarsfönstret"
+          },
+          "first_half_5h_diff_from_current_percent": {
+            "name": "Första halvan jämfört med nuvarande pris (%)"
+          },
+          "second_half_5h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervall i första halvan"
+          },
+          "second_half_interval_count": {
+            "name": "Intervall i andra halvan"
+          }
         }
       },
       "price_trajectory_6h": {
@@ -791,6 +2615,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trajectory_6h_percent": {
+            "name": "Utveckling över 6 tim (%)"
+          },
+          "first_half_6h_avg": {
+            "name": "Medelpris, första halvan av 6-timmarsfönstret"
+          },
+          "second_half_6h_avg": {
+            "name": "Medelpris, andra halvan av 6-timmarsfönstret"
+          },
+          "first_half_6h_diff_from_current_percent": {
+            "name": "Första halvan jämfört med nuvarande pris (%)"
+          },
+          "second_half_6h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervall i första halvan"
+          },
+          "second_half_interval_count": {
+            "name": "Intervall i andra halvan"
+          }
         }
       },
       "price_trajectory_8h": {
@@ -801,6 +2666,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trajectory_8h_percent": {
+            "name": "Utveckling över 8 tim (%)"
+          },
+          "first_half_8h_avg": {
+            "name": "Medelpris, första halvan av 8-timmarsfönstret"
+          },
+          "second_half_8h_avg": {
+            "name": "Medelpris, andra halvan av 8-timmarsfönstret"
+          },
+          "first_half_8h_diff_from_current_percent": {
+            "name": "Första halvan jämfört med nuvarande pris (%)"
+          },
+          "second_half_8h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervall i första halvan"
+          },
+          "second_half_interval_count": {
+            "name": "Intervall i andra halvan"
+          }
         }
       },
       "price_trajectory_12h": {
@@ -811,6 +2717,47 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "trend_value": {
+            "name": "Trendvärde"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "trajectory_12h_percent": {
+            "name": "Utveckling över 12 tim (%)"
+          },
+          "first_half_12h_avg": {
+            "name": "Medelpris, första halvan av 12-timmarsfönstret"
+          },
+          "second_half_12h_avg": {
+            "name": "Medelpris, andra halvan av 12-timmarsfönstret"
+          },
+          "first_half_12h_diff_from_current_percent": {
+            "name": "Första halvan jämfört med nuvarande pris (%)"
+          },
+          "second_half_12h_diff_from_current_percent": {
+            "name": "Andra halvan jämfört med nuvarande pris (%)"
+          },
+          "first_half_interval_count": {
+            "name": "Intervall i första halvan"
+          },
+          "second_half_interval_count": {
+            "name": "Intervall i andra halvan"
+          }
         }
       },
       "current_price_trend": {
@@ -821,19 +2768,158 @@
           "stable": "Stabil",
           "falling": "Fallande",
           "strongly_falling": "Kraftigt fallande"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "previous_direction": {
+            "name": "Föregående riktning"
+          },
+          "price_direction_duration_minutes": {
+            "name": "Varaktighet för nuvarande riktning (min)"
+          },
+          "price_direction_since": {
+            "name": "Riktning sedan"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          }
         }
       },
       "next_price_trend_change": {
-        "name": "Nästa pristrendändring"
+        "name": "Nästa pristrendändring",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "direction": {
+            "name": "Riktning efter förändringen"
+          },
+          "from_direction": {
+            "name": "Riktning före förändringen"
+          },
+          "minutes_until_change": {
+            "name": "Minuter till förändring"
+          },
+          "price_now": {
+            "name": "Nuvarande pris"
+          },
+          "price_at_change": {
+            "name": "Pris vid förändringen"
+          },
+          "price_avg_after_change": {
+            "name": "Medelpris efter förändringen"
+          },
+          "trend_diff_percent": {
+            "name": "Prisförändring vid förändringen (%)"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          }
+        }
       },
       "next_price_trend_change_in": {
-        "name": "Nästa pristrendändring om"
+        "name": "Nästa pristrendändring om",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "direction": {
+            "name": "Riktning efter förändringen"
+          },
+          "from_direction": {
+            "name": "Riktning före förändringen"
+          },
+          "minutes_until_change": {
+            "name": "Minuter till förändring"
+          },
+          "price_now": {
+            "name": "Nuvarande pris"
+          },
+          "price_at_change": {
+            "name": "Pris vid förändringen"
+          },
+          "price_avg_after_change": {
+            "name": "Medelpris efter förändringen"
+          },
+          "trend_diff_percent": {
+            "name": "Prisförändring vid förändringen (%)"
+          },
+          "volatility_factor": {
+            "name": "Volatilitetsfaktor"
+          },
+          "threshold_rising_percent": {
+            "name": "Tröskel stigande (%)"
+          },
+          "threshold_rising_strongly_percent": {
+            "name": "Tröskel kraftigt stigande (%)"
+          },
+          "threshold_falling_percent": {
+            "name": "Tröskel fallande (%)"
+          },
+          "threshold_falling_strongly_percent": {
+            "name": "Tröskel kraftigt fallande (%)"
+          }
+        }
       },
       "daily_rating": {
-        "name": "Dagligt prisbetyg"
+        "name": "Dagligt prisbetyg",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "monthly_rating": {
-        "name": "Månatligt prisbetyg"
+        "name": "Månatligt prisbetyg",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "data_lifecycle_status": {
         "name": "Datalivscykelstatus",
@@ -846,6 +2932,32 @@
           "error": "Fel",
           "awaiting_subscription": "Väntar på avtalsstart",
           "subscription_ended": "Avtalet har avslutats"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "tomorrow_available": {
+            "name": "Data för imorgon tillgänglig"
+          },
+          "next_api_poll": {
+            "name": "Nästa API-anrop"
+          },
+          "updates_today": {
+            "name": "Uppdateringar idag"
+          },
+          "last_turnover": {
+            "name": "Senaste dygnsskiftet"
+          },
+          "last_error": {
+            "name": "Senaste fel"
+          }
         }
       },
       "today_volatility": {
@@ -855,6 +2967,56 @@
           "moderate": "Måttlig",
           "high": "Hög",
           "very_high": "Mycket hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "price_volatility": {
+            "name": "Volatilitetsnivå"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoefficient (%)"
+          },
+          "price_spread": {
+            "name": "Prisspann"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "price_q25": {
+            "name": "Pris vid 25:e percentilen"
+          },
+          "price_q75": {
+            "name": "Pris vid 75:e percentilen"
+          },
+          "price_typical_spread": {
+            "name": "Typiskt prisspann (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typiskt prisspann (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Pristoppar"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          }
         }
       },
       "tomorrow_volatility": {
@@ -864,6 +3026,56 @@
           "moderate": "Måttlig",
           "high": "Hög",
           "very_high": "Mycket hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "price_volatility": {
+            "name": "Volatilitetsnivå"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoefficient (%)"
+          },
+          "price_spread": {
+            "name": "Prisspann"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "price_q25": {
+            "name": "Pris vid 25:e percentilen"
+          },
+          "price_q75": {
+            "name": "Pris vid 75:e percentilen"
+          },
+          "price_typical_spread": {
+            "name": "Typiskt prisspann (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typiskt prisspann (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Pristoppar"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          }
         }
       },
       "next_24h_volatility": {
@@ -873,6 +3085,56 @@
           "moderate": "Måttlig",
           "high": "Hög",
           "very_high": "Mycket hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "price_volatility": {
+            "name": "Volatilitetsnivå"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoefficient (%)"
+          },
+          "price_spread": {
+            "name": "Prisspann"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "price_q25": {
+            "name": "Pris vid 25:e percentilen"
+          },
+          "price_q75": {
+            "name": "Pris vid 75:e percentilen"
+          },
+          "price_typical_spread": {
+            "name": "Typiskt prisspann (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typiskt prisspann (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Pristoppar"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          }
         }
       },
       "today_tomorrow_volatility": {
@@ -882,43 +3144,381 @@
           "moderate": "Måttlig",
           "high": "Hög",
           "very_high": "Mycket hög"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "price_volatility": {
+            "name": "Volatilitetsnivå"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoefficient (%)"
+          },
+          "price_spread": {
+            "name": "Prisspann"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "price_q25": {
+            "name": "Pris vid 25:e percentilen"
+          },
+          "price_q75": {
+            "name": "Pris vid 75:e percentilen"
+          },
+          "price_typical_spread": {
+            "name": "Typiskt prisspann (IQR)"
+          },
+          "price_typical_spread_percent": {
+            "name": "Typiskt prisspann (IQR, %)"
+          },
+          "price_spike_count": {
+            "name": "Pristoppar"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "today_volatility": {
+            "name": "Volatilitet idag"
+          },
+          "tomorrow_volatility": {
+            "name": "Volatilitet imorgon"
+          },
+          "interval_count_today": {
+            "name": "Intervall idag"
+          },
+          "interval_count_tomorrow": {
+            "name": "Intervall imorgon"
+          }
         }
       },
       "best_price_end_time": {
-        "name": "Bästa pris slutar"
+        "name": "Bästa pris slutar",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "best_price_period_duration": {
-        "name": "Bästa pris varaktighet"
+        "name": "Bästa pris varaktighet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "best_price_remaining_minutes": {
-        "name": "Bästa pris återstående tid"
+        "name": "Bästa pris återstående tid",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "best_price_progress": {
-        "name": "Bästa pris framsteg"
+        "name": "Bästa pris framsteg",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "best_price_next_start_time": {
-        "name": "Bästa pris startar"
+        "name": "Bästa pris startar",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "best_price_next_in_minutes": {
-        "name": "Bästa pris startar om"
+        "name": "Bästa pris startar om",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "peak_price_end_time": {
-        "name": "Topppris slutar"
+        "name": "Topppris slutar",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "peak_price_period_duration": {
-        "name": "Topppris varaktighet"
+        "name": "Topppris varaktighet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "peak_price_remaining_minutes": {
-        "name": "Topppris återstående tid"
+        "name": "Topppris återstående tid",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "peak_price_progress": {
-        "name": "Topppris framsteg"
+        "name": "Topppris framsteg",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "peak_price_next_start_time": {
-        "name": "Topppris startar"
+        "name": "Topppris startar",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "peak_price_next_in_minutes": {
-        "name": "Topppris startar om"
+        "name": "Topppris startar om",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "period_duration_minutes": {
+            "name": "Periodens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "home_type": {
         "name": "Hemtyp",
@@ -927,16 +3527,60 @@
           "rowhouse": "Radhus",
           "house": "Hus",
           "cottage": "Stuga"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
         }
       },
       "home_size": {
-        "name": "Hemstorlek"
+        "name": "Hemstorlek",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "main_fuse_size": {
-        "name": "Huvudsäkringsstorlek"
+        "name": "Huvudsäkringsstorlek",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "number_of_residents": {
-        "name": "Antal boende"
+        "name": "Antal boende",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "primary_heating_source": {
         "name": "Primär värmekälla",
@@ -956,31 +3600,130 @@
           "oil": "Olja",
           "other": "Annat",
           "waste": "Spillvärme"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
         }
       },
       "grid_company": {
-        "name": "Nätbolag"
+        "name": "Nätbolag",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "grid_area_code": {
-        "name": "Nätområdeskod"
+        "name": "Nätområdeskod",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "price_area_code": {
-        "name": "Prisområdeskod"
+        "name": "Prisområdeskod",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "consumption_ean": {
-        "name": "Förbruknings-EAN"
+        "name": "Förbruknings-EAN",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "production_ean": {
-        "name": "Produktions-EAN"
+        "name": "Produktions-EAN",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "energy_tax_type": {
-        "name": "Energiskattetyp"
+        "name": "Energiskattetyp",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "vat_type": {
-        "name": "Momstyp"
+        "name": "Momstyp",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "estimated_annual_consumption": {
-        "name": "Beräknad årlig förbrukning"
+        "name": "Beräknad årlig förbrukning",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "subscription_status": {
         "name": "Abonnemangsstatus",
@@ -990,6 +3733,17 @@
           "pending": "Väntande",
           "unknown": "Okänd",
           "awaiting_market": "Väntar på marknad"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
         }
       },
       "day_pattern_yesterday": {
@@ -1003,6 +3757,41 @@
           "rising": "Stigande",
           "falling": "Fallande",
           "mixed": "Blandad"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "confidence": {
+            "name": "Tillförlitlighet"
+          },
+          "day_cv_percent": {
+            "name": "Dagens variationskoefficient (%)"
+          },
+          "extreme_time": {
+            "name": "Tidpunkt för ytterpunkten"
+          },
+          "valley_start": {
+            "name": "Dalens start"
+          },
+          "valley_end": {
+            "name": "Dalens slut"
+          },
+          "peak_start": {
+            "name": "Toppens start"
+          },
+          "peak_end": {
+            "name": "Toppens slut"
+          },
+          "segments": {
+            "name": "Segment"
+          }
         }
       },
       "day_pattern_today": {
@@ -1016,6 +3805,41 @@
           "rising": "Stigande",
           "falling": "Fallande",
           "mixed": "Blandad"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "confidence": {
+            "name": "Tillförlitlighet"
+          },
+          "day_cv_percent": {
+            "name": "Dagens variationskoefficient (%)"
+          },
+          "extreme_time": {
+            "name": "Tidpunkt för ytterpunkten"
+          },
+          "valley_start": {
+            "name": "Dalens start"
+          },
+          "valley_end": {
+            "name": "Dalens slut"
+          },
+          "peak_start": {
+            "name": "Toppens start"
+          },
+          "peak_end": {
+            "name": "Toppens slut"
+          },
+          "segments": {
+            "name": "Segment"
+          }
         }
       },
       "day_pattern_tomorrow": {
@@ -1029,6 +3853,41 @@
           "rising": "Stigande",
           "falling": "Fallande",
           "mixed": "Blandad"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "confidence": {
+            "name": "Tillförlitlighet"
+          },
+          "day_cv_percent": {
+            "name": "Dagens variationskoefficient (%)"
+          },
+          "extreme_time": {
+            "name": "Tidpunkt för ytterpunkten"
+          },
+          "valley_start": {
+            "name": "Dalens start"
+          },
+          "valley_end": {
+            "name": "Dalens slut"
+          },
+          "peak_start": {
+            "name": "Toppens start"
+          },
+          "peak_end": {
+            "name": "Toppens slut"
+          },
+          "segments": {
+            "name": "Segment"
+          }
         }
       },
       "current_price_phase": {
@@ -1037,6 +3896,44 @@
           "rising": "Stigande",
           "falling": "Fallande",
           "flat": "Platt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Slut"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "segment_index": {
+            "name": "Segmentnummer"
+          },
+          "segment_count": {
+            "name": "Antal segment"
+          },
+          "all_segments": {
+            "name": "Alla segment"
+          },
+          "is_tomorrow": {
+            "name": "Börjar imorgon"
+          }
         }
       },
       "next_price_phase": {
@@ -1045,37 +3942,305 @@
           "rising": "Stigande",
           "falling": "Fallande",
           "flat": "Platt"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Slut"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "segment_index": {
+            "name": "Segmentnummer"
+          },
+          "segment_count": {
+            "name": "Antal segment"
+          },
+          "all_segments": {
+            "name": "Alla segment"
+          },
+          "is_tomorrow": {
+            "name": "Börjar imorgon"
+          }
         }
       },
       "current_price_phase_end_time": {
-        "name": "Aktuell fas sluttid"
+        "name": "Aktuell fas sluttid",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "current_price_phase_remaining_minutes": {
-        "name": "Aktuell fas återstående"
+        "name": "Aktuell fas återstående",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "current_price_phase_duration": {
-        "name": "Aktuell fas varaktighet"
+        "name": "Aktuell fas varaktighet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "current_price_phase_progress": {
-        "name": "Aktuell fas framsteg"
+        "name": "Aktuell fas framsteg",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "next_rising_phase_start_time": {
-        "name": "Nästa stigande fas start"
+        "name": "Nästa stigande fas start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "next_falling_phase_start_time": {
-        "name": "Nästa fallande fas start"
+        "name": "Nästa fallande fas start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "next_flat_phase_start_time": {
-        "name": "Nästa flata fas start"
+        "name": "Nästa flata fas start",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "next_rising_phase_in_minutes": {
-        "name": "Tid till nästa stigande fas"
+        "name": "Tid till nästa stigande fas",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "next_falling_phase_in_minutes": {
-        "name": "Tid till nästa fallande fas"
+        "name": "Tid till nästa fallande fas",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "next_flat_phase_in_minutes": {
-        "name": "Tid till nästa flata fas"
+        "name": "Tid till nästa flata fas",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "icon_color": {
+            "name": "Ikonfärg"
+          },
+          "phase_duration_minutes": {
+            "name": "Fasens längd (min)"
+          },
+          "remaining_minutes": {
+            "name": "Återstående minuter"
+          },
+          "next_in_minutes": {
+            "name": "Minuter till nästa start"
+          }
+        }
       },
       "chart_data_export": {
         "name": "Diagramdataexport",
@@ -1083,6 +4248,17 @@
           "pending": "Väntande",
           "ready": "Redo",
           "error": "Fel"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
         }
       },
       "chart_metadata": {
@@ -1091,40 +4267,397 @@
           "pending": "Väntande",
           "ready": "Redo",
           "error": "Fel"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "yaxis_min": {
+            "name": "Minimum för diagramaxeln"
+          },
+          "yaxis_max": {
+            "name": "Maximum för diagramaxeln"
+          },
+          "yaxis_min_energy": {
+            "name": "Minimum för diagramaxeln (energipris)"
+          },
+          "yaxis_max_energy": {
+            "name": "Maximum för diagramaxeln (energipris)"
+          },
+          "yaxis_min_tax": {
+            "name": "Minimum för diagramaxeln (skatter och avgifter)"
+          },
+          "yaxis_max_tax": {
+            "name": "Maximum för diagramaxeln (skatter och avgifter)"
+          },
+          "currency": {
+            "name": "Valuta"
+          },
+          "resolution": {
+            "name": "Upplösning"
+          },
+          "error": {
+            "name": "Fel"
+          }
         }
       },
       "current_interval_price_rank_today": {
-        "name": "Aktuellt prisrang (idag)"
+        "name": "Aktuellt prisrang (idag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "current_price": {
+            "name": "Pris för aktuellt intervall"
+          }
+        }
       },
       "current_interval_price_rank_tomorrow": {
-        "name": "Aktuellt prisrang (imorgon)"
+        "name": "Aktuellt prisrang (imorgon)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "current_price": {
+            "name": "Pris för aktuellt intervall"
+          }
+        }
       },
       "current_interval_price_rank_today_tomorrow": {
-        "name": "Aktuellt prisrang (idag+imorgon)"
+        "name": "Aktuellt prisrang (idag+imorgon)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "current_price": {
+            "name": "Pris för aktuellt intervall"
+          }
+        }
       },
       "next_interval_price_rank_today": {
-        "name": "Nästa prisrang (idag)"
+        "name": "Nästa prisrang (idag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "next_price": {
+            "name": "Pris för nästa intervall"
+          }
+        }
       },
       "next_interval_price_rank_today_tomorrow": {
-        "name": "Nästa prisrang (idag+imorgon)"
+        "name": "Nästa prisrang (idag+imorgon)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "next_price": {
+            "name": "Pris för nästa intervall"
+          }
+        }
       },
       "previous_interval_price_rank_today": {
-        "name": "Förra prisrang (idag)"
+        "name": "Förra prisrang (idag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "previous_price": {
+            "name": "Pris för föregående intervall"
+          }
+        }
       },
       "previous_interval_price_rank_today_tomorrow": {
-        "name": "Förra prisrang (idag+imorgon)"
+        "name": "Förra prisrang (idag+imorgon)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "previous_price": {
+            "name": "Pris för föregående intervall"
+          }
+        }
       },
       "current_hour_price_rank_today": {
-        "name": "⌀ Timprisrang aktuell (idag)"
+        "name": "⌀ Timprisrang aktuell (idag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "current_hour_avg_price": {
+            "name": "Medelpris, aktuell timme"
+          }
+        }
       },
       "current_hour_price_rank_today_tomorrow": {
-        "name": "⌀ Timprisrang aktuell (idag+imorgon)"
+        "name": "⌀ Timprisrang aktuell (idag+imorgon)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "current_hour_avg_price": {
+            "name": "Medelpris, aktuell timme"
+          }
+        }
       },
       "next_hour_price_rank_today": {
-        "name": "⌀ Timprisrang nästa (idag)"
+        "name": "⌀ Timprisrang nästa (idag)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "next_hour_avg_price": {
+            "name": "Medelpris, nästa timme"
+          }
+        }
       },
       "next_hour_price_rank_today_tomorrow": {
-        "name": "⌀ Timprisrang nästa (idag+imorgon)"
+        "name": "⌀ Timprisrang nästa (idag+imorgon)",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "prices_below_count": {
+            "name": "Billigare intervall"
+          },
+          "interval_count": {
+            "name": "Antal intervall"
+          },
+          "reference_min": {
+            "name": "Lägsta jämförelsepris"
+          },
+          "reference_max": {
+            "name": "Högsta jämförelsepris"
+          },
+          "reference_mean": {
+            "name": "Genomsnittligt jämförelsepris"
+          },
+          "next_hour_avg_price": {
+            "name": "Medelpris, nästa timme"
+          }
+        }
       },
       "entry_mode": {
         "name": "Dataläge",
@@ -1132,101 +4665,648 @@
           "live": "Live",
           "time_travel_days": "Tidsresa (dagar)",
           "time_travel_yearly": "Tidsresa (årlig)"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
         }
       },
       "time_travel_reference_time": {
-        "name": "Visad tid"
+        "name": "Visad tid",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "time_travel_days_offset": {
-        "name": "Tidsreseförskjutning i dagar"
+        "name": "Tidsreseförskjutning i dagar",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "time_travel_years_offset": {
-        "name": "Tidsreseförskjutning i år"
+        "name": "Tidsreseförskjutning i år",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "time_travel_time_offset": {
-        "name": "Tidsresa-klockförskjutning"
+        "name": "Tidsresa-klockförskjutning",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "headless_mode": {
         "name": "Headless-läge",
         "state": {
           "on": "På",
           "off": "Av"
+        },
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
         }
       }
     },
     "binary_sensor": {
       "peak_price_period": {
-        "name": "Topprisperiod"
+        "name": "Topprisperiod",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "intervals_available": {
+            "name": "Tillgängliga intervall"
+          },
+          "data_status": {
+            "name": "Datastatus"
+          },
+          "period_position": {
+            "name": "Position i perioden"
+          },
+          "period_count_total": {
+            "name": "Perioder totalt"
+          },
+          "period_count_remaining": {
+            "name": "Återstående perioder"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Slut"
+          },
+          "periods": {
+            "name": "Perioder"
+          },
+          "duration_minutes": {
+            "name": "Varaktighet (min)"
+          },
+          "level": {
+            "name": "Prisnivå"
+          },
+          "rating_level": {
+            "name": "Prisbetyg"
+          },
+          "rating_difference_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_spread": {
+            "name": "Prisspann"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoefficient (%)"
+          },
+          "volatility": {
+            "name": "Volatilitet"
+          },
+          "day_volatility_percent": {
+            "name": "Volatilitet för dagen (%)"
+          },
+          "period_price_diff_from_daily_min": {
+            "name": "Avvikelse från dagens minimum"
+          },
+          "period_price_diff_from_daily_min_percent": {
+            "name": "Avvikelse från dagens minimum (%)"
+          },
+          "period_price_diff_from_daily_max": {
+            "name": "Avvikelse från dagens maximum"
+          },
+          "period_price_diff_from_daily_max_percent": {
+            "name": "Avvikelse från dagens maximum (%)"
+          },
+          "period_interval_count": {
+            "name": "Intervall i perioden"
+          },
+          "period_count_today": {
+            "name": "Perioder idag"
+          },
+          "period_count_tomorrow": {
+            "name": "Perioder imorgon"
+          },
+          "relaxation_active": {
+            "name": "Lättnad aktiv"
+          },
+          "relaxation_level": {
+            "name": "Lättnadsnivå"
+          },
+          "relaxation_threshold_original_percent": {
+            "name": "Ursprunglig flexibilitet (%)"
+          },
+          "relaxation_threshold_applied_percent": {
+            "name": "Tillämpad flexibilitet (%)"
+          },
+          "min_periods_configured": {
+            "name": "Konfigurerat minsta antal perioder"
+          },
+          "flat_days_detected": {
+            "name": "Platta dagar upptäckta"
+          },
+          "relaxation_incomplete": {
+            "name": "Lättnad ofullständig"
+          }
+        }
       },
       "best_price_period": {
-        "name": "Bästa Prisperiod"
+        "name": "Bästa Prisperiod",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "intervals_available": {
+            "name": "Tillgängliga intervall"
+          },
+          "data_status": {
+            "name": "Datastatus"
+          },
+          "period_position": {
+            "name": "Position i perioden"
+          },
+          "period_count_total": {
+            "name": "Perioder totalt"
+          },
+          "period_count_remaining": {
+            "name": "Återstående perioder"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Slut"
+          },
+          "periods": {
+            "name": "Perioder"
+          },
+          "duration_minutes": {
+            "name": "Varaktighet (min)"
+          },
+          "level": {
+            "name": "Prisnivå"
+          },
+          "rating_level": {
+            "name": "Prisbetyg"
+          },
+          "rating_difference_percent": {
+            "name": "Avvikelse från medelvärdet (%)"
+          },
+          "price_mean": {
+            "name": "Medelpris"
+          },
+          "price_median": {
+            "name": "Medianpris"
+          },
+          "price_min": {
+            "name": "Lägsta pris"
+          },
+          "price_max": {
+            "name": "Högsta pris"
+          },
+          "price_spread": {
+            "name": "Prisspann"
+          },
+          "price_coefficient_variation_percent": {
+            "name": "Variationskoefficient (%)"
+          },
+          "volatility": {
+            "name": "Volatilitet"
+          },
+          "day_volatility_percent": {
+            "name": "Volatilitet för dagen (%)"
+          },
+          "period_price_diff_from_daily_min": {
+            "name": "Avvikelse från dagens minimum"
+          },
+          "period_price_diff_from_daily_min_percent": {
+            "name": "Avvikelse från dagens minimum (%)"
+          },
+          "period_price_diff_from_daily_max": {
+            "name": "Avvikelse från dagens maximum"
+          },
+          "period_price_diff_from_daily_max_percent": {
+            "name": "Avvikelse från dagens maximum (%)"
+          },
+          "period_interval_count": {
+            "name": "Intervall i perioden"
+          },
+          "period_count_today": {
+            "name": "Perioder idag"
+          },
+          "period_count_tomorrow": {
+            "name": "Perioder imorgon"
+          },
+          "relaxation_active": {
+            "name": "Lättnad aktiv"
+          },
+          "relaxation_level": {
+            "name": "Lättnadsnivå"
+          },
+          "relaxation_threshold_original_percent": {
+            "name": "Ursprunglig flexibilitet (%)"
+          },
+          "relaxation_threshold_applied_percent": {
+            "name": "Tillämpad flexibilitet (%)"
+          },
+          "min_periods_configured": {
+            "name": "Konfigurerat minsta antal perioder"
+          },
+          "flat_days_detected": {
+            "name": "Platta dagar upptäckta"
+          },
+          "relaxation_incomplete": {
+            "name": "Lättnad ofullständig"
+          }
+        }
       },
       "in_rising_price_phase": {
-        "name": "I stigande prisfas"
+        "name": "I stigande prisfas",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Slut"
+          }
+        }
       },
       "in_falling_price_phase": {
-        "name": "I fallande prisfas"
+        "name": "I fallande prisfas",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Slut"
+          }
+        }
       },
       "in_flat_price_phase": {
-        "name": "I platt prisfas"
+        "name": "I platt prisfas",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "start": {
+            "name": "Start"
+          },
+          "end": {
+            "name": "Slut"
+          }
+        }
       },
       "connection": {
-        "name": "Tibber API-anslutning"
+        "name": "Tibber API-anslutning",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "tomorrow_data_available": {
-        "name": "Morgondagens data tillgänglig"
+        "name": "Morgondagens data tillgänglig",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          },
+          "intervals_available": {
+            "name": "Tillgängliga intervall"
+          },
+          "data_status": {
+            "name": "Datastatus"
+          }
+        }
       },
       "has_ventilation_system": {
-        "name": "Har ventilationssystem"
+        "name": "Har ventilationssystem",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "realtime_consumption_enabled": {
-        "name": "Realtidsförbrukning aktiverad"
+        "name": "Realtidsförbrukning aktiverad",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       }
     },
     "number": {
       "best_price_flex_override": {
-        "name": "Bästa pris: Flexibilitet"
+        "name": "Bästa pris: Flexibilitet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "best_price_min_distance_override": {
-        "name": "Bästa pris: Minimiavstånd"
+        "name": "Bästa pris: Minimiavstånd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "best_price_min_period_length_override": {
-        "name": "Bästa pris: Minsta periodlängd"
+        "name": "Bästa pris: Minsta periodlängd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "best_price_min_periods_override": {
-        "name": "Bästa pris: Minsta antal perioder"
+        "name": "Bästa pris: Minsta antal perioder",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "best_price_relaxation_attempts_override": {
-        "name": "Bästa pris: Lättnadsförsök"
+        "name": "Bästa pris: Lättnadsförsök",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "best_price_gap_count_override": {
-        "name": "Bästa pris: Glaptolerans"
+        "name": "Bästa pris: Glaptolerans",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "peak_price_flex_override": {
-        "name": "Topppris: Flexibilitet"
+        "name": "Topppris: Flexibilitet",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "peak_price_min_distance_override": {
-        "name": "Topppris: Minimiavstånd"
+        "name": "Topppris: Minimiavstånd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "peak_price_min_period_length_override": {
-        "name": "Topppris: Minsta periodlängd"
+        "name": "Topppris: Minsta periodlängd",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "peak_price_min_periods_override": {
-        "name": "Topppris: Minsta antal perioder"
+        "name": "Topppris: Minsta antal perioder",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "peak_price_relaxation_attempts_override": {
-        "name": "Topppris: Lättnadsförsök"
+        "name": "Topppris: Lättnadsförsök",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "peak_price_gap_count_override": {
-        "name": "Topppris: Glaptolerans"
+        "name": "Topppris: Glaptolerans",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       }
     },
     "switch": {
       "best_price_enable_relaxation_override": {
-        "name": "Bästa pris: Uppnå minimiantal"
+        "name": "Bästa pris: Uppnå minimiantal",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       },
       "peak_price_enable_relaxation_override": {
-        "name": "Topppris: Uppnå minimiantal"
+        "name": "Topppris: Uppnå minimiantal",
+        "state_attributes": {
+          "timestamp": {
+            "name": "Tidsstämpel"
+          },
+          "description": {
+            "name": "Beskrivning"
+          },
+          "usage_tips": {
+            "name": "Användningstips"
+          }
+        }
       }
     }
   },
