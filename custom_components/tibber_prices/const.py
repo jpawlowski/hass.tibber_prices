@@ -635,15 +635,6 @@ PRICE_TREND_MAPPING = {
     PRICE_TREND_STRONGLY_RISING: 2,
 }
 
-# Icon mapping for price levels (dynamic icons based on level)
-PRICE_LEVEL_ICON_MAPPING = {
-    PRICE_LEVEL_VERY_CHEAP: "mdi:gauge-empty",
-    PRICE_LEVEL_CHEAP: "mdi:gauge-low",
-    PRICE_LEVEL_NORMAL: "mdi:gauge",
-    PRICE_LEVEL_EXPENSIVE: "mdi:gauge-full",
-    PRICE_LEVEL_VERY_EXPENSIVE: "mdi:alert",
-}
-
 # Color mapping for price levels (CSS variables for theme compatibility)
 PRICE_LEVEL_COLOR_MAPPING = {
     PRICE_LEVEL_VERY_CHEAP: "var(--success-color)",
@@ -664,26 +655,11 @@ PRICE_LEVEL_CASH_ICON_MAPPING = {
     PRICE_LEVEL_VERY_EXPENSIVE: "mdi:cash-remove",  # Cash crossed out (very expensive)
 }
 
-# Icon mapping for price ratings (dynamic icons based on rating)
-PRICE_RATING_ICON_MAPPING = {
-    PRICE_RATING_LOW: "mdi:thumb-up",
-    PRICE_RATING_NORMAL: "mdi:thumbs-up-down",
-    PRICE_RATING_HIGH: "mdi:thumb-down",
-}
-
 # Color mapping for price ratings (CSS variables for theme compatibility)
 PRICE_RATING_COLOR_MAPPING = {
     PRICE_RATING_LOW: "var(--success-color)",
     PRICE_RATING_NORMAL: "var(--state-icon-color)",
     PRICE_RATING_HIGH: "var(--error-color)",
-}
-
-# Icon mapping for volatility levels (dynamic icons based on volatility)
-VOLATILITY_ICON_MAPPING = {
-    VOLATILITY_LOW: "mdi:chart-line-variant",
-    VOLATILITY_MODERATE: "mdi:chart-timeline-variant",
-    VOLATILITY_HIGH: "mdi:chart-bar",
-    VOLATILITY_VERY_HIGH: "mdi:chart-scatter-plot",
 }
 
 # Color mapping for volatility levels (CSS variables for theme compatibility)

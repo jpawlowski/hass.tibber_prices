@@ -1,4 +1,188 @@
 {
+  "entity": {
+    "sensor": {
+      "current_hour_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "current_hour_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      },
+      "current_interval_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "current_interval_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      },
+      "next_24h_volatility": {
+        "default": "mdi:chart-bell-curve-cumulative",
+        "state": {
+          "low": "mdi:chart-line-variant",
+          "moderate": "mdi:chart-timeline-variant",
+          "high": "mdi:chart-bar",
+          "very_high": "mdi:chart-scatter-plot"
+        }
+      },
+      "next_hour_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "next_hour_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      },
+      "next_interval_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "next_interval_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      },
+      "previous_interval_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "previous_interval_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      },
+      "today_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "today_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      },
+      "today_tomorrow_volatility": {
+        "default": "mdi:chart-bell-curve-cumulative",
+        "state": {
+          "low": "mdi:chart-line-variant",
+          "moderate": "mdi:chart-timeline-variant",
+          "high": "mdi:chart-bar",
+          "very_high": "mdi:chart-scatter-plot"
+        }
+      },
+      "today_volatility": {
+        "default": "mdi:chart-bell-curve-cumulative",
+        "state": {
+          "low": "mdi:chart-line-variant",
+          "moderate": "mdi:chart-timeline-variant",
+          "high": "mdi:chart-bar",
+          "very_high": "mdi:chart-scatter-plot"
+        }
+      },
+      "tomorrow_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "tomorrow_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      },
+      "tomorrow_volatility": {
+        "default": "mdi:chart-bell-curve-cumulative",
+        "state": {
+          "low": "mdi:chart-line-variant",
+          "moderate": "mdi:chart-timeline-variant",
+          "high": "mdi:chart-bar",
+          "very_high": "mdi:chart-scatter-plot"
+        }
+      },
+      "yesterday_price_level": {
+        "default": "mdi:gauge",
+        "state": {
+          "very_cheap": "mdi:gauge-empty",
+          "cheap": "mdi:gauge-low",
+          "normal": "mdi:gauge",
+          "expensive": "mdi:gauge-full",
+          "very_expensive": "mdi:alert"
+        }
+      },
+      "yesterday_price_rating": {
+        "default": "mdi:thumbs-up-down",
+        "state": {
+          "low": "mdi:thumb-up",
+          "normal": "mdi:thumbs-up-down",
+          "high": "mdi:thumb-down"
+        }
+      }
+    }
+  },
   "services": {
     "get_price": {
       "service": "mdi:table-search"

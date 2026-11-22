@@ -89,7 +89,6 @@ INTERVAL_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="current_interval_price_level",
         translation_key="current_interval_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on level value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -97,7 +96,6 @@ INTERVAL_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="next_interval_price_level",
         translation_key="next_interval_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on level value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -105,7 +103,6 @@ INTERVAL_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="previous_interval_price_level",
         translation_key="previous_interval_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on level value
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -120,7 +117,6 @@ INTERVAL_RATING_SENSORS = (
     SensorEntityDescription(
         key="current_interval_price_rating",
         translation_key="current_interval_price_rating",
-        icon="mdi:thumbs-up-down",  # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on rating value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -129,7 +125,6 @@ INTERVAL_RATING_SENSORS = (
     SensorEntityDescription(
         key="next_interval_price_rating",
         translation_key="next_interval_price_rating",
-        icon="mdi:thumbs-up-down",  # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on rating value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -138,7 +133,6 @@ INTERVAL_RATING_SENSORS = (
     SensorEntityDescription(
         key="previous_interval_price_rating",
         translation_key="previous_interval_price_rating",
-        icon="mdi:thumbs-up-down",  # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on rating value
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
@@ -189,7 +183,6 @@ ROLLING_HOUR_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="current_hour_price_level",
         translation_key="current_hour_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on aggregated level value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -197,7 +190,6 @@ ROLLING_HOUR_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="next_hour_price_level",
         translation_key="next_hour_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on aggregated level value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -211,8 +203,6 @@ ROLLING_HOUR_RATING_SENSORS = (
     SensorEntityDescription(
         key="current_hour_price_rating",
         translation_key="current_hour_price_rating",
-        # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on aggregated rating value
-        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -221,8 +211,6 @@ ROLLING_HOUR_RATING_SENSORS = (
     SensorEntityDescription(
         key="next_hour_price_rating",
         translation_key="next_hour_price_rating",
-        # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on aggregated rating value
-        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -293,7 +281,6 @@ DAILY_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="yesterday_price_level",
         translation_key="yesterday_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on daily level value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -302,7 +289,6 @@ DAILY_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="today_price_level",
         translation_key="today_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on daily level value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -310,7 +296,6 @@ DAILY_LEVEL_SENSORS = (
     SensorEntityDescription(
         key="tomorrow_price_level",
         translation_key="tomorrow_price_level",
-        icon="mdi:gauge",  # Dynamic: shows gauge/gauge-empty/gauge-low/gauge-full based on daily level value
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["very_cheap", "cheap", "normal", "expensive", "very_expensive"],
@@ -324,8 +309,6 @@ DAILY_RATING_SENSORS = (
     SensorEntityDescription(
         key="yesterday_price_rating",
         translation_key="yesterday_price_rating",
-        # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on daily rating value
-        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -334,8 +317,6 @@ DAILY_RATING_SENSORS = (
     SensorEntityDescription(
         key="today_price_rating",
         translation_key="today_price_rating",
-        # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on daily rating value
-        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -344,8 +325,6 @@ DAILY_RATING_SENSORS = (
     SensorEntityDescription(
         key="tomorrow_price_rating",
         translation_key="tomorrow_price_rating",
-        # Dynamic: shows thumbs-up/thumbs-up-down/thumbs-down based on daily rating value
-        icon="mdi:thumbs-up-down",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "normal", "high"],
@@ -698,8 +677,6 @@ VOLATILITY_SENSORS = (
     SensorEntityDescription(
         key="today_volatility",
         translation_key="today_volatility",
-        # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
-        icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
@@ -707,8 +684,6 @@ VOLATILITY_SENSORS = (
     SensorEntityDescription(
         key="tomorrow_volatility",
         translation_key="tomorrow_volatility",
-        # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
-        icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
@@ -717,8 +692,6 @@ VOLATILITY_SENSORS = (
     SensorEntityDescription(
         key="next_24h_volatility",
         translation_key="next_24h_volatility",
-        # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
-        icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],
@@ -727,8 +700,6 @@ VOLATILITY_SENSORS = (
     SensorEntityDescription(
         key="today_tomorrow_volatility",
         translation_key="today_tomorrow_volatility",
-        # Dynamic: shows chart-bell-curve/chart-gantt/finance based on volatility level
-        icon="mdi:chart-bell-curve-cumulative",
         device_class=SensorDeviceClass.ENUM,
         state_class=None,  # Enum values: no statistics
         options=["low", "moderate", "high", "very_high"],

@@ -24,12 +24,9 @@ from .helpers import get_price_value, get_rolling_hour_window
 from .icons import (
     get_binary_sensor_icon,
     get_dynamic_icon,
-    get_level_sensor_icon,
     get_price_level_for_icon,
     get_price_sensor_icon,
-    get_rating_sensor_icon,
     get_trend_icon,
-    get_volatility_sensor_icon,
 )
 
 __all__ = [
@@ -39,12 +36,9 @@ __all__ = [
     "get_binary_sensor_icon",
     "get_dynamic_icon",
     "get_icon_color",
-    "get_level_sensor_icon",
     "get_price_level_for_icon",
     "get_price_sensor_icon",
     "get_price_value",
-    "get_rating_sensor_icon",
     "get_rolling_hour_window",
     "get_trend_icon",
-    "get_volatility_sensor_icon",
 ]

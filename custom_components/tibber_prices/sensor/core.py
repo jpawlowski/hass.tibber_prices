@@ -24,7 +24,11 @@ from custom_components.tibber_prices.coordinator.helpers import get_intervals_fo
 from custom_components.tibber_prices.device import entity_unique_id
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import add_icon_color_attribute, get_price_value
-from custom_components.tibber_prices.entity_utils.icons import TibberPricesIconContext, get_dynamic_icon
+from custom_components.tibber_prices.entity_utils.icons import (
+    TibberPricesIconContext,
+    get_dynamic_icon,
+    uses_icons_json,
+)
 from custom_components.tibber_prices.utils.average import calculate_next_n_hours_mean
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass, SensorEntityDescription
@@ -964,6 +968,9 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
     def icon(self) -> str | None:
         """Return the icon based on sensor type and state."""
         key = self.entity_description.key
+        if uses_icons_json(key):
+            # icons.json maps the state to an icon; skip computing the value for nothing
+            return None
         value = self.native_value
 
         # Create callback for period active state check (used by timing sensors)

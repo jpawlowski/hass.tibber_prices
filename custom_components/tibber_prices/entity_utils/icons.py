@@ -10,13 +10,7 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
 
-from custom_components.tibber_prices.const import (
-    BINARY_SENSOR_ICON_MAPPING,
-    PRICE_LEVEL_CASH_ICON_MAPPING,
-    PRICE_LEVEL_ICON_MAPPING,
-    PRICE_RATING_ICON_MAPPING,
-    VOLATILITY_ICON_MAPPING,
-)
+from custom_components.tibber_prices.const import BINARY_SENSOR_ICON_MAPPING, PRICE_LEVEL_CASH_ICON_MAPPING
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets
 from custom_components.tibber_prices.entity_utils.helpers import get_rolling_hour_window
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data
@@ -51,6 +45,15 @@ TIMING_MEDIUM_THRESHOLD = 180  # ≤3 hours: Sand timer icon
 PROGRESS_MAX = 100  # Maximum progress value (100%)
 
 
+# Enum sensors whose icon depends only on their own state: icons.json (`state` maps) provides it
+_ICONS_JSON_KEY_SUFFIXES = ("_price_level", "_price_rating", "_volatility")
+
+
+def uses_icons_json(key: str) -> bool:
+    """Return True if icons.json, not the icon property, provides this sensor's icon."""
+    return key.endswith(_ICONS_JSON_KEY_SUFFIXES)
+
+
 def get_dynamic_icon(
     key: str,
     value: Any,
@@ -78,9 +81,6 @@ def get_dynamic_icon(
         get_trend_icon(key, value, context=ctx)
         or get_timing_sensor_icon(key, value, period_is_active_callback=ctx.period_is_active_callback)
         or get_price_sensor_icon(key, ctx.coordinator_data, time=ctx.time)
-        or get_level_sensor_icon(key, value)
-        or get_rating_sensor_icon(key, value)
-        or get_volatility_sensor_icon(key, value)
         or get_binary_sensor_icon(key, is_on=ctx.is_on, has_future_periods_callback=ctx.has_future_periods_callback)
     )
 
@@ -230,48 +230,6 @@ def get_price_sensor_icon(
 
     # For all other price sensors, let entity description handle the icon
     return None
-
-
-def get_level_sensor_icon(key: str, value: Any) -> str | None:
-    """Get icon for price level sensors."""
-    if key not in [
-        "current_interval_price_level",
-        "next_interval_price_level",
-        "previous_interval_price_level",
-        "current_hour_price_level",
-        "next_hour_price_level",
-        "yesterday_price_level",
-        "today_price_level",
-        "tomorrow_price_level",
-    ] or not isinstance(value, str):
-        return None
-
-    return PRICE_LEVEL_ICON_MAPPING.get(value.upper())
-
-
-def get_rating_sensor_icon(key: str, value: Any) -> str | None:
-    """Get icon for price rating sensors."""
-    if key not in [
-        "current_interval_price_rating",
-        "next_interval_price_rating",
-        "previous_interval_price_rating",
-        "current_hour_price_rating",
-        "next_hour_price_rating",
-        "yesterday_price_rating",
-        "today_price_rating",
-        "tomorrow_price_rating",
-    ] or not isinstance(value, str):
-        return None
-
-    return PRICE_RATING_ICON_MAPPING.get(value.upper())
-
-
-def get_volatility_sensor_icon(key: str, value: Any) -> str | None:
-    """Get icon for volatility sensors."""
-    if not key.endswith("_volatility") or not isinstance(value, str):
-        return None
-
-    return VOLATILITY_ICON_MAPPING.get(value.upper())
 
 
 def get_binary_sensor_icon(
