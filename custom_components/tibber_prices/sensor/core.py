@@ -59,6 +59,7 @@ from .chart_metadata import (
     call_chartdata_service_for_metadata_async,
     get_chart_metadata_state,
 )
+from .definitions import TREND_HOURS
 from .helpers import aggregate_level_data, aggregate_rating_data, normalize_enum_state
 from .value_getters import get_value_getter_mapping
 
@@ -73,6 +74,12 @@ HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
 MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
+
+
+def _per_hour(*templates: str) -> set[str]:
+    """Return the attribute keys of `templates` ({h} = hour count) for every trend hour count."""
+    return {template.format(h=hours) for template in templates for hours in TREND_HOURS}
+
 
 # Sentinel for _last_written_value: forces first write after init or coordinator update
 _SENTINEL = object()
@@ -126,13 +133,6 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "price_direction_since",
             "price_now",
             "trend_diff_percent",
-            # Dynamic keys for second_half diff (all trend hour variants)
-            "second_half_3h_diff_from_current_percent",
-            "second_half_4h_diff_from_current_percent",
-            "second_half_5h_diff_from_current_percent",
-            "second_half_6h_diff_from_current_percent",
-            "second_half_8h_diff_from_current_percent",
-            "second_half_12h_diff_from_current_percent",
             # Static/Rarely Changing
             "tomorrow_expected_after",
             "energy_price",
@@ -184,6 +184,72 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "period_price_diff_from_daily_min_percent",
             "period_count_total",
             "period_count_remaining",
+            # Chart metadata: per-source axis bounds, like yaxis_min/yaxis_max above
+            "yaxis_min_energy",
+            "yaxis_max_energy",
+            "yaxis_min_tax",
+            "yaxis_max_tax",
+            # Trend/outlook: derived from the averages and the current price, or changing every update
+            "trend_value",
+            "minutes_until_change",
+            "price_direction_duration_minutes",
+            "price_at_change",
+            "price_avg_after_change",
+            "first_half_interval_count",
+            "second_half_interval_count",
+            # Volatility: statistics of the same prices, the level and its coefficient stay
+            "price_volatility",
+            "price_spread",
+            "price_q25",
+            "price_q75",
+            "price_typical_spread",
+            "price_typical_spread_percent",
+            "price_spike_count",
+            "today_volatility",
+            "tomorrow_volatility",
+            "interval_count_today",
+            "interval_count_tomorrow",
+            # Price rank: reference statistics of the day and the price of the interval (own sensors)
+            "prices_below_count",
+            "reference_min",
+            "reference_max",
+            "reference_mean",
+            "current_price",
+            "next_price",
+            "previous_price",
+            "current_hour_avg_price",
+            "next_hour_avg_price",
+            # Timing sensors: the attribute repeats the state (in minutes)
+            "period_duration_minutes",
+            "phase_duration_minutes",
+            "remaining_minutes",
+            "next_in_minutes",
+            # Day pattern and price phases: derivable from the price data, large or changing daily
+            "confidence",
+            "day_cv_percent",
+            "extreme_time",
+            "valley_start",
+            "valley_end",
+            "peak_start",
+            "peak_end",
+            "segments",
+            "all_segments",
+            "segment_index",
+            "segment_count",
+            "is_tomorrow",
+            "start",
+            "end",
+            # Rolling hour and window sensors: the clock hour's statistics, constant counts
+            "clock_hour_price_mean",
+            "clock_hour_price_median",
+            "hours",
+            # Trend hour variants (the hour count is part of the key)
+            *_per_hour(
+                "first_half_{h}h_avg",
+                "second_half_{h}h_avg",
+                "first_half_{h}h_diff_from_current_percent",
+                "second_half_{h}h_diff_from_current_percent",
+            ),
         }
     )
 

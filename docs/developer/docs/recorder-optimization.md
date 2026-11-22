@@ -158,6 +158,17 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 **Example:** `price_spread = price_max - price_min` (both are recorded, so spread can be calculated). `period_count_remaining = period_count_total - period_position` (both components are recorded).
 
+**Added when the attribute names were translated (#267)**, once every attribute was inventoried (`scripts/docs/inventory-attributes`):
+
+- **Repeats the state:** timing sensors' `remaining_minutes`, `next_in_minutes`, `period_duration_minutes`, `phase_duration_minutes` (the state is the same number in minutes); `price_volatility` (the level in lower case); the rank sensors' `current_price`, `next_price`, `previous_price`, `current_hour_avg_price`, `next_hour_avg_price` (the states of the price sensors); `today_volatility`, `tomorrow_volatility` (states of other sensors)
+- **Statistics of the same prices or derivable from them:** volatility `price_spread`, `price_q25`, `price_q75`, `price_typical_spread(_percent)`, `price_spike_count`, `interval_count_today/_tomorrow`; rank `prices_below_count`, `reference_min/_max/_mean`; `clock_hour_price_mean/_median`; day pattern `confidence`, `day_cv_percent`, `extreme_time`, `valley_*`, `peak_*`; price phases `start`, `end`, `segment_index`, `segment_count`, `is_tomorrow`; `hours`; binary period `period_price_diff_from_daily_max(_percent)`, `day_volatility_percent`
+- **Large:** `segments`, `all_segments`
+- **Changing every update:** `trend_value`, `minutes_until_change`, `price_direction_duration_minutes`, `price_at_change`, `price_avg_after_change`, `first_half_interval_count`, `second_half_interval_count`
+- **Trend hour variants** (`first_half_<h>h_avg`, `second_half_<h>h_avg` and their `_diff_from_current_percent`): generated from `TREND_HOURS` in `sensor/definitions.py`, so a new hour count can't be missed
+- Chart axis bounds per source: `yaxis_min/max_energy`, `yaxis_min/max_tax`
+
+Kept on purpose: `trend_<h>h_percent`, `trajectory_<h>h_percent`, `next_<h>h_avg` (the numbers behind a categorical trend state), `price_coefficient_variation_percent`, `price_min/max/mean/median`.
+
 ## Attributes That ARE Recorded
 
 These attributes **remain in history** because they provide essential analytical value:

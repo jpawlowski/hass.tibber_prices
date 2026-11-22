@@ -75,6 +75,9 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             "period_price_diff_from_daily_min_percent",
             "period_count_total",
             "period_count_remaining",
+            "period_price_diff_from_daily_max",
+            "period_price_diff_from_daily_max_percent",
+            "day_volatility_percent",
         }
     )
 

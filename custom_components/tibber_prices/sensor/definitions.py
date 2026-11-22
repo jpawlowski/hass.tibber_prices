@@ -476,6 +476,10 @@ FUTURE_MEAN_SENSORS = (
     ),
 )
 
+# Hour counts of the price_outlook_<h>h and price_trajectory_<h>h sensors (the trend attributes carry the hour
+# in their name, e.g. second_half_<h>h_avg); tests/test_recorder_exclusions.py keeps this in step with the keys below
+TREND_HOURS = (1, 2, 3, 4, 5, 6, 8, 12)
+
 FUTURE_TREND_SENSORS = (
     # Current trend sensor (what is the trend right now, valid until next change?)
     SensorEntityDescription(
