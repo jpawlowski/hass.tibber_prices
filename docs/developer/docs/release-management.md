@@ -17,7 +17,8 @@ version or runs a release script: the version and the release notes follow from 
    `.release-please-manifest.json`, creates the tag `vX.Y.Z` and a **draft** GitHub release.
 3. The **Release** workflow (`.github/workflows/release.yml`) then:
     - **build** (read-only): `./scripts/release/build-asset` packs `custom_components/tibber_prices/`
-      of the tag into `tibber_prices.zip` and checks its version and the layout the store installs
+      of the tag into `tibber_prices.zip`, adds a gzip copy of every card module (`*.js.gz`)
+      and checks its version and the layout the store installs
     - **publish**: attaches the zip, appends the Buy Me a Coffee footer
       (`.github/release-notes-footer.md`) and publishes the release (a draft until then, so no
       install ever finds the asset missing)

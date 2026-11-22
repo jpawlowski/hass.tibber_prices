@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(./scripts/check)",
+      "Bash(./scripts/lint-check)",
+      "Bash(./scripts/type-check)",
+      "Bash(./scripts/test)",
+      "Bash(./scripts/test *)"
+    ]
+  }
+}

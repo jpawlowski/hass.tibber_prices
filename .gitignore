@@ -40,3 +40,8 @@ Thumbs.db
 
 # Planning documents (work-in-progress)
 planning/
+
+# Claude Code: personal settings stay on the machine (shared ones go into .claude/settings.json),
+# worktrees of parallel sessions are local checkouts
+.claude/settings.local.json
+.claude/worktrees/

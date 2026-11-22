@@ -12,9 +12,12 @@
 # tag (vX.Y.ZbN) is pushed by hand on a commit whose manifest still carries the last
 # release, so for a beta the version is written into the zip's copy.
 #
+# Every card module gets a gzip copy, which aiohttp sends to browsers that accept
+# gzip (why only here: the docstring of frontend/__init__.py).
+#
 # Runs in CI (release.yml, job "build", read-only token; it uploads what lands
-# in OUTPUT_DIR) and locally, to see what a release would ship. A build step for
-# the asset (e.g. bundling the cards, #271) goes between unpacking and zipping.
+# in OUTPUT_DIR) and locally, to see what a release would ship. Build steps for
+# the asset go between unpacking and zipping.
 #
 # Usage:
 #   ./scripts/release/build-asset TAG [OUTPUT_DIR]
@@ -44,6 +47,7 @@ INTEGRATION="custom_components/tibber_prices"
 require_command "jq" "apt-get install jq"
 require_command "zip" "apt-get install zip"
 require_command "unzip" "apt-get install unzip"
+require_command "gzip" "apt-get install gzip"
 
 VERSION="${TAG#v}"
 [[ $VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(b[0-9]+)?$ ]] || die "$TAG is not vX.Y.Z or vX.Y.ZbN"
@@ -70,16 +74,21 @@ else
         die "manifest.json at $TAG says $MANIFEST_VERSION, not $VERSION: release-please's extra-files didn't update it"
 fi
 
+# -n leaves name and time out of the copy, so the same module gives the same bytes; -k keeps the
+# module itself for browsers that don't accept gzip
+find "$BUILD/frontend/cards" -name '*.js' -exec gzip -9 -k -n {} +
+
 mkdir -p "$OUTPUT_DIR"
 OUTPUT="$(cd "$OUTPUT_DIR" && pwd)/$FILENAME"
 rm -f "$OUTPUT"
-(cd "$BUILD" && zip -q -r -X "$OUTPUT" .)
+# -n .gz stores the copies as they are instead of deflating them a second time
+(cd "$BUILD" && zip -q -r -X -n .gz "$OUTPUT" .)
 
 # A zip with a wrong layout breaks the install for every user: check what the store needs
 [[ "$(unzip -p "$OUTPUT" manifest.json | jq -r '.version')" == "$VERSION" ]] ||
     die "$FILENAME has no manifest.json at its root with version $VERSION"
 ENTRIES=$(unzip -Z1 "$OUTPUT")
-for required in __init__.py frontend/cards/tibber-prices-cards.js; do
+for required in __init__.py frontend/cards/tibber-prices-cards.js frontend/cards/tibber-prices-cards.js.gz; do
     grep -qxF "$required" <<<"$ENTRIES" || die "$FILENAME lacks $required"
 done
 
