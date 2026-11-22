@@ -10,9 +10,9 @@
  * them under a URL with its version, so an update never mixes old and new modules.
  *
  * Each module imports only from those before it: util → time → data → ui → config → strings,
- * styles → base → the cards (forecast → now, chart → energy) → this entry; the tile feature
- * (outlook-feature) needs only util to config and strings. The editors (editors.js) come after
- * the cards and are loaded on demand only, by import() from base.js.
+ * styles → reload → base → the cards (forecast → now, chart → energy) → this entry; the tile
+ * feature (outlook-feature) needs only util to config, strings and reload. The editors
+ * (editors.js) come after the cards and are loaded on demand only, by import() from base.js.
  */
 
 import { FEATURE_NAMES, languageStrings } from "./strings.js";
@@ -30,6 +30,7 @@ import "./data.js";
 import "./ui.js";
 import "./config.js";
 import "./styles.js";
+import "./reload.js";
 
 /**
  * Registering the elements. This script is loaded by the integration while Home Assistant's

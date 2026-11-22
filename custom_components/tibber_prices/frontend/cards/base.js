@@ -7,6 +7,7 @@ import { HOLD_DOUBLE_TAP, cardTitle, dialogHead, trackKeyboard } from "./ui.js";
 import { stringsFor } from "./strings.js";
 import { DEFAULTS, modeVariables } from "./config.js";
 import { CARD_WINDOW_STYLE } from "./styles.js";
+import { checkForUpdate, watchForUpdate } from "./reload.js";
 
 // The cards a card can show in a window, its options for it under their key: the element, its
 // editor (a level down in the outer card's editor) and the icon of its row there
@@ -44,10 +45,19 @@ const HOLD_MS = 350;
 const HOLD_SLOP_PX = 8;
 
 // The editors, loaded with the first one asked for (getConfigElement may answer with a promise):
-// a page that only shows cards never loads them
+// a page that only shows cards never loads them. Failing to load, they most likely come from a
+// URL an update left behind: the page checks for an update (a reload notice if so), and asks
+// again next time. A failure while registering is not retried: the elements defined stay
 let editorsLoaded;
 export function loadEditors() {
-  editorsLoaded ??= import("./editors.js").then((editors) => editors.registerEditors());
+  editorsLoaded ??= import("./editors.js").then(
+    (editors) => editors.registerEditors(),
+    (err) => {
+      editorsLoaded = undefined;
+      checkForUpdate();
+      throw err;
+    }
+  );
   return editorsLoaded;
 }
 
@@ -80,6 +90,7 @@ export class TibberPricesCardBase extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    watchForUpdate(hass);
     if (this._window) this._window.hass = hass;
     if (!this._config) return;
     this._applyAppearance();

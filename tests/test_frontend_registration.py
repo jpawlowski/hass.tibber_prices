@@ -18,9 +18,12 @@ if TYPE_CHECKING:
     from pytest_homeassistant.typing import ClientSessionGenerator
 
 
-@pytest.mark.unit
-async def test_cards_are_served_and_loaded_with_version() -> None:
-    """The card directory is served under a URL with version and modification time, so imports bust the cache too."""
+@pytest.fixture
+async def registered() -> tuple[MagicMock, MagicMock, MagicMock]:
+    """Run the registration for version 1.2.3 with modules last changed at 1700000000.
+
+    Returns the hass mock, the add_extra_js_url mock and the websocket registration mock.
+    """
     hass = MagicMock()
     hass.http.async_register_static_paths = AsyncMock()
     hass.async_add_executor_job = AsyncMock(side_effect=lambda func, *args: func(*args))
@@ -28,16 +31,37 @@ async def test_cards_are_served_and_loaded_with_version() -> None:
         patch.object(frontend, "async_get_loaded_integration", return_value=MagicMock(version="1.2.3")),
         patch.object(frontend, "_newest_modification", return_value=1700000000),
         patch.object(frontend, "add_extra_js_url") as add_js,
+        patch.object(frontend.websocket_api, "async_register_command") as register,
     ):
         await frontend.async_register_frontend(hass)
+    return hass, add_js, register
 
+
+URL = "/tibber_prices_frontend/1.2.3-1700000000"
+
+
+@pytest.mark.unit
+def test_cards_are_served_and_loaded_with_version(registered: tuple[MagicMock, MagicMock, MagicMock]) -> None:
+    """The card directory is served under a URL with version and modification time, so imports bust the cache too."""
+    hass, add_js, _register = registered
     (config,) = hass.http.async_register_static_paths.call_args.args[0]
     directory = Path(config.path)
-    assert config.url_path == "/tibber_prices_frontend/1.2.3-1700000000"
+    assert config.url_path == URL
     assert config.cache_headers is True
     assert (directory / "tibber-prices-cards.js").is_file()
     assert not (directory / "__init__.py").exists()
-    add_js.assert_called_once_with(hass, "/tibber_prices_frontend/1.2.3-1700000000/tibber-prices-cards.js")
+    add_js.assert_called_once_with(hass, f"{URL}/tibber-prices-cards.js")
+
+
+@pytest.mark.unit
+def test_open_pages_can_ask_where_the_cards_are_now(registered: tuple[MagicMock, MagicMock, MagicMock]) -> None:
+    """The websocket command names the URL of this start, the one cards/reload.js compares with its own."""
+    hass, _add_js, register = registered
+    ((registered_hass, handler),) = (call.args for call in register.call_args_list)
+    assert registered_hass is hass
+    connection = MagicMock()
+    handler(hass, connection, {"id": 7, "type": "tibber_prices/frontend"})
+    connection.send_result.assert_called_once_with(7, {"url": URL})
 
 
 @pytest.mark.unit

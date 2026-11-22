@@ -19,6 +19,9 @@ they are, so an edit is never hidden behind a stale copy. A copy that no longer 
 aiohttp would keep sending the old code under the new URL. Bundling or minifying the cards was
 weighed against that (#271) and left out: gzip alone takes them from about 700 KB to 200 KB, the
 rest would cost a build tool from npm in the release and source maps for reading a user's error.
+
+The websocket command `tibber_prices/frontend` names that URL, so an open page can tell its cards
+are outdated (`cards/reload.js`).
 """
 
 from __future__ import annotations
@@ -26,13 +29,17 @@ from __future__ import annotations
 import gzip
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+
+import probatio as vol
 
 from custom_components.tibber_prices.const import DOMAIN
+from homeassistant.components import websocket_api
 from homeassistant.components.frontend import add_extra_js_url
 
 # Public import path, as HA core integrations use it; the http package re-exports it without __all__
 from homeassistant.components.http import StaticPathConfig  # pyright: ignore[reportPrivateImportUsage]
+from homeassistant.core import callback
 from homeassistant.loader import async_get_loaded_integration
 
 if TYPE_CHECKING:
@@ -75,3 +82,11 @@ async def async_register_frontend(hass: HomeAssistant) -> None:
     url = f"{URL_BASE}/{version}-{modified}"
     await hass.http.async_register_static_paths([StaticPathConfig(url, str(CARDS_DIR), cache_headers=True)])
     add_extra_js_url(hass, f"{url}/{CARDS_FILE}")
+
+    @callback
+    @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/frontend"})
+    def cards_url(_hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
+        """Name the URL the cards are served under since this start."""
+        connection.send_result(msg["id"], {"url": url})
+
+    websocket_api.async_register_command(hass, cards_url)

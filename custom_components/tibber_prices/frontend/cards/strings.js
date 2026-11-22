@@ -23,6 +23,8 @@ export const STRINGS = {
     // Inside a sentence, where it differs ("in der Nacht zum Samstag")
     part_in_sentence: {},
     action_button: { "more-info": "More info", open: "Open", run: "Run" },
+    // The notice that the cards on an open page are outdated (reload.js)
+    update: { message: "Tibber Prices & Planning was updated. Reload to get the new cards.", reload: "Reload" },
     day_details: {
       cheapest_hour: { today: "Cheapest hour still to come today", other: "Cheapest hour" },
       cheapest_part: { today: "Cheapest part of the day still to come today", other: "Cheapest part of the day" },
@@ -305,6 +307,11 @@ export const STRINGS = {
     // Inside a sentence, where it differs ("in der Nacht zum Samstag")
     part_in_sentence: { night: "in der Nacht zum {next}" },
     action_button: { "more-info": "Mehr Infos", open: "Öffnen", run: "Ausführen" },
+    // The notice that the cards on an open page are outdated (reload.js)
+    update: {
+      message: "Tibber Prices & Planning wurde aktualisiert. Lade neu, um die neuen Karten zu bekommen.",
+      reload: "Neu laden",
+    },
     day_details: {
       cheapest_hour: { today: "Günstigste Stunde heute noch", other: "Günstigste Stunde" },
       cheapest_part: { today: "Günstigste Tageszeit heute noch", other: "Günstigste Tageszeit" },
@@ -598,6 +605,11 @@ export const STRINGS = {
     // Inside a sentence, where it differs ("in der Nacht zum Samstag")
     part_in_sentence: {},
     action_button: { "more-info": "Mer info", open: "Åpne", run: "Kjør" },
+    // The notice that the cards on an open page are outdated (reload.js)
+    update: {
+      message: "Tibber Prices & Planning er oppdatert. Last inn på nytt for å få de nye kortene.",
+      reload: "Last inn på nytt",
+    },
     day_details: {
       cheapest_hour: { today: "Billigste time resten av i dag", other: "Billigste time" },
       cheapest_part: { today: "Billigste tid på døgnet resten av i dag", other: "Billigste tid på døgnet" },
@@ -888,6 +900,11 @@ export const STRINGS = {
     // Inside a sentence, where it differs ("in der Nacht zum Samstag")
     part_in_sentence: { night: "in de nacht naar {next}" },
     action_button: { "more-info": "Meer info", open: "Openen", run: "Uitvoeren" },
+    // The notice that the cards on an open page are outdated (reload.js)
+    update: {
+      message: "Tibber Prices & Planning is bijgewerkt. Laad opnieuw voor de nieuwe kaarten.",
+      reload: "Opnieuw laden",
+    },
     day_details: {
       cheapest_hour: { today: "Goedkoopste uur nog vandaag", other: "Goedkoopste uur" },
       cheapest_part: { today: "Goedkoopste dagdeel nog vandaag", other: "Goedkoopste dagdeel" },
@@ -1185,6 +1202,11 @@ export const STRINGS = {
     // Inside a sentence, where it differs ("in der Nacht zum Samstag")
     part_in_sentence: {},
     action_button: { "more-info": "Mer info", open: "Öppna", run: "Kör" },
+    // The notice that the cards on an open page are outdated (reload.js)
+    update: {
+      message: "Tibber Prices & Planning har uppdaterats. Ladda om för att få de nya korten.",
+      reload: "Ladda om",
+    },
     day_details: {
       cheapest_hour: { today: "Billigaste timmen under resten av i dag", other: "Billigaste timmen" },
       cheapest_part: { today: "Billigaste tiden på dygnet under resten av i dag", other: "Billigaste tiden på dygnet" },

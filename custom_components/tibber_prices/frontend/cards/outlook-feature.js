@@ -10,6 +10,7 @@ import { stringsFor } from "./strings.js";
 import { validatePriceSource } from "./config.js";
 import { priceState } from "./data.js";
 import { homeCalendar } from "./time.js";
+import { watchForUpdate } from "./reload.js";
 
 const FEATURE_STYLE = `
   :host { display: block; height: var(--feature-height, 42px); container-type: inline-size; }
@@ -49,6 +50,7 @@ export class TibberPricesOutlookFeature extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    watchForUpdate(hass);
     this._render();
   }
 
