@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "skipDangerousModePermissionPrompt": true,
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "deny": [
+      "Read(**/.env.local*)",
+      "Read(**/config/.storage/auth)",
+      "Read(**/config/.storage/auth_provider.*)",
+      "Read(**/config/.storage/dev_access_token)",
+      "Edit(**/.env.local*)",
+      "Edit(**/config/.storage/auth)",
+      "Edit(**/config/.storage/auth_provider.*)",
+      "Edit(**/config/.storage/dev_access_token)",
+      "Edit(./.git/**)",
+      "Edit(./.agents/hooks/**)",
+      "Edit(./.claude/settings.json)",
+      "Edit(./.codex/hooks.json)",
+      "Edit(./.opencode/**)",
+      "Edit(./opencode.json)",
+      "Edit(./opencode.jsonc)",
+      "Edit(./.devcontainer/claude-code/**)",
+      "Edit(./.devcontainer/codex/**)",
+      "Edit(./.devcontainer/opencode/**)",
+      "Edit(./.github/workflows/**)",
+      "Edit(./.github/actions/**)",
+      "Edit(./release-please-config.json)",
+      "Edit(./script/release-notes)",
+      "Edit(./script/version)"
+    ]
+  },
+  "sandbox": {
+    "enabled": false
+  }
+}

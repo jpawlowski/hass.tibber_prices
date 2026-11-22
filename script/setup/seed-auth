@@ -1,0 +1,91 @@
+#!/bin/bash
+
+# script/seed-auth: Mint a long-lived access token for the development CLI
+#
+# Gives script/ha authenticated access to the development Home Assistant
+# instance without a human creating a token in the UI. The token is minted
+# offline against the stopped config directory — see script/.lib/seed_auth.py
+# for how, and for why Home Assistant has to be stopped.
+#
+# Safe to re-run: it only mints when there is no usable token, and rotates
+# automatically once fewer than 7 days of lifetime remain. Called by
+# script/develop on every start, so it heals itself after script/setup/reset.
+#
+# Outputs, both in gitignored and template-sync-excluded config/.storage/:
+#   dev_access_token       the token itself, mode 0600
+#   dev_access_token.json  non-secret metadata, mode 0600
+#
+# Environment:
+#   HA_DEV_TOKEN=0        skip entirely (opt out via script/hooks/develop.pre.sh)
+#   HA_DEV_TOKEN_DAYS=30  token lifetime in days
+#
+# Usage:
+#   ./script/setup/seed-auth [--force] [--revoke]
+#
+# Examples:
+#   ./script/setup/seed-auth            # mint if needed
+#   ./script/setup/seed-auth --force    # rotate now, even if still valid
+#   ./script/setup/seed-auth --revoke   # remove the token and its refresh token
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+TOKEN_FILE="$(ha_config_dir)/.storage/dev_access_token"
+
+run_hook "setup/seed-auth" "pre"
+
+if [[ ${HA_DEV_TOKEN:-1} == "0" ]]; then
+    log_info "HA_DEV_TOKEN=0 - skipping the development token"
+    exit 0
+fi
+
+# config/* is gitignored, but that is a default rather than a control, and
+# `git add -f` defeats it. This token is a Home Assistant admin credential.
+if git ls-files --error-unmatch "$TOKEN_FILE" >/dev/null 2>&1; then
+    log_error "$TOKEN_FILE is tracked by git - it is a Home Assistant admin credential"
+    log_step "Untrack it:  git rm --cached $TOKEN_FILE"
+    log_step "Then revoke: ./script/setup/seed-auth --revoke"
+    exit 1
+fi
+
+activate_venv
+
+set +e
+message=$(python3 "$SCRIPT_DIR/../.lib/seed_auth.py" "$@")
+status=$?
+set -e
+
+# Exit codes are defined in script/.lib/seed_auth.py.
+case "$status" in
+0 | 13)
+    log_success "$message"
+    ;;
+10)
+    log_info "Development token: $message"
+    ;;
+11)
+    log_info "Development token skipped - $message"
+    log_step "Start Home Assistant with ./script/develop and complete onboarding in the browser"
+    log_step "Restart it once afterwards and the token is minted automatically"
+    ;;
+12)
+    log_warning "Development token skipped - $message"
+    log_step "A token written now would be discarded when Home Assistant next saves its auth store"
+    log_step "Stop it first: pkill -f \"hass --config\""
+    ;;
+14)
+    log_info "$message"
+    ;;
+*)
+    log_error "Could not mint the development token: $message"
+    log_step "script/ha will report this as an auth failure; nothing else is affected"
+    exit 1
+    ;;
+esac
+
+run_hook "setup/seed-auth" "post"

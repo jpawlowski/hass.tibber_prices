@@ -3,44 +3,125 @@ name: Validate
 on:
   workflow_dispatch:
   schedule:
-    - cron: "0 0 * * *"
-  # Only what hassfest and the HACS action read: the integration, hacs.json and the README.
-  # The nightly run still catches changes on their side and in the repository settings.
-  push:
-    branches:
-      - main
-    paths: &paths
-      - "custom_components/**"
-      - "hacs.json"
-      - "README.md"
-      - ".github/workflows/validate.yml"
+    # Weekly is enough to notice a change in hassfest or the HACS action between pull requests.
+    - cron: "0 0 * * 1"
   pull_request:
     branches:
       - main
-    paths: *paths
+    # A draft spends no minutes; marking it ready for review runs everything.
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  hassfest: # https://developers.home-assistant.io/blog/2020/04/16/hassfest
-    name: Hassfest validation
-    runs-on: ubuntu-latest
+  # Hassfest and HACS are required checks, so they cannot be filtered with `on.paths`: a workflow that never starts
+  # reports no status and blocks the merge. A job skipped by `if` counts as passed.
+  changes:
+    name: Detect relevant changes
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      contents: read # check out the repository
+    outputs:
+      relevant: ${{ steps.scope.outputs.relevant }}
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+
+      # A pull request is checked out as a merge commit, so its first parent is the base it is compared with.
+      - name: Check whether the integration or its metadata changed
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          echo "relevant=true" >> "${GITHUB_OUTPUT}"
+          [[ "${EVENT}" == "pull_request" ]] || exit 0
+          changed=$(git diff --name-only HEAD^1 HEAD) || exit 0
+          grep -qE '^custom_components/|^(README|info)\.md$|^hacs\.json$|^script/\.lib/ha_version\.sh$|^\.github/workflows/validate\.yml$' \
+            <<<"${changed}" && exit 0
+          echo "Neither the integration nor its metadata changed — Hassfest and HACS skipped" >> "${GITHUB_STEP_SUMMARY}"
+          echo "relevant=false" >> "${GITHUB_OUTPUT}"
+
+  hassfest: # https://contributors.home-assistant.io/blog/2020/04/16/hassfest/
+    name: Hassfest validation
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The Home Assistant version the dev container installs, so a rule newer than that cannot fail it
+      - name: Run hassfest validation
+        run: |
+          version=$(bash script/.lib/ha_version.sh)
+          docker run --rm -v "${GITHUB_WORKSPACE}:/github/workspace" "ghcr.io/home-assistant/hassfest:${version}"
+
+  hassfest-dev:
+    name: Hassfest with Home Assistant dev
+    # An early warning of rules the next release brings: never on pull requests, so it cannot block a merge
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Run hassfest validation
-        uses: home-assistant/actions/hassfest@07f46fd2e19967768b5fd3000f91f857452b767c # master
+        uses: home-assistant/actions/hassfest@86d4564712fa02543c808e3a693dd04f9d3f8361 # master # zizmor: ignore[ref-version-mismatch,stale-action-refs]
 
   hacs: # https://github.com/hacs/action
     name: HACS validation
-    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.relevant == 'true'
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read # check out the repository
     steps:
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # The action reads the repository without a token and refuses a private one; the catalog only lists public ones
+      - name: Detect a private repository
+        id: repository
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "$(gh api "repos/${GITHUB_REPOSITORY}" --jq .private)" == "true" ]]; then
+            echo "::notice::Private repository - skipping HACS validation until it is made public"
+            echo "private=true" >>"$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect brand images
+        id: brand
+        run: |
+          if compgen -G "custom_components/*/brand/icon.png" >/dev/null; then
+            echo "ignore=" >>"$GITHUB_OUTPUT"
+          else
+            echo "::warning::No custom_components/<domain>/brand/icon.png - skipping the brands check the Marketplace catalog requires"
+            echo "ignore=brands" >>"$GITHUB_OUTPUT"
+          fi
+
       - name: Run HACS validation
+        if: steps.repository.outputs.private != 'true'
         uses: hacs/action@d556e736723344f83838d08488c983a15381059a # 22.5.0
         with:
           category: integration
+          ignore: ${{ steps.brand.outputs.ignore }}

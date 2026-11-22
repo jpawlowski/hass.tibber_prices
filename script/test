@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# script/test: Run project tests
+#
+# Runs integration tests plus synchronized tooling tests with the project
+# configuration. Automatically cleans up package installations after the run.
+#
+# Usage:
+#   ./script/test [OPTIONS] [PYTEST_OPTIONS]
+#
+# Options:
+#   --cov           Generate coverage report (terminal output)
+#   --cov-html      Generate HTML coverage report in htmlcov/
+#
+# Examples:
+#   ./script/test
+#   ./script/test -v
+#   ./script/test --cov
+#   ./script/test --cov-html
+#   ./script/test --cov -k test_midnight
+#   ./script/test tests/test_cache_validity.py
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/integration.sh
+source "$SCRIPT_DIR/.lib/integration.sh"
+# shellcheck source=script/.lib/ha_envs.sh
+source "$SCRIPT_DIR/.lib/ha_envs.sh"
+
+activate_venv
+ha_envs_notice
+
+# Parse coverage flags
+COVERAGE_ARGS=()
+PYTEST_ARGS=()
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    --cov)
+        COVERAGE_ARGS+=("--cov=$INTEGRATION_PATH" "--cov-report=term-missing")
+        shift
+        ;;
+    --cov-html)
+        COVERAGE_ARGS+=("--cov=$INTEGRATION_PATH" "--cov-report=html")
+        shift
+        ;;
+    *)
+        PYTEST_ARGS+=("$1")
+        shift
+        ;;
+    esac
+done
+
+# Check if pytest is available
+if ! python -c "import pytest" 2>/dev/null; then
+    log_info "pytest not found. Installing test dependencies..."
+    uv pip install -e ".[test]"
+fi
+
+# Run pytest with project configuration
+if [[ ${#COVERAGE_ARGS[@]} -gt 0 ]]; then
+    log_header "Running tests with coverage"
+else
+    log_header "Running tests"
+fi
+echo ""
+
+run_hook "test" "pre"
+echo ""
+TEST_PATHS="tests"
+if [[ -d script/tests ]]; then
+    TEST_PATHS+=" script/tests"
+fi
+pytest --override-ini "testpaths=$TEST_PATHS" "${COVERAGE_ARGS[@]}" "${PYTEST_ARGS[@]}"
+
+run_hook "test" "post"
+
+log_success "Tests completed"
+
+if [[ ${#COVERAGE_ARGS[@]} -gt 0 ]] && [[ " ${COVERAGE_ARGS[*]} " =~ " --cov-report=html " ]]; then
+    echo ""
+    log_success "Coverage report generated in htmlcov/index.html"
+fi
+
+# Clean up any accidental package installation from pytest/test dependencies
+# This prevents Home Assistant from loading the installed version instead of
+# the development version from custom_components/
+"$SCRIPT_DIR/clean" --minimal

@@ -1,0 +1,38 @@
+#!/bin/bash
+
+# script/template-sync-guard: Keep this repository's newer versions in a template sync
+#
+# A template sync merges with -X theirs, so where this repository's dependency bots raised a pin further than the
+# template has, the sync would lower it again. Run on the sync branch, this compares the pins in mise.toml, the
+# requirements files, package.json, the dev container and the workflows with the base ref, restores every one the
+# sync lowered and prints a Markdown report of them on stdout. When package.json changes, package-lock.json is
+# regenerated to match. --check only reports, and exits 1 when something would be restored.
+#
+# Usage:
+#   ./script/template-sync-guard <base-ref> [--check]
+#
+# Examples:
+#   ./script/template-sync-guard origin/main
+#   ./script/template-sync-guard origin/main --check
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+run_hook "template-sync-guard" "pre"
+
+package_before="$(git hash-object package.json 2>/dev/null || true)"
+status=0
+python3 -I "$SCRIPT_DIR/.lib/version_guard.py" "$@" || status=$?
+
+if [[ $status -eq 0 && -f package.json && "$(git hash-object package.json)" != "$package_before" ]]; then
+    log_info "package.json kept newer versions — regenerating package-lock.json" >&2
+    npm install --package-lock-only --ignore-scripts --no-audit --no-fund >&2
+fi
+
+run_hook "template-sync-guard" "post"
+exit "$status"

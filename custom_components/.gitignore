@@ -1,0 +1,2 @@
+# Re-includes your integration; kept here so the root .gitignore stays template-synced.
+!tibber_prices/

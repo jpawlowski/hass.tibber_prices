@@ -1,12 +1,102 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "env": {
+    "GIT_TERMINAL_PROMPT": "0",
+    "GCM_INTERACTIVE": "0"
+  },
+  "plansDirectory": ".agents/scratch/plans",
+  "attribution": {
+    "sessionUrl": false
+  },
   "permissions": {
     "allow": [
-      "Bash(./scripts/check)",
-      "Bash(./scripts/lint-check)",
-      "Bash(./scripts/type-check)",
-      "Bash(./scripts/test)",
-      "Bash(./scripts/test *)"
+      "Bash(script/lint:*)",
+      "Bash(script/type-check:*)",
+      "Bash(script/test:*)",
+      "Bash(script/hassfest:*)",
+      "Bash(script/ha-version-sync:*)",
+      "Bash(script/skills-check:*)",
+      "Bash(script/architecture-check:*)",
+      "Bash(script/ha status:*)",
+      "Bash(script/ha entries:*)",
+      "Bash(script/ha states:*)",
+      "Bash(script/ha logs:*)",
+      "Bash(script/ha diagnostics:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh issue view:*)"
+    ],
+    "deny": [
+      "Read(**/.env.local*)",
+      "Read(**/config/.storage/auth)",
+      "Read(**/config/.storage/auth_provider.*)",
+      "Read(**/config/.storage/dev_access_token)",
+      "Edit(**/.env.local*)",
+      "Edit(**/config/.storage/auth)",
+      "Edit(**/config/.storage/auth_provider.*)",
+      "Edit(**/config/.storage/dev_access_token)",
+      "Edit(./.git/**)",
+      "Edit(./.agents/hooks/**)",
+      "Edit(./.claude/settings.json)",
+      "Edit(./.codex/hooks.json)",
+      "Edit(./.opencode/**)",
+      "Edit(./opencode.json)",
+      "Edit(./opencode.jsonc)",
+      "Edit(./.devcontainer/claude-code/**)",
+      "Edit(./.devcontainer/codex/**)",
+      "Edit(./.devcontainer/opencode/**)",
+      "Edit(./.github/workflows/**)",
+      "Edit(./.github/actions/**)",
+      "Edit(./release-please-config.json)",
+      "Edit(./script/release-notes)",
+      "Edit(./script/version)"
+    ]
+  },
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$(git rev-parse --show-toplevel)/.agents/hooks/session-start.sh\"; [ -f \"$f\" ] || exit 0; bash \"$f\"",
+            "timeout": 180,
+            "statusMessage": "Preparing the development environment…"
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash|shell|exec_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/pre-push-check.sh\"",
+            "timeout": 10,
+            "statusMessage": "Checking that git's pre-push hook will vet this push…"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/remind-change-review.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$(git rev-parse --show-toplevel)/.agents/hooks/remind-dependency-sync.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }

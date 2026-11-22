@@ -12,10 +12,10 @@ import pytest
 
 REPO = Path(__file__).parent.parent
 
-GENERATOR = REPO / "scripts" / "i18n" / "generate-attribute-translations"
+GENERATOR = REPO / "script" / "i18n" / "generate-attribute-translations.py"
 TRANSLATIONS = REPO / "custom_components" / "tibber_prices" / "translations"
 KEY = re.compile(r"^[a-z0-9_-]+$")
-LANGUAGES = json.loads((REPO / "scripts" / "i18n" / "attribute-names.json").read_text(encoding="utf-8"))["languages"]
+LANGUAGES = json.loads((REPO / "script" / "i18n" / "attribute-names.json").read_text(encoding="utf-8"))["languages"]
 
 
 @pytest.mark.unit

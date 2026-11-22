@@ -1,0 +1,6 @@
+# This integration's own command-line tools, on top of the blueprint's in mise.toml. Template sync never touches this
+# file, and mise loads it everywhere mise.toml is loaded. A tool listed in both keeps mise.toml's version; personal
+# overrides go in the gitignored mise.local.toml.
+[tools]
+# Docusaurus builds the user documentation site (docs/user/, docusaurus.yml, docs-check.yml).
+node = "26.13.1"

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# script/python: Format and lint Python files
+#
+# Runs Ruff format (auto-format) and Ruff check with auto-fix enabled.
+# Targets the integration, its tests, and synchronized Python tooling tests.
+#
+# Usage:
+#   ./script/python
+#
+# Examples:
+#   ./script/python
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+activate_venv
+
+run_hook "python" "pre"
+
+PYTHON_PATHS=(custom_components/ tests/ script/.lib/)
+if [[ -d script/tests ]]; then
+    PYTHON_PATHS+=(script/tests/)
+fi
+
+log_header "Running Ruff format"
+ruff format "${PYTHON_PATHS[@]}"
+
+log_header "Running Ruff check"
+ruff check "${PYTHON_PATHS[@]}" --fix
+
+# Clean up any accidental package installation from uv run
+"$SCRIPT_DIR/clean" --minimal
+
+run_hook "python" "post"
+log_success "Python formatting and linting completed"

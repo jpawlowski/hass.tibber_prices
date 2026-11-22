@@ -1,0 +1,163 @@
+---
+# Syncs updates from the upstream integration blueprint template into this
+# repository by opening a pull request whenever new changes are available.
+#
+# Files listed in .templatesyncignore are never touched.
+#
+# This workflow is provided by the template itself. You can safely customize
+# the schedule, add a PAT secret for workflow-file updates, or disable it.
+#
+# Keeping .github/workflows/template-sync.yml in .templatesyncignore (default)
+# means the template cannot overwrite your customizations here.
+#
+# Source: https://github.com/AndreasAugustin/actions-template-sync
+
+name: Sync from Blueprint Template
+
+on:
+  schedule:
+    # Every Monday at 07:00 UTC
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  template-sync:
+    name: Sync from template
+    # Skip when running inside the template repository itself
+    if: github.repository != 'jpawlowski/ha-integration-blueprint'
+    runs-on: ubuntu-26.04
+    env:
+      TEMPLATE_SYNC_TARGET_PAT: ${{ secrets.TEMPLATE_SYNC_TARGET_PAT }}
+    permissions:
+      contents: write # push the sync branch
+      pull-requests: write # open and update the sync pull request
+      repository-projects: read # required by is_force_push_pr (gh pr edit)
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Use PAT when configured; otherwise fall back to github.token.
+          # persist-credentials=false is recommended by actions-template-sync
+          # when a custom token is used for push operations.
+          token: ${{ env.TEMPLATE_SYNC_TARGET_PAT || github.token }}
+          persist-credentials: false
+
+      - name: Prepare runtime ignore file
+        run: |
+          cp .templatesyncignore .templatesyncignore.runtime
+
+          if [[ -z "${TEMPLATE_SYNC_TARGET_PAT:-}" ]]; then
+            {
+              echo ".github/workflows/*.yml"
+              echo ".github/workflows/*.yaml"
+            } >> .templatesyncignore.runtime
+
+            {
+              echo "### Template sync notice"
+              echo
+              echo "TEMPLATE_SYNC_TARGET_PAT is not configured."
+              echo "Workflow file updates (.github/workflows/*) are skipped for this run."
+              echo "All other template changes are still synced."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Sync from blueprint template
+        uses: AndreasAugustin/actions-template-sync@6e1d0089686f8940604fc15baae62367bf6ee860 # v2.6.0
+        with:
+          # Needed only for changes in .github/workflows/*.yml.
+          # Falls back to github.token for normal syncs.
+          target_gh_token: ${{ env.TEMPLATE_SYNC_TARGET_PAT || github.token }}
+          source_repo_path: jpawlowski/ha-integration-blueprint
+          upstream_branch: main
+          template_sync_ignore_file_path: .templatesyncignore.runtime
+          pr_labels: template-sync
+          pr_title: "chore: sync updates from integration blueprint template"
+          pr_commit_msg: "chore(template): sync blueprint updates :up:"
+          # Reuse/update existing template-sync PRs instead of closing and recreating them.
+          is_force_push_pr: true
+          is_pr_cleanup: false
+
+      # -X theirs lets the template win where both sides changed a pin, which lowers a version this repository's
+      # dependency bots already raised. script/template-sync-guard puts the higher one back on the sync branch.
+      - name: Keep this repository's newer versions
+        env:
+          GH_TOKEN: ${{ env.TEMPLATE_SYNC_TARGET_PAT || github.token }}
+          BASE_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          pr=$(gh pr list --repo "${GITHUB_REPOSITORY}" --label template-sync --state open \
+            --json number,headRefName --jq '.[0] // empty')
+          if [[ -z "${pr}" ]]; then
+            echo "No open template sync pull request — nothing to guard"
+            exit 0
+          fi
+          number=$(jq -r .number <<<"${pr}")
+          head=$(jq -r .headRefName <<<"${pr}")
+
+          gh auth setup-git
+          git fetch --quiet origin "${BASE_BRANCH}" "${head}"
+          git checkout --quiet -B "${head}" "origin/${head}"
+          if [[ ! -x script/template-sync-guard ]]; then
+            echo "The sync branch has no script/template-sync-guard — nothing to guard"
+            exit 0
+          fi
+
+          script/template-sync-guard "origin/${BASE_BRANCH}" > "${RUNNER_TEMP}/kept.md"
+          if [[ ! -s "${RUNNER_TEMP}/kept.md" ]]; then
+            echo "The sync lowers no version" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          cat "${RUNNER_TEMP}/kept.md" >> "${GITHUB_STEP_SUMMARY}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit --quiet --all -m "chore(template): keep this repository's newer versions"
+          git push --quiet origin "HEAD:${head}"
+          gh pr comment "${number}" --repo "${GITHUB_REPOSITORY}" --body-file "${RUNNER_TEMP}/kept.md"
+
+      # The sync brings every file the blueprint adds, its blueprint-only ones too; .templatesyncignore here does not
+      # know them yet. script/prune-blueprint removes them and adds them to .templatesyncignore on the sync branch.
+      - name: Drop blueprint-only files
+        env:
+          GH_TOKEN: ${{ env.TEMPLATE_SYNC_TARGET_PAT || github.token }}
+        run: |
+          pr=$(gh pr list --repo "${GITHUB_REPOSITORY}" --label template-sync --state open \
+            --json number,headRefName --jq '.[0] // empty')
+          if [[ -z "${pr}" ]]; then
+            echo "No open template sync pull request — nothing to prune"
+            exit 0
+          fi
+          number=$(jq -r .number <<<"${pr}")
+          head=$(jq -r .headRefName <<<"${pr}")
+
+          gh auth setup-git
+          git fetch --quiet origin "${head}"
+          git checkout --quiet -B "${head}" "origin/${head}"
+          if [[ ! -x script/prune-blueprint ]]; then
+            echo "The sync branch has no script/prune-blueprint — nothing to prune"
+            exit 0
+          fi
+
+          script/prune-blueprint --apply > "${RUNNER_TEMP}/pruned.txt"
+          if [[ -z "$(git status --porcelain)" ]]; then
+            echo "The sync brings no blueprint-only files" >> "${GITHUB_STEP_SUMMARY}"
+            exit 0
+          fi
+          { echo "Removed blueprint-only files the sync brought, and listed them in \`.templatesyncignore\`:"
+            echo
+            git status --porcelain | sed 's/^.. /- /'
+          } > "${RUNNER_TEMP}/pruned.md"
+          cat "${RUNNER_TEMP}/pruned.md" >> "${GITHUB_STEP_SUMMARY}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add --all
+          git commit --quiet -m "chore(template): drop blueprint-only files"
+          git push --quiet origin "HEAD:${head}"
+          gh pr comment "${number}" --repo "${GITHUB_REPOSITORY}" --body-file "${RUNNER_TEMP}/pruned.md"

@@ -1,47 +1,82 @@
-# artifacts
-__pycache__
-.pytest*
-*.egg-info
-*/build/*
-*/dist/*
-.venv
+# Directory patterns are anchored with a leading slash: unanchored, a name such as image or lib would also hide a
+# platform or package of that name inside the integration.
 
-
-# misc
-.coverage
-.vscode
-coverage.xml
-.ruff_cache
-uv.lock
-
-
-# Home Assistant configuration
+# Home Assistant configuration and runtime (development/testing)
 config/*
 !config/configuration.yaml
 
-# HACS and other custom components installed for testing
-# Ignore everything in custom_components/ except tibber_prices
+# Custom components (Marketplace- or HACS-installed dependencies and dev symlinks)
 custom_components/*
-!custom_components/tibber_prices/
+!custom_components/.gitignore
 
-# Home Assistant database and logs
-*.db
-*.db-shm
-*.db-wal
-*.log
-home-assistant.log*
-home-assistant_v2.db*
+# Virtual environment and shell configuration (when HOME is set to workspace)
+/.venv
+/.local/
+/.bashrc
+/.zshrc
 
-# Temporary files
-*.tmp
-*.temp
+# Python bytecode and packaging
+__pycache__/
+*.py[codz]
+/build/
+/dist/
+*.egg-info/
+
+# Development tool caches and dependency locks
+/.ruff_cache/
+/.pytest_cache/
+/.coverage
+/.coverage.*
+/coverage.xml
+/htmlcov/
+/node_modules/
+/uv.lock
+
+# AI agent temporary scratch files and planning notes
+/.agents/scratch/
+
+# Per-person agent settings; the shared ones are .claude/settings.json
+/.claude/settings.local.json
+
+# Runtime artifact created by the template-sync workflow (never commit)
+/.templatesyncignore.runtime
+
+# Local DevContainer environment overrides (user-specific, see .devcontainer/.env.local.example)
+/.devcontainer/.env.local
+
+# Personal mise tool overrides (see mise.toml)
+/mise.local.toml
+
+# Local extra Python dependencies (user-specific, see requirements.txt for project deps)
+/requirements.local.txt
+
+# VS Code: only the shared project files; settings.json is a personal override (docs/development/CUSTOMIZATION.md)
+/.vscode/*
+!/.vscode/settings.default.jsonc
+!/.vscode/tasks.json
+!/.vscode/launch.json
+!/.vscode/extensions.json
+!/.vscode/*.code-snippets
+
+# Credentials, keys and certificates; .env is anchored because .devcontainer/.env is tracked
+/.env
+/.envrc
+/.pypirc
+*.crt
+*.csr
+*.key
+*.pem
+
+# Operating system and editor leftovers
 .DS_Store
+._*
 Thumbs.db
+[Dd]esktop.ini
+*~
+*.swp
 
-# Planning documents (work-in-progress)
+# Planning documents (work-in-progress); planning/README.md is tracked on purpose
 planning/
 
-# Claude Code: personal settings stay on the machine (shared ones go into .claude/settings.json),
-# worktrees of parallel sessions are local checkouts
-.claude/settings.local.json
-.claude/worktrees/
+# Worktrees of parallel Claude Code sessions are local checkouts
+/.claude/worktrees/

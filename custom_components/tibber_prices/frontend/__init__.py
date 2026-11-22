@@ -13,7 +13,7 @@ development.
 Home Assistant compresses none of this, but aiohttp's file response sends `<module>.js.gz`
 instead of the module when it exists and the browser accepts gzip (with `Content-Encoding` and
 `Vary`, the type still that of the module). The release zip carries such a copy of every module
-(`scripts/release/build-asset`), the repository doesn't: during development the modules go out as
+(`script/hooks/build.post.sh`), the repository doesn't: during development the modules go out as
 they are, so an edit is never hidden behind a stale copy. A copy that no longer matches its module
 (a manual install copied over a store install, a module patched by hand) is deleted on start, else
 aiohttp would keep sending the old code under the new URL. Bundling or minifying the cards was

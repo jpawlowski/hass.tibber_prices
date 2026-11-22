@@ -9,7 +9,7 @@ on:
       - main
     paths:
       - "docs/**"
-      - "mise.toml"
+      - ".config/mise/conf.d/project.toml"
       - ".github/workflows/docs-check.yml"
   workflow_dispatch:
 
@@ -40,7 +40,7 @@ jobs:
           SITE: ${{ matrix.site }}
         run: |
           if [[ $GITHUB_EVENT_NAME != pull_request ]] ||
-              git diff --name-only HEAD^1 HEAD | grep -qE "^(docs/${SITE}/|mise\.toml$|\.github/workflows/docs-check\.yml$)"; then
+              git diff --name-only HEAD^1 HEAD | grep -qE "^(docs/${SITE}/|\.config/mise/conf\.d/project\.toml$|\.github/workflows/docs-check\.yml$)"; then
               echo "build=true" >>"$GITHUB_OUTPUT"
           fi
 

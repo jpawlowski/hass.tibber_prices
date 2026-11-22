@@ -1,0 +1,173 @@
+# The integration's own cards, one view each, for the screenshots of the Dashboard Cards page
+# (docs/user/docs/dashboard-cards.md). Saved as the UI dashboard "tibber-cards" by
+# render-dashboard.py, next to the dashboard from the get_dashboard_yaml action.
+#
+# The current price with two decimals, as most users see it (the demo sensor's own setting may
+# differ).
+#
+# Placeholders, resolved by render-dashboard.py for the demo home (not a time-travel view):
+#   "device:<translation_key>"   the home's device (the one of that entity)
+#   "entity:<translation_key>"   the home's entity
+views:
+  # The forecast card with every section, as wide as a dashboard with two columns gets
+  - title: Forecast
+    path: forecast
+    icon: mdi:weather-partly-cloudy
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:tibber-prices-forecast-card
+            device_id: "device:current_interval_price"
+            # Every section, the current price with two decimals (reused by the window below)
+            <<: &forecast
+              show: [now, hours, day_parts, days]
+              now: { now_decimals: 2 }
+              hours: { now_decimals: 2 }
+              day_parts: { now_decimals: 2 }
+              days: { now_decimals: 2 }
+  # The chart card: as wide as two columns, then one column at the default height and a low one
+  - title: Chart
+    path: chart
+    icon: mdi:chart-timeline-variant
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            # Three styles to switch between in every view, price levels first
+            all_views:
+              style_switch: true
+              styles:
+                - { line: level, fill: level, reference: true }
+                - { line: average, fill: average_shown, reference: true }
+                - { line: single, fill: average_shown, reference: false }
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            views: [today, tomorrow, two_days]
+            # The price in a ring above the curve
+            header: dial
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            views: [outlook]
+            # The simple style: below and above the day's average, as in Tibber's app
+            outlook: { resolution: hour, styles: [{ line: average, fill: average_shown }] }
+            grid_options: { rows: 4 }
+  # The energy card: the chart card with the Energy dashboard's solar forecast and production and the
+  # home battery on top. Without such sources in the Energy dashboard it shows the prices alone
+  - title: Energy
+    path: energy
+    icon: mdi:solar-power
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        column_span: 2
+        cards:
+          - type: custom:tibber-prices-energy-card
+            device_id: "device:current_interval_price"
+            views: [outlook, today, tomorrow, two_days]
+            grid_options: { columns: full, rows: 7 }
+  # The now card's three styles side by side; the tile among Home Assistant's own tiles
+  - title: Now
+    path: now
+    icon: mdi:progress-clock
+    type: sections
+    max_columns: 3
+    sections:
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: tile
+            now_decimals: 2
+            grid_options: { columns: full }
+          - type: tile
+            entity: "entity:best_price_period"
+          - type: tile
+            entity: "entity:peak_price_period"
+          - type: tile
+            entity: "entity:tomorrow_data_available"
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: gauge
+            now_decimals: 2
+            grid_options: { columns: full, rows: 5 }
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: clock
+            now_decimals: 2
+            grid_options: { columns: full, rows: 5 }
+  # Cards opening each other in a window: the now card's tap the forecast card, its icon top
+  # right and the forecast card's the chart card, the chart card's head the forecast card
+  - title: Window
+    path: window
+    icon: mdi:open-in-new
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-now-card
+            device_id: "device:current_interval_price"
+            style: tile
+            now_decimals: 2
+            tap_opens: forecast
+            forecast: *forecast
+            chart_button: true
+            window_width: wide
+            chart: &chart
+              views: [outlook, today, tomorrow, two_days]
+              all_views: { resolution: switch }
+            grid_options: { columns: full }
+          - type: custom:tibber-prices-forecast-card
+            device_id: "device:current_interval_price"
+            show: [now, days]
+            now: { now_decimals: 2 }
+            days: { now_decimals: 2 }
+            chart_button: true
+            window_width: wide
+            chart: *chart
+      - type: grid
+        cards:
+          - type: custom:tibber-prices-chart-card
+            device_id: "device:current_interval_price"
+            views: [today, tomorrow]
+            header: dial
+            tap_opens: forecast
+            window_width: wide
+            forecast: *forecast
+            grid_options: { rows: 5 }
+  # The tile feature below a tile and inline next to its name
+  - title: Feature
+    path: feature
+    icon: mdi:view-agenda-outline
+    type: sections
+    max_columns: 2
+    sections:
+      - type: grid
+        cards:
+          - type: tile
+            entity: "entity:current_interval_price"
+            features_position: bottom
+            features:
+              - type: custom:tibber-prices-outlook-feature
+          - type: tile
+            entity: "entity:current_interval_price"
+            features_position: inline
+            features:
+              - type: custom:tibber-prices-outlook-feature
+            grid_options: { columns: full }

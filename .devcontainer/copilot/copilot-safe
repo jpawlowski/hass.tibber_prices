@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Wrapper for GitHub Copilot CLI with project-managed default flags.
+#
+# Opt-out for one invocation:
+#   COPILOT_CLI_NO_DEFAULT_FLAGS=1 copilot-safe ...
+#
+# Override flags file:
+#   COPILOT_DEFAULT_FLAGS_FILE=/path/to/flags.txt copilot-safe ...
+
+set -euo pipefail
+
+flags_file="${COPILOT_DEFAULT_FLAGS_FILE:-$HOME/.copilot/default-flags.txt}"
+
+declare -a default_flags=()
+
+if [[ -z "${COPILOT_CLI_NO_DEFAULT_FLAGS:-}" && -f "$flags_file" ]]; then
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        # Strip trailing comments and trim whitespace.
+        line="${line%%#*}"
+        line="${line#"${line%%[![:space:]]*}"}"
+        line="${line%"${line##*[![:space:]]}"}"
+
+        if [[ -n "$line" ]]; then
+            default_flags+=("$line")
+        fi
+    done <"$flags_file"
+fi
+
+exec gh copilot -- "${default_flags[@]}" "$@"

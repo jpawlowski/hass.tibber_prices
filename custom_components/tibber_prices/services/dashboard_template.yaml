@@ -1,6 +1,8 @@
 # Dashboard views returned by the get_dashboard_yaml action, a starting point users paste into
 # their own dashboard. Also the demo dashboard behind the documentation screenshots
-# (scripts/docs/demo).
+# (script/docs/demo).
+# Flow mappings keep the spaces inside their braces, as Prettier writes them:
+# yamllint disable rule:braces
 #
 # Placeholders, resolved by services/get_dashboard_yaml.py:
 #   "entity:<translation_key>"   whole string -> entity_id of the home (language independent)

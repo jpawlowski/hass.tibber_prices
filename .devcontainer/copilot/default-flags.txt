@@ -1,0 +1,5 @@
+# One Copilot CLI flag per line.
+# Lines starting with # are ignored.
+#
+# Default: reduce approval prompts for terminal Copilot sessions in the devcontainer.
+--allow-all-tools

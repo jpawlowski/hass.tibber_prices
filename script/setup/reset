@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# script/reset: Reset development environment to fresh state
+#
+# Removes all HA-generated files in the active Home Assistant environment's config directory (config/ for minimum,
+# .local/ha-config/<slot>/ for the others; script/ha-env) and re-runs complete setup (dependencies, optional HACS,
+# symlinks). configuration.yaml stays by default; --full also resets it from git. Asks for confirmation; --yes skips
+# the question, and without a terminal to ask in the script stops instead of waiting.
+#
+# Usage:
+#   ./script/setup/reset [--full] [--yes]
+#
+# Examples:
+#   ./script/setup/reset             # Keep configuration.yaml (your local settings)
+#   ./script/setup/reset --full      # Also reset configuration.yaml from git
+#   ./script/setup/reset --full --yes # Same, without the question
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+CONFIG_DIR="$(ha_config_dir)"
+
+FULL_RESET=false
+ASSUME_YES=false
+
+for arg in "$@"; do
+    case "$arg" in
+    --full) FULL_RESET=true ;;
+    --yes) ASSUME_YES=true ;;
+    *) die "Unknown option: $arg (expected --full or --yes)" ;;
+    esac
+done
+
+run_hook "setup/reset" "pre"
+
+log_header "Resetting development environment to fresh state"
+
+if [[ ! -d config ]]; then
+    log_error "config/ directory does not exist"
+    exit 1
+fi
+
+# Confirm destructive action
+echo ""
+log_warning "This will DELETE files in $CONFIG_DIR/ directory!"
+if [[ $FULL_RESET == true ]]; then
+    log_step "Mode: ${BOLD}FULL RESET${NC} - All files including configuration.yaml"
+    log_step "Deleting: .storage/, custom_components/, logs, .HA_VERSION, configuration.yaml, etc."
+    [[ $CONFIG_DIR != config ]] || log_step "Then restore: configuration.yaml from git"
+else
+    log_step "Mode: ${BOLD}STANDARD RESET${NC} - Keep configuration.yaml"
+    log_step "Deleting: .storage/, custom_components/, logs, .HA_VERSION, etc."
+    log_step "Keeping: configuration.yaml (your local settings preserved)"
+fi
+log_step "Then re-run: Complete setup (bootstrap + optional HACS + symlinks)"
+echo ""
+if [[ $ASSUME_YES == true ]]; then
+    log_info "Continuing without asking (--yes)"
+elif [[ ! -t 0 ]]; then
+    die "No terminal to confirm in; run again with --yes to reset anyway"
+else
+    read -p "Continue? [y/N] " -n 1 -r
+    echo ""
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log_info "Reset cancelled"
+        exit 0
+    fi
+fi
+
+# Another environment's directory stays in place, so script/develop does not start it over from config/'s state; its
+# links into config/, configuration.yaml among them, are made again there and the shared file is left alone.
+if [[ ! -d $CONFIG_DIR ]]; then
+    log_info "$CONFIG_DIR/ does not exist yet — nothing to delete"
+elif [[ $FULL_RESET == true ]]; then
+    log_step "Removing all files in $CONFIG_DIR/"
+    find "$CONFIG_DIR" -mindepth 1 -delete
+
+    if [[ $CONFIG_DIR == config ]]; then
+        if git ls-files --error-unmatch config/configuration.yaml >/dev/null 2>&1; then
+            log_step "Restoring configuration.yaml from git repository"
+            git checkout HEAD -- config/configuration.yaml || {
+                log_error "Failed to restore configuration.yaml from git"
+                exit 1
+            }
+        else
+            log_warning "configuration.yaml is not tracked in git repository"
+        fi
+    fi
+else
+    log_step "Removing all files except configuration.yaml"
+    if ! find "$CONFIG_DIR" -mindepth 1 -depth ! -name 'configuration.yaml' -exec rm -rf {} \; 2>/dev/null; then
+        log_error "Failed to clean $CONFIG_DIR/ directory"
+        exit 1
+    fi
+fi
+
+log_success "Config directory cleaned"
+
+# Re-run complete setup
+echo ""
+log_header "Running complete setup"
+log_info "This will install dependencies, optional HACS, and create symlinks"
+echo ""
+
+"$SCRIPT_DIR/setup" || {
+    log_error "Setup failed"
+    exit 1
+}
+
+echo ""
+log_success "Reset complete - development environment is now in fresh state"
+echo ""
+log_info "Next steps:"
+log_step "Run ${BOLD}./script/develop${NC} to start Home Assistant"
+log_step "Configure integrations via UI"
+
+if [[ $FULL_RESET == false ]]; then
+    echo ""
+    log_info "Tip: Use './script/setup/reset --full' to also reset configuration.yaml from git"
+fi
+
+run_hook "setup/reset" "post"

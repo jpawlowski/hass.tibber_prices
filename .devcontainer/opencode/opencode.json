@@ -1,0 +1,28 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permissions": [
+    { "action": "read", "resource": "*.env.local*", "effect": "deny" },
+    { "action": "read", "resource": "*config/.storage/auth", "effect": "deny" },
+    { "action": "read", "resource": "*config/.storage/auth_provider.*", "effect": "deny" },
+    { "action": "read", "resource": "*config/.storage/dev_access_token", "effect": "deny" },
+    { "action": "edit", "resource": "*.env.local*", "effect": "deny" },
+    { "action": "edit", "resource": "*config/.storage/auth", "effect": "deny" },
+    { "action": "edit", "resource": "*config/.storage/auth_provider.*", "effect": "deny" },
+    { "action": "edit", "resource": "*config/.storage/dev_access_token", "effect": "deny" },
+    { "action": "edit", "resource": ".git/*", "effect": "deny" },
+    { "action": "edit", "resource": ".agents/hooks/*", "effect": "deny" },
+    { "action": "edit", "resource": ".claude/settings.json", "effect": "deny" },
+    { "action": "edit", "resource": ".codex/hooks.json", "effect": "deny" },
+    { "action": "edit", "resource": ".opencode/*", "effect": "deny" },
+    { "action": "edit", "resource": "opencode.json", "effect": "deny" },
+    { "action": "edit", "resource": "opencode.jsonc", "effect": "deny" },
+    { "action": "edit", "resource": ".devcontainer/claude-code/*", "effect": "deny" },
+    { "action": "edit", "resource": ".devcontainer/codex/*", "effect": "deny" },
+    { "action": "edit", "resource": ".devcontainer/opencode/*", "effect": "deny" },
+    { "action": "edit", "resource": ".github/workflows/*", "effect": "deny" },
+    { "action": "edit", "resource": ".github/actions/*", "effect": "deny" },
+    { "action": "edit", "resource": "release-please-config.json", "effect": "deny" },
+    { "action": "edit", "resource": "script/release-notes", "effect": "deny" },
+    { "action": "edit", "resource": "script/version", "effect": "deny" }
+  ]
+}

@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# script/type-check: Run type checking tools
+#
+# Runs Pyright against the integration and synchronized Python tooling. Uses
+# 'basic' type checking mode.
+#
+# Usage:
+#   ./script/type-check
+#
+# Examples:
+#   ./script/type-check
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/integration.sh
+source "$SCRIPT_DIR/.lib/integration.sh"
+
+activate_venv
+
+run_hook "type-check" "pre"
+
+log_header "Running type checking tools"
+
+export PATH="$PWD/node_modules/.bin:$PATH"
+if ! command -v pyright >/dev/null 2>&1; then
+    die "Node.js dependencies not installed. Run: npm ci"
+fi
+
+PYRIGHT_PATHS=("$INTEGRATION_PATH")
+PYRIGHT_PATHS+=(script/.lib/)
+if [[ -d script/tests ]]; then
+    PYRIGHT_PATHS+=(script/tests/)
+fi
+
+pyright "${PYRIGHT_PATHS[@]}"
+
+run_hook "type-check" "post"
+log_success "Type checking completed"

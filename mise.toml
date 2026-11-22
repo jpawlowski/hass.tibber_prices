@@ -1,19 +1,40 @@
-# Development tools of this project, the same in the DevContainer, in CI
-# (jdx/mise-action) and locally: `mise install` installs them all.
-#
-# Python is not listed here: its version is in .python-version, the one the
-# configured Home Assistant version is built on (scripts/setup/update-ha-version
-# keeps it in step). mise reads that file, and so does uv. Python packages are
-# uv's job (scripts/setup/bootstrap), not mise's.
+# The blueprint's tool pins for every environment. This integration's own tools go in .config/mise/conf.d/project.toml,
+# which template sync leaves alone; personal overrides in the gitignored mise.local.toml.
+min_version = "2026.11.12"
 
+# Unset, these fall back to a source build when no precompiled one matches; false makes that an error instead.
 [settings]
-idiomatic_version_file_enable_tools = ["python"]
+python.compile = false
+node.compile = false
 
 [tools]
-node = "26.13.1"
+# Follows the Python version Home Assistant requires.
+python = "3.14.9"
 uv = "0.13.9"
-"npm:pyright" = "1.1.414"
-"npm:prettier" = "3.10.1"
 shellcheck = "0.11.0"
 shfmt = "3.14.1"
+jq = "1.8.2"
 yq = "4.54.3"
+ripgrep = "15.2.0"
+fd = "10.5.2"
+betterleaks = "1.10.1"
+
+# script/setup/bootstrap creates the venv and links it here in every environment; mise puts it ahead of its own Python.
+[env]
+_.python.venv = { path = ".venv" }
+
+# What Renovate would raise, without opening a pull request. Renovate's engines name an older Node major than the
+# environment may have, so the task brings its own; mise installs task tools on first use, never with `mise install`.
+[tasks.renovate-dry-run]
+description = "Show what Renovate would raise, without a pull request"
+# @yarnpkg/libzip 3.2.2, a Renovate dependency, lost the provenance 3.2.1 had, which mise's npm trust policy refuses.
+tools = { node = "24.22.3", "npm:renovate" = { version = "44.257.9", trust_policy_excludes = ["@yarnpkg/libzip@3.2.2"] } }
+shell = "bash -c"
+run = '''
+token="${RENOVATE_GITHUB_COM_TOKEN:-$(gh auth token 2>/dev/null)}"
+if [[ -z "$token" ]]; then
+  echo "renovate-dry-run: no GitHub token; run gh auth login, or set RENOVATE_GITHUB_COM_TOKEN" >&2
+  exit 1
+fi
+RENOVATE_GITHUB_COM_TOKEN="$token" renovate --platform=local --dry-run=lookup
+'''

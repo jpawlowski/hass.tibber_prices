@@ -1,0 +1,11 @@
+{
+  "id": "project-feature",
+  "version": "1.0.0",
+  "name": "Project requirements",
+  "description": "VS Code extensions this project requires for every contributor; see docs/development/CUSTOMIZATION.md.",
+  "customizations": {
+    "vscode": {
+      "extensions": []
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  // Files and directories excluded from markdownlint validation.
+  // Keep in sync with .prettierignore — markdownlint-cli2 does NOT support .markdownlintignore.
+  "ignores": [
+    // Runtime / generated directories
+    "node_modules/**",
+    "config/**",
+    ".local/**",
+    // custom_components/hacs is a third-party integration — only lint our own integration
+    "custom_components/hacs/**",
+    // Auto-generated release file
+    "CHANGELOG.md",
+    // Symlinks into .agents/ — lint the real directories once.
+    ".claude/rules/**",
+    ".claude/skills/**",
+    ".github/instructions/**",
+    // Agent scratch space — generated notes and reports, never committed
+    ".agents/scratch/**"
+  ]
+}

@@ -1,0 +1,83 @@
+name: Dependency Bot HA Stability Check
+
+# Automatically closes Dependabot and Renovate PRs that bump pytest-homeassistant
+# to a Home Assistant pre-release (alpha, beta, or RC).
+# The bot opens a new PR once a stable HA release becomes available.
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - requirements_test.txt
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check-ha-stability:
+    name: Skip if HA dependency is pre-release
+    # Only run for dependency bot PRs — human PRs are never auto-closed
+    if: contains(fromJSON('["dependabot[bot]", "renovate[bot]"]'), github.event.pull_request.user.login)
+    runs-on: ubuntu-26.04
+    permissions:
+      pull-requests: write # comment on and close the Dependabot pull request
+      contents: read # read requirements_test.txt from the PR branch
+    steps:
+      - name: Checkout PR branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
+
+      - name: Check if HA dependency is a pre-release
+        id: check
+        run: |
+          source script/.lib/output.sh
+          source script/.lib/ha_version.sh
+          read -r TEST_PACKAGE PIN HA_VERSION < <(ha_test_pin) || true
+          if [[ -z "${PIN:-}" ]]; then
+            echo "Neither test package found in requirements_test.txt — skipping"
+            exit 0
+          fi
+          if [[ -z "${HA_VERSION:-}" ]]; then
+            echo "::warning::Could not determine the Home Assistant version for ${TEST_PACKAGE}==${PIN} — skipping"
+            exit 0
+          fi
+          {
+            echo "package=${TEST_PACKAGE}"
+            echo "pin=${PIN}"
+            echo "ha_version=${HA_VERSION}"
+          } >> "${GITHUB_OUTPUT}"
+          echo "${TEST_PACKAGE}==${PIN} pins Home Assistant ${HA_VERSION}"
+
+          if ha_version_is_prerelease "${HA_VERSION}"; then
+            echo "is_prerelease=true" >> "${GITHUB_OUTPUT}"
+            echo "Pre-release detected — PR will be closed"
+          else
+            echo "Stable release — PR may proceed"
+          fi
+
+      - name: Close PR — HA pre-release dependency detected
+        if: steps.check.outputs.is_prerelease == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HA_VERSION: ${{ steps.check.outputs.ha_version }}
+          PACKAGE: ${{ steps.check.outputs.package }}
+          PIN: ${{ steps.check.outputs.pin }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          {
+            printf '## ⏸️ Skipping — Home Assistant pre-release dependency\n\n'
+            printf '`%s==%s` pins **Home Assistant %s**, which is a pre-release version.\n\n' \
+              "${PACKAGE}" "${PIN}" "${HA_VERSION}"
+            printf 'This PR is automatically closed to avoid pinning the integration to a beta or\n'
+            printf 'release-candidate build of Home Assistant. A new PR will follow once\n'
+            printf 'a stable Home Assistant release is available.\n\n'
+            printf '> To test against **%s** intentionally, reopen this PR manually.\n' "${HA_VERSION}"
+          } > /tmp/pr-comment.md
+
+          gh pr comment "${PR_NUMBER}" --body-file /tmp/pr-comment.md
+          gh pr close "${PR_NUMBER}"

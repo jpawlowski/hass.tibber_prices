@@ -1,8 +1,9 @@
-name: PR Title
+---
+# A squash merge turns the pull request's title into the commit on main, a rebase merge keeps each of its commits, and
+# release-please reads either for the version and the changelog. The rules come from the base branch, so a pull request
+# cannot loosen them for itself.
 
-# A squash merge turns the pull request's title into the commit on main, and release-please
-# builds the release notes from those commits, sorted by type (release-please-config.json).
-# So the title has to be a Conventional Commit.
+name: PR Title
 
 on:
   pull_request:
@@ -17,31 +18,37 @@ concurrency:
 jobs:
   pr-title:
     name: PR title
-    # Drafts may carry a working title. Every other event runs the check, a body edit included:
-    # a skipped run would replace a failed one and count as passed.
-    if: ${{ !github.event.pull_request.draft }}
+    # A body edit leaves the title as it was; only a title edit needs the check again. Dependabot names both commit
+    # hashes of a digest-pinned action in the title, which no sensible length limit fits.
+    if: ${{ !github.event.pull_request.draft && github.event.pull_request.user.login != 'dependabot[bot]' && (github.event.action != 'edited' || github.event.changes.title != null) }}
     runs-on: ubuntu-26.04
     timeout-minutes: 5
+    permissions:
+      contents: read # read the commitlint configuration from the base branch
     steps:
-      - name: Check the title against Conventional Commits
+      - name: Checkout the base branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Check the title against the commit message rules
         env:
           TITLE: ${{ github.event.pull_request.title }}
         run: |
-          # The types of @commitlint/config-conventional; the header fits in 100 characters
-          types='feat|fix|perf|build|docs|style|refactor|test|ci|chore|revert'
-          pattern="^(${types})(\(([a-z0-9._/-]+)\))?!?: [^ ]"
-          if [[ ! ${TITLE} =~ ${pattern} ]]; then
-            echo "::error::\"${TITLE}\" is not a Conventional Commit title: <type>(<scope>): <summary>, type one of ${types//|/, }"
+          npm ci --ignore-scripts --no-audit --no-fund >/dev/null
+          printf '%s\n' "${TITLE}" | npx --no-install commitlint --verbose
+
+      # Not required: a pull request meant for squashing may carry working commits. Rebase-merge only when this passes.
+      - name: Check each commit, for a rebase merge
+        continue-on-error: true
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          git fetch --quiet --no-tags origin "pull/${NUMBER}/head"
+          if ! npx --no-install commitlint --from "$(git merge-base "${BASE}" FETCH_HEAD)" --to FETCH_HEAD --verbose; then
+            echo "::warning::Some commits do not follow the commit message rules — squash this pull request, do not rebase it"
             exit 1
           fi
-          # build is listed in the release notes as "Updated Dependencies": only the integration's
-          # own requirements (Renovate's build(deps)) belong there
-          if [[ ${BASH_REMATCH[1]} == build && ${BASH_REMATCH[3]} != deps ]]; then
-            echo "::error::build is reserved for build(deps), the integration's requirements; use chore or ci"
-            exit 1
-          fi
-          if (( ${#TITLE} > 100 )); then
-            echo "::error::The title has ${#TITLE} characters, at most 100 fit the commit header"
-            exit 1
-          fi
-          echo "✓ ${TITLE}"

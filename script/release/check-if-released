@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# script/check-if-released: Check if a commit has been released in any version tag
+#
+# Determines whether a specific commit is included in any released version tag.
+# Useful for deciding if legacy migration code is needed for unreleased changes.
+#
+# Usage:
+#   ./script/release/check-if-released <commit-hash> [--details]
+#
+# Examples:
+#   ./script/release/check-if-released f4568be
+#   ./script/release/check-if-released HEAD~3 --details
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/../.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/../.lib/output.sh"
+
+# Check if commit hash provided
+if [[ -z ${1:-} ]]; then
+    echo "Usage: $0 <commit-hash> [--details]"
+    echo ""
+    echo "Examples:"
+    echo "  $0 f4568be"
+    echo "  $0 HEAD~3 --details"
+    exit 1
+fi
+
+COMMIT="$1"
+DETAILS="${2:-}"
+
+# Validate commit exists
+if ! git rev-parse --verify "$COMMIT" >/dev/null 2>&1; then
+    die "Commit '$COMMIT' not found"
+fi
+
+SHORT_HASH=$(git rev-parse --short "$COMMIT")
+
+# Get commit info
+COMMIT_SUBJECT=$(git log -1 --format="%s" "$COMMIT")
+COMMIT_DATE=$(git log -1 --format="%ci" "$COMMIT")
+
+echo "Checking commit: $SHORT_HASH"
+echo "Subject: $COMMIT_SUBJECT"
+echo "Date: $COMMIT_DATE"
+echo ""
+
+# Check if commit is in any version tag (vX.Y.Z or vX.Y.ZbN)
+TAGS=$(git tag --contains "$COMMIT" | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+(b[0-9]+)?$' || true)
+
+if [[ -z $TAGS ]]; then
+    printf '%b✓ NOT RELEASED%b\n' "$GREEN" "$NC"
+    echo "This commit is not part of any version tag."
+    echo ""
+    printf '%b→ No legacy migration needed for code introduced in this commit%b\n' "$YELLOW" "$NC"
+    exit 0
+else
+    printf '%b✗ ALREADY RELEASED%b\n' "$RED" "$NC"
+    echo "This commit is included in the following version tags:"
+    while IFS= read -r tag; do printf '  - %s\n' "$tag"; done <<<"$TAGS"
+    echo ""
+    printf '%b⚠ Breaking Change Decision:%b\n' "$YELLOW" "$NC"
+    echo "  1. If migration is SIMPLE (e.g., .lower(), key rename) → Add it"
+    echo "  2. If migration is COMPLEX → Document in release notes instead"
+    echo "  3. Home Assistant style: Prefer breaking changes over code complexity"
+    echo ""
+
+    if [[ $DETAILS == --details ]]; then
+        echo ""
+        echo "First release containing this commit:"
+        FIRST_TAG=$(echo "$TAGS" | head -1)
+        echo "  Tag: $FIRST_TAG"
+        git log -1 --format="  Date: %ci" "$FIRST_TAG"
+
+        echo ""
+        echo "Latest release:"
+        LATEST_TAG=$(git tag -l 'v*.*.*' --sort=-version:refname | head -1)
+        echo "  Tag: $LATEST_TAG"
+        git log -1 --format="  Date: %ci" "$LATEST_TAG"
+    fi
+
+    exit 1
+fi

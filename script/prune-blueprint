@@ -1,0 +1,119 @@
+#!/bin/bash
+
+# script/prune-blueprint: Remove leftovers that only make sense in the blueprint itself
+#
+# Lists, or with --apply deletes, the blueprint-only files and sections that initialize.sh
+# removes and that template sync can bring back or never removed, and adds the
+# .templatesyncignore entries that stop the sync from bringing them back or from overwriting
+# the files a project owns. Safe to run repeatedly.
+# Refuses to run while initialize.sh exists, because that is the blueprint or a copy that
+# has not been initialised yet.
+#
+# Usage:
+#   ./script/prune-blueprint [--apply]
+#
+# Examples:
+#   ./script/prune-blueprint           # Show what would be removed
+#   ./script/prune-blueprint --apply   # Remove it
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+PRUNE_PATHS=(
+    ".github/FUNDING.yml"
+    "docs/blueprint"
+    ".agents/skills/blueprint-skill-maintenance"
+    "script/tests/test_initialize.py"
+    "script/import-overlay"
+    "script/tests/test_import_overlay.py"
+)
+PROJECT_OWNED_PATHS=(
+    ".devcontainer/project-feature"
+)
+SECTION_FILE=".agents/skills/README.md"
+SECTION_START="<!-- blueprint-only:start -->"
+SECTION_END="<!-- blueprint-only:end -->"
+SYNC_IGNORE=".templatesyncignore"
+
+APPLY=false
+ALLOW_UNINITIALIZED=false
+for arg in "$@"; do
+    case "$arg" in
+    --apply) APPLY=true ;;
+    --allow-uninitialized) ALLOW_UNINITIALIZED=true ;; # initialize.sh only
+    *)
+        log_error "Unknown argument: $arg"
+        exit 2
+        ;;
+    esac
+done
+
+if [[ -e initialize.sh && $ALLOW_UNINITIALIZED == false ]]; then
+    log_error "initialize.sh exists: this is the blueprint or a copy that is not initialised yet. Nothing was changed."
+    exit 1
+fi
+
+found=0
+
+for path in "${PRUNE_PATHS[@]}"; do
+    if [[ -e $path ]]; then
+        found=$((found + 1))
+        if $APPLY; then
+            rm -rf -- "$path"
+            log_success "Removed $path"
+        else
+            log_info "Would remove $path"
+        fi
+    fi
+done
+
+if [[ -f $SECTION_FILE ]] && grep -qF "$SECTION_START" "$SECTION_FILE"; then
+    found=$((found + 1))
+    if $APPLY; then
+        # Joins the blank lines on both sides of a removed section, which markdownlint would reject (MD012), and drops
+        # them at the start or end of the file. Blank lines anywhere else, code blocks included, are left alone.
+        pruned=$(awk -v s="$SECTION_START" -v e="$SECTION_END" '
+            index($0, s) { skip = 1; next }
+            skip { if (index($0, e)) { skip = 0; removed = 1 } next }
+            /^[[:space:]]*$/ { pending[blank++] = $0; next }
+            {
+                n = removed ? (printed && blank ? 1 : 0) : blank
+                for (i = 0; i < n; i++) print pending[i]
+                blank = 0; removed = 0; printed = 1
+                print
+            }
+            END { if (!removed) for (i = 0; i < blank; i++) print pending[i] }
+        ' "$SECTION_FILE")
+        printf '%s\n' "$pruned" >"$SECTION_FILE"
+        log_success "Removed blueprint-only sections from $SECTION_FILE"
+    else
+        log_info "Would remove blueprint-only sections from $SECTION_FILE"
+    fi
+fi
+
+if [[ -f $SYNC_IGNORE ]]; then
+    missing=()
+    for path in "${PRUNE_PATHS[@]}" "${PROJECT_OWNED_PATHS[@]}"; do
+        if ! grep -qxF -e "$path" -e "$path/" "$SYNC_IGNORE"; then
+            missing+=("$path")
+            $APPLY || log_info "Would add $path to $SYNC_IGNORE"
+        fi
+    done
+    found=$((found + ${#missing[@]}))
+    if $APPLY && ((${#missing[@]})); then
+        printf '\n# ── Added by script/prune-blueprint ──────────────────────────\n' >>"$SYNC_IGNORE"
+        printf '%s\n' "${missing[@]}" >>"$SYNC_IGNORE"
+        log_success "Added ${missing[*]} to $SYNC_IGNORE"
+    fi
+fi
+
+if ((found == 0)); then
+    log_success "Nothing to prune"
+elif ! $APPLY && ! $ALLOW_UNINITIALIZED; then
+    log_info "Run ./script/prune-blueprint --apply to remove it"
+fi

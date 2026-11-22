@@ -1,0 +1,29 @@
+#!/bin/bash
+
+# script/blueprint-update: Show what the blueprint changed in the files template sync never ships
+#
+# .templatesyncignore keeps files such as AGENTS.md, the sync workflow and the developer documentation out of the
+# weekly sync, so the blueprint's changes to them have to be carried over by hand. This fetches the blueprint named
+# in .github/workflows/template-sync.yml, renders those files with this repository's names instead of the blueprint's,
+# and prints a diff of what changed since the blueprint commit recorded in .agents/blueprint-update.json. Without a
+# record yet, it shows how each file differs from the blueprint. The blueprint-update skill walks through applying it.
+#
+# Usage:
+#   ./script/blueprint-update [--files] [--record] [--source=<url>]
+#
+# Examples:
+#   ./script/blueprint-update            # Diff of every watched file the blueprint changed
+#   ./script/blueprint-update --files    # Only their names
+#   ./script/blueprint-update --record   # Mark the current blueprint as gone through
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+run_hook "blueprint-update" "pre"
+python3 -I "$SCRIPT_DIR/.lib/blueprint_update.py" "$@"
+run_hook "blueprint-update" "post"

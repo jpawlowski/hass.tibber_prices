@@ -78,7 +78,7 @@ def calculate_periods(
 
     from .types import INDENT_L0  # noqa: PLC0415
 
-    _LOGGER = logging.getLogger(__name__)
+    _LOGGER = logging.getLogger(__name__)  # noqa: N806 - module logger bound locally; moved in phase 6
 
     # Extract config values
     reverse_sort = config.reverse_sort
@@ -339,7 +339,7 @@ def _apply_segment_forcing(
     from .period_building import build_periods  # noqa: PLC0415
     from .types import DAY_PATTERN_DOUBLE_DIP, DAY_PATTERN_DUCK_CURVE, INDENT_L1, INDENT_L2  # noqa: PLC0415
 
-    _LOGGER = logging.getLogger(__name__)
+    _LOGGER = logging.getLogger(__name__)  # noqa: N806 - module logger bound locally; moved in phase 6
 
     reverse_sort = config.reverse_sort
     target_pattern = DAY_PATTERN_DUCK_CURVE if reverse_sort else DAY_PATTERN_DOUBLE_DIP

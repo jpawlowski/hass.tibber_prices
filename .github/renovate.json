@@ -1,0 +1,137 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "description": [
+    "Renovate raises what Dependabot cannot read: mise.toml, the mise version pins and the integration's runtime requirements. Inert without the Renovate GitHub App.",
+    "manifest.json is bumped together with requirements.txt, so one package lands in one pull request; a workflow input is named by a `# renovate:` comment directly above it.",
+    "script/template-sync-guard reads the managers and patterns here to know which pins a template sync must not lower."
+  ],
+  "extends": [
+    "config:best-practices",
+    ":semanticCommits",
+    ":semanticCommitTypeAll(chore)",
+    ":semanticCommitScope(deps)"
+  ],
+  "enabledManagers": ["mise", "pip_requirements", "custom.regex", "github-actions", "npm", "devcontainer"],
+  "ignorePaths": ["**/node_modules/**"],
+  "minimumReleaseAge": "3 days",
+  "schedule": ["* 0-5 * * 1"],
+  "labels": ["dependencies"],
+  "vulnerabilityAlerts": {
+    "description": "Needs Dependabot alerts on in the repository settings. Users only receive a fixed version with a new release.",
+    "semanticCommitType": "fix",
+    "addLabels": ["security"]
+  },
+  "mise": {
+    "managerFilePatterns": ["/(^|/)mise\\.devcontainer\\.toml$/", "/(^|/)\\.config/mise/conf\\.d/[^/]+\\.toml$/"]
+  },
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)custom_components/[^/]+/manifest\\.json$/"],
+      "matchStrings": ["\"(?<depName>[A-Za-z0-9][A-Za-z0-9._-]*)(?:\\[[^\\]]*\\])?==(?<currentValue>[^\"\\s;]+)\""],
+      "datasourceTemplate": "pypi"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)mise\\.toml$/", "/(^|/)\\.devcontainer/devcontainer\\.json$/"],
+      "matchStrings": [
+        "min_version = \"(?<currentValue>[^\"]+)\"",
+        "\"ghcr\\.io/devcontainers-extra/features/mise:\\d+(?:@sha256:[a-f0-9]+)?\":\\s*\\{\\s*\"version\":\\s*\"(?<currentValue>[^\"]+)\""
+      ],
+      "depNameTemplate": "jdx/mise",
+      "datasourceTemplate": "github-releases",
+      "extractVersionTemplate": "^v(?<version>.+)$"
+    },
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/(^|/)\\.github/workflows/[^/]+\\.ya?ml$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: extractVersion=(?<extractVersion>\\S+))?\\n\\s+version: \"?(?<currentValue>[^\"\\s]+)\"?"
+      ]
+    }
+  ],
+  "packageRules": [
+    {
+      "description": "Dependabot's share (.github/dependabot.yml). To let Renovate raise these instead, delete that file together with this rule and the next one; the tooling rules below already group them.",
+      "matchManagers": ["github-actions", "npm", "devcontainer"],
+      "enabled": false
+    },
+    {
+      "matchFileNames": ["requirements_dev.txt"],
+      "enabled": false
+    },
+    {
+      "description": "Runtime: what Home Assistant installs for users. One pull request per package, committed as `build` so it reaches the changelog; a security fix stays `fix`.",
+      "matchFileNames": ["requirements.txt", "custom_components/*/manifest.json"],
+      "semanticCommitType": "build",
+      "addLabels": ["runtime"]
+    },
+    {
+      "description": "A runtime major waits on the dependency dashboard for a person.",
+      "matchFileNames": ["requirements.txt", "custom_components/*/manifest.json"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "description": "Tooling: everything that runs the checks, CI and the editor moves in one grouped pull request a week; a major update gets one of its own.",
+      "matchManagers": ["mise", "github-actions", "npm", "devcontainer"],
+      "groupName": "tooling",
+      "addLabels": ["tooling"]
+    },
+    {
+      "matchFileNames": [
+        "mise.toml",
+        ".devcontainer/devcontainer.json",
+        ".github/workflows/**",
+        "requirements_dev.txt"
+      ],
+      "groupName": "tooling",
+      "addLabels": ["tooling"]
+    },
+    {
+      "description": "A new action version settles a week before it runs with the repository's token, as in Home Assistant Core.",
+      "matchManagers": ["github-actions"],
+      "minimumReleaseAge": "7 days"
+    },
+    {
+      "description": "These actions take a tool version beside their pin, so Renovate raises both together; dependabot.yml ignores them.",
+      "matchManagers": ["github-actions"],
+      "matchDepNames": ["trufflesecurity/trufflehog", "jdx/mise-action"],
+      "enabled": true
+    },
+    {
+      "description": "Home Assistant decides the Python version. Raise it by hand together with the Home Assistant version.",
+      "matchManagers": ["mise"],
+      "matchUpdateTypes": ["major", "minor"],
+      "enabled": false,
+      "matchDepNames": ["python"]
+    },
+    {
+      "description": "ShellCheck is the shell linter with no real alternative, so a year without a release is not abandonment.",
+      "matchPackageNames": ["koalaman/shellcheck"],
+      "abandonmentThreshold": null
+    },
+    {
+      "description": "Renovate's own engines refuse a Node major newer than this.",
+      "matchManagers": ["mise"],
+      "matchDepTypes": ["task-renovate-dry-run-tools"],
+      "allowedVersions": "<25",
+      "matchDepNames": ["node"]
+    },
+    {
+      "description": "Each release tracks one Home Assistant version. A new release train means raising the minimum in hacs.json, which script/ha-version-sync enforces; a pre-release dependency is closed by the HA stability check workflow.",
+      "matchPackageNames": ["pytest-homeassistant"],
+      "groupName": "Home Assistant test environment",
+      "addLabels": ["home-assistant"]
+    },
+    {
+      "description": "The secret scanners carry their detection rules in the binary, so a release is mostly new rules: outside the weekly schedule, still after the release age, and merged once the pull request's checks are green. A release that finds something keeps them red and the pull request open.",
+      "matchDepNames": ["betterleaks", "trufflesecurity/trufflehog"],
+      "groupName": "security scanners",
+      "addLabels": ["security"],
+      "schedule": ["at any time"],
+      "automerge": true,
+      "automergeStrategy": "squash"
+    }
+  ]
+}

@@ -51,7 +51,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
         self._state_getter: Callable | None = self._get_value_getter()
         self._time_sensitive_remove_listener: Callable | None = None
         # State change detection for call-avoidance optimization (see sensor/core.py for rationale)
-        self._last_written_state: bool | None | object = _SENTINEL
+        self._last_written_state: bool | object | None = _SENTINEL
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

@@ -1,0 +1,108 @@
+#!/bin/bash
+
+# script/second-review: Review a branch with a different coding agent than the one this session runs in
+#
+# The second review in blueprint-change-review. Exports the committed head into a temporary directory, so nothing the
+# session changes meanwhile reaches the review, and runs another installed agent CLI over it with the reviewer brief
+# and the diff, reading only (script/.lib/agent_cli.sh). It spends the developer's quota for that CLI: run it only on
+# their word.
+#
+# Usage:
+#   ./script/second-review [--base REF] [HEAD]
+#
+# Examples:
+#   ./script/second-review                 # HEAD against its merge base with origin/main
+#   ./script/second-review --base abc1234  # only what came after abc1234
+#   AGENT_CLI=codex ./script/second-review # name the CLI
+#
+# The findings go to stdout and to .agents/scratch/second-review-<head>.md.
+#
+# Environment:
+#   AGENT_CLI    claude, codex, copilot or opencode (default: see agent_resolve --other in agent_cli.sh)
+#   AGENT_MODEL  Model for that CLI (default: the CLI's own)
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/agent_cli.sh
+source "$SCRIPT_DIR/.lib/agent_cli.sh"
+
+USAGE="Usage: script/second-review [--base REF] [HEAD]"
+BRIEF=".agents/skills/blueprint-change-review/references/reviewer-brief.md"
+SCRATCH_DIR=".agents/scratch"
+
+base_ref=""
+head_ref="HEAD"
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --base)
+        [[ $# -ge 2 ]] || die "$USAGE"
+        base_ref="$2"
+        shift 2
+        ;;
+    -h | --help)
+        echo "$USAGE"
+        exit 0
+        ;;
+    -*) die "$USAGE" ;;
+    *)
+        head_ref="$1"
+        shift
+        ;;
+    esac
+done
+
+run_hook "second-review" "pre"
+
+[[ -f "$BRIEF" ]] || die "$BRIEF is missing"
+agent_resolve --other || exit 1
+head="$(git rev-parse --verify --quiet "$head_ref^{commit}")" || die "$head_ref is not a commit"
+
+if [[ -n "$base_ref" ]]; then
+    base="$(git rev-parse --verify --quiet "$base_ref^{commit}")" || die "$base_ref is not a commit"
+else
+    GIT_TERMINAL_PROMPT=0 git fetch --quiet origin main 2>/dev/null || log_warning "could not fetch origin/main; using the local copy"
+    base="$(git merge-base origin/main "$head")" || die "no merge base between origin/main and $head_ref"
+fi
+[[ "$base" != "$head" ]] || die "nothing to review: $head_ref is its own base — this reviews commits, so commit first"
+
+main=()
+if git rev-parse --verify --quiet origin/main >/dev/null; then
+    main=(^origin/main)
+fi
+
+mkdir -p "$SCRATCH_DIR"
+# Outside the repository, and no git checkout: Claude Code loads every CLAUDE.md above its directory, and the agents'
+# session-start hooks act only inside a checkout.
+export_dir="$(mktemp -d "${TMPDIR:-/tmp}/second-review.XXXXXX")"
+prompt="$(mktemp "$SCRATCH_DIR/second-review-prompt.XXXXXX")"
+cleanup() {
+    rm -rf "$export_dir" "$prompt"
+}
+trap cleanup EXIT
+git archive "$head" | tar -x -C "$export_dir"
+git log -p --no-merges "$base..$head" ${main[@]+"${main[@]}"} >"$export_dir/.second-review.patch"
+
+{
+    cat "$BRIEF"
+    printf '\n---\n\n'
+    printf 'Range: %s..%s. The current directory holds the files of the repository at the head, and the change is in\n' \
+        "$base" "$head"
+    # shellcheck disable=SC2016  # the backticks are Markdown in the prompt, not a command substitution
+    printf '`.second-review.patch` there (`git log -p --no-merges %s..%s %s`).\n' "$base" "$head" "${main[*]-}"
+    printf 'You may read files and cannot run commands: where the brief says to run one, read the patch and check\n'
+    printf 'commands against their documentation instead. Tier: full.\n\n'
+    printf 'Commit subjects, as claims to check against the diff:\n\n'
+    git log --no-merges --format='- %s' "$base..$head" ${main[@]+"${main[@]}"}
+} >"$prompt"
+
+report="$SCRATCH_DIR/second-review-${head:0:12}.md"
+log_header "Second review by $AGENT_NAME of ${base:0:12}..${head:0:12}" >&2
+agent_review "$export_dir" "$prompt" | tee "$report" || die "$AGENT_NAME did not finish the review; nothing in $report holds"
+log_success "Findings saved to $report" >&2
+
+run_hook "second-review" "post"

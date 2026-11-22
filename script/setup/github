@@ -1,0 +1,127 @@
+#!/bin/bash
+
+# script/setup/github: Apply this repository's GitHub settings and rulesets
+#
+# Settings live on github.com, not in the repository, so a repository made from the blueprint starts without them.
+# Applies each one with gh, the same every time it runs; docs/development/REPOSITORY_SETUP.md lists what and why.
+# --dry-run prints the calls without making them. Needs gh, signed in with admin rights on the repository.
+#
+# Usage:
+#   ./script/setup/github [--dry-run] [--repo <owner/name>]
+#
+# Examples:
+#   ./script/setup/github --dry-run
+#   ./script/setup/github
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+dry_run=0
+repo=""
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --dry-run) dry_run=1 ;;
+    --repo)
+        [[ -n ${2:-} ]] || die "--repo needs <owner/name>"
+        repo=$2
+        shift
+        ;;
+    *) die "Unknown option: $1 (expected --dry-run or --repo <owner/name>)" ;;
+    esac
+    shift
+done
+
+run_hook "setup/github" "pre"
+
+require_command gh "https://cli.github.com, then gh auth login"
+gh auth status >/dev/null 2>&1 || die "gh is not signed in — run gh auth login"
+if [[ -z $repo ]]; then
+    repo="$(gh repo view --json nameWithOwner --jq .nameWithOwner)" || die "Could not tell which repository this is; pass --repo"
+fi
+
+# Change something on GitHub, or with --dry-run only say what would change.
+change() {
+    local method=$1 path=$2 body=${3:-}
+    if [[ $dry_run -eq 1 ]]; then
+        log_step "would ${method} ${path}${body:+ $body}"
+        return 0
+    fi
+    if [[ -n $body ]]; then
+        gh api -X "$method" "$path" --input - >/dev/null <<<"$body"
+    else
+        gh api -X "$method" "$path" >/dev/null
+    fi
+}
+
+private="$(gh api "repos/$repo" --jq .private)"
+log_header "GitHub settings for $repo ($([[ $private == "true" ]] && echo private || echo public))"
+
+log_step "Dependabot alerts"
+change PUT "repos/$repo/vulnerability-alerts"
+if [[ -f .github/dependabot.yml ]]; then
+    log_step "Dependabot security updates"
+    change PUT "repos/$repo/automated-security-fixes"
+fi
+
+# The rulesets decide which merge methods there are; a repository that relaxes its ruleset gets the settings to match.
+settings="$(jq -s -c --argjson private "$private" '
+    [.[].rules[]? | select(.type == "pull_request") | .parameters.allowed_merge_methods // empty | .[]] | unique as $methods
+    | {delete_branch_on_merge: true, allow_auto_merge: true, squash_merge_commit_title: "PR_TITLE", squash_merge_commit_message: "PR_BODY"}
+    + (if $methods == [] then {} else {
+        allow_squash_merge: ($methods | index("squash") != null),
+        allow_merge_commit: ($methods | index("merge") != null),
+        allow_rebase_merge: ($methods | index("rebase") != null)} end)
+    + (if $private then {} else {security_and_analysis: {
+        secret_scanning: {status: "enabled"}, secret_scanning_push_protection: {status: "enabled"}}} end)
+' .github/rulesets/*.json 2>/dev/null || echo '{"delete_branch_on_merge": true}')"
+if [[ $private == "true" ]]; then
+    log_info "Secret scanning and push protection need GitHub Secret Protection on a private repository — left as they are"
+fi
+log_step "Merge methods, branch cleanup after merge, secret scanning and push protection"
+change PATCH "repos/$repo" "$settings"
+
+log_step "Workflow permissions"
+change PUT "repos/$repo/actions/permissions/workflow" \
+    '{"default_workflow_permissions": "read", "can_approve_pull_request_reviews": true}'
+
+log_step "Fork pull requests run workflows only after approval"
+change PUT "repos/$repo/actions/permissions/fork-pr-contributor-approval" \
+    '{"approval_policy": "all_external_contributors"}'
+
+existing="$(gh api "repos/$repo/rulesets")"
+for file in .github/rulesets/*.json; do
+    [[ -f $file ]] || continue
+    name="$(jq -r .name "$file")"
+    id="$(jq -r --arg name "$name" '.[] | select(.name == $name) | .id' <<<"$existing")"
+    log_step "Ruleset \"$name\" from $file"
+    change "$([[ -n $id ]] && echo PUT || echo POST)" "repos/$repo/rulesets${id:+/$id}" "$(jq -c . "$file")"
+done
+
+# Only once the workflow is on the default branch, or nothing would analyse the code in between.
+if [[ $private != "true" ]] && gh api "repos/$repo/contents/.github/workflows/codeql.yml" >/dev/null 2>&1; then
+    log_step "CodeQL default setup off — .github/workflows/codeql.yml runs the analysis"
+    change PATCH "repos/$repo/code-scanning/default-setup" '{"state": "not-configured"}'
+fi
+
+run_hook "setup/github" "post"
+
+echo ""
+log_success "GitHub settings applied$([[ $dry_run -eq 1 ]] && echo " (dry run — nothing changed)")"
+# No token here can query the app installation. Renovate rewrites its dashboard issue on every run, so recent activity
+# is the sign it is live — the same rule toolchain-update-check.yml applies.
+since="$(date -u -d '45 days ago' +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || date -u -v-45d +%Y-%m-%dT%H:%M:%SZ)"
+renovate_active="$(gh api "repos/$repo/issues?creator=renovate%5Bbot%5D&state=all&since=$since&per_page=1" --jq length)"
+if [[ ${renovate_active:-0} -gt 0 ]]; then
+    log_success "Renovate is active on this repository"
+fi
+log_info "Still yours to do on github.com:"
+if [[ ${renovate_active:-0} -eq 0 ]]; then
+    log_step "Install the Renovate app for this repository: https://github.com/apps/renovate"
+    log_step "Installed already but nothing from Renovate here yet? Check that the app's repository access includes it"
+fi
+log_step "For workflow updates through the template sync, add a TEMPLATE_SYNC_TARGET_PAT secret (docs/development/CUSTOMIZATION.md)"

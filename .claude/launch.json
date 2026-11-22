@@ -1,0 +1,25 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "Home Assistant",
+      "runtimeExecutable": "script/develop",
+      "port": 8123,
+      "autoPort": false
+    },
+    {
+      "name": "Home Assistant (latest)",
+      "runtimeExecutable": "script/develop",
+      "runtimeArgs": ["--env", "latest"],
+      "port": 8123,
+      "autoPort": false
+    },
+    {
+      "name": "Home Assistant (beta)",
+      "runtimeExecutable": "script/develop",
+      "runtimeArgs": ["--env", "beta"],
+      "port": 8123,
+      "autoPort": false
+    }
+  ]
+}

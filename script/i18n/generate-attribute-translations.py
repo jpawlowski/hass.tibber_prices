@@ -1,0 +1,112 @@
+#!/usr/bin/env python3
+"""
+Generate the translated attribute names (`state_attributes`) of the entities.
+
+Home Assistant shows an attribute's name in the more-info dialog from
+`entity.<platform>.<translation_key>.state_attributes.<attribute>.name` of the
+integration's `translations/<language>.json`, one entry per entity. Which attributes an
+entity has is declared on its description (`attributes=`, see
+`custom_components/tibber_prices/utils/attribute_specs.py`); the texts come from
+`script/i18n/attribute-names.json` (not shipped with the integration):
+
+- `names`: attribute name template -> [en, de, nb, nl, sv] (order as in `languages`).
+  A `{h}` in the name and in the texts stands for the hour count the description declares
+  (`price_outlook_4h` -> `trend_4h_percent`, "next 4 h").
+
+Entities without a description that declares attributes (numbers, switches) get the common ones.
+Attribute keys must match `[a-z0-9_-]` (Hassfest). Needs the development environment (Home Assistant).
+
+Usage:
+    script/i18n/generate-attribute-translations.py           # write translations/*.json
+    script/i18n/generate-attribute-translations.py --check   # fail if they are out of date (CI)
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import re
+import sys
+
+REPO = Path(__file__).resolve().parents[2]
+sys.path.insert(0, str(REPO))
+
+from custom_components.tibber_prices.binary_sensor.definitions import ENTITY_DESCRIPTIONS as BINARY_SENSORS  # noqa: E402
+from custom_components.tibber_prices.sensor.definitions import ENTITY_DESCRIPTIONS as SENSORS  # noqa: E402
+from custom_components.tibber_prices.utils.attribute_specs import TibberPricesAttribute, declared_attributes  # noqa: E402
+
+SOURCE = REPO / "script" / "i18n" / "attribute-names.json"
+TRANSLATIONS = REPO / "custom_components" / "tibber_prices" / "translations"
+KEY = re.compile(r"^[a-z0-9_-]+$")
+DESCRIPTIONS = {("sensor", d.key): d for d in SENSORS} | {("binary_sensor", d.key): d for d in BINARY_SENSORS}
+
+
+def load_source() -> dict:
+    """Read the source and check that every name has a text per language."""
+    source = json.loads(SOURCE.read_text(encoding="utf-8"))
+    for attribute, texts in source["names"].items():
+        if len(texts) != len(source["languages"]):
+            sys.exit(f"{attribute}: {len(texts)} texts for {len(source['languages'])} languages")
+    return source
+
+
+def attributes_of(platform: str, entity: str) -> tuple[TibberPricesAttribute, ...]:
+    """Return the attributes the description of an entity declares, the common ones included."""
+    return declared_attributes(DESCRIPTIONS.get((platform, entity)))
+
+
+def build(source: dict) -> dict[str, str]:
+    """Return the new content of every translations file, keyed by language."""
+    english = json.loads((TRANSLATIONS / "en.json").read_text(encoding="utf-8"))["entity"]
+    names = source["names"]
+    used: set[str] = set()
+    plan: dict[tuple[str, str], tuple[TibberPricesAttribute, ...]] = {}
+    for platform, entities in english.items():
+        for entity in entities:
+            attributes = attributes_of(platform, entity)
+            for spec in attributes:
+                if not KEY.match(spec.key):
+                    sys.exit(f"{platform}.{entity}: invalid attribute key {spec.key!r}")
+                if spec.name not in names:
+                    sys.exit(f"{platform}.{entity}: no name for attribute {spec.name!r}")
+                for text in names[spec.name]:
+                    if "{" in text.replace("{h}", str(spec.hours)):
+                        sys.exit(f"{platform}.{entity}.{spec.key}: unresolved placeholder in {text!r}")
+                used.add(spec.name)
+            plan[platform, entity] = attributes
+    if unused := [name for name in names if name not in used]:
+        sys.exit(f"Names no entity uses (remove them or declare them on an entity): {', '.join(unused)}")
+
+    result: dict[str, str] = {}
+    for index, language in enumerate(source["languages"]):
+        raw = (TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8")
+        data = json.loads(raw)
+        for (platform, entity), attributes in plan.items():
+            target = data["entity"][platform][entity]
+            target.pop("state_attributes", None)
+            if attributes:
+                target["state_attributes"] = {
+                    spec.key: {"name": names[spec.name][index].replace("{h}", str(spec.hours))} for spec in attributes
+                }
+        result[language] = json.dumps(data, indent=2, ensure_ascii=False) + ("\n" if raw.endswith("\n") else "")
+    return result
+
+
+def main() -> None:
+    """Write the translations, or with --check only compare them."""
+    new = build(load_source())
+    stale = [lang for lang, text in new.items() if (TRANSLATIONS / f"{lang}.json").read_text(encoding="utf-8") != text]
+    if "--check" in sys.argv:
+        if stale:
+            sys.exit(
+                f"Attribute translations out of date ({', '.join(stale)}): run script/i18n/generate-attribute-translations.py"
+            )
+        sys.stdout.write("Attribute translations are up to date\n")
+        return
+    for lang in stale:
+        (TRANSLATIONS / f"{lang}.json").write_text(new[lang], encoding="utf-8")
+    sys.stdout.write(f"Updated: {', '.join(stale) if stale else 'nothing to do'}\n")
+
+
+if __name__ == "__main__":
+    main()

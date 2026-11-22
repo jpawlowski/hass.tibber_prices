@@ -1,0 +1,68 @@
+{
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Home Assistant (Debug)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "homeassistant",
+      "justMyCode": false,
+      "args": ["--debug", "-c", "config"]
+    },
+    {
+      "name": "Home Assistant (Fast Start)",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "homeassistant",
+      "justMyCode": false,
+      "args": ["--debug", "-c", "config", "--skip-pip"]
+    },
+    {
+      "name": "Debug Current Test File",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "args": ["-vv", "${file}"]
+    },
+    {
+      "name": "Debug All Tests",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "args": ["tests/", "-v"]
+    },
+    {
+      "name": "Debug Tests with Coverage",
+      "type": "debugpy",
+      "request": "launch",
+      "module": "pytest",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "args": ["tests/", "--cov", "--cov-report=term-missing"]
+    },
+    {
+      // Debug by attaching to local Home Assistant server using Remote Python Debugger.
+      // See https://www.home-assistant.io/integrations/debugpy/
+      "name": "Attach to Running HA (Local)",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": {
+        "port": 5678,
+        "host": "localhost"
+      },
+      "pathMappings": [
+        {
+          "localRoot": "${workspaceFolder}",
+          "remoteRoot": "."
+        }
+      ]
+    }
+  ]
+}

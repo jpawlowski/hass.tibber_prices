@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# script/seed-http-config: Seed the HTTP integration's UI-managed config store
+#
+# Since Home Assistant 2026.8, the `http:` YAML block is imported into
+# config/.storage/http on first boot and ignored on every boot after that
+# (with a Repairs warning nagging to remove it). Because config/.storage is
+# gitignored and gets wiped by `script/setup/reset`, relying on YAML would
+# either re-trigger that warning on every fresh environment or leave fresh
+# environments without our dev-friendly network settings (reachable from
+# Codespaces/DevContainer reverse proxies, IP banning disabled, permissive
+# CORS). This script writes the store directly instead, using the actual
+# HTTP_STORAGE_SCHEMA from the installed Home Assistant so the file always
+# matches the schema/version the current venv expects.
+#
+# Safe to re-run: it only writes the store if config/.storage/http does not
+# already exist, so it never overwrites settings changed via
+# Settings > System > Network in a running instance.
+#
+# Usage:
+#   ./script/setup/seed-http-config
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+run_hook "setup/seed-http-config" "pre"
+
+activate_venv
+
+if [[ -f $HA_CONFIG_DIR/.storage/http ]]; then
+    log_info "$HA_CONFIG_DIR/.storage/http already exists - leaving HTTP network config as-is"
+    exit 0
+fi
+
+log_header "Seeding HTTP network configuration"
+
+# Ensure a minimal config directory exists (safe to call this script standalone).
+mkdir -p "$HA_CONFIG_DIR"
+if [[ ! -f $HA_CONFIG_DIR/.HA_VERSION ]]; then
+    log_step "Initializing Home Assistant config directory"
+    hass --config "${PWD}/${HA_CONFIG_DIR}" --script ensure_config >/dev/null 2>&1
+fi
+
+mkdir -p "$HA_CONFIG_DIR/.storage"
+
+# Edit the `desired` dict below to change the seeded dev network settings.
+# Values mirror what the http: YAML block used to configure.
+python3 <<'PY'
+import json
+import os
+import tempfile
+from datetime import datetime, timezone
+from pathlib import Path
+
+from homeassistant.components.http import config as http_config
+
+desired = {
+    "server_host": ["0.0.0.0"],
+    "use_x_forwarded_for": True,
+    "trusted_proxies": [
+        "127.0.0.0/8",
+        "::1",
+        "192.168.0.0/16",
+        "172.16.0.0/12",
+        "10.0.0.0/8",
+    ],
+    "cors_allowed_origins": ["*"],
+    "ip_ban_enabled": False,
+}
+
+validated = http_config.HTTP_STORAGE_SCHEMA(desired)
+now = datetime.now(timezone.utc).isoformat()
+stable = {**validated, "created_at": now, "error": None, "error_message": None}
+
+payload = {
+    "version": http_config.STORAGE_VERSION,
+    "minor_version": http_config.STORAGE_MINOR_VERSION,
+    "key": http_config.STORAGE_KEY,
+    "data": {
+        "stable": stable,
+        "pending": None,
+        "yaml_migration_done": True,
+    },
+}
+
+path = Path(os.environ["HA_CONFIG_DIR"]) / ".storage" / "http"
+fd, tmp_path = tempfile.mkstemp(dir=path.parent, prefix=".http.")
+try:
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(json.dumps(payload, indent=2))
+    os.chmod(tmp_path, 0o600)
+    os.replace(tmp_path, path)
+except BaseException:
+    Path(tmp_path).unlink(missing_ok=True)
+    raise
+PY
+
+log_success "Wrote $HA_CONFIG_DIR/.storage/http with development-friendly network settings"
+
+run_hook "setup/seed-http-config" "post"

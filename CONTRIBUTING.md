@@ -1,169 +1,112 @@
-# Contributing to Tibber Prices Integration
+# Contribution guidelines
 
-Thank you for your interest in contributing! This document provides guidelines for contributing to this Home Assistant custom integration.
+Contributing to this project should be as easy and transparent as possible, whether it's:
 
-## 📋 Table of Contents
+- Reporting a bug
+- Discussing the current state of the code
+- Submitting a fix
+- Proposing new features
 
-- [Getting Started](#getting-started)
-- [Development Process](#development-process)
-- [Coding Standards](#coding-standards)
-- [Submitting Changes](#submitting-changes)
-- [Documentation](#documentation)
+## GitHub is used for everything
 
-For detailed developer documentation, see [docs/development/](docs/development/).
+GitHub is used to host code, to track issues and feature requests, as well as accept pull requests.
 
-> **Note:** This project is developed with extensive AI assistance (GitHub Copilot, Claude). If you're also using AI tools, check [`AGENTS.md`](/AGENTS.md) for patterns and conventions that ensure consistency.
+Pull requests are the best way to propose changes to the codebase.
 
-## Getting Started
+AI-assisted contributions are welcome, including substantially AI-generated work. Read the
+[`AI_POLICY.md`](AI_POLICY.md) before contributing. Be accurate about what you reviewed and tested, and do not present
+automated checks as human review or real-device testing.
 
-1. **Fork the repository** on GitHub
-2. **Clone your fork**:
-   ```bash
-   git clone https://github.com/YOUR_USERNAME/hass.tibber_prices.git
-   cd hass.tibber_prices
-   ```
-3. **Open in DevContainer** (recommended):
-   - Open in VS Code
-   - Click "Reopen in Container" when prompted
-   - Or manually: `Ctrl+Shift+P` → "Dev Containers: Reopen in Container"
+1. Fork the repo and create your branch from `main`.
+2. Run `script/setup/bootstrap` to install dependencies and git hooks.
+3. If you've changed something, update the documentation.
+4. Make sure your code passes all checks (using `script/check` for linting and type checking).
+5. Test your contribution.
+6. Review the resulting diff and describe its verification accurately.
+7. Issue that pull request!
 
-See [Development Setup](docs/development/setup.md) for detailed instructions.
+## Any contributions you make will be under the MIT Software License
 
-## Development Process
+In short, when you submit code changes, your submissions are understood to be under the same [MIT License](http://choosealicense.com/licenses/mit/) that covers the project. Feel free to contact the maintainers if that's a concern.
 
-### 1. Create a Branch
+## Report bugs using GitHub's [issues](../../issues)
 
-```bash
-git checkout -b feature/your-feature-name
-# or
-git checkout -b fix/issue-description
-```
+GitHub issues are used to track public bugs.
+Report a bug by [opening a new issue](../../issues/new/choose); it's that easy!
 
-### 2. Make Changes
+## Write bug reports with detail, background, and sample code
 
-- Follow the [Coding Guidelines](docs/development/coding-guidelines.md)
-- Keep changes focused and atomic
-- Update documentation if needed
+**Great Bug Reports** tend to have:
 
-### 3. Test Your Changes
+- A quick summary and/or background
+- Steps to reproduce
+  - Be specific!
+  - Give sample code if you can.
+- What you expected would happen
+- What actually happens
+- Notes (possibly including why you think this might be happening, or stuff you tried that didn't work)
 
-```bash
-# Lint and format
-./scripts/lint
+People _love_ thorough bug reports. I'm not even kidding.
 
-# Start development environment
-./scripts/develop
+## Use a Consistent Coding Style
 
-# Run tests (if available)
-pytest tests/
-```
+This project uses:
 
-### 4. Commit Your Changes
+- [Ruff](https://github.com/astral-sh/ruff) for linting and formatting
+- [Pyright](https://github.com/microsoft/pyright) for type checking
 
-We use **Conventional Commits** format:
+Run `script/check` to lint and type-check your code before submitting, or `script/lint` to auto-format and fix linting issues.
 
-```
-<type>(<scope>): <short summary>
+**Local validation:** Run `script/hassfest` to validate your integration against Home Assistant's quality standards using the official validation tools. This checks manifest.json, translations, services.yaml (service action definitions), and integration structure locally before pushing to GitHub.
 
-<detailed description>
+## AI Agent Support
 
-Impact: <user-visible effects>
-```
+This project ships [agent skills](./.agents/skills/README.md) — task-triggered playbooks written against the open
+[`SKILL.md`](https://agentskills.io/specification) standard. They work with GitHub Copilot, Claude Code, OpenAI Codex
+CLI, OpenCode, Cursor, Gemini CLI, and any other tool that implements the standard. Codex, Copilot, OpenCode and
+VS Code read `.agents/skills/` directly; Claude Code reaches the same files through the `.claude/skills/` symlink.
 
-**Types:** `feat`, `fix`, `perf`, `build`, `docs`, `style`, `refactor`, `test`, `ci`, `chore`, `revert`
+Skills cover adding entity platforms and service actions, config flow work, debugging the coordinator, translations,
+testing, quality-scale review, deprecated APIs, breaking changes, planning, releases, and repository tooling. A
+compatible agent loads the right one on its own; ask for it by name if it does not.
 
-The type decides what appears in the release notes. Pull requests are squash-merged, so **the pull request title becomes the commit on main** and has to follow the same format (a check enforces it).
+Alongside those, `AGENTS.md` provides always-on project context and `.agents/instructions/*.instructions.md` provide
+per-file-type style rules for GitHub Copilot.
 
-For the full commit-message rules, see `.github/instructions/commit-messages.instructions.md`.
-
-**Example:**
+Two commands keep the skills honest:
 
 ```bash
-git commit -m "feat(sensors): add daily average price sensor
-
-Added new sensor that calculates average price for the entire day.
-
-Impact: Users can now track daily average prices for cost analysis."
+script/skills-check                     # structure — runs in CI and as a pre-commit hook
 ```
 
-See `.github/instructions/commit-messages.instructions.md` for detailed commit-message guidelines.
+**Companion skill for operating Home Assistant.** These skills cover _developing_ the integration. When you drive the
+devcontainer's Home Assistant instance with an agent — creating test automations, dashboards, or helpers while trying
+your integration out — the community
+[`home-assistant-best-practices`](https://github.com/homeassistant-ai/skills) skill covers that side. It is not bundled
+here and not required; install it into your own agent if you find it useful.
 
-## Submitting Changes
+Please read [`AI_POLICY.md`](./AI_POLICY.md) before submitting AI-assisted contributions.
 
-### Pull Request Process
+## Code Quality
 
-1. **Push your branch** to your fork
-2. **Create a Pull Request** on GitHub with:
-   - A Conventional Commit title (`fix(sensors): …`): it becomes the commit on main and the line in the release notes
-   - Detailed description with context
-   - Reference related issues (`Fixes #123`)
-3. **Wait for review** and address feedback
+This blueprint follows Home Assistant's [integration quality standards](https://contributors.home-assistant.io/core/quality-scale/) as best practices. The code includes:
 
-### PR Requirements
+- ✅ Comprehensive docstrings with links to official documentation
+- ✅ Full type hints for better IDE support
+- ✅ Config flow with reauthentication support
+- ✅ Proper error handling and entity unavailability
+- ✅ Coordinator pattern for efficient data fetching
 
-- ✅ Code passes `./scripts/lint-check`
-- ✅ No breaking changes (or clearly documented)
-- ✅ Translations updated for all languages
-- ✅ Commit messages follow Conventional Commits
-- ✅ Changes tested in Home Assistant
+**Don't worry!** You don't need to maintain all of this. The blueprint gives you a solid, well-documented starting point. Feel free to simplify or adapt anything to your needs - the goal is to help you get started quickly with good patterns, not to overwhelm you with requirements.
 
-## Coding Standards
+## Test your code modification
 
-### Code Style
+This project comes with a complete development environment in a container, easy to launch
+if you use Visual Studio Code. With this container you will have a standalone
+Home Assistant instance running and already configured with the included
+[`configuration.yaml`](./config/configuration.yaml) file.
 
-- **Formatter/Linter**: Ruff (enforced automatically)
-- **Max line length**: 120 characters
-- **Python version**: 3.13+
-
-Always run before committing:
-
-```bash
-./scripts/lint
-```
-
-### Key Patterns
-
-- Use `dt_util` from `homeassistant.util` for all datetime operations
-- Load translations asynchronously at integration setup
-- Enrich price data before exposing to entities
-- Follow Home Assistant entity naming conventions
-
-See [Coding Guidelines](docs/developer/docs/coding-guidelines.md) for complete details.
-
-## Documentation
-
-Documentation is organized in two Docusaurus sites:
-
-- **User docs** (`docs/user/`): Installation, configuration, usage guides
-  - Markdown files in `docs/user/docs/*.md`
-  - Navigation via `docs/user/sidebars.ts`
-- **Developer docs** (`docs/developer/`): Architecture, patterns, contribution guides
-  - Markdown files in `docs/developer/docs/*.md`
-  - Navigation via `docs/developer/sidebars.ts`
-
-**When adding new documentation:**
-
-1. Place file in appropriate `docs/*/docs/` directory
-2. Add to corresponding `sidebars.ts` for navigation
-3. Update translations when changing `translations/en.json` (update ALL language files)
-
-## Reporting Bugs
-
-Report bugs via [GitHub Issues](../../issues/new/choose).
-
-**Great bug reports include:**
-
-- Quick summary and background
-- Steps to reproduce (be specific!)
-- Expected vs. actual behavior
-- Sample code/logs if applicable
-
-## Questions?
-
-- Check [Developer Documentation](docs/development/)
-- Read [Copilot Instructions](AGENTS.md) for patterns
-- Search [existing issues](https://github.com/jpawlowski/hass.tibber_prices/issues)
-- Open a [new issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new)
+You can also run tests using `script/test` to ensure your changes don't break existing functionality.
 
 ## License
 

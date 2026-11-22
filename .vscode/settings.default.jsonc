@@ -1,0 +1,127 @@
+// Please keep this file (mostly!) in sync with settings in .devcontainer/devcontainer.json
+{
+  "chat.promptFiles": true,
+  // AGENTS.md is the single always-loaded instruction file; there is no
+  // .github/copilot-instructions.md to fall back on, so pin this on.
+  "chat.useAgentsMdFile": true,
+  // No chat.agentSkillsLocations needed: VS Code discovers .agents/skills/ by default.
+  "editor.tabSize": 4,
+  "editor.formatOnPaste": false,
+  "editor.formatOnSave": true,
+  "editor.formatOnType": false,
+  "files.eol": "\n",
+  "files.trimTrailingWhitespace": true,
+  "files.associations": {
+    "**/translations/*.json": "jsontranslation",
+    "**/*ignore": "ignore"
+  },
+  "markdown.validate.enabled": false,
+  "markdown.validate.fileLinks.enabled": "ignore",
+  "markdown.validate.fragmentLinks.enabled": "ignore",
+  "python.analysis.autoImportCompletions": true,
+  "python.analysis.diagnosticMode": "workspace",
+  "python.defaultInterpreterPath": "/home/vscode/ha-venv/bin/python",
+  "python.linting.pylintEnabled": false,
+  // .devcontainer/.bashrc and .zshrc activate the venv in every terminal, before this extension could.
+  "python.terminal.activateEnvironment": false,
+  "python.terminal.activateEnvInCurrentTerminal": false,
+  // .devcontainer/.env uses Bash syntax (sourced by setup scripts) — not a Python dotenv file.
+  // Disable VS Code's env file injection to avoid parse errors and unexpected variable leakage.
+  // Also clear python.envFile to avoid Python extension warnings about a configured env file.
+  "python.envFile": "",
+  "python.terminal.useEnvFile": false,
+  "python.testing.pytestArgs": ["--no-cov"],
+  "python.testing.pytestEnabled": false,
+  "terminal.integrated.profiles.linux": {
+    "zsh": {
+      "path": "/usr/bin/zsh"
+    }
+  },
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  // Devcontainer already isolates execution; disable agent terminal sandbox to
+  // avoid double-sandbox namespace/prerequisite issues in chat tooling.
+  "chat.agent.sandbox.enabled": "off",
+  // Keep explicit compatibility with terminal-tool specific setting variants.
+  "chat.tools.terminal.sandbox.enabled": false,
+  // Disallow global auto-approval; use workspace/session scoped approvals instead.
+  "chat.tools.global.autoApprove": false,
+  // Always require manual approval for sensitive paths, even when broader auto-approve is enabled.
+  "chat.tools.edits.autoApprove": {
+    "**/.env": false,
+    "**/.env.*": false,
+    "**/config/.storage/auth": false,
+    "**/config/.storage/auth_provider.*": false,
+    "**/config/.storage/dev_access_token": false,
+    "**/.git/**": false,
+    ".agents/hooks/**": false,
+    ".claude/settings.json": false,
+    ".codex/hooks.json": false,
+    ".opencode/**": false,
+    "opencode.json": false,
+    "opencode.jsonc": false,
+    ".devcontainer/claude-code/**": false,
+    ".devcontainer/codex/**": false,
+    ".devcontainer/opencode/**": false,
+    ".github/workflows/**": false,
+    ".github/actions/**": false,
+    "release-please-config.json": false,
+    "script/release-notes": false,
+    "script/version": false
+  },
+  "yaml.customTags": [
+    "!secret scalar",
+    "!include scalar",
+    "!include_dir_list scalar",
+    "!include_dir_merge_list scalar",
+    "!include_dir_named scalar",
+    "!include_dir_merge_named scalar",
+    "!input scalar"
+  ],
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  },
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true
+  },
+  "[jsontranslation]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": false
+  },
+
+  "github.copilot.chat.commitMessageGeneration.instructions": [
+    { "file": ".agents/instructions/blueprint.commit-message.instructions.md" }
+  ],
+
+  "json.schemas": [
+    // These values differs between working with devcontainer and locally, therefore their values should NOT be in sync!
+    {
+      "fileMatch": ["custom_components/*/manifest.json"],
+      "url": "./schemas/json/manifest_schema.json"
+    },
+    {
+      "fileMatch": ["custom_components/*/translations/*.json"],
+      "url": "./schemas/json/translation_schema.json"
+    },
+    {
+      "fileMatch": ["hacs.json"],
+      "url": "./schemas/json/hacs_schema.json"
+    },
+    {
+      "fileMatch": ["custom_components/*/icons.json"],
+      "url": "./schemas/json/icons_schema.json"
+    }
+  ]
+}

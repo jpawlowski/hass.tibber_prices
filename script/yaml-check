@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# script/yaml-check: Check YAML files with yamllint and zizmor
+#
+# Runs yamllint in check-only mode against integration YAML, schemas,
+# GitHub Actions workflows, and config files, then audits the workflows
+# for security issues with zizmor. Neither tool has an auto-fix mode here.
+# Useful for targeted validation after YAML changes.
+#
+# Usage:
+#   ./script/yaml-check
+#
+# Examples:
+#   ./script/yaml-check
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/integration.sh
+source "$SCRIPT_DIR/.lib/integration.sh"
+
+activate_venv
+
+run_hook "yaml-check" "pre"
+
+log_header "Checking YAML with yamllint"
+yamllint -c .yamllint.yml \
+    "$INTEGRATION_PATH"/ \
+    schemas/yaml/ \
+    .github/ \
+    .pre-commit-config.yaml \
+    .prettierrc.yml
+
+log_header "Auditing GitHub Actions workflows with zizmor"
+# zizmor picks up GH_TOKEN when one is set and degrades to offline auditing
+# otherwise, so no token is required locally.
+zizmor --pedantic .github/workflows/
+
+run_hook "yaml-check" "post"
+log_success "YAML check completed"

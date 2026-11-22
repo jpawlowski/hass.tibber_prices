@@ -1,28 +1,93 @@
 {
-  "name": "jpawlowski/hass.tibber_prices",
+  "name": "HA ${localWorkspaceFolderBasename} Dev Container",
   "image": "mcr.microsoft.com/devcontainers/base:debian",
-  "postCreateCommand": "{ sudo chown vscode:vscode /home/vscode/.claude /home/vscode/.codex || true; } && bash .devcontainer/setup-git.sh && scripts/setup/setup",
-  "postStartCommand": "scripts/motd",
+  // Lifecycle hooks — execution order on first creation:
+  //   onCreateCommand → updateContentCommand → postCreateCommand → postStartCommand → postAttachCommand
+  // On subsequent starts (container stopped/restarted):
+  //   postStartCommand → postAttachCommand
+  // On client re-attach (container already running):
+  //   postAttachCommand only
+  //
+  // Each hook script sources .devcontainer/hooks/<name>.{pre,post}.sh when present.
+  //
+  // Runs once at container creation — fixes Docker volume mount point ownership.
+  "onCreateCommand": "bash .devcontainer/on-create.sh",
+  // Runs at creation and on Codespaces pre-build refreshes — use for content-dependent setup.
+  "updateContentCommand": "bash .devcontainer/update-content.sh",
+  // Runs on every container start (not on every attach) — use for per-start actions.
+  "postStartCommand": "bash .devcontainer/post-start.sh",
+  // Runs on every container creation — installs all dependencies.
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+  // Runs on every client attach — detects fresh blueprints and triggers initialization.
   "containerEnv": {
+    // Python runtime variables — must be set for ALL Python processes, including those spawned
+    // by VS Code extensions (Pylance, test runner, Ruff) that never go through our shell scripts.
+    //
+    // NOTE: .devcontainer/.env is NOT available here. containerEnv is applied by the Docker runtime
+    // at container start, while .env is sourced by lifecycle hook scripts (onCreateCommand etc.).
+    // Variables that only need to reach setup scripts belong in .devcontainer/.env, not here.
+    // Variables from .env also cannot influence DevContainer features — features are installed
+    // during image build, before the container starts and before any lifecycle hook runs.
+    //
+    // Enable asyncio debug mode for easier debugging of async code
     "PYTHONASYNCIODEBUG": "1",
-    "TIBBER_PRICES_DEV": "1",
-    "CLAUDE_CONFIG_DIR": "/home/vscode/.claude"
+    // Ensure Python output is sent straight to terminal (e.g. for logging)
+    "PYTHONUNBUFFERED": "1",
+    // Prevent Python from writing .pyc files to disk
+    "PYTHONDONTWRITEBYTECODE": "1",
+    // uv's cache shares the venv volume, so uv can hardlink packages into the venvs instead of copying them.
+    // Must be set here so it reaches every process (extensions, uv, hass) from container start.
+    "UV_CACHE_DIR": "/home/vscode/ha-venv/.uv-cache",
+    // mise keeps its tools in a named volume, mounted under $HOME for the same reason as the venv below.
+    "MISE_DATA_DIR": "/home/vscode/mise-data",
+    // Opening the repository in the container is the consent mise's trust prompt would ask for.
+    "MISE_TRUSTED_CONFIG_PATHS": "${containerWorkspaceFolder}",
+    // Adds mise.devcontainer.toml: the terminal tools only a person in the container uses.
+    "MISE_ENV": "devcontainer"
   },
+  // mise's shims first, so every terminal and every editor extension finds the versions mise.toml pins.
   "remoteEnv": {
-    "PATH": "/home/vscode/.local/share/mise/shims:${containerEnv:PATH}"
+    "PATH": "/home/vscode/mise-data/shims:${containerEnv:PATH}"
   },
-  "forwardPorts": [8123, 3000, 3001],
+  "features": {
+    // Python and the CLI tools come from mise.toml; apt keeps system libraries and tools without a mise binary.
+    // Node stays a feature because the agent CLI features below need it at image build time.
+    "ghcr.io/devcontainers-extra/features/mise:1": {
+      "version": "2026.11.12"
+    },
+    "ghcr.io/devcontainers/features/node:2": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
+    "ghcr.io/dirien/devcontainer-feature-codex/codex:0": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/opencode:1": {},
+    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
+      "packages": [
+        "autoconf",
+        "automake",
+        "ffmpeg",
+        "httpie",
+        "ipython3",
+        "jo",
+        "libpcap-dev",
+        "libssl-dev",
+        "libtool",
+        "libturbojpeg0",
+        "moreutils",
+        "socat",
+        "sqlite3",
+        "tree"
+      ]
+    },
+    "./project-feature": {}
+  },
+  "forwardPorts": [8123],
   "portsAttributes": {
     "8123": {
       "label": "Home Assistant",
-      "onAutoForward": "notify"
-    },
-    "3000": {
-      "label": "Docusaurus User Docs",
-      "onAutoForward": "notify"
-    },
-    "3001": {
-      "label": "Docusaurus Developer Docs",
       "onAutoForward": "notify"
     }
   },
@@ -30,69 +95,84 @@
     "vscode": {
       "extensions": [
         "charliermarsh.ruff",
+        "davidanson.vscode-markdownlint",
         "EditorConfig.EditorConfig",
         "esbenp.prettier-vscode",
-        "github.copilot",
         "github.vscode-pull-request-github",
         "ms-python.python",
         "ms-python.vscode-pylance",
         "ms-vscode-remote.remote-containers",
         "redhat.vscode-yaml",
-        "ryanluker.vscode-coverage-gutters",
-        "MermaidChart.vscode-mermaid-chart",
-        "Anthropic.claude-code",
-        "openai.chatgpt"
+        "tamasfe.even-better-toml"
       ],
+      // Please keep this file in sync with settings in .vscode/settings.default.jsonc
       "settings": {
+        "chat.promptFiles": true,
+        // AGENTS.md is the single always-loaded instruction file; there is no
+        // .github/copilot-instructions.md to fall back on, so pin this on.
+        "chat.useAgentsMdFile": true,
+        // No chat.agentSkillsLocations needed: VS Code discovers .agents/skills/ by default.
         "editor.tabSize": 4,
+        "editor.formatOnPaste": false,
         "editor.formatOnSave": true,
         "editor.formatOnType": false,
-        "extensions.ignoreRecommendations": false,
         "files.eol": "\n",
         "files.trimTrailingWhitespace": true,
-        "python.analysis.typeCheckingMode": "basic",
+        "files.associations": {
+          "**/translations/*.json": "jsontranslation",
+          "**/*ignore": "ignore"
+        },
+        "markdown.validate.enabled": false,
+        "markdown.validate.fileLinks.enabled": "ignore",
+        "markdown.validate.fragmentLinks.enabled": "ignore",
         "python.analysis.autoImportCompletions": true,
         "python.analysis.diagnosticMode": "workspace",
-        "python.analysis.diagnosticSeverityOverrides": {
-          "reportUnusedImport": "none",
-          "reportUnusedVariable": "none",
-          "reportUnusedCoroutine": "none",
-          "reportMissingTypeStubs": "none"
-        },
-        "python.analysis.include": ["custom_components/tibber_prices"],
-        "python.analysis.exclude": [
-          "**/.venv/**",
-          "**/venv/**",
-          "**/__pycache__/**",
-          "**/.git/**",
-          "**/.github/**",
-          "**/docs/**",
-          "**/node_modules/**"
-        ],
-        "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
-        "python.terminal.activateEnvironment": true,
-        "python.terminal.activateEnvInCurrentTerminal": true,
+        "python.defaultInterpreterPath": "/home/vscode/ha-venv/bin/python",
+        "python.linting.pylintEnabled": false,
+        // .devcontainer/.bashrc and .zshrc activate the venv in every terminal, before this extension could.
+        "python.terminal.activateEnvironment": false,
+        "python.terminal.activateEnvInCurrentTerminal": false,
+        // .devcontainer/.env uses Bash syntax (sourced by setup scripts) — not a Python dotenv file.
+        // Disable VS Code's env file injection to avoid parse errors and unexpected variable leakage.
+        // Also clear python.envFile to avoid Python extension warnings about a configured env file.
+        "python.envFile": "",
+        "python.terminal.useEnvFile": false,
         "python.testing.pytestArgs": ["--no-cov"],
-        "[json]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode",
-          "editor.formatOnSave": true,
-          "editor.tabSize": 2
-        },
-        "[jsonc]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode",
-          "editor.formatOnSave": true,
-          "editor.tabSize": 2
-        },
-        "[python]": {
-          "editor.defaultFormatter": "charliermarsh.ruff",
-          "editor.formatOnSave": true,
-          "editor.codeActionsOnSave": {
-            "source.fixAll.ruff": "explicit",
-            "source.organizeImports.ruff": "explicit"
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "/usr/bin/zsh"
           }
         },
-        "[markdown]": {
-          "editor.wordWrap": "on"
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        // Devcontainer already isolates execution; disable agent terminal sandbox to
+        // avoid double-sandbox namespace/prerequisite issues in chat tooling.
+        "chat.agent.sandbox.enabled": "off",
+        // Keep explicit compatibility with terminal-tool specific setting variants.
+        "chat.tools.terminal.sandbox.enabled": false,
+        // Disallow global auto-approval; use workspace/session scoped approvals instead.
+        "chat.tools.global.autoApprove": false,
+        // Always require manual approval for sensitive paths, even when broader auto-approve is enabled.
+        "chat.tools.edits.autoApprove": {
+          "**/.env": false,
+          "**/.env.*": false,
+          "**/config/.storage/auth": false,
+          "**/config/.storage/auth_provider.*": false,
+          "**/config/.storage/dev_access_token": false,
+          "**/.git/**": false,
+          ".agents/hooks/**": false,
+          ".claude/settings.json": false,
+          ".codex/hooks.json": false,
+          ".opencode/**": false,
+          "opencode.json": false,
+          "opencode.jsonc": false,
+          ".devcontainer/claude-code/**": false,
+          ".devcontainer/codex/**": false,
+          ".devcontainer/opencode/**": false,
+          ".github/workflows/**": false,
+          ".github/actions/**": false,
+          "release-please-config.json": false,
+          "script/release-notes": false,
+          "script/version": false
         },
         "yaml.customTags": [
           "!secret scalar",
@@ -103,66 +183,82 @@
           "!include_dir_merge_named scalar",
           "!input scalar"
         ],
-        "markdown.validate.enabled": false,
-        "markdown.validate.fileLinks.enabled": "ignore",
-        "markdown.validate.fragmentLinks.enabled": "ignore",
+        "[python]": {
+          "editor.defaultFormatter": "charliermarsh.ruff",
+          "editor.codeActionsOnSave": {
+            "source.fixAll.ruff": "explicit",
+            "source.organizeImports.ruff": "explicit"
+          }
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[jsonc]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": true
+        },
+        "[jsontranslation]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode",
+          "editor.formatOnSave": false
+        },
+        "github.copilot.chat.commitMessageGeneration.instructions": [
+          { "file": ".agents/instructions/blueprint.commit-message.instructions.md" }
+        ],
+        "json.schemaDownload.trustedDomains": {
+          "https://opencode.ai/": true,
+          "https://models.dev/": true
+        },
         "json.schemas": [
           {
-            "fileMatch": ["homeassistant/components/*/manifest.json"],
+            "fileMatch": ["custom_components/*/manifest.json"],
             "url": "${containerWorkspaceFolder}/schemas/json/manifest_schema.json"
           },
           {
-            "fileMatch": ["homeassistant/components/*/translations/*.json"],
+            "fileMatch": ["custom_components/*/translations/*.json"],
             "url": "${containerWorkspaceFolder}/schemas/json/translation_schema.json"
-          }
-        ],
-        "github.copilot.chat.commitMessageGeneration.instructions": [
+          },
           {
-            "file": ".github/instructions/commit-messages.instructions.md"
+            "fileMatch": ["hacs.json"],
+            "url": "${containerWorkspaceFolder}/schemas/json/hacs_schema.json"
+          },
+          {
+            "fileMatch": ["custom_components/*/icons.json"],
+            "url": "${containerWorkspaceFolder}/schemas/json/icons_schema.json"
           }
-        ],
-        "git.useConfigOnly": false
+        ]
       }
     }
   },
   "mounts": [
-    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached",
-    "source=tibber-prices-claude-${devcontainerId},target=/home/vscode/.claude,type=volume",
-    "source=tibber-prices-codex-${devcontainerId},target=/home/vscode/.codex,type=volume"
+    // Named volume for HA Python venv: survives container rebuilds (but not "Rebuild and Clean Volumes").
+    // Holds every Home Assistant environment, the Python builds they use and uv's cache, so a rebuild keeps them all.
+    // Mounted directly under $HOME (not ~/.local/ha-venv) so Docker does NOT create ~/.local as root,
+    // which would race with VS Code server trying to write ~/.cache/Microsoft at container start.
+    // Ownership is fixed by onCreateCommand (Docker initializes volume mount points as root).
+    // Volume name uses ${localWorkspaceFolderBasename} so each project on the host gets its own volume.
+    "source=${localWorkspaceFolderBasename}_ha_venv,target=/home/vscode/ha-venv,type=volume",
+    // Named volume for the tools mise installs: a rebuild does not download Python and the CLI tools again.
+    // Ownership is fixed by onCreateCommand (Docker initializes volume mount points as root).
+    "source=${localWorkspaceFolderBasename}_mise_data,target=/home/vscode/mise-data,type=volume",
+    // Named volume for node_modules: keeps it on Container FS (not bind mount) for performance.
+    // Docker manages this volume separately from the workspace — npm ci runs fast on overlay FS.
+    "source=${localWorkspaceFolderBasename}_node_modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    // Persist Claude CLI home data (sessions/history/auth) across container rebuilds.
+    // Useful when using Claude Code locally inside the DevContainer.
+    "source=${localWorkspaceFolderBasename}_claude_home,target=/home/vscode/.claude,type=volume",
+    // Persist Codex CLI data (sessions/history/config) across container rebuilds.
+    // Config bootstrap in on-create continues to work because this directory stays writable.
+    "source=${localWorkspaceFolderBasename}_codex_home,target=/home/vscode/.codex,type=volume",
+    // Persist OpenCode CLI data (sessions/history/auth); on-create.sh links it into ~/.config and ~/.local/share.
+    "source=${localWorkspaceFolderBasename}_opencode_home,target=/home/vscode/.opencode,type=volume",
+    // Mount host gitconfig for local development (ignored in Codespaces)
+    // In Codespaces, GitHub automatically configures Git with your account
+    "source=${localEnv:HOME}${localEnv:USERPROFILE}/.gitconfig,target=/home/vscode/.gitconfig.host,type=bind,consistency=cached,readonly"
   ],
-  "remoteUser": "vscode",
-  "features": {
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/flexwie/devcontainer-features/op:1": {
-      "version": "latest"
-    },
-    "ghcr.io/devcontainers-extra/features/mise:1": {},
-    "ghcr.io/devcontainers-extra/features/apt-packages:1": {
-      "packages": [
-        "autoconf",
-        "automake",
-        "bat",
-        "eza",
-        "fd-find",
-        "ffmpeg",
-        "fzf",
-        "git-delta",
-        "httpie",
-        "hyperfine",
-        "ipython3",
-        "jo",
-        "jq",
-        "libpcap-dev",
-        "libssl-dev",
-        "libtool",
-        "libturbojpeg0",
-        "miller",
-        "moreutils",
-        "ripgrep",
-        "sqlite3",
-        "tree",
-        "yamllint"
-      ]
-    }
-  }
+  "remoteUser": "vscode"
 }
