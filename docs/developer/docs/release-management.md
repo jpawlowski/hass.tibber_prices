@@ -18,8 +18,9 @@ version or runs a release script: the version and the release notes follow from 
 3. The **Release** workflow (`.github/workflows/release.yml`) then:
     - **build** (read-only): `./scripts/release/build-asset` packs `custom_components/tibber_prices/`
       of the tag into `tibber_prices.zip` and checks its version and the layout the store installs
-    - **publish**: attaches the zip and publishes the release (a draft until then, so no install
-      ever finds the asset missing)
+    - **publish**: attaches the zip, appends the Buy Me a Coffee footer
+      (`.github/release-notes-footer.md`) and publishes the release (a draft until then, so no
+      install ever finds the asset missing)
     - **docs**: starts `docusaurus.yml` to version the docs
 
 The repository setting "Allow GitHub Actions to create and approve pull requests" (Settings →

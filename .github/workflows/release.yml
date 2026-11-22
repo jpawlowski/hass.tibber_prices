@@ -109,7 +109,16 @@ jobs:
           name: release-asset
           path: dist
 
-      - name: Attach the asset, then publish
+      # The footer every release ends with, from the workflow's own commit (older tags lack it)
+      - name: Checkout the release notes footer
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: .github/release-notes-footer.md
+          sparse-checkout-cone-mode: false
+          path: repo
+          persist-credentials: false
+
+      - name: Attach the asset and the footer, then publish
         env:
           GH_TOKEN: ${{ github.token }}
           PRERELEASE: ${{ needs.build.outputs.prerelease }}
@@ -117,15 +126,24 @@ jobs:
           if gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" >/dev/null 2>&1; then
             # release-please's draft (or a release whose upload failed before)
             gh release upload "${TAG}" dist/* --clobber --repo "${GITHUB_REPOSITORY}"
-            gh release edit "${TAG}" --draft=false --repo "${GITHUB_REPOSITORY}"
           elif [[ ${PRERELEASE} == true ]]; then
-            # A beta: no release pull request, so the notes come from GitHub (.github/release.yml)
-            gh release create "${TAG}" dist/* --verify-tag --prerelease --generate-notes \
+            # A beta: no release pull request, so the notes come from GitHub (.github/release.yml);
+            # a draft too, until the footer is on
+            gh release create "${TAG}" dist/* --verify-tag --draft --prerelease --generate-notes \
               --title "${TAG} (beta)" --repo "${GITHUB_REPOSITORY}"
           else
             echo "::error::No release for ${TAG}: stable releases come from the release pull request"
             exit 1
           fi
+
+          # Append the footer once: a re-run finds it already there
+          gh release view "${TAG}" --json body -q .body --repo "${GITHUB_REPOSITORY}" > notes.md
+          if ! grep -qF 'buymeacoffee.com/jpawlowski' notes.md; then
+            printf '\n\n' >> notes.md
+            cat repo/.github/release-notes-footer.md >> notes.md
+            gh release edit "${TAG}" --notes-file notes.md --repo "${GITHUB_REPOSITORY}"
+          fi
+          gh release edit "${TAG}" --draft=false --repo "${GITHUB_REPOSITORY}"
           {
             echo "**Tag:** ${TAG}"
             echo "**Asset:** $(ls dist)"

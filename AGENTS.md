@@ -1006,6 +1006,7 @@ When changes are complete and ready for testing:
 
 - **Don't bring back** hand-made version bumps, `prepare`/`suggest-version`/`generate-notes`, git-cliff or a CI job that commits to `main` (#272: that was the fragile part).
 - **The release stays a draft until its asset is attached**, so no install ever finds it missing; never create a release with GitHub's "Draft a new release" button.
+- **Every release ends with the Buy Me a Coffee footer** (`.github/release-notes-footer.md`, appended by the `publish` job before it publishes, once per release). release-please doesn't write it, so don't drop that step; the file is excluded from Prettier, which would turn its leading `---` into `***`.
 - **The type decides the release notes** (release-please sorts by type only, ignores scopes and trailers; mapping in `.github/instructions/commit-messages.instructions.md`). `build` is reserved for `build(deps)`, the integration's own requirements (Renovate, `pr-title.yml` enforces it). Squash-merged pull requests give one line per change.
 - **Permissions per job**: `build` has no write token (a build step may run third-party code, #271; build steps go into `build-asset`), the docs dispatch has its own job with `actions: write` (a tag created with `GITHUB_TOKEN` starts no workflow, so `docusaurus.yml` is started by `gh workflow run`).
 - `build-asset` checks that a release's `manifest.json` already carries the tag's version (release-please's `extra-files`) and writes it only for betas.
