@@ -2052,12 +2052,6 @@
           },
           "threshold_falling_strongly_percent": {
             "name": "Tröskel kraftigt fallande (%)"
-          },
-          "second_half_2h_avg": {
-            "name": "Medelpris, andra halvan av 2-timmarsfönstret"
-          },
-          "second_half_2h_diff_from_current_percent": {
-            "name": "Andra halvan jämfört med nuvarande pris (%)"
           }
         }
       },
@@ -2824,7 +2818,7 @@
             "name": "Medelpris efter förändringen"
           },
           "trend_diff_percent": {
-            "name": "Prisförändring vid förändringen (%)"
+            "name": "Prisförändring vid vändpunkten (%)"
           },
           "volatility_factor": {
             "name": "Volatilitetsfaktor"
@@ -2874,7 +2868,7 @@
             "name": "Medelpris efter förändringen"
           },
           "trend_diff_percent": {
-            "name": "Prisförändring vid förändringen (%)"
+            "name": "Prisförändring vid vändpunkten (%)"
           },
           "volatility_factor": {
             "name": "Volatilitetsfaktor"
@@ -4258,6 +4252,12 @@
           },
           "usage_tips": {
             "name": "Användningstips"
+          },
+          "currency": {
+            "name": "Valuta"
+          },
+          "error": {
+            "name": "Fel"
           }
         }
       },
@@ -5057,6 +5057,15 @@
           },
           "usage_tips": {
             "name": "Användningstips"
+          },
+          "using_cached_data": {
+            "name": "Använder cachade data"
+          },
+          "last_successful_update": {
+            "name": "Senaste lyckade uppdatering"
+          },
+          "subscription_phase": {
+            "name": "Abonnemangsfas"
           }
         }
       },

@@ -2052,12 +2052,6 @@
           },
           "threshold_falling_strongly_percent": {
             "name": "Strongly falling threshold (%)"
-          },
-          "second_half_2h_avg": {
-            "name": "Average price, second half of the 2 h window"
-          },
-          "second_half_2h_diff_from_current_percent": {
-            "name": "Second half vs. current price (%)"
           }
         }
       },
@@ -2824,7 +2818,7 @@
             "name": "Average price after the change"
           },
           "trend_diff_percent": {
-            "name": "Price change at the change (%)"
+            "name": "Price change at the turning point (%)"
           },
           "volatility_factor": {
             "name": "Volatility factor"
@@ -2874,7 +2868,7 @@
             "name": "Average price after the change"
           },
           "trend_diff_percent": {
-            "name": "Price change at the change (%)"
+            "name": "Price change at the turning point (%)"
           },
           "volatility_factor": {
             "name": "Volatility factor"
@@ -4258,6 +4252,12 @@
           },
           "usage_tips": {
             "name": "Usage tips"
+          },
+          "currency": {
+            "name": "Currency"
+          },
+          "error": {
+            "name": "Error"
           }
         }
       },
@@ -5057,6 +5057,15 @@
           },
           "usage_tips": {
             "name": "Usage tips"
+          },
+          "using_cached_data": {
+            "name": "Using cached data"
+          },
+          "last_successful_update": {
+            "name": "Last successful update"
+          },
+          "subscription_phase": {
+            "name": "Subscription phase"
           }
         }
       },

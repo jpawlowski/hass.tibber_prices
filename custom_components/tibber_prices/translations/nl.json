@@ -2052,12 +2052,6 @@
           },
           "threshold_falling_strongly_percent": {
             "name": "Drempel sterk dalend (%)"
-          },
-          "second_half_2h_avg": {
-            "name": "Gemiddelde prijs, tweede helft van het 2-uursvenster"
-          },
-          "second_half_2h_diff_from_current_percent": {
-            "name": "Tweede helft t.o.v. huidige prijs (%)"
           }
         }
       },
@@ -2824,7 +2818,7 @@
             "name": "Gemiddelde prijs na de verandering"
           },
           "trend_diff_percent": {
-            "name": "Prijsverandering bij de verandering (%)"
+            "name": "Prijsverandering op het omslagpunt (%)"
           },
           "volatility_factor": {
             "name": "Volatiliteitsfactor"
@@ -2874,7 +2868,7 @@
             "name": "Gemiddelde prijs na de verandering"
           },
           "trend_diff_percent": {
-            "name": "Prijsverandering bij de verandering (%)"
+            "name": "Prijsverandering op het omslagpunt (%)"
           },
           "volatility_factor": {
             "name": "Volatiliteitsfactor"
@@ -4258,6 +4252,12 @@
           },
           "usage_tips": {
             "name": "Gebruikstips"
+          },
+          "currency": {
+            "name": "Valuta"
+          },
+          "error": {
+            "name": "Fout"
           }
         }
       },
@@ -5057,6 +5057,15 @@
           },
           "usage_tips": {
             "name": "Gebruikstips"
+          },
+          "using_cached_data": {
+            "name": "Gebruikt gecachte gegevens"
+          },
+          "last_successful_update": {
+            "name": "Laatste succesvolle update"
+          },
+          "subscription_phase": {
+            "name": "Abonnementsfase"
           }
         }
       },

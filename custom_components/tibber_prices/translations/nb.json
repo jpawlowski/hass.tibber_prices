@@ -2052,12 +2052,6 @@
           },
           "threshold_falling_strongly_percent": {
             "name": "Terskel sterkt fallende (%)"
-          },
-          "second_half_2h_avg": {
-            "name": "Gjennomsnittspris, andre halvdel av 2-timersvinduet"
-          },
-          "second_half_2h_diff_from_current_percent": {
-            "name": "Andre halvdel mot nåværende pris (%)"
           }
         }
       },
@@ -2824,7 +2818,7 @@
             "name": "Gjennomsnittspris etter endringen"
           },
           "trend_diff_percent": {
-            "name": "Prisendring ved endringen (%)"
+            "name": "Prisendring ved vendepunktet (%)"
           },
           "volatility_factor": {
             "name": "Volatilitetsfaktor"
@@ -2874,7 +2868,7 @@
             "name": "Gjennomsnittspris etter endringen"
           },
           "trend_diff_percent": {
-            "name": "Prisendring ved endringen (%)"
+            "name": "Prisendring ved vendepunktet (%)"
           },
           "volatility_factor": {
             "name": "Volatilitetsfaktor"
@@ -4258,6 +4252,12 @@
           },
           "usage_tips": {
             "name": "Brukstips"
+          },
+          "currency": {
+            "name": "Valuta"
+          },
+          "error": {
+            "name": "Feil"
           }
         }
       },
@@ -5057,6 +5057,15 @@
           },
           "usage_tips": {
             "name": "Brukstips"
+          },
+          "using_cached_data": {
+            "name": "Bruker hurtigbufrede data"
+          },
+          "last_successful_update": {
+            "name": "Siste vellykkede oppdatering"
+          },
+          "subscription_phase": {
+            "name": "Abonnementsfase"
           }
         }
       },
