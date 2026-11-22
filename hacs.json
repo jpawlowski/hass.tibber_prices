@@ -2,5 +2,6 @@
   "name": "Tibber Prices & Planning",
   "homeassistant": "2026.9.0",
   "zip_release": true,
-  "filename": "tibber_prices.zip"
+  "filename": "tibber_prices.zip",
+  "hide_default_branch": true
 }
