@@ -224,7 +224,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             "phase_duration_minutes",
             "remaining_minutes",
             "next_in_minutes",
-            # Day pattern and price phases: derivable from the price data, large or changing daily
+            # Day pattern and price phases: derivable from the price data, large or changing daily.
+            # Per class: a sensor that gets a top-level start/end/hours of its own loses it from history too
             "confidence",
             "day_cv_percent",
             "extreme_time",

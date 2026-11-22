@@ -45,78 +45,57 @@ def load_source() -> dict:
     return source
 
 
-def attributes_of(source: dict, platform: str, entity: str) -> tuple[str | None, list[str]]:
-    """Return the hour count taken from the entity's key (if any) and its expanded attribute keys."""
-    hours: str | None = None
-    matches = []
+def attributes_of(source: dict, platform: str, entity: str) -> dict[str, tuple[str, str]]:
+    """Return the entity's attributes as key -> (name template, hour count), expanded and in group order."""
+    found: dict[str, tuple[str, str]] = {}
     for group in source["groups"]:
         if group["platform"] in ("*", platform) and (match := re.search(group["match"], entity)):
-            hours = match.groupdict().get("h") or hours
-            matches.append((group, match))
-    attributes: list[str] = []
-    for group, match in matches:
-        group_hours = match.groupdict().get("h")
-        for attribute in group["attributes"]:
-            key = attribute.replace("{h}", group_hours) if group_hours else attribute
-            if key not in attributes:
-                attributes.append(key)
-    return hours, attributes
-
-
-def text_for(source: dict, attribute: str, hours: str | None, index: int) -> str | None:
-    """Find the text of an expanded attribute key in the language at `index`."""
-    for template, texts in source["names"].items():
-        if "{h}" in template:
-            if hours is not None and template.replace("{h}", hours) == attribute:
-                return texts[index].replace("{h}", hours)
-        elif template == attribute:
-            return texts[index]
-    return None
+            hours = match.groupdict().get("h") or ""
+            for template in group["attributes"]:
+                if "{h}" in template and not hours:
+                    sys.exit(
+                        f"{platform}.{entity}: {template!r} needs a (?P<h>...) group in the regex {group['match']!r}"
+                    )
+                found.setdefault(template.replace("{h}", hours), (template, hours))
+    return found
 
 
 def build(source: dict) -> dict[str, str]:
     """Return the new content of every translations file, keyed by language."""
-    languages = source["languages"]
-    english = json.loads((TRANSLATIONS / "en.json").read_text(encoding="utf-8"))
+    english = json.loads((TRANSLATIONS / "en.json").read_text(encoding="utf-8"))["entity"]
+    names = source["names"]
     used: set[str] = set()
-    result: dict[str, str] = {}
-    for index, language in enumerate(languages):
-        path = TRANSLATIONS / f"{language}.json"
-        raw = path.read_text(encoding="utf-8")
-        data = json.loads(raw)
-        for platform, entities in english["entity"].items():
-            for entity in entities:
-                target = data["entity"][platform][entity]
-                target.pop("state_attributes", None)
-                hours, attributes = attributes_of(source, platform, entity)
-                names = {}
-                for attribute in attributes:
-                    if not KEY.match(attribute):
-                        sys.exit(f"{entity}: invalid attribute key {attribute!r}")
-                    text = text_for(source, attribute, hours, index)
-                    if text is None:
-                        sys.exit(f"{platform}.{entity}: no name for attribute {attribute!r}")
-                    if "{" in text:
-                        sys.exit(f"{platform}.{entity}.{attribute}: unresolved placeholder in {text!r}")
-                    used.add(attribute)
-                    names[attribute] = {"name": text}
-                if names:
-                    target["state_attributes"] = names
-        result[language] = json.dumps(data, indent=2, ensure_ascii=False) + ("\n" if raw.endswith("\n") else "")
-    unused = [name for name in source["names"] if not any(_expands_to(name, attribute) for attribute in used)]
-    if unused:
+    plan: dict[tuple[str, str], dict[str, tuple[str, str]]] = {}
+    for platform, entities in english.items():
+        for entity in entities:
+            attributes = attributes_of(source, platform, entity)
+            for key, (template, hours) in attributes.items():
+                if not KEY.match(key):
+                    sys.exit(f"{platform}.{entity}: invalid attribute key {key!r}")
+                if template not in names:
+                    sys.exit(f"{platform}.{entity}: no name for attribute {template!r}")
+                for text in names[template]:
+                    if "{" in text.replace("{h}", hours):
+                        sys.exit(f"{platform}.{entity}.{key}: unresolved placeholder in {text!r}")
+                used.add(template)
+            plan[platform, entity] = attributes
+    if unused := [template for template in names if template not in used]:
         sys.exit(f"Names no entity uses (remove them or add a group): {', '.join(unused)}")
+
+    result: dict[str, str] = {}
+    for index, language in enumerate(source["languages"]):
+        raw = (TRANSLATIONS / f"{language}.json").read_text(encoding="utf-8")
+        data = json.loads(raw)
+        for (platform, entity), attributes in plan.items():
+            target = data["entity"][platform][entity]
+            target.pop("state_attributes", None)
+            if attributes:
+                target["state_attributes"] = {
+                    key: {"name": names[template][index].replace("{h}", hours)}
+                    for key, (template, hours) in attributes.items()
+                }
+        result[language] = json.dumps(data, indent=2, ensure_ascii=False) + ("\n" if raw.endswith("\n") else "")
     return result
-
-
-def _expands_to(template: str, attribute: str) -> bool:
-    """Return True if `attribute` is the template with some hour count filled in."""
-    if "{h}" not in template:
-        return template == attribute
-    prefix, suffix = template.split("{h}")
-    return (
-        attribute.startswith(prefix) and attribute.endswith(suffix) and attribute[len(prefix) : -len(suffix)].isdigit()
-    )
 
 
 def main() -> None:

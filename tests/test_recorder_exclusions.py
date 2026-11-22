@@ -12,16 +12,41 @@ from custom_components.tibber_prices.binary_sensor.core import TibberPricesBinar
 from custom_components.tibber_prices.sensor.core import TibberPricesSensor
 from custom_components.tibber_prices.sensor.definitions import ENTITY_DESCRIPTIONS, TREND_HOURS
 
-NAMES = json.loads((Path(__file__).parent.parent / "scripts" / "i18n" / "attribute-names.json").read_text("utf-8"))[
-    "names"
-]
+SOURCE = json.loads(
+    (Path(__file__).parent.parent / "scripts" / "i18n" / "attribute-names.json").read_text(encoding="utf-8")
+)
+NAMES = SOURCE["names"]
+HOUR_NAMES = [name for name in NAMES if "{h}" in name]
+HOUR_PATTERNS = [re.compile("^" + re.escape(name).replace(r"\{h\}", r"\d+") + "$") for name in HOUR_NAMES]
+
+
+def has_name(key: str) -> bool:
+    """Return True if `key` is an attribute with a name, hour variants included (`trend_4h_percent`)."""
+    return key in NAMES or any(pattern.match(key) for pattern in HOUR_PATTERNS)
+
+
 UNRECORDED = TibberPricesSensor._unrecorded_attributes  # noqa: SLF001
 UNRECORDED_BINARY = TibberPricesBinarySensor._unrecorded_attributes  # noqa: SLF001
+
+# Exclusions that are no attribute names: nested structures, cache and lifecycle diagnostics
+NOT_NAMED = {
+    "trend_attributes",
+    "current_trend_attributes",
+    "trend_change_attributes",
+    "volatility_attributes",
+    "data",
+    "cache_age",
+    "cache_validity",
+    "data_completeness",
+    "tomorrow_expected_after",
+    "next_midnight_turnover",
+    "last_update",
+}
 
 
 @pytest.mark.unit
 def test_trend_hours_match_the_trend_sensors() -> None:
-    """TREND_HOURS lists exactly the hour counts of the outlook and trajectory sensors."""
+    """TREND_HOURS lists exactly the hour counts of the outlook sensors, and the trajectory ones are among them."""
     outlook = {int(m[1]) for d in ENTITY_DESCRIPTIONS if (m := re.fullmatch(r"price_outlook_(\d+)h", d.key))}
     trajectory = {int(m[1]) for d in ENTITY_DESCRIPTIONS if (m := re.fullmatch(r"price_trajectory_(\d+)h", d.key))}
     assert set(TREND_HOURS) == outlook
@@ -29,40 +54,15 @@ def test_trend_hours_match_the_trend_sensors() -> None:
 
 
 @pytest.mark.unit
-@pytest.mark.parametrize("hours", TREND_HOURS)
-def test_derived_trend_hour_attributes_are_not_recorded(hours: int) -> None:
-    """Every trend attribute that carries the hour count is excluded: all are computed from the recorded prices."""
-    for key in (
-        f"trend_{hours}h_percent",
-        f"trajectory_{hours}h_percent",
-        f"next_{hours}h_avg",
-        f"first_half_{hours}h_avg",
-        f"second_half_{hours}h_avg",
-        f"first_half_{hours}h_diff_from_current_percent",
-        f"second_half_{hours}h_diff_from_current_percent",
-    ):
-        assert key in UNRECORDED
+@pytest.mark.parametrize("name", HOUR_NAMES)
+def test_attributes_with_an_hour_count_are_not_recorded(name: str) -> None:
+    """Every hour-bound attribute is computed from the recorded prices: a new one is excluded for every hour count."""
+    for hours in TREND_HOURS:
+        assert name.replace("{h}", str(hours)) in UNRECORDED
 
 
 @pytest.mark.unit
-def test_every_unrecorded_key_with_a_name_is_a_real_attribute_name() -> None:
-    """A typo in an exclusion would silently record the attribute: keys that look like names must exist there."""
-    templates = [re.compile("^" + re.escape(n).replace(r"\{h\}", r"\d+") + "$") for n in NAMES]
+def test_every_unrecorded_key_is_a_real_attribute_name() -> None:
+    """A typo in an exclusion would silently record the attribute."""
     for key in UNRECORDED | UNRECORDED_BINARY:
-        if key in NAMES or any(t.match(key) for t in templates):
-            continue
-        # Entries kept for older attributes or other platforms are listed by hand
-        assert key in {
-            "trend_attributes",
-            "current_trend_attributes",
-            "trend_change_attributes",
-            "volatility_attributes",
-            "data",
-            "cache_age",
-            "cache_validity",
-            "data_completeness",
-            "tomorrow_expected_after",
-            "next_midnight_turnover",
-            "last_update",
-            "last_successful_update",
-        }, f"unknown attribute in an exclusion list: {key}"
+        assert key in NOT_NAMED or has_name(key), f"unknown attribute in an exclusion list: {key}"
