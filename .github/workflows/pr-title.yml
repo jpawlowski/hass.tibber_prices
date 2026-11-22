@@ -20,7 +20,7 @@ jobs:
     # Drafts may carry a working title. Every other event runs the check, a body edit included:
     # a skipped run would replace a failed one and count as passed.
     if: ${{ !github.event.pull_request.draft }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     steps:
       - name: Check the title against Conventional Commits
