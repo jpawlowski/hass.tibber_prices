@@ -25,6 +25,7 @@ from custom_components.tibber_prices.const import (
     CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
     CONF_VOLATILITY_THRESHOLD_HIGH,
     CONF_VOLATILITY_THRESHOLD_MODERATE,
+    MIN_HOURS_FOR_LATER_HALF,
     get_display_precision,
     get_display_unit_factor,
 )
@@ -43,7 +44,6 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
 
 # Constants
-MIN_HOURS_FOR_LATER_HALF = 1  # Minimum hours needed to calculate half-window averages (activates at 2h+)
 PRICE_AVG_AFTER_CHANGE_INTERVALS = 12  # price_avg_after_change: the 3 hours after the change
 TREND_CACHE_SECONDS = 60  # Recheck the trend once a minute (the countdown sensor updates every 30s)
 

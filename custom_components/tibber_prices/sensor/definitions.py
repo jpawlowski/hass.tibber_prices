@@ -65,7 +65,7 @@ class TibberPricesSensorDescription(SensorEntityDescription):
     attributes: tuple[TibberPricesAttribute, ...] = ()
     open_attributes: bool = False
     # The state is a mean or median price: the attribute of the same average is left out of the recorder (see
-    # TibberPricesSensor._configure_average_sensor_exclusions), so the value isn't stored twice
+    # TibberPricesSensor._configure_recorder_exclusions), so the value isn't stored twice
     state_is_average: bool = False
 
 

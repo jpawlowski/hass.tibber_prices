@@ -546,6 +546,10 @@ def get_display_unit_string(config_entry: ConfigEntry, currency_code: str | None
     return format_price_unit_base(currency_code)
 
 
+# Trend windows longer than this many hours also get the averages of their halves (second half from 2 hours on):
+# the trend calculator writes them, the sensors declare them (sensor/attribute_sets.py)
+MIN_HOURS_FOR_LATER_HALF = 1
+
 # ============================================================================
 # Price Level, Rating, and Volatility Constants
 # ============================================================================

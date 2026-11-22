@@ -10,7 +10,6 @@ from custom_components.tibber_prices.coordinator.helpers import get_intervals_fo
 from custom_components.tibber_prices.device import entity_unique_id
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
-from custom_components.tibber_prices.utils.attribute_specs import report_undeclared
 from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorEntityDescription
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -415,7 +414,7 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             return None
 
         if attributes:
-            report_undeclared(self.entity_description, attributes, self._declared_attribute_keys)
+            self._screen_attributes(attributes)
         return attributes
 
     async def async_update(self) -> None:

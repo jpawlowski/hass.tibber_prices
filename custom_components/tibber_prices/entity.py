@@ -3,16 +3,18 @@
 from __future__ import annotations
 
 from functools import cached_property
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, get_translation
 from .coordinator import TibberPricesDataUpdateCoordinator
 from .device import build_device_info
-from .utils.attribute_specs import declared_keys, excluded_keys
+from .utils.attribute_specs import declared_keys, excluded_keys, report_undeclared
 
 if TYPE_CHECKING:
+    from collections.abc import Mapping
+
     from homeassistant.config_entries import ConfigSubentry
     from homeassistant.helpers.entity import EntityDescription
 
@@ -74,6 +76,19 @@ class TibberPricesEntity(CoordinatorEntity[TibberPricesDataUpdateCoordinator]):
             | excluded_keys(self.entity_description)
             | set(extra),
         }
+
+    def _screen_attributes(self, attributes: Mapping[str, Any]) -> None:
+        """
+        Check what the entity exposes against its declaration.
+
+        An attribute without a declaration is reported (see `report_undeclared`) and left out of the
+        recorder from then on: what nobody decided to keep doesn't fill the database, whatever branch of
+        a builder produced it.
+        """
+        undeclared = report_undeclared(self.entity_description, attributes, self._declared_attribute_keys)
+        info = self._state_info
+        if undeclared and info is not None and not undeclared <= info["unrecorded_attributes"]:
+            self._state_info = {**info, "unrecorded_attributes": info["unrecorded_attributes"] | undeclared}
 
     @property
     def available(self) -> bool:

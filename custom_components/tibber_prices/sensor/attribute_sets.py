@@ -8,6 +8,7 @@ is listed. `history=True` marks what the recorder keeps; everything else stays o
 
 from __future__ import annotations
 
+from custom_components.tibber_prices.const import MIN_HOURS_FOR_LATER_HALF
 from custom_components.tibber_prices.utils.attribute_specs import TibberPricesAttribute, attribute
 
 # ---------------------------------------------------------------------------
@@ -132,10 +133,6 @@ def rank_attributes(price: str) -> tuple[TibberPricesAttribute, ...]:
 # ---------------------------------------------------------------------------
 # Trend, outlook and trajectory
 # ---------------------------------------------------------------------------
-# The trend calculator writes the second half of the window for windows longer than its MIN_HOURS_FOR_LATER_HALF (1)
-SECOND_HALF_FROM_HOURS = 2
-
-
 def outlook_attributes(hours: int) -> tuple[TibberPricesAttribute, ...]:
     """Return the attributes of the price outlook sensor of `hours` hours (the second half from 2 hours on)."""
     attributes = (
@@ -147,7 +144,7 @@ def outlook_attributes(hours: int) -> tuple[TibberPricesAttribute, ...]:
         attribute("next_{h}h_avg", hours=hours),
         *TREND_THRESHOLDS,
     )
-    if hours < SECOND_HALF_FROM_HOURS:
+    if hours <= MIN_HOURS_FOR_LATER_HALF:
         return attributes
     return (
         *attributes,

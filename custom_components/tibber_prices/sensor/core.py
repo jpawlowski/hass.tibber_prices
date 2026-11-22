@@ -29,7 +29,6 @@ from custom_components.tibber_prices.entity_utils.icons import (
     get_dynamic_icon,
     uses_icons_json,
 )
-from custom_components.tibber_prices.utils.attribute_specs import report_undeclared
 from custom_components.tibber_prices.utils.average import calculate_next_n_hours_mean
 from custom_components.tibber_prices.utils.price import calculate_volatility_level
 from homeassistant.components.sensor import RestoreSensor, SensorDeviceClass
@@ -74,7 +73,6 @@ if TYPE_CHECKING:
 HOURS_IN_DAY = 24
 LAST_HOUR_OF_DAY = 23
 MAX_FORECAST_INTERVALS = 8  # Show up to 8 future intervals (2 hours with 15-min intervals)
-MIN_HOURS_FOR_LATER_HALF = 3  # Minimum hours needed to calculate later half average
 
 
 # Sentinel for _last_written_value: forces first write after init or coordinator update
@@ -978,7 +976,7 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             return None
 
         if attributes:
-            report_undeclared(self.entity_description, attributes, self._declared_attribute_keys)
+            self._screen_attributes(attributes)
         return attributes
 
     def _get_sensor_attributes(self) -> dict | None:

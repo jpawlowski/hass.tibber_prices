@@ -30,6 +30,7 @@ from custom_components.tibber_prices.utils.price import enrich_price_info_with_d
 from homeassistant.components.recorder.db_schema import StateAttributes
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.helpers.translation import async_get_translations
 
 BERLIN = ZoneInfo("Europe/Berlin")
 NOW = datetime(2026, 11, 24, 14, 10, tzinfo=BERLIN)
@@ -313,3 +314,49 @@ async def test_the_recorder_stores_what_the_description_keeps(
     assert {"start", "end", "price_mean"} <= recorded
     assert not recorded & {"timestamp", "periods", "day_price_min", "price_spread"}
     assert {"timestamp", "periods", "day_price_min"} <= exposed  # they are on the state, only not stored
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize(
+    ("language", "name"), [("en", "Change over the next 4 h (%)"), ("de", "Änderung in den nächsten 4 Std. (%)")]
+)
+async def test_home_assistant_serves_the_attribute_names(hass: HomeAssistant, language: str, name: str) -> None:
+    """The frontend gets attribute names from Home Assistant's translation loader, per entity and language."""
+    translations = await async_get_translations(hass, language, "entity", {"tibber_prices"})
+
+    key = "component.tibber_prices.entity.sensor.price_outlook_4h.state_attributes.trend_4h_percent.name"
+    assert translations[key] == name
+    # Every entity has the common ones
+    assert translations["component.tibber_prices.entity.sensor.current_interval_price.state_attributes.timestamp.name"]
+
+
+@pytest.mark.unit
+def test_an_undeclared_attribute_is_left_out_of_the_recorder(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, coordinator: TibberPricesDataUpdateCoordinator
+) -> None:
+    """What nobody declared isn't stored: whichever builder branch produced it, it is excluded from then on."""
+    monkeypatch.setattr(attribute_specs, "STRICT", False)
+    monkeypatch.setattr(attribute_specs, "_REPORTED", set())
+    sensor = _sensor(coordinator, "price_outlook_4h")
+    sensor._configure_recorder_exclusions()  # noqa: SLF001
+
+    sensor._screen_attributes({"timestamp": NOW, "trend_4h_percent": 1.0, "surprise": 1})  # noqa: SLF001
+
+    unrecorded = sensor._state_info["unrecorded_attributes"]  # noqa: SLF001
+    assert "surprise" in unrecorded
+    assert "surprise" in caplog.text
+
+
+@pytest.mark.unit
+def test_the_chart_export_leaves_its_service_result_out_of_the_recorder(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture, coordinator: TibberPricesDataUpdateCoordinator
+) -> None:
+    """The result of the chart service can't be listed (open attributes): none of its keys is stored, none logged."""
+    monkeypatch.setattr(attribute_specs, "STRICT", False)
+    sensor = _sensor(coordinator, "chart_data_export")
+    sensor._configure_recorder_exclusions()  # noqa: SLF001
+
+    sensor._screen_attributes({"timestamp": NOW, "price_data": [1, 2, 3]})  # noqa: SLF001
+
+    assert "price_data" in sensor._state_info["unrecorded_attributes"]  # noqa: SLF001
+    assert "price_data" not in caplog.text

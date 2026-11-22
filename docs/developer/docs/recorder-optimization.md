@@ -172,7 +172,7 @@ The documented route is a class-level `_unrecorded_attributes`, which applies to
 - **Trend hour variants** (`trend_<h>h_percent`, `trajectory_<h>h_percent`, `next_<h>h_avg`, `first_half_<h>h_avg`, `second_half_<h>h_avg` and their `_diff_from_current_percent`): the averages are the mean price of a window of the next hours and the percentages their difference from the current price, so they can be recalculated from the price series that the price sensors record (not exactly in the evening before tomorrow's prices are known, when the window was shorter than the full hour count). What history cannot rebuild is the trend decision itself (thresholds, volatility factor), but the categorical trend state is recorded, so the decision stays visible. Declared per hour count by `outlook_attributes()` and `trajectory_attributes()` (`sensor/attribute_sets.py`), so a new hour count can't be missed
 - Chart axis bounds per source: `yaxis_min/max_energy`, `yaxis_min/max_tax`
 
-Kept on purpose: `price_coefficient_variation_percent` (the number behind the volatility level), `price_min/max/mean/median` (values the price sensors' states don't carry), and `start`/`end` of the three `in_*_price_phase` binary sensors (`_unrecorded_attributes` is per class, and the best/peak price periods need `start`/`end`; they change only when a phase changes).
+Kept on purpose: `price_coefficient_variation_percent` (the number behind the volatility level) and `price_min/max/mean/median` (values the price sensors' states don't carry). The price phase binary sensors leave out `start` and `end`; the best and peak price periods keep them.
 
 ## Attributes That ARE Recorded
 
@@ -241,13 +241,11 @@ For a typical installation with:
 
 ## Implementation Files
 
-- **Sensor Platform**: `custom_components/tibber_prices/sensor/core.py`
-    - Class: `TibberPricesSensor`
-    - 46 attributes excluded
+- **Declarations**: `custom_components/tibber_prices/utils/attribute_specs.py` (`attribute()`, `excluded_keys()`, `report_undeclared()`), `sensor/attribute_sets.py` and `binary_sensor/definitions.py` (what each entity exposes and keeps)
+- **Applied per entity**: `custom_components/tibber_prices/entity.py` (`_apply_recorder_exclusions()`, `_screen_attributes()`), called from `sensor/core.py` and `binary_sensor/core.py`
+- **Numbers and switches**: `number/core.py`, `switch/core.py` (a small class-level `_unrecorded_attributes`)
 
-- **Binary Sensor Platform**: `custom_components/tibber_prices/binary_sensor/core.py`
-    - Class: `TibberPricesBinarySensor`
-    - 29 attributes excluded
+An attribute an entity exposes without declaring it is logged once and left out of the recorder from then on (`_screen_attributes()`), so a builder branch that nobody declared can't fill the database. The chart export's service result (`open_attributes`) is left out the same way, without a log line.
 
 ## When to Declare an Attribute with `history=True`
 

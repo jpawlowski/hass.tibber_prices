@@ -79,20 +79,22 @@ def excluded_keys(description: Any) -> frozenset[str]:
     return frozenset(spec.key for spec in declared_attributes(description) if not spec.history)
 
 
-def report_undeclared(description: Any, emitted: Iterable[str], declared: frozenset[str]) -> None:
+def report_undeclared(description: Any, emitted: Iterable[str], declared: frozenset[str]) -> frozenset[str]:
     """
-    Complain about attributes an entity exposes without declaring them.
+    Return the attributes an entity exposes without declaring them, and complain about them.
 
     Logged once per entity and key; raises in tests (STRICT). `declared` is the entity's `declared_keys()`,
-    worked out once by the entity. The chart export's service result is open: it can't be listed.
+    worked out once by the entity. The chart export's service result is open (`open_attributes`): it
+    can't be listed, so nothing is logged for it. The caller leaves what is returned out of the recorder.
     """
-    if getattr(description, "open_attributes", False):
-        return
-    missing = sorted(key for key in set(emitted) - declared if (description.key, key) not in _REPORTED)
-    if not missing:
-        return
-    message = f"{description.key} exposes undeclared attributes {missing}: add them to the entity's attributes"
-    if STRICT:
-        raise AssertionError(message)
-    _REPORTED.update((description.key, key) for key in missing)
-    _LOGGER.warning(message)
+    undeclared = frozenset(emitted) - declared
+    if not undeclared or getattr(description, "open_attributes", False):
+        return undeclared
+    missing = sorted(key for key in undeclared if (description.key, key) not in _REPORTED)
+    if missing:
+        message = f"{description.key} exposes undeclared attributes {missing}: add them to the entity's attributes"
+        if STRICT:
+            raise AssertionError(message)
+        _REPORTED.update((description.key, key) for key in missing)
+        _LOGGER.warning(message)
+    return undeclared
