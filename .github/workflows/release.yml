@@ -255,14 +255,12 @@ jobs:
       - name: Build release asset
         if: steps.version_check.outputs.warning == ''
         run: |
-          # HACS reads its download counter from this asset (hacs.json: zip_release + filename) and
-          # unpacks it straight into custom_components/tibber_prices/, so the zip root is the integration.
-          # Built from the tag, not from main: main may be ahead of it. git archive packs tracked files
-          # only, so no __pycache__ or local leftovers.
+          # The store installs this asset (hacs.json: zip_release + filename) by unpacking it into
+          # custom_components/tibber_prices/, so the zip root is the integration, and counts its downloads.
+          # Built from the tag, not from main: main may be ahead of it. git archive packs tracked files only.
           git archive --format=zip -o tibber_prices.zip "${GITHUB_REF_NAME}:custom_components/tibber_prices"
-          unzip -l tibber_prices.zip | grep -E ' manifest.json$' || { echo "::error::manifest.json missing at zip root"; exit 1; }
-          unzip -p tibber_prices.zip manifest.json | grep "\"version\": \"${GITHUB_REF_NAME#v}\"" \
-            || { echo "::error::manifest.json in zip does not carry version ${GITHUB_REF_NAME#v}"; exit 1; }
+          unzip -p tibber_prices.zip manifest.json | grep -qF "\"version\": \"${GITHUB_REF_NAME#v}\"" \
+            || { echo "::error::tibber_prices.zip has no manifest.json at its root with version ${GITHUB_REF_NAME#v}"; exit 1; }
 
       - name: Create GitHub Release
         if: steps.version_check.outputs.warning == ''
