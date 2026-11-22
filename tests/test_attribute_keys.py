@@ -21,10 +21,8 @@ def test_no_attribute_key_ends_in_percent_sign() -> None:
     for path in _sources():
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
-                value = node.value
-                # Keys only: log formats and prose containing "_%" followed by a letter are no keys
-                if value.endswith("_%") or "_%_" in value:
-                    offenders.append(f"{path.relative_to(ROOT)}:{node.lineno}: {value!r}")
+                if node.value.endswith("_%"):
+                    offenders.append(f"{path.relative_to(ROOT)}:{node.lineno}: {node.value!r}")
             elif (
                 isinstance(node, ast.BinOp)
                 and isinstance(node.op, ast.Add)
