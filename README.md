@@ -84,9 +84,10 @@ Older versions with HACS:
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
 <!-- ha-marketplace:exclude-end -->
 
-1. Click "Download" to install
+Click "Download" to install.
+
 <!-- ha-marketplace:exclude-start -->
-2. With HACS, **restart Home Assistant** ([details](https://jpawlowski.github.io/hass.tibber_prices/user/installation))
+With HACS, **restart Home Assistant** afterwards ([details](https://jpawlowski.github.io/hass.tibber_prices/user/installation)).
 <!-- ha-marketplace:exclude-end -->
 
 ### Step 2: Configure

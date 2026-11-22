@@ -254,13 +254,24 @@ jobs:
 
       - name: Build release asset
         if: steps.version_check.outputs.warning == ''
+        env:
+          # A manual run names the tag as an input; on a tag push the ref name is the tag
+          TAG: ${{ inputs.tag || github.ref_name }}
         run: |
           # The store installs this asset (hacs.json: zip_release + filename) by unpacking it into
           # custom_components/tibber_prices/, so the zip root is the integration, and counts its downloads.
-          # Built from the tag, not from main: main may be ahead of it. git archive packs tracked files only.
-          git archive --format=zip -o tibber_prices.zip "${GITHUB_REF_NAME}:custom_components/tibber_prices"
-          unzip -p tibber_prices.zip manifest.json | grep -qF "\"version\": \"${GITHUB_REF_NAME#v}\"" \
-            || { echo "::error::tibber_prices.zip has no manifest.json at its root with version ${GITHUB_REF_NAME#v}"; exit 1; }
+          # Built from the tag, not from main: main may be ahead of it. The tag is fetched again because
+          # sync-manifest may have moved it. git archive packs tracked files only.
+          git fetch --force --tags origin
+          git archive --format=zip -o tibber_prices.zip "refs/tags/${TAG}:custom_components/tibber_prices"
+
+          # A zip with a wrong layout breaks the install for every user: check what the store needs
+          unzip -p tibber_prices.zip manifest.json | grep -qF "\"version\": \"${TAG#v}\"" \
+            || { echo "::error::tibber_prices.zip has no manifest.json at its root with version ${TAG#v}"; exit 1; }
+          for required in __init__.py frontend/cards/tibber-prices-cards.js; do
+            unzip -l tibber_prices.zip | grep -qE " ${required}\$" \
+              || { echo "::error::tibber_prices.zip lacks ${required}"; exit 1; }
+          done
 
       - name: Create GitHub Release
         if: steps.version_check.outputs.warning == ''
