@@ -2,13 +2,20 @@
 
 from __future__ import annotations
 
+import gzip
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import web
 import pytest
 
 from custom_components.tibber_prices import frontend
+from homeassistant.components.http.static import CachingStaticResource
+
+if TYPE_CHECKING:
+    from pytest_homeassistant.typing import ClientSessionGenerator
 
 
 @pytest.mark.unit
@@ -35,8 +42,37 @@ async def test_cards_are_served_and_loaded_with_version() -> None:
 
 @pytest.mark.unit
 def test_stamp_is_the_newest_module(tmp_path: Path) -> None:
-    """Editing any module changes the URL; files that aren't modules don't."""
-    for name, modified in (("a.js", 1000), ("b.js", 2000), ("notes.txt", 3000)):
+    """Editing any module changes the URL; files that aren't modules (the gzip copies too) don't."""
+    for name, modified in (("a.js", 1000), ("b.js", 2000), ("notes.txt", 3000), ("a.js.gz", 4000)):
         (tmp_path / name).write_text("")
         os.utime(tmp_path / name, (modified, modified))
     assert frontend._newest_modification(tmp_path) == 2000  # noqa: SLF001
+
+
+@pytest.mark.unit
+@pytest.mark.usefixtures("socket_enabled")  # a local test server, as Home Assistant's own hass_client_no_auth
+@pytest.mark.parametrize(("accept", "encoding"), [("gzip, deflate, br", "gzip"), ("identity", None)])
+async def test_gzip_copy_is_served_when_accepted(
+    aiohttp_client: ClientSessionGenerator, tmp_path: Path, accept: str, encoding: str | None
+) -> None:
+    """The release ships `<module>.js.gz` beside each module; Home Assistant's static handler sends it.
+
+    Guards the assumption build-asset relies on: if Home Assistant or aiohttp stopped picking up
+    the copy, every user would download the cards uncompressed again.
+    """
+    source = b"export const answer = 42;\n"
+    (tmp_path / "card.js").write_bytes(source)
+    (tmp_path / "card.js.gz").write_bytes(gzip.compress(source))
+    app = web.Application()
+    app.router.register_resource(CachingStaticResource("/cards", str(tmp_path)))
+
+    client = await aiohttp_client(app, auto_decompress=False)
+    response = await client.get("/cards/card.js", headers={"Accept-Encoding": accept})
+    body = await response.read()
+
+    assert response.status == 200
+    assert response.headers.get("Content-Encoding") == encoding
+    assert response.content_type == "text/javascript"
+    assert (gzip.decompress(body) if encoding else body) == source
+    if encoding:
+        assert response.headers["Vary"] == "Accept-Encoding"

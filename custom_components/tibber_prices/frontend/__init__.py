@@ -9,6 +9,14 @@ URL, not a query on the entry file: a query would not reach the modules it impor
 update the browser would mix new modules with old ones from its cache. The integration version
 changes the URL on every release, the newest modification time of the files on every edit during
 development.
+
+Home Assistant compresses none of this, but aiohttp's file response sends `<module>.js.gz`
+instead of the module when it exists and the browser accepts gzip (with `Content-Encoding` and
+`Vary`, the type still that of the module). The release zip carries such a copy of every module
+(`scripts/release/build-asset`), the repository doesn't: during development the modules go out as
+they are, so an edit is never hidden behind a stale copy. Bundling or minifying the cards was
+weighed against that (#271) and left out: gzip alone takes them from about 700 KB to 200 KB, the
+rest would cost a build tool from npm in the release and source maps for reading a user's error.
 """
 
 from __future__ import annotations

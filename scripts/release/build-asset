@@ -12,9 +12,15 @@
 # tag (vX.Y.ZbN) is pushed by hand on a commit whose manifest still carries the last
 # release, so for a beta the version is written into the zip's copy.
 #
+# Home Assistant serves the cards uncompressed, but aiohttp sends a file's .gz
+# copy instead when the browser accepts gzip. So every card module gets one here:
+# about 200 KB instead of 700 KB on a cold cache. Only in the zip: in the
+# repository a stale copy would hide every edit of its module.
+#
 # Runs in CI (release.yml, job "build", read-only token; it uploads what lands
-# in OUTPUT_DIR) and locally, to see what a release would ship. A build step for
-# the asset (e.g. bundling the cards, #271) goes between unpacking and zipping.
+# in OUTPUT_DIR) and locally, to see what a release would ship. Build steps for
+# the asset go between unpacking and zipping, and run nothing from a package
+# registry: gzip ships with the system.
 #
 # Usage:
 #   ./scripts/release/build-asset TAG [OUTPUT_DIR]
@@ -70,6 +76,11 @@ else
         die "manifest.json at $TAG says $MANIFEST_VERSION, not $VERSION: release-please's extra-files didn't update it"
 fi
 
+# -n leaves name and time out of the copy, so the same module gives the same bytes; -k keeps the
+# module itself for browsers that don't accept gzip
+CARDS="$BUILD/frontend/cards"
+find "$CARDS" -maxdepth 1 -name '*.js' -exec gzip -9 -k -n {} +
+
 mkdir -p "$OUTPUT_DIR"
 OUTPUT="$(cd "$OUTPUT_DIR" && pwd)/$FILENAME"
 rm -f "$OUTPUT"
@@ -82,6 +93,12 @@ ENTRIES=$(unzip -Z1 "$OUTPUT")
 for required in __init__.py frontend/cards/tibber-prices-cards.js; do
     grep -qxF "$required" <<<"$ENTRIES" || die "$FILENAME lacks $required"
 done
+# A module without its copy would go out uncompressed, a copy without its module would never be
+# asked for
+MODULES=$(grep -cE '^frontend/cards/[^/]+\.js$' <<<"$ENTRIES" || true)
+COPIES=$(grep -cE '^frontend/cards/[^/]+\.js\.gz$' <<<"$ENTRIES" || true)
+[[ $MODULES -gt 0 && $MODULES -eq $COPIES ]] ||
+    die "$FILENAME has $MODULES card modules but $COPIES gzip copies"
 
 log_success "Built $FILENAME for $TAG (version $VERSION)" >&2
 echo "$OUTPUT"
