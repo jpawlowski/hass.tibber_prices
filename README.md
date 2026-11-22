@@ -4,12 +4,14 @@
   <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/header.svg" alt="Tibber Prices & Planning" width="600">
 </p>
 
+<!-- ha-marketplace:exclude-start -->
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
 [![Project Maintenance][maintenance-shield]][user_profile]
 
 <a href="https://www.buymeacoffee.com/jpawlowski" target="_blank"><img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/bmc-button.svg" alt="Buy Me A Coffee" height="41" width="174"></a>
+<!-- ha-marketplace:exclude-end -->
 
 > **⚠️ Not affiliated with Tibber**
 > This is an independent, community-maintained custom integration for Home Assistant. It is **not** an official Tibber product and is **not** affiliated with or endorsed by Tibber AS.
@@ -212,6 +214,9 @@ The chart card covers the price curve with nothing to install. If you use [ApexC
 - 📖 **[FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq)** — Common questions answered
 - 🔧 **[Troubleshooting](https://jpawlowski.github.io/hass.tibber_prices/user/troubleshooting)** — Solving common issues
 - 🐛 **[Report an Issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new)** — Found a bug? Let us know
+- ⭐ **[Star the repository](https://github.com/jpawlowski/hass.tibber_prices)** — If the integration saves you money or time, a star on GitHub helps others find it in the Marketplace
+
+<!-- ha-marketplace:exclude-start -->
 
 ## 🤝 Contributing
 
@@ -220,6 +225,8 @@ Contributions are welcome! See the [Contributing Guidelines](CONTRIBUTING.md) an
 - **[Developer Setup](https://jpawlowski.github.io/hass.tibber_prices/developer/setup)** — DevContainer-based development environment
 - **[Architecture Guide](https://jpawlowski.github.io/hass.tibber_prices/developer/architecture)** — Understand the codebase
 - **[Release Management](https://jpawlowski.github.io/hass.tibber_prices/developer/release-management)** — Release process and versioning
+
+<!-- ha-marketplace:exclude-end -->
 
 ## 🤖 Development Note
 
