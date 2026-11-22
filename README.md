@@ -4,12 +4,14 @@
   <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/header.svg" alt="Tibber Prices & Planning" width="600">
 </p>
 
+<!-- ha-marketplace:exclude-start -->
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
 [![Project Maintenance][maintenance-shield]][user_profile]
 
 <a href="https://www.buymeacoffee.com/jpawlowski" target="_blank"><img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/bmc-button.svg" alt="Buy Me A Coffee" height="41" width="174"></a>
+<!-- ha-marketplace:exclude-end -->
 
 > **⚠️ Not affiliated with Tibber**
 > This is an independent, community-maintained custom integration for Home Assistant. It is **not** an official Tibber product and is **not** affiliated with or endorsed by Tibber AS.
@@ -70,18 +72,23 @@ Most Tibber integrations give you a single price sensor. This one gives you a **
 
 ## 🚀 Quick Start
 
-### Step 1: Install from the Marketplace (or HACS)
+### Step 1: Install
 
 Home Assistant 2026.11 or newer (built-in Marketplace):
 
 [![Open your Home Assistant instance and open a repository inside the Marketplace.](https://my.home-assistant.io/badges/marketplace_repository.svg)](https://my.home-assistant.io/redirect/marketplace_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
 
+<!-- ha-marketplace:exclude-start -->
 Older versions with HACS:
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+<!-- ha-marketplace:exclude-end -->
 
-1. Click "Download" to install
-2. With HACS, **restart Home Assistant** ([details](https://jpawlowski.github.io/hass.tibber_prices/user/installation))
+Click "Download" to install.
+
+<!-- ha-marketplace:exclude-start -->
+With HACS, **restart Home Assistant** afterwards ([details](https://jpawlowski.github.io/hass.tibber_prices/user/installation)).
+<!-- ha-marketplace:exclude-end -->
 
 ### Step 2: Configure
 
@@ -212,6 +219,9 @@ The chart card covers the price curve with nothing to install. If you use [ApexC
 - 📖 **[FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq)** — Common questions answered
 - 🔧 **[Troubleshooting](https://jpawlowski.github.io/hass.tibber_prices/user/troubleshooting)** — Solving common issues
 - 🐛 **[Report an Issue](https://github.com/jpawlowski/hass.tibber_prices/issues/new)** — Found a bug? Let us know
+- ⭐ **[Star the repository](https://github.com/jpawlowski/hass.tibber_prices)** — If the integration saves you money or time, a star on GitHub helps others find it in the Marketplace
+
+<!-- ha-marketplace:exclude-start -->
 
 ## 🤝 Contributing
 
@@ -220,6 +230,8 @@ Contributions are welcome! See the [Contributing Guidelines](CONTRIBUTING.md) an
 - **[Developer Setup](https://jpawlowski.github.io/hass.tibber_prices/developer/setup)** — DevContainer-based development environment
 - **[Architecture Guide](https://jpawlowski.github.io/hass.tibber_prices/developer/architecture)** — Understand the codebase
 - **[Release Management](https://jpawlowski.github.io/hass.tibber_prices/developer/release-management)** — Release process and versioning
+
+<!-- ha-marketplace:exclude-end -->
 
 ## 🤖 Development Note
 
