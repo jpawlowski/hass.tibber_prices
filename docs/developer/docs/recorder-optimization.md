@@ -11,27 +11,32 @@ This document describes the implementation of `_unrecorded_attributes` for Tibbe
 
 ## Implementation
 
-Both `TibberPricesSensor` and `TibberPricesBinarySensor` implement `_unrecorded_attributes` as a class-level `frozenset` to exclude attributes that don't provide value in historical data analysis.
+Sensors and binary sensors decide **per entity** what the recorder leaves out, derived from the attribute declarations of their descriptions. Numbers and switches only expose `description` and Home Assistant's own capability attributes and keep a small class-level `_unrecorded_attributes`.
 
 ### Pattern
 
 ```python
-class TibberPricesSensor(TibberPricesEntity, SensorEntity):
-    """tibber_prices Sensor class."""
+# sensor/attribute_sets.py: what an entity exposes, and what the recorder keeps
+PRICE_AVERAGES = (attribute("price_mean", history=True), attribute("price_median", history=True))
+PRICE_SPLIT = (attribute("energy_price"), attribute("tax"))  # no history=True: left out of the database
 
-    _unrecorded_attributes = frozenset(
-        {
-            "description",
-            "usage_tips",
-            # ... more attributes
-        }
-    )
+
+# entity.py: called from the entities' async_added_to_hass
+def _apply_recorder_exclusions(self, *extra: str) -> None:
+    info = self._state_info  # set by Home Assistant just before, read on every state write
+    self._state_info = {
+        **info,
+        "unrecorded_attributes": info["unrecorded_attributes"] | excluded_keys(self.entity_description) | set(extra),
+    }
 ```
+
+An attribute is excluded unless it is declared `history=True`, so a new attribute can't fill the database by accident. Because the set belongs to the entity, one key can mean different things on different entities: the price phase binary sensors leave out `start` and `end` (the price data already tells), the best and peak price period sensors keep them. A sensor whose state is its mean or median (`state_is_average=True`) also leaves out the attribute of that average.
+
+The documented route is a class-level `_unrecorded_attributes`, which applies to every entity of a class alike. `_state_info` is a private attribute of Home Assistant's `Entity`; `tests/test_entity_attributes.py` checks that the exclusions reach it, so a change in Home Assistant fails there.
 
 **Key Points:**
 
-- Must be a **class attribute** (not instance attribute)
-- Use `frozenset` for immutability and performance
+- Applied when the entity is added (before its first state write)
 - Applied automatically by Home Assistant's Recorder component
 
 ## Categories of Excluded Attributes
@@ -158,13 +163,13 @@ class TibberPricesSensor(TibberPricesEntity, SensorEntity):
 
 **Example:** `price_spread = price_max - price_min` (both are recorded, so spread can be calculated). `period_count_remaining = period_count_total - period_position` (both components are recorded).
 
-**Added when the attribute names were translated (#267)**, once every attribute was inventoried (`scripts/docs/inventory-attributes`):
+**Decided when the attributes were declared and translated (#267):**
 
 - **Repeats the state:** timing sensors' `remaining_minutes`, `next_in_minutes`, `period_duration_minutes`, `phase_duration_minutes` (the state is the same number in minutes); `price_volatility` (the level in lower case); the rank sensors' `current_price`, `next_price`, `previous_price`, `current_hour_avg_price`, `next_hour_avg_price` (the states of the price sensors); `today_volatility`, `tomorrow_volatility` (states of other sensors)
 - **Statistics of the same prices or derivable from them:** volatility `price_spread`, `price_q25`, `price_q75`, `price_typical_spread(_percent)`, `price_spike_count`, `interval_count_today/_tomorrow`; rank `prices_below_count`, `reference_min/_max/_mean`; `clock_hour_price_mean/_median`; day pattern `confidence`, `day_cv_percent`, `extreme_time`, `valley_*`, `peak_*`; price phases `start`, `end`, `segment_index`, `segment_count`, `is_tomorrow`; `hours`; binary period `period_price_diff_from_daily_max(_percent)`, `day_volatility_percent`
 - **Large:** `segments`, `all_segments`
 - **Changing every update:** `trend_value`, `minutes_until_change`, `price_direction_duration_minutes`, `price_at_change`, `price_avg_after_change`, `first_half_interval_count`, `second_half_interval_count`
-- **Trend hour variants** (`trend_<h>h_percent`, `trajectory_<h>h_percent`, `next_<h>h_avg`, `first_half_<h>h_avg`, `second_half_<h>h_avg` and their `_diff_from_current_percent`): the averages are the mean price of a window of the next hours and the percentages their difference from the current price, so they can be recalculated from the price series that the price sensors record (not exactly in the evening before tomorrow's prices are known, when the window was shorter than the full hour count). What history cannot rebuild is the trend decision itself (thresholds, volatility factor), but the categorical trend state is recorded, so the decision stays visible. Generated from `TREND_HOURS` in `sensor/definitions.py`, so a new hour count can't be missed
+- **Trend hour variants** (`trend_<h>h_percent`, `trajectory_<h>h_percent`, `next_<h>h_avg`, `first_half_<h>h_avg`, `second_half_<h>h_avg` and their `_diff_from_current_percent`): the averages are the mean price of a window of the next hours and the percentages their difference from the current price, so they can be recalculated from the price series that the price sensors record (not exactly in the evening before tomorrow's prices are known, when the window was shorter than the full hour count). What history cannot rebuild is the trend decision itself (thresholds, volatility factor), but the categorical trend state is recorded, so the decision stays visible. Declared per hour count by `outlook_attributes()` and `trajectory_attributes()` (`sensor/attribute_sets.py`), so a new hour count can't be missed
 - Chart axis bounds per source: `yaxis_min/max_energy`, `yaxis_min/max_tax`
 
 Kept on purpose: `price_coefficient_variation_percent` (the number behind the volatility level), `price_min/max/mean/median` (values the price sensors' states don't carry), and `start`/`end` of the three `in_*_price_phase` binary sensors (`_unrecorded_attributes` is per class, and the best/peak price periods need `start`/`end`; they change only when a phase changes).
@@ -244,9 +249,11 @@ For a typical installation with:
     - Class: `TibberPricesBinarySensor`
     - 29 attributes excluded
 
-## When to Update \_unrecorded_attributes
+## When to Declare an Attribute with `history=True`
 
-### Add to Exclusion List When:
+An attribute is excluded by default. Declare `history=True` only for what must stay in history. Leave it out of history when:
+
+### Exclusion list (default) when:
 
 ✅ Adding new **description/help text** attributes
 ✅ Adding **large nested structures** (arrays, complex objects)
@@ -254,7 +261,7 @@ For a typical installation with:
 ✅ Adding **temporary/time-bound data** (timestamps that become stale)
 ✅ Adding **redundant/derived calculations**
 
-### Keep in History When:
+### Keep in History (`history=True`) When:
 
 ✅ **Core price/timing data** needed for analysis
 ✅ **Boolean status flags** that show state transitions
@@ -287,7 +294,7 @@ When adding a new attribute, ask:
 
 ## Testing
 
-After modifying `_unrecorded_attributes`:
+After changing the `history` flags:
 
 1. **Restart Home Assistant** to apply changes
 2. **Check Recorder database size** before/after

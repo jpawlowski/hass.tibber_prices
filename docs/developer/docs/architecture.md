@@ -256,7 +256,7 @@ The sensor platform uses **Calculator Pattern** for clean separation of concerns
 - **Custom translations** (`/custom_translations/*.json`): Extended descriptions, usage tips
 - Both loaded at integration setup, cached in memory
 - Access via `get_translation()` helper function
-- **Attribute names** (`state_attributes` in `/translations/*.json`, shown in the more-info dialog) are generated, never edited by hand: names and the entity groups they belong to live in `scripts/i18n/attribute-names.json`, `scripts/i18n/generate-attribute-translations` writes them (`--check` runs in `./scripts/check`). A new attribute needs a name in all five languages there. Attribute keys allow only `[a-z0-9_-]` (Hassfest), so percent values end in `_percent`, never `%`.
+- **Attributes** are declared on the entity descriptions (`attributes=`, see `utils/attribute_specs.py` and `sensor/attribute_sets.py`). The translated names (`state_attributes` in `/translations/*.json`, shown in the more-info dialog) are generated from that declaration and the texts in `scripts/i18n/attribute-names.json` by `scripts/i18n/generate-attribute-translations` (`--check` runs in `./scripts/check`), never edited by hand. The same declaration decides what the recorder keeps, per entity (`history=True`; everything else is excluded, see `recorder-optimization.md`) and is checked at runtime: an attribute an entity exposes without declaring it is logged once and fails the tests. Attribute keys allow only `[a-z0-9_-]` (Hassfest), so percent values end in `_percent`, never `%`.
 
 ### 2. Price Data Enrichment
 
