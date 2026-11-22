@@ -258,21 +258,27 @@ jobs:
           } >> $GITHUB_OUTPUT
 
       - name: Build release asset
+        id: asset
         if: steps.version_check.outputs.warning == ''
         run: |
           # The store installs this asset (hacs.json: zip_release + filename) by unpacking it into
           # custom_components/tibber_prices/, so the zip root is the integration, and counts its downloads.
           # Built from the tag, not from main: main may be ahead of it. The checkout above fetched all tags
           # after sync-manifest ran, so a moved tag is the current one. git archive packs tracked files only.
-          git archive --format=zip -o tibber_prices.zip "refs/tags/${TAG}:custom_components/tibber_prices"
+          # The file name comes from hacs.json of the tag (what the store reads), the one place the store reads it from: a second copy
+          # here could drift and ship an asset under a name the store never asks for (404 on install).
+          filename=$(git show "refs/tags/${TAG}:hacs.json" | jq -er '.filename') \
+            || { echo "::error::hacs.json at ${TAG} has no filename (zip_release needs one)"; exit 1; }
+          echo "filename=${filename}" >> "$GITHUB_OUTPUT"
+          git archive --format=zip -o "${filename}" "refs/tags/${TAG}:custom_components/tibber_prices"
 
           # A zip with a wrong layout breaks the install for every user: check what the store needs
-          unzip -p tibber_prices.zip manifest.json | grep -qF "\"version\": \"${TAG#v}\"" \
-            || { echo "::error::tibber_prices.zip has no manifest.json at its root with version ${TAG#v}"; exit 1; }
-          entries=$(unzip -Z1 tibber_prices.zip)
+          unzip -p "${filename}" manifest.json | grep -qF "\"version\": \"${TAG#v}\"" \
+            || { echo "::error::${filename} has no manifest.json at its root with version ${TAG#v}"; exit 1; }
+          entries=$(unzip -Z1 "${filename}")
           for required in __init__.py frontend/cards/tibber-prices-cards.js; do
             grep -qxF "${required}" <<< "${entries}" \
-              || { echo "::error::tibber_prices.zip lacks ${required}"; exit 1; }
+              || { echo "::error::${filename} lacks ${required}"; exit 1; }
           done
 
       - name: Create GitHub Release
@@ -280,7 +286,7 @@ jobs:
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
           tag_name: ${{ env.TAG }}
-          files: tibber_prices.zip
+          files: ${{ steps.asset.outputs.filename }}
           name: ${{ steps.release_notes.outputs.title }}
           body: ${{ steps.release_notes.outputs.notes }}
           draft: false
