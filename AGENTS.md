@@ -1009,6 +1009,9 @@ When changes are complete and ready for testing:
 - **The type decides the release notes** (release-please sorts by type only, ignores scopes and trailers; mapping in `.github/instructions/commit-messages.instructions.md`). `build` is reserved for `build(deps)`, the integration's own requirements (Renovate, `pr-title.yml` enforces it). Squash-merged pull requests give one line per change.
 - **Permissions per job**: `build` has no write token (a build step may run third-party code, #271; build steps go into `build-asset`), the docs dispatch has its own job with `actions: write` (a tag created with `GITHUB_TOKEN` starts no workflow, so `docusaurus.yml` is started by `gh workflow run`).
 - `build-asset` checks that a release's `manifest.json` already carries the tag's version (release-please's `extra-files`) and writes it only for betas.
+- **Deliberate differences from the ha-integration-blueprint** (keep them, or decide anew, when its template sync or the import of #273 brings its release flow):
+  - **Betas** are hand-pushed `vX.Y.ZbN` tags outside release-please (no release pull request, no `Release-As`); the beta branch of the `publish` job creates the pre-release. The blueprint names betas `X.Y.Z-beta.N`, cuts them through release-please with a `Release-As` footer and sets the pre-release flag from the hyphen. Either way the stores go only by GitHub's pre-release flag. Never feed `Release-As: X.Y.ZbN` to release-please: it reads that as the plain `X.Y.Z` and would release it to everyone. And never set `"prerelease": true` in the config: before 1.0.0 it marks every release as a pre-release.
+  - **`feat` bumps MINOR before 1.0** (only `bump-minor-pre-major` is set); the blueprint also sets `bump-patch-for-minor-pre-major`, which would make a `feat` a PATCH here.
 
 **Semantic Versioning Rules:**
 
