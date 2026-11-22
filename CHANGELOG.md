@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.40.1](https://github.com/jpawlowski/hass.tibber_prices/compare/v0.40.0...v0.40.1) (2026-11-22)
+
+
+### ⚡ More Reliable
+
+* **cards:** load the dashboard cards gzip-compressed ([#278](https://github.com/jpawlowski/hass.tibber_prices/issues/278)) ([4e1d93e](https://github.com/jpawlowski/hass.tibber_prices/commit/4e1d93ebeb27643db6539d6656f4063893f7d1e6))
+
 ## [0.40.0](https://github.com/jpawlowski/hass.tibber_prices/compare/v0.39.1...v0.40.0) (2026-11-22)
 
 ### ⚠️ Before You Update: Some Attribute Names Change
