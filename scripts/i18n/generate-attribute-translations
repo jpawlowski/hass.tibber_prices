@@ -1,0 +1,139 @@
+#!/usr/bin/env python3
+"""
+Generate the translated attribute names (`state_attributes`) of the entities.
+
+Home Assistant shows an attribute's name in the more-info dialog from
+`entity.<platform>.<translation_key>.state_attributes.<attribute>.name` of the
+integration's `translations/<language>.json`, one entry per entity. Writing
+those by hand for every entity and language drifts, so they are generated from
+one source, `scripts/i18n/attribute-names.json` (not shipped with the integration):
+
+- `names`: attribute -> [en, de, nb, nl, sv] (language order as in `languages`).
+  A `{h}` in the attribute and in the texts stands for an hour count taken from the
+  entity's own key (`price_outlook_4h` -> `trend_4h_percent`, "next 4 h").
+- `groups`: which entities have which attributes: `platform` (or `*`), a regex (searched, anchor with ^) on the
+  entity's translation key (named group `h` for the hour count) and the attributes.
+
+Attribute keys must match `[a-z0-9_-]` (Hassfest). An attribute an entity doesn't
+have costs nothing but a string, so a group may list more than is always present.
+
+Usage:
+    scripts/i18n/generate-attribute-translations           # write translations/*.json
+    scripts/i18n/generate-attribute-translations --check   # fail if they are out of date (CI)
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+import re
+import sys
+
+REPO = Path(__file__).resolve().parents[2]
+SOURCE = REPO / "scripts" / "i18n" / "attribute-names.json"
+TRANSLATIONS = REPO / "custom_components" / "tibber_prices" / "translations"
+KEY = re.compile(r"^[a-z0-9_-]+$")
+
+
+def load_source() -> dict:
+    """Read the source and check that every name has a text per language."""
+    source = json.loads(SOURCE.read_text(encoding="utf-8"))
+    languages = source["languages"]
+    for attribute, texts in source["names"].items():
+        if len(texts) != len(languages):
+            sys.exit(f"{attribute}: {len(texts)} texts for {len(languages)} languages")
+    return source
+
+
+def attributes_of(source: dict, platform: str, entity: str) -> tuple[str | None, list[str]]:
+    """Return the hour count taken from the entity's key (if any) and its expanded attribute keys."""
+    hours: str | None = None
+    matches = []
+    for group in source["groups"]:
+        if group["platform"] in ("*", platform) and (match := re.search(group["match"], entity)):
+            hours = match.groupdict().get("h") or hours
+            matches.append((group, match))
+    attributes: list[str] = []
+    for group, match in matches:
+        group_hours = match.groupdict().get("h")
+        for attribute in group["attributes"]:
+            key = attribute.replace("{h}", group_hours) if group_hours else attribute
+            if key not in attributes:
+                attributes.append(key)
+    return hours, attributes
+
+
+def text_for(source: dict, attribute: str, hours: str | None, index: int) -> str | None:
+    """Find the text of an expanded attribute key in the language at `index`."""
+    for template, texts in source["names"].items():
+        if "{h}" in template:
+            if hours is not None and template.replace("{h}", hours) == attribute:
+                return texts[index].replace("{h}", hours)
+        elif template == attribute:
+            return texts[index]
+    return None
+
+
+def build(source: dict) -> dict[str, str]:
+    """Return the new content of every translations file, keyed by language."""
+    languages = source["languages"]
+    english = json.loads((TRANSLATIONS / "en.json").read_text(encoding="utf-8"))
+    used: set[str] = set()
+    result: dict[str, str] = {}
+    for index, language in enumerate(languages):
+        path = TRANSLATIONS / f"{language}.json"
+        raw = path.read_text(encoding="utf-8")
+        data = json.loads(raw)
+        for platform, entities in english["entity"].items():
+            for entity in entities:
+                target = data["entity"][platform][entity]
+                target.pop("state_attributes", None)
+                hours, attributes = attributes_of(source, platform, entity)
+                names = {}
+                for attribute in attributes:
+                    if not KEY.match(attribute):
+                        sys.exit(f"{entity}: invalid attribute key {attribute!r}")
+                    text = text_for(source, attribute, hours, index)
+                    if text is None:
+                        sys.exit(f"{platform}.{entity}: no name for attribute {attribute!r}")
+                    if "{" in text:
+                        sys.exit(f"{platform}.{entity}.{attribute}: unresolved placeholder in {text!r}")
+                    used.add(attribute)
+                    names[attribute] = {"name": text}
+                if names:
+                    target["state_attributes"] = names
+        result[language] = json.dumps(data, indent=2, ensure_ascii=False) + ("\n" if raw.endswith("\n") else "")
+    unused = [name for name in source["names"] if not any(_expands_to(name, attribute) for attribute in used)]
+    if unused:
+        sys.exit(f"Names no entity uses (remove them or add a group): {', '.join(unused)}")
+    return result
+
+
+def _expands_to(template: str, attribute: str) -> bool:
+    """Return True if `attribute` is the template with some hour count filled in."""
+    if "{h}" not in template:
+        return template == attribute
+    prefix, suffix = template.split("{h}")
+    return (
+        attribute.startswith(prefix) and attribute.endswith(suffix) and attribute[len(prefix) : -len(suffix)].isdigit()
+    )
+
+
+def main() -> None:
+    """Write the translations, or with --check only compare them."""
+    new = build(load_source())
+    stale = [lang for lang, text in new.items() if (TRANSLATIONS / f"{lang}.json").read_text(encoding="utf-8") != text]
+    if "--check" in sys.argv:
+        if stale:
+            sys.exit(
+                f"Attribute translations out of date ({', '.join(stale)}): run scripts/i18n/generate-attribute-translations"
+            )
+        sys.stdout.write("Attribute translations are up to date\n")
+        return
+    for lang in stale:
+        (TRANSLATIONS / f"{lang}.json").write_text(new[lang], encoding="utf-8")
+    sys.stdout.write(f"Updated: {', '.join(stale) if stale else 'nothing to do'}\n")
+
+
+if __name__ == "__main__":
+    main()

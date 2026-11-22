@@ -31,5 +31,9 @@ echo ""
 
 log_header "Checking sensor reference freshness..."
 python3 "$SCRIPT_DIR/docs/generate-sensor-reference" --check
+echo ""
+
+log_header "Checking attribute translations freshness..."
+python3 "$SCRIPT_DIR/i18n/generate-attribute-translations" --check
 
 log_success "All checks passed"
