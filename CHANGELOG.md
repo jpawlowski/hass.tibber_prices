@@ -25,13 +25,3 @@
 
 * **recorder:** also exclude the trend percentages and next-hours averages ([8fd78e8](https://github.com/jpawlowski/hass.tibber_prices/commit/8fd78e82dee69eaa27cd19a1a3d92d4b923b2215))
 * **recorder:** exclude more derived and repeated attributes from history ([98acc38](https://github.com/jpawlowski/hass.tibber_prices/commit/98acc3826d9f103a16800059d9f4fc1d2b348347))
-
-
-### 📦 Updated Dependencies
-
-* **i18n:** generate the translated attribute names from one source ([2af1791](https://github.com/jpawlowski/hass.tibber_prices/commit/2af179156fe69ad5c300f6b69606e5311957d90f))
-
-
-### Refactoring
-
-* **attributes:** rename attribute keys ending in % to _percent ([5dd3c5b](https://github.com/jpawlowski/hass.tibber_prices/commit/5dd3c5ba4e54bcb8e04959fe6542ba022c96cbe2))
