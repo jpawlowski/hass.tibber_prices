@@ -14,13 +14,17 @@ Home Assistant compresses none of this, but aiohttp's file response sends `<modu
 instead of the module when it exists and the browser accepts gzip (with `Content-Encoding` and
 `Vary`, the type still that of the module). The release zip carries such a copy of every module
 (`scripts/release/build-asset`), the repository doesn't: during development the modules go out as
-they are, so an edit is never hidden behind a stale copy. Bundling or minifying the cards was
+they are, so an edit is never hidden behind a stale copy. A copy that no longer matches its module
+(a manual install copied over a store install, a module patched by hand) is deleted on start, else
+aiohttp would keep sending the old code under the new URL. Bundling or minifying the cards was
 weighed against that (#271) and left out: gzip alone takes them from about 700 KB to 200 KB, the
 rest would cost a build tool from npm in the release and source maps for reading a user's error.
 """
 
 from __future__ import annotations
 
+import gzip
+import logging
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -34,6 +38,8 @@ from homeassistant.loader import async_get_loaded_integration
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
 
+_LOGGER = logging.getLogger(__name__)
+
 URL_BASE = f"/{DOMAIN}_frontend"
 CARDS_DIR = Path(__file__).parent / "cards"
 CARDS_FILE = "tibber-prices-cards.js"
@@ -44,9 +50,27 @@ def _newest_modification(directory: Path) -> int:
     return max(int(module.stat().st_mtime) for module in directory.glob("*.js"))
 
 
+def _drop_stale_copies(directory: Path) -> None:
+    """Delete gzip copies whose module is gone or differs, so aiohttp never sends outdated code."""
+    for copy in directory.glob("*.js.gz"):
+        module = copy.with_suffix("")
+        try:
+            if module.is_file() and gzip.decompress(copy.read_bytes()) == module.read_bytes():
+                continue
+        except OSError, EOFError, gzip.BadGzipFile:
+            pass  # unreadable or broken: as stale as an outdated one
+        try:
+            copy.unlink()
+        except OSError as err:
+            _LOGGER.warning("Could not delete the outdated card copy %s: %s", copy, err)
+        else:
+            _LOGGER.debug("Deleted the outdated card copy %s", copy.name)
+
+
 async def async_register_frontend(hass: HomeAssistant) -> None:
     """Serve the card modules and load the entry into the frontend (once per Home Assistant start)."""
     version = async_get_loaded_integration(hass, DOMAIN).version
+    await hass.async_add_executor_job(_drop_stale_copies, CARDS_DIR)
     modified = await hass.async_add_executor_job(_newest_modification, CARDS_DIR)
     url = f"{URL_BASE}/{version}-{modified}"
     await hass.http.async_register_static_paths([StaticPathConfig(url, str(CARDS_DIR), cache_headers=True)])

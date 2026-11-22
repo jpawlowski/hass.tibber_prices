@@ -50,6 +50,22 @@ def test_stamp_is_the_newest_module(tmp_path: Path) -> None:
 
 
 @pytest.mark.unit
+def test_stale_gzip_copies_are_dropped(tmp_path: Path) -> None:
+    """A copy that no longer matches its module would send old code under the new URL: it goes."""
+    (tmp_path / "same.js").write_bytes(b"new")
+    (tmp_path / "same.js.gz").write_bytes(gzip.compress(b"new"))
+    (tmp_path / "edited.js").write_bytes(b"new")
+    (tmp_path / "edited.js.gz").write_bytes(gzip.compress(b"old"))
+    (tmp_path / "gone.js.gz").write_bytes(gzip.compress(b"old"))
+    (tmp_path / "broken.js").write_bytes(b"new")
+    (tmp_path / "broken.js.gz").write_bytes(b"not gzip")
+
+    frontend._drop_stale_copies(tmp_path)  # noqa: SLF001
+
+    assert sorted(path.name for path in tmp_path.iterdir()) == ["broken.js", "edited.js", "same.js", "same.js.gz"]
+
+
+@pytest.mark.unit
 @pytest.mark.usefixtures("socket_enabled")  # a local test server, as Home Assistant's own hass_client_no_auth
 @pytest.mark.parametrize(("accept", "encoding"), [("gzip, deflate, br", "gzip"), ("identity", None)])
 async def test_gzip_copy_is_served_when_accepted(
