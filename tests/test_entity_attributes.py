@@ -10,11 +10,13 @@ user data, time travel) are stand-ins, so those entities are checked for what th
 from __future__ import annotations
 
 from datetime import datetime, timedelta
+import json
 from typing import Any
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 from zoneinfo import ZoneInfo
 
 import pytest
+from pytest_homeassistant.common import MockEntityPlatform
 
 from custom_components.tibber_prices.binary_sensor.core import TibberPricesBinarySensor
 from custom_components.tibber_prices.binary_sensor.definitions import ENTITY_DESCRIPTIONS as BINARY_DESCRIPTIONS
@@ -25,6 +27,9 @@ from custom_components.tibber_prices.sensor.core import TibberPricesSensor
 from custom_components.tibber_prices.sensor.definitions import ENTITY_DESCRIPTIONS as SENSOR_DESCRIPTIONS
 from custom_components.tibber_prices.utils import attribute_specs
 from custom_components.tibber_prices.utils.price import enrich_price_info_with_differences
+from homeassistant.components.recorder.db_schema import StateAttributes
+from homeassistant.const import EVENT_STATE_CHANGED
+from homeassistant.core import Event, HomeAssistant
 
 BERLIN = ZoneInfo("Europe/Berlin")
 NOW = datetime(2026, 11, 24, 14, 10, tzinfo=BERLIN)
@@ -34,10 +39,18 @@ LEVELS = ("VERY_CHEAP", "CHEAP", "NORMAL", "EXPENSIVE", "VERY_EXPENSIVE")
 class _Coordinator(TibberPricesDataUpdateCoordinator):
     """The real coordinator's lookups on sample data; whatever else is asked for is a stand-in."""
 
+    stand_in: type[Mock] = Mock
+
     def __getattr__(self, name: str) -> Any:
         if name.startswith("__"):
             raise AttributeError(name)
-        return Mock()
+        return self.stand_in()
+
+
+class _ListeningCoordinator(_Coordinator):
+    """Also takes the listener bookkeeping of a platform that really adds entities (counters, sets, callbacks)."""
+
+    stand_in = MagicMock
 
 
 def _price_info(time: TibberPricesTimeService) -> list[dict]:
@@ -237,3 +250,66 @@ def test_a_binary_sensor_applies_its_own_declaration(coordinator: TibberPricesDa
 
     assert "start" in unrecorded["in_rising_price_phase"]
     assert "start" not in unrecorded["best_price_period"]
+
+
+@pytest.fixture
+def listening_coordinator(
+    hass: HomeAssistant, coordinator: TibberPricesDataUpdateCoordinator
+) -> TibberPricesDataUpdateCoordinator:
+    """Return the sample coordinator on a real hass, for tests that add entities to a platform."""
+    coordinator.__class__ = _ListeningCoordinator
+    coordinator.hass = hass
+    return coordinator
+
+
+@pytest.mark.integration
+async def test_the_recorder_reads_the_exclusions_from_the_state(
+    hass: HomeAssistant, listening_coordinator: TibberPricesDataUpdateCoordinator
+) -> None:
+    """With real entities on a real hass, the state carries the set the recorder leaves out (db_schema.py reads it)."""
+    entities = [
+        TibberPricesSensor(listening_coordinator, next(d for d in SENSOR_DESCRIPTIONS if d.key == "price_outlook_4h")),
+        TibberPricesBinarySensor(
+            listening_coordinator, next(d for d in BINARY_DESCRIPTIONS if d.key == "in_rising_price_phase")
+        ),
+        TibberPricesBinarySensor(
+            listening_coordinator, next(d for d in BINARY_DESCRIPTIONS if d.key == "best_price_period")
+        ),
+    ]
+    for entity, domain in zip(entities, ("sensor", "binary_sensor", "binary_sensor"), strict=True):
+        platform = MockEntityPlatform(hass, domain=domain, platform_name="tibber_prices")
+        await platform.async_add_entities([entity])
+
+    outlook, phase, period = (hass.states.get(entity.entity_id) for entity in entities)
+    assert outlook is not None
+    assert phase is not None
+    assert period is not None
+    assert {"trend_4h_percent", "timestamp"} <= outlook.state_info["unrecorded_attributes"]
+    assert "start" in phase.state_info["unrecorded_attributes"]
+    assert "start" not in period.state_info["unrecorded_attributes"]
+
+
+def _recorded_keys(state: Any) -> set[str]:
+    """Return the attribute keys the recorder would store for a state (what db_schema.py keeps)."""
+    event = Event(EVENT_STATE_CHANGED, {"new_state": state, "old_state": None, "entity_id": state.entity_id})
+    return set(json.loads(StateAttributes.shared_attrs_bytes_from_event(event, None)))
+
+
+@pytest.mark.integration
+async def test_the_recorder_stores_what_the_description_keeps(
+    hass: HomeAssistant, listening_coordinator: TibberPricesDataUpdateCoordinator
+) -> None:
+    """The attributes the recorder stores are exactly the kept ones: periods keep start and end, nothing else of the day."""
+    entity = TibberPricesBinarySensor(
+        listening_coordinator, next(d for d in BINARY_DESCRIPTIONS if d.key == "best_price_period")
+    )
+    await MockEntityPlatform(hass, domain="binary_sensor", platform_name="tibber_prices").async_add_entities([entity])
+
+    state = hass.states.get(entity.entity_id)
+    assert state is not None
+    exposed = set(state.attributes)
+    recorded = _recorded_keys(state)
+
+    assert {"start", "end", "price_mean"} <= recorded
+    assert not recorded & {"timestamp", "periods", "day_price_min", "price_spread"}
+    assert {"timestamp", "periods", "day_price_min"} <= exposed  # they are on the state, only not stored
