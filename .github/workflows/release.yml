@@ -36,7 +36,7 @@ jobs:
   release-please:
     name: Release Please
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     # Also needs "Allow GitHub Actions to create and approve pull requests" under
     # Settings > Actions > General.
     permissions:
@@ -57,7 +57,7 @@ jobs:
     if: >-
       !cancelled() && (needs.release-please.outputs.release_created == 'true'
       || github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/'))
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: read # No write token here: a build step may run third-party code (#271)
     env:
@@ -97,7 +97,7 @@ jobs:
     # Explicit: the default success() also counts release-please, which a beta tag or a manual
     # run skips, and would skip this job with it
     if: ${{ !cancelled() && needs.build.result == 'success' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       contents: write # Upload the asset, publish the release
     env:
@@ -138,7 +138,7 @@ jobs:
     if: >-
       ${{ !cancelled() && needs.publish.result == 'success'
       && needs.build.outputs.prerelease == 'false' }}
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     permissions:
       actions: write # Start docusaurus.yml: a tag created with GITHUB_TOKEN starts no workflow
     steps:
