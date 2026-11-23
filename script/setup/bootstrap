@@ -198,6 +198,11 @@ else
     fi
 fi
 
+if [[ -z "${GITHUB_ACTIONS:-}" ]]; then
+    log_header "Installing agent plugins"
+    "$SCRIPT_DIR/agent-plugins" || log_warning "Agent plugins not installed — run script/setup/agent-plugins to see why"
+fi
+
 log_header "Pruning uv package cache"
 # Remove cache entries that are no longer referenced by any installed environment.
 # Safe to run after every install; avoids unbounded cache growth on the named Docker volume.

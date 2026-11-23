@@ -4,7 +4,7 @@ description: >-
   Perform a structured quality review of this Home Assistant custom integration, either as a full audit or scoped
   to a diff. Use when asked to "review the integration", "audit the code", "check quality scale", "are we
   bronze/silver/gold", "is this ready to release", "what's missing before publishing", or before a release. The
-  review of a change before a commit or a merge is blueprint-change-review. Covers running the automated gates
+  review of a change before it lands is haci-change-review, from the haci-review plugin. Covers running the automated gates
   first, then auditing architecture, the Integration Quality Scale rules, error handling, security, performance, user
   experience, and documentation — and reporting findings ranked by severity with concrete fixes. SYMPTOMS — load
   this if you are about to: report a review that only restates linter output; claim real-device testing that did
@@ -173,7 +173,7 @@ Check each; the rule and how to comply live in the linked file.
 - Publishing readiness, when it is meant to be listed — repository preconditions, brand images, the CI gates the
   catalog requires: [`ha-marketplace`](../ha-marketplace/SKILL.md) has the checklist.
 - Architectural choices worth remembering are decision records in `docs/development/decisions/`
-  ([`ha-planning`](../ha-planning/SKILL.md)).
+  ([`blueprint-decisions`](../blueprint-decisions/SKILL.md)).
 - Breaking changes carry a migration path ([`ha-breaking-changes`](../ha-breaking-changes/SKILL.md)).
 - The project's own skills and instructions files are still worth their context: no rule a check now enforces, none
   the code no longer has, no two files on one topic

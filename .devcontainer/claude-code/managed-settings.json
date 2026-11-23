@@ -16,6 +16,8 @@
       "Edit(./.agents/hooks/**)",
       "Edit(./.claude/settings.json)",
       "Edit(./.codex/hooks.json)",
+      "Edit(./.codex/config.toml)",
+      "Edit(./.github/copilot/settings.json)",
       "Edit(./.opencode/**)",
       "Edit(./opencode.json)",
       "Edit(./opencode.jsonc)",

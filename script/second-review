@@ -2,18 +2,20 @@
 
 # script/second-review: Review a branch with a different coding agent than the one this session runs in
 #
-# The second review in blueprint-change-review. Exports the committed head into a temporary directory, so nothing the
+# The second review in haci-change-review (the haci-review plugin). Exports the committed head into a temporary directory, so nothing the
 # session changes meanwhile reaches the review, and runs another installed agent CLI over it with the reviewer brief
 # and the diff, reading only (script/.lib/agent_cli.sh). It spends the developer's quota for that CLI: run it only on
 # their word.
 #
 # Usage:
-#   ./script/second-review [--base REF] [HEAD]
+#   ./script/second-review --brief FILE [--base REF] [HEAD]
+#
+# --brief is the reviewer brief the skill ships: references/reviewer-brief.md beside its SKILL.md.
 #
 # Examples:
-#   ./script/second-review                 # HEAD against its merge base with origin/main
-#   ./script/second-review --base abc1234  # only what came after abc1234
-#   AGENT_CLI=codex ./script/second-review # name the CLI
+#   ./script/second-review --brief "$BRIEF"                 # HEAD against its merge base with origin/main
+#   ./script/second-review --brief "$BRIEF" --base abc1234  # only what came after abc1234
+#   AGENT_CLI=codex ./script/second-review --brief "$BRIEF" # name the CLI
 #
 # The findings go to stdout and to .agents/scratch/second-review-<head>.md.
 #
@@ -31,10 +33,10 @@ source "$SCRIPT_DIR/.lib/output.sh"
 # shellcheck source=script/.lib/agent_cli.sh
 source "$SCRIPT_DIR/.lib/agent_cli.sh"
 
-USAGE="Usage: script/second-review [--base REF] [HEAD]"
-BRIEF=".agents/skills/blueprint-change-review/references/reviewer-brief.md"
+USAGE="Usage: script/second-review --brief FILE [--base REF] [HEAD]"
 SCRATCH_DIR=".agents/scratch"
 
+brief=""
 base_ref=""
 head_ref="HEAD"
 while [[ $# -gt 0 ]]; do
@@ -42,6 +44,11 @@ while [[ $# -gt 0 ]]; do
     --base)
         [[ $# -ge 2 ]] || die "$USAGE"
         base_ref="$2"
+        shift 2
+        ;;
+    --brief)
+        [[ $# -ge 2 ]] || die "$USAGE"
+        brief="$2"
         shift 2
         ;;
     -h | --help)
@@ -58,7 +65,8 @@ done
 
 run_hook "second-review" "pre"
 
-[[ -f "$BRIEF" ]] || die "$BRIEF is missing"
+[[ -n "$brief" ]] || die "--brief is required: references/reviewer-brief.md of the haci-change-review skill. $USAGE"
+[[ -f "$brief" ]] || die "$brief is missing"
 agent_resolve --other || exit 1
 head="$(git rev-parse --verify --quiet "$head_ref^{commit}")" || die "$head_ref is not a commit"
 
@@ -88,7 +96,7 @@ git archive "$head" | tar -x -C "$export_dir"
 git log -p --no-merges "$base..$head" ${main[@]+"${main[@]}"} >"$export_dir/.second-review.patch"
 
 {
-    cat "$BRIEF"
+    cat "$brief"
     printf '\n---\n\n'
     printf 'Range: %s..%s. The current directory holds the files of the repository at the head, and the change is in\n' \
         "$base" "$head"

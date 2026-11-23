@@ -1,5 +1,18 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "extraKnownMarketplaces": {
+    "ha-custom-integration-skills": {
+      "source": {
+        "source": "github",
+        "repo": "jpawlowski/ha-custom-integration-skills",
+        "ref": "v0.2.0"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "haci-plan@ha-custom-integration-skills": true,
+    "haci-review@ha-custom-integration-skills": true
+  },
   "env": {
     "GIT_TERMINAL_PROMPT": "0",
     "GCM_INTERACTIVE": "0"
@@ -41,6 +54,8 @@
       "Edit(./.agents/hooks/**)",
       "Edit(./.claude/settings.json)",
       "Edit(./.codex/hooks.json)",
+      "Edit(./.codex/config.toml)",
+      "Edit(./.github/copilot/settings.json)",
       "Edit(./.opencode/**)",
       "Edit(./opencode.json)",
       "Edit(./opencode.jsonc)",

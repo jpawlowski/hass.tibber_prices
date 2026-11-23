@@ -62,23 +62,6 @@ patternProperties:
                           - type: string
                           - type: number
 
-          device:
-            type: object
-            description: Device selector configuration
-            additionalProperties: false
-            properties:
-              integration:
-                type: string
-                description: Filter devices by integration
-
-              manufacturer:
-                type: string
-                description: Filter devices by manufacturer
-
-              model:
-                type: string
-                description: Filter devices by model
-
           area:
             type: object
             description: Area selector configuration
