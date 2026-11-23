@@ -895,8 +895,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             ),
         )
 
-        # Fall back to static icon from entity description
-        return icon or self.entity_description.icon
+        # Fall back to the description's fallback icon
+        return icon or self.entity_description.fallback_icon
 
     # Interval price sensors that show individual quarter-hour prices.
     # These get full data precision (subunit→2, base→4) as display default

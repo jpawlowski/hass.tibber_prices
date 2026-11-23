@@ -59,6 +59,9 @@ the sensor platform is built: [`ARCHITECTURE.md`](../../docs/development/ARCHITE
   rely on the scheme.
 - **The `connection` binary sensor stays available and sets `force_update`.** It reports the connection itself, so it
   must not go unavailable with the data, and every repeated state belongs in its history.
+- **An icon that depends only on the state goes into `icons.json`; one the `icon` property computes from more keeps
+  its default in `fallback_icon=` on the description, never `icon=`.** The property overrides `icons.json`, so its
+  default has to live in code, and the architecture check rejects `icon=`.
 - **Rename a sensor or binary sensor key through `ENTITY_KEY_RENAMES` in `migrations.py`.** It moves the unique ID
   and keeps the entity ID, history and customisations; a bare rename orphans the old entity. It matches only unique
   IDs that start with `{entry_id}_`, and number and switch entities are built on `entry.unique_id`, so a rename there

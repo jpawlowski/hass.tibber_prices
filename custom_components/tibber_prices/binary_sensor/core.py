@@ -8,7 +8,7 @@ from custom_components.tibber_prices.coordinator.helpers import get_intervals_fo
 from custom_components.tibber_prices.device import entity_unique_id
 from custom_components.tibber_prices.entity import TibberPricesEntity
 from custom_components.tibber_prices.entity_utils import get_binary_sensor_icon
-from homeassistant.components.binary_sensor import BinarySensorEntity, BinarySensorEntityDescription
+from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -28,6 +28,8 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
     from homeassistant.config_entries import ConfigSubentry
 
+    from .definitions import TibberPricesBinarySensorDescription
+
 
 # Sentinel for _last_written_state: forces first write after init or coordinator update
 _SENTINEL = object()
@@ -36,10 +38,12 @@ _SENTINEL = object()
 class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEntity):
     """tibber_prices binary_sensor class with state restoration."""
 
+    entity_description: TibberPricesBinarySensorDescription
+
     def __init__(
         self,
         coordinator: TibberPricesDataUpdateCoordinator,
-        entity_description: BinarySensorEntityDescription,
+        entity_description: TibberPricesBinarySensorDescription,
         subentry: ConfigSubentry | None = None,
     ) -> None:
         """Initialize the binary_sensor class."""
@@ -350,8 +354,8 @@ class TibberPricesBinarySensor(TibberPricesEntity, BinarySensorEntity, RestoreEn
             has_future_periods_callback=self._has_future_periods,
         )
 
-        # Fall back to static icon from entity description
-        return icon or self.entity_description.icon
+        # Fall back to the description's fallback icon
+        return icon or self.entity_description.fallback_icon
 
     def _has_future_periods(self) -> bool:
         """
