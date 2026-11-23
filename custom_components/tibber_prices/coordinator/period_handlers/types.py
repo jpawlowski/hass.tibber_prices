@@ -58,7 +58,7 @@ CROSS_DAY_OVERNIGHT_VALIDATION_HOUR = 6  # Validate 00:00-05:59 against previous
 
 # Relaxation flex increment per step (decimal, e.g. 0.03 = 3% per step).
 # Hard-coded for reliability and predictability across all callers (see
-# docs/developer/docs/period-calculation-theory.md). Keeps escalation moderate
+# docs/development/PERIODS.md). Keeps escalation moderate
 # even when the user configures a high base flex (a high base would otherwise
 # cause runaway escalation, e.g. base 40% × 1.25 → 50% in a single step).
 RELAXATION_FLEX_INCREMENT = 0.03

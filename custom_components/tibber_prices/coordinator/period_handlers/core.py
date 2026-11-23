@@ -26,7 +26,7 @@ from .period_statistics import extract_period_summaries
 from .shape_extension import extend_periods_for_shape
 from .types import TibberPricesThresholdConfig
 
-# Flex limits to prevent degenerate behavior (see docs/development/period-calculation-theory.md)
+# Flex limits to prevent degenerate behavior (see docs/development/PERIODS.md)
 MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
 MIN_SEGMENT_FORCING_INTERVALS = 8  # Minimum intervals per day half to attempt segment forcing (< 2 hours is too few)
 

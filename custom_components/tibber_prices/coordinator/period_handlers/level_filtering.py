@@ -6,7 +6,7 @@ Key Concepts:
 - Min Distance Filter: Ensures prices are significantly different from average
 - Conflict Scaling: Min_Distance is cut where high Flex passes it (flat days)
 
-See docs/development/period-calculation-theory.md for detailed explanation.
+See docs/development/PERIODS.md for detailed explanation.
 """
 
 from typing import TYPE_CHECKING, Any

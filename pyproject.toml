@@ -88,6 +88,7 @@ target-version = "py314"
 line-length = 120
 
 [tool.ruff.lint]
+logger-objects = ["custom_components.tibber_prices.const.LOGGER"]
 select = [
     "A001",   # Variable {name} is shadowing a Python builtin
     "ASYNC",  # flake8-async

@@ -264,17 +264,15 @@ class TibberPricesOptionsFlowHandler(OptionsFlow):
             "switch.peak_price_enable_relaxation_override": "enable_min_periods_peak",
         }
 
-        # Check each possible override entity
+        entry_entities = er.async_entries_for_config_entry(ent_reg, self.config_entry.entry_id)
+
+        # Entity IDs include the device name, so match on the unique_id suffix: {config_entry_id}_{entity_key}
         for entity_id_suffix, config_key in override_entities.items():
-            # Entity IDs include device name, so we need to search by unique_id pattern
-            # The unique_id follows pattern: {config_entry_id}_{entity_key}
             domain, entity_key = entity_id_suffix.split(".", 1)
 
-            # Find entity by iterating through registry
-            for entity_entry in ent_reg.entities.values():
+            for entity_entry in entry_entities:
                 if (
                     entity_entry.domain == domain
-                    and entity_entry.config_entry_id == self.config_entry.entry_id
                     and entity_entry.config_subentry_id is None
                     and entity_entry.unique_id
                     and entity_entry.unique_id.endswith(entity_key)

@@ -1,21 +1,10 @@
 """
-Service handlers for Tibber Prices integration.
+Service actions of the Tibber Prices integration.
 
-This package provides service endpoints for external integrations and data export:
-- Chart data export (get_chartdata)
-- ApexCharts YAML generation (get_apexcharts_yaml)
-- Dashboard views as a starting point (get_dashboard_yaml)
-- User data refresh (refresh_user_data)
-- Debug: Clear tomorrow data (debug_clear_tomorrow) - DevContainer only
-
-Architecture:
-- helpers.py: Common utilities (get_entry_and_data)
-- formatters.py: Data transformation and formatting functions
-- chartdata.py: Main data export service handler
-- apexcharts.py: ApexCharts card YAML generator
-- refresh_user_data.py: User data refresh handler
-- debug_clear_tomorrow.py: Debug tool for testing tomorrow refresh (dev only)
-
+Each action lives in a module named after it (get_chartdata.py, find_cheapest_block.py, plan_charging.py, …).
+Shared code: helpers.py (entry and data lookup), entity_resolver.py, formatters.py and relaxation.py;
+charging/ holds the planner behind plan_charging. debug_clear_tomorrow is registered only with
+TIBBER_PRICES_DEV=1.
 """
 
 import os

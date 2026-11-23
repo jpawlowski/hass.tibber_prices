@@ -14,7 +14,7 @@ from custom_components.tibber_prices.entity_utils.helpers import get_rolling_hou
 from custom_components.tibber_prices.sensor.helpers import aggregate_level_data
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval
 
-# Icon update logic uses timedelta directly (cosmetic, independent - allowed per AGENTS.md)
+# Icon update logic uses timedelta directly (cosmetic, independent of the time service)
 _INTERVAL_MINUTES = 15  # Tibber's 15-minute intervals
 
 

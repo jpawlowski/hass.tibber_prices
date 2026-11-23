@@ -150,7 +150,7 @@ def build_period_summary_dict(
         Complete period summary dictionary following attribute ordering
 
     """
-    # Build complete period summary (following attribute ordering from AGENTS.md)
+    # Build complete period summary
     summary = {
         # 1. Time information (when does this apply?)
         "start": period_data.start_time,

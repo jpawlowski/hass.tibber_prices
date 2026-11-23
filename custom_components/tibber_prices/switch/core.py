@@ -103,7 +103,7 @@ class TibberPricesConfigSwitch(RestoreEntity, SwitchEntity):
 
     @callback
     def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Accept an in-place rename (HA 2026.11+); see AGENTS.md "async_entity_id_changed"."""
+        """Accept an in-place rename (HA 2026.11+)."""
 
     async def async_will_remove_from_hass(self) -> None:
         """Handle entity removal from Home Assistant."""
@@ -194,4 +194,4 @@ class TibberPricesConfigSwitch(RestoreEntity, SwitchEntity):
     def async_registry_entry_updated(self) -> None:
         """Handle entity registry update (enabled/disabled state change)."""
         # This is called when the entity is enabled/disabled in the UI
-        self.hass.async_create_task(self._sync_override_state())
+        self.coordinator.config_entry.async_create_task(self.hass, self._sync_override_state())
