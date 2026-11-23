@@ -15,8 +15,6 @@
     ".claude/skills/**",
     ".github/instructions/**",
     // Agent scratch space — generated notes and reports, never committed
-    ".agents/scratch/**",
-    // Docusaurus documentation site: its own toolchain (MDX components such as <EntityRef>)
-    "docs/user/**"
+    ".agents/scratch/**"
   ]
 }

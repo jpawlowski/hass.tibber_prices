@@ -13,6 +13,8 @@
     { "action": "edit", "resource": ".agents/hooks/*", "effect": "deny" },
     { "action": "edit", "resource": ".claude/settings.json", "effect": "deny" },
     { "action": "edit", "resource": ".codex/hooks.json", "effect": "deny" },
+    { "action": "edit", "resource": ".codex/config.toml", "effect": "deny" },
+    { "action": "edit", "resource": ".github/copilot/settings.json", "effect": "deny" },
     { "action": "edit", "resource": ".opencode/*", "effect": "deny" },
     { "action": "edit", "resource": "opencode.json", "effect": "deny" },
     { "action": "edit", "resource": "opencode.jsonc", "effect": "deny" },

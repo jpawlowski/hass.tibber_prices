@@ -186,7 +186,7 @@ ir.async_create_issue(
   repair issues — says **backward-incompatible change**, Home Assistant's term; `BREAKING CHANGE:` stays the commit
   footer, because release-please keys on it.
 - Record the reasoning as a decision record in `docs/development/decisions/` if it was an architectural call
-  ([`ha-planning`](../ha-planning/SKILL.md)).
+  ([`blueprint-decisions`](../blueprint-decisions/SKILL.md)).
 
 ## 6. Removing entities and devices
 

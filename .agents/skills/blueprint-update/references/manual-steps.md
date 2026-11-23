@@ -4,18 +4,27 @@ What an integration repository has to do by hand because template sync cannot do
 for the `skipped` list in `.agents/blueprint-update.json`, the date it entered the blueprint, and a check that passes
 once it is done. Run the check from the repository root.
 
-## `change-review-pass` — 2026-11-22
+## `agent-plugins` — 2026-11-23
 
-**Check:** `grep -q '^| .*blueprint-change-review/SKILL.md' AGENTS.md && grep -q 'Review before a commit and before a pull request leaves draft' AGENTS.md && grep -q 'and the review below ran' AGENTS.md && grep -q 'Agent review' .github/pull_request_template.md`
+**Check:** `grep -q 'ha-custom-integration-skills' AGENTS.md && ! grep -qE 'skills/(ha-grill|ha-planning|ha-issue-triage|blueprint-change-review)/' AGENTS.md && ! grep -q 'and the review below ran' AGENTS.md && test ! -e .agents/skills/ha-grill && test ! -e .agents/skills/ha-planning && test ! -e .agents/skills/ha-issue-triage && test ! -e .agents/skills/blueprint-change-review && test ! -e .claude/commands/issues.md && test ! -e .github/skills/issues && ! grep -q 'Review before a commit and before a pull request leaves draft' AGENTS.md`
 
-The sync brings the skill `blueprint-change-review`, the review pass before the first commit of a change and before
-`gh pr ready`. `AGENTS.md`, the pull request template and `docs/` are not synced:
+Interviewing, planning and backlog triage are now plugins from
+[ha-custom-integration-skills](https://github.com/jpawlowski/ha-custom-integration-skills) that a developer can turn
+off: `haci-grill` and `haci-planning` (`haci-plan`), backlog triage with `haci-issue-triage` and `haci-issues`, which
+replaces the `/issues` command (`haci-triage`, off by default), and the review pass `haci-change-review` (`haci-review`),
+which now runs once before a push instead of before every commit. The sync brings the agent settings that pin and
+enable them and `script/setup/agent-plugins`, which bootstrap runs; recording decisions moves to the new
+`blueprint-decisions` skill. In Claude Code they are invoked as `/haci-plan:haci-grill` and so on.
 
-1. Carry over the section _Review before a commit and before a pull request leaves draft_, its routing row, and the
-   words "and the review below ran" in the draft bullet under _Commits, branches and pull requests_.
-2. Add the `Agent review` line under _Verification context_ in `.github/pull_request_template.md`.
-3. Optionally, the paragraph on the agent's own review pass under _Human Review and Transparency_ in
-   `docs/development/AI_AGENTS.md`.
+1. Delete `.agents/skills/ha-grill/`, `.agents/skills/ha-planning/`, `.agents/skills/ha-issue-triage/`,
+   `.agents/skills/blueprint-change-review/`, `.claude/commands/issues.md` and `.github/skills/issues/` where the sync
+   left them. A copy you kept on purpose in
+   `.templatesyncignore` has its `haci-` counterpart now; drop the copy or the entry.
+2. In `AGENTS.md`, replace their routing rows with the `blueprint-decisions` row; if you took the earlier step
+   `change-review-pass`, also remove the section _Review before a commit and before a pull request leaves draft_ and
+   the words "and the review below ran" in the draft bullet; carry over the section _Agent
+   plugins_ with its table and the critical files, and point _Decisions_ and _Scope of a change_ at the new names.
+3. Run `script/setup/agent-plugins`.
 
 ## `release-notes-sentence-case` — 2026-11-22
 
@@ -52,7 +61,7 @@ fails while a project instructions file — one not named `blueprint.*` — has 
 **Check:** `test ! -e docs/development/DECISIONS.md && test -f docs/development/decisions/README.md && grep -q 'docs/development/decisions' AGENTS.md`
 
 Decisions are now one record per file in `docs/development/decisions/`, with an index `script/decisions` writes and
-checks — see [`ha-planning`](../../ha-planning/references/decision-records.md). The script arrives through the sync and
+checks — see [`blueprint-decisions`](../../blueprint-decisions/references/decision-records.md). The script arrives through the sync and
 passes while the old single file is still there; `docs/` and `AGENTS.md` are not synced:
 
 1. Move each entry of `docs/development/DECISIONS.md` this project made into a record of its own, keeping its text,

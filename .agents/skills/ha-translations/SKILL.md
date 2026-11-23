@@ -146,8 +146,8 @@ raise HomeAssistantError(
 - Match the wording Home Assistant uses for the same situation rather than inventing a variant —
   [Core's shared strings](../../instructions/blueprint.translations.instructions.md#cores-shared-strings).
 - Use the word the project already settled on. If `docs/development/GLOSSARY.md` exists it decides the wording here,
-  because renaming an entity later is a breaking change ([`ha-grill`](../ha-grill/SKILL.md) is where those terms are
-  agreed).
+  because renaming an entity later is a breaking change (`haci-grill`, where the plugin is on, is
+  where those terms are agreed).
 
 ## icons.json
 

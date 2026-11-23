@@ -18,7 +18,7 @@ it lives where the next agent working on that code will meet it.
 
 **Read first:** the rule-versus-procedure split in `AGENTS.md` › _Where the rules live_ and the comment gates in
 [`blueprint.comments`](../../instructions/blueprint.comments.instructions.md). Decisions — a trade-off that was
-chosen — are [`ha-planning`](../ha-planning/references/decision-records.md), not this.
+chosen — are [`blueprint-decisions`](../blueprint-decisions/SKILL.md), not this.
 
 ## 0. Most lessons need no file
 
@@ -64,7 +64,7 @@ Cheapest durable home first. Take the first that can hold it:
 | The area's project instructions file (§3)                                                     | The mistake belongs to an area of the code and no check catches it                                                    |
 | A SYMPTOMS clause in a project skill's description                                            | The mistake happens during a kind of task, whatever file it touches                                                   |
 | A code comment with the issue URL                                                             | Only a workaround for an external bug ([`blueprint.comments`](../../instructions/blueprint.comments.instructions.md)) |
-| A decision record                                                                             | Only when a trade-off was chosen ([`ha-planning`](../ha-planning/SKILL.md))                                           |
+| A decision record                                                                             | Only when a trade-off was chosen ([`blueprint-decisions`](../blueprint-decisions/SKILL.md))                           |
 | `AGENTS.md`                                                                                   | Only when it bears on most sessions — `AGENTS.md` costs context in every one                                          |
 
 Never only in your own memory — `AGENTS.md` › _When instructions conflict with a request_ says why.
@@ -115,7 +115,7 @@ Most still have one place they start from. Take the first that fits:
   that area (`api`, `coordinator`), and a test there holds it.
 - **It happens during a task, whatever file it touches** → the project skill for that task, if one exists; otherwise
   the area file of the files that task changes.
-- **It is a word of the domain** → `docs/development/GLOSSARY.md` ([`ha-grill`](../ha-grill/SKILL.md)).
+- **It is a word of the domain** → `docs/development/GLOSSARY.md` (`haci-grill`, where the plugin is on).
 - **It holds in almost every session** → `AGENTS.md`.
 
 The list is closed: no `LESSONS.md`, no rules folder of its own, no second always-loaded file, no nested `AGENTS.md`.

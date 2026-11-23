@@ -37,6 +37,7 @@ __pycache__/
 
 # Per-person agent settings; the shared ones are .claude/settings.json
 /.claude/settings.local.json
+/.github/copilot/settings.local.json
 
 # Runtime artifact created by the template-sync workflow (never commit)
 /.templatesyncignore.runtime
@@ -74,6 +75,3 @@ Thumbs.db
 [Dd]esktop.ini
 *~
 *.swp
-
-# Worktrees of parallel Claude Code sessions are local checkouts
-/.claude/worktrees/

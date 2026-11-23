@@ -8,7 +8,7 @@ import subprocess
 import pytest
 
 ROOT = Path(__file__).parents[2]
-BRIEF = Path(".agents/skills/blueprint-change-review/references/reviewer-brief.md")
+BRIEF_TEXT = "# Reviewer brief\n\nYou review a change to this repository.\n"
 
 # A codex stand-in: writes where it ran and the prompt's range line as its last message.
 CODEX = """#!/bin/bash
@@ -28,14 +28,12 @@ def _git(repository: Path, *args: str) -> str:
 
 @pytest.fixture
 def repository(tmp_path: Path) -> Path:
-    """A repository with the script, its libraries and the brief, and one commit on top of a base."""
+    """A repository with the script and its libraries, and one commit on top of a base."""
     repository = tmp_path / "repository"
     (repository / "script" / ".lib").mkdir(parents=True)
     shutil.copy(ROOT / "script" / "second-review", repository / "script" / "second-review")
     for library in ("output.sh", "agent_cli.sh"):
         shutil.copy(ROOT / "script" / ".lib" / library, repository / "script" / ".lib" / library)
-    (repository / BRIEF).parent.mkdir(parents=True)
-    shutil.copy(ROOT / BRIEF, repository / BRIEF)
     (repository / ".gitignore").write_text(".agents/scratch/\n", encoding="utf-8")
     _git(repository, "init", "--quiet", "--initial-branch=main")
     _git(repository, "config", "user.email", "test@example.com")
@@ -51,18 +49,20 @@ def repository(tmp_path: Path) -> Path:
 def _run(repository: Path, tmp_path: Path, *args: str, **env: str) -> subprocess.CompletedProcess[str]:
     folder = tmp_path / "bin"
     folder.mkdir(exist_ok=True)
+    brief = tmp_path / "reviewer-brief.md"
+    brief.write_text(BRIEF_TEXT, encoding="utf-8")
     stub = folder / "codex"
     stub.write_text(CODEX, encoding="utf-8")
     stub.chmod(0o755)
     environment = {
         **{key: value for key, value in os.environ.items() if key not in {"CLAUDECODE", "AI_AGENT", "AGENT_CLI"}},
         "PATH": f"{folder}:{os.environ['PATH']}",
-        "BRIEF_PATH": str(BRIEF),
+        "BRIEF_PATH": str(brief),
         "CODEX_API_KEY": "k",
         **env,
     }
     return subprocess.run(
-        [str(repository / "script" / "second-review"), *args],
+        [str(repository / "script" / "second-review"), "--brief", str(brief), *args],
         cwd=repository,
         env=environment,
         capture_output=True,
@@ -96,3 +96,14 @@ def test_an_empty_range_is_refused(repository: Path, tmp_path: Path) -> None:
 
     assert result.returncode != 0
     assert "nothing to review" in result.stderr + result.stdout
+
+
+@pytest.mark.unit
+def test_the_brief_is_required(repository: Path) -> None:
+    """The brief ships with the plugin skill, not the repository, so a run without --brief names what it needs."""
+    result = subprocess.run(
+        [str(repository / "script" / "second-review")], cwd=repository, capture_output=True, text=True, check=False
+    )
+
+    assert result.returncode != 0
+    assert "--brief is required" in result.stderr + result.stdout
