@@ -1,7 +1,5 @@
 """Test midnight turnover consistency - period visibility before/after midnight."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 from zoneinfo import ZoneInfo

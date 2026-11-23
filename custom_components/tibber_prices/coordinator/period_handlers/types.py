@@ -1,7 +1,5 @@
 """Type definitions and constants for period calculation."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, NamedTuple, TypedDict
 
 if TYPE_CHECKING:

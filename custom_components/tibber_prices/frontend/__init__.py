@@ -24,14 +24,12 @@ The websocket command `tibber_prices/frontend` names that URL, so an open page c
 are outdated (`cards/reload.js`).
 """
 
-from __future__ import annotations
-
 import gzip
 import logging
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.components import websocket_api
@@ -84,7 +82,7 @@ async def async_register_frontend(hass: HomeAssistant) -> None:
     add_extra_js_url(hass, f"{url}/{CARDS_FILE}")
 
     @callback
-    @websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/frontend"})
+    @websocket_api.websocket_command({probatio.Required("type"): f"{DOMAIN}/frontend"})
     def cards_url(_hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
         """Name the URL the cards are served under since this start."""
         connection.send_result(msg["id"], {"url": url})

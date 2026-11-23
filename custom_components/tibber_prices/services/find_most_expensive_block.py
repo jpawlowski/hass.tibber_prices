@@ -5,11 +5,9 @@ Finds the most expensive contiguous window of a given duration within a search r
 Mirror of find_cheapest_block with reversed price selection.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-import probatio as vol
+import probatio
 
 from .find_cheapest_block import _COMMON_BLOCK_SCHEMA, _handle_find_block
 
@@ -18,7 +16,7 @@ if TYPE_CHECKING:
 
 FIND_MOST_EXPENSIVE_BLOCK_SERVICE_NAME = "find_most_expensive_block"
 
-FIND_MOST_EXPENSIVE_BLOCK_SERVICE_SCHEMA = vol.Schema(_COMMON_BLOCK_SCHEMA)
+FIND_MOST_EXPENSIVE_BLOCK_SERVICE_SCHEMA = probatio.Schema(_COMMON_BLOCK_SCHEMA)
 
 
 async def handle_find_most_expensive_block(call: ServiceCall) -> ServiceResponse:

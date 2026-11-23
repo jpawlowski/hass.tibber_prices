@@ -1,7 +1,5 @@
 """Custom exceptions for API client."""
 
-from __future__ import annotations
-
 
 class TibberPricesApiClientError(Exception):
     """Exception to indicate a general API error."""

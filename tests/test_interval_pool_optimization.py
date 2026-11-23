@@ -15,8 +15,6 @@ updated to match the new API routing logic in interval_pool/routing.py.
 TODO: Rewrite these tests with proper API client fixtures.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 

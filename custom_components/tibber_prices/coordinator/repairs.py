@@ -11,8 +11,6 @@ Repair Types:
 4. API Outage - Warns when the API has been unreachable for a prolonged period (time-based)
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING

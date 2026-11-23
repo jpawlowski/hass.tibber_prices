@@ -10,8 +10,6 @@ Usage:
     script/docs/generate-sensor-reference.py --check    # Verify file is up-to-date (CI)
 """
 
-from __future__ import annotations
-
 from collections import OrderedDict
 import json
 from pathlib import Path

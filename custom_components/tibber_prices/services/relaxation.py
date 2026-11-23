@@ -9,8 +9,6 @@ Relaxation phases (in order):
 3. Reduce duration by 1 interval per step (up to dynamic or user-specified cap)
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

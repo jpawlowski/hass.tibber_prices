@@ -19,15 +19,13 @@ Response: JSON with chart-ready data
 
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import math
 import re
 import statistics
 from typing import TYPE_CHECKING, Any, Final
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_THRESHOLD_HIGH,
@@ -275,27 +273,33 @@ _CHARTDATA_ENTITY_PARAMS: dict[str, type] = {
 }
 
 # Service schema
-CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
+CHARTDATA_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(ATTR_ENTRY_ID, default=""): str,
-        vol.Optional("view_id", default=""): str,
-        vol.Optional(ATTR_DAY): vol.All(vol.Coerce(list), [vol.In(["yesterday", "today", "tomorrow"])]),
-        vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
-        vol.Optional("output_format", default="array_of_objects"): vol.In(["array_of_objects", "array_of_arrays"]),
-        vol.Optional("array_fields"): str,
-        vol.Optional("subunit_currency", default=False): bool,
-        vol.Optional("round_decimals"): or_entity_ref(vol.All(vol.Coerce(int), vol.Range(min=0, max=10))),
-        vol.Optional("include_level", default=False): bool,
-        vol.Optional("include_rating_level", default=False): bool,
-        vol.Optional("include_average", default=False): bool,
-        vol.Optional("price_source", default="total"): vol.In(["total", "energy", "tax"]),
-        vol.Optional("include_energy", default=False): bool,
-        vol.Optional("include_tax", default=False): bool,
-        vol.Optional("level_filter"): vol.All(
-            vol.Coerce(list),
+        probatio.Optional(ATTR_ENTRY_ID, default=""): str,
+        probatio.Optional("view_id", default=""): str,
+        probatio.Optional(ATTR_DAY): probatio.All(
+            probatio.Coerce(list), [probatio.In(["yesterday", "today", "tomorrow"])]
+        ),
+        probatio.Optional("resolution", default="interval"): probatio.In(["interval", "hourly"]),
+        probatio.Optional("output_format", default="array_of_objects"): probatio.In(
+            ["array_of_objects", "array_of_arrays"]
+        ),
+        probatio.Optional("array_fields"): str,
+        probatio.Optional("subunit_currency", default=False): bool,
+        probatio.Optional("round_decimals"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=10))
+        ),
+        probatio.Optional("include_level", default=False): bool,
+        probatio.Optional("include_rating_level", default=False): bool,
+        probatio.Optional("include_average", default=False): bool,
+        probatio.Optional("price_source", default="total"): probatio.In(["total", "energy", "tax"]),
+        probatio.Optional("include_energy", default=False): bool,
+        probatio.Optional("include_tax", default=False): bool,
+        probatio.Optional("level_filter"): probatio.All(
+            probatio.Coerce(list),
             normalize_level_filter,
             [
-                vol.In(
+                probatio.In(
                     [
                         PRICE_LEVEL_VERY_CHEAP,
                         PRICE_LEVEL_CHEAP,
@@ -306,25 +310,25 @@ CHARTDATA_SERVICE_SCHEMA: Final = vol.Schema(
                 )
             ],
         ),
-        vol.Optional("rating_level_filter"): vol.All(
-            vol.Coerce(list),
+        probatio.Optional("rating_level_filter"): probatio.All(
+            probatio.Coerce(list),
             normalize_rating_level_filter,
-            [vol.In([PRICE_RATING_LOW, PRICE_RATING_NORMAL, PRICE_RATING_HIGH])],
+            [probatio.In([PRICE_RATING_LOW, PRICE_RATING_NORMAL, PRICE_RATING_HIGH])],
         ),
-        vol.Optional("insert_nulls", default="none"): vol.In(["none", "segments", "all"]),
-        vol.Optional("connect_segments", default=False): bool,
-        vol.Optional("add_trailing_null", default=False): bool,
-        vol.Optional("period_filter"): vol.In(["best_price", "peak_price"]),
-        vol.Optional("start_time_field", default="start_time"): str,
-        vol.Optional("end_time_field", default="end_time"): str,
-        vol.Optional("price_field", default="price_per_kwh"): str,
-        vol.Optional("level_field", default="level"): str,
-        vol.Optional("rating_level_field", default="rating_level"): str,
-        vol.Optional("average_field", default="average"): str,
-        vol.Optional("energy_field", default="energy_price"): str,
-        vol.Optional("tax_field", default="tax"): str,
-        vol.Optional("data_key", default="data"): str,
-        vol.Optional("metadata", default="include"): vol.In(["include", "only", "none"]),
+        probatio.Optional("insert_nulls", default="none"): probatio.In(["none", "segments", "all"]),
+        probatio.Optional("connect_segments", default=False): bool,
+        probatio.Optional("add_trailing_null", default=False): bool,
+        probatio.Optional("period_filter"): probatio.In(["best_price", "peak_price"]),
+        probatio.Optional("start_time_field", default="start_time"): str,
+        probatio.Optional("end_time_field", default="end_time"): str,
+        probatio.Optional("price_field", default="price_per_kwh"): str,
+        probatio.Optional("level_field", default="level"): str,
+        probatio.Optional("rating_level_field", default="rating_level"): str,
+        probatio.Optional("average_field", default="average"): str,
+        probatio.Optional("energy_field", default="energy_price"): str,
+        probatio.Optional("tax_field", default="tax"): str,
+        probatio.Optional("data_key", default="data"): str,
+        probatio.Optional("metadata", default="include"): probatio.In(["include", "only", "none"]),
     }
 )
 

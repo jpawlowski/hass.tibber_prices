@@ -8,8 +8,6 @@ Packages:
     economics:         Round-trip economic analysis (Phase 4)
 """
 
-from __future__ import annotations
-
 from .deadline_solver import build_deadline_schedule, get_deadline_events, resolve_deadline
 from .economics import (
     calculate_break_even_price,

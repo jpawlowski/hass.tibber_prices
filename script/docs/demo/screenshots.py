@@ -9,8 +9,6 @@ Token: HA_TOKEN env var or config/.ha_token (git-ignored). Usage:
     /tmp/pw/bin/python script/docs/demo/screenshots.py OUT_DIR [shot_name ...]
 """
 
-from __future__ import annotations
-
 import json
 import os
 from pathlib import Path

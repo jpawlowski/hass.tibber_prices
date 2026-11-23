@@ -1,7 +1,5 @@
 """Options flow for tibber_prices integration."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 import logging
 from typing import TYPE_CHECKING, Any

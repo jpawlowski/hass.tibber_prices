@@ -1,7 +1,5 @@
 """Regression tests for period calculation cache hashing."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 from unittest.mock import Mock

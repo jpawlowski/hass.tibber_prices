@@ -1,7 +1,5 @@
 """Unit tests for charging round-trip economics helpers."""
 
-from __future__ import annotations
-
 from custom_components.tibber_prices.services.charging.economics import (
     calculate_break_even_price,
     calculate_plan_economics,

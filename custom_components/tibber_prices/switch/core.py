@@ -6,8 +6,6 @@ When a config entity is enabled, its value takes precedence over the
 options flow setting for period calculations.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 

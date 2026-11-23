@@ -1,7 +1,5 @@
 """Attribute keys carry no `%`: translated attribute names allow only [a-z0-9_-] in their key (#267)."""
 
-from __future__ import annotations
-
 import ast
 from pathlib import Path
 

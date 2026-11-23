@@ -21,8 +21,6 @@ Usage:
     script/i18n/generate-attribute-translations.py --check   # fail if they are out of date (CI)
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import re

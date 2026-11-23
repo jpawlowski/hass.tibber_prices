@@ -1,7 +1,5 @@
 """Metadata attribute builders for Tibber Prices sensors."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.utils.price import find_price_data_for_interval

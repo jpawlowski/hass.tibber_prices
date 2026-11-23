@@ -1,7 +1,5 @@
 """Tests for get_chartdata metadata statistics calculation."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 
 from custom_components.tibber_prices.services.get_chartdata import _calculate_metadata

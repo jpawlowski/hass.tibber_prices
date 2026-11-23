@@ -1,7 +1,5 @@
 """Regression tests for overlap resolution and merged period summaries."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 import pytest

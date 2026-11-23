@@ -1,7 +1,5 @@
 """Icons that depend only on an entity's own state live in icons.json, not in the icon property."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 

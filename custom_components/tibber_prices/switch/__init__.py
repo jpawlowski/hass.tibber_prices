@@ -8,8 +8,6 @@ When enabled, these entities take precedence over the options flow settings.
 When disabled (default), the options flow settings are used.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from .core import TibberPricesConfigSwitch

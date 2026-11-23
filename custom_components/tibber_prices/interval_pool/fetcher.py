@@ -1,7 +1,5 @@
 """Interval fetcher - coverage check and API coordination for interval pool."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any

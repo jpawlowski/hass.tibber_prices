@@ -5,8 +5,6 @@ This module serves as the entry point for Home Assistant's config flow discovery
 The actual implementation is in the config_flow_handlers package.
 """
 
-from __future__ import annotations
-
 from .config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler as OptionsFlowHandler
 from .config_flow_handlers.schemas import (
     get_best_price_schema,

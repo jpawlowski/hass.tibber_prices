@@ -1,7 +1,5 @@
 """Test midnight-crossing period assignment with group_periods_by_day()."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 

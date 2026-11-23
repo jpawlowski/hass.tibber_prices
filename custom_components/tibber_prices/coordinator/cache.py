@@ -24,8 +24,6 @@ user metadata and timestamps. The IntervalPool handles all price data
 fetching, caching, and persistence independently.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, NamedTuple
 

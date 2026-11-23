@@ -18,8 +18,6 @@ the core period-finding logic; periods that would not normally be found are not
 created by this step.
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import statistics
 from typing import TYPE_CHECKING, Any

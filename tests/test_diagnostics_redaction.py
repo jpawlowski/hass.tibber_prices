@@ -1,7 +1,5 @@
 """Diagnostics files get attached to public issues: nothing identifying may be in them."""
 
-from __future__ import annotations
-
 import json
 from types import SimpleNamespace
 from unittest.mock import MagicMock

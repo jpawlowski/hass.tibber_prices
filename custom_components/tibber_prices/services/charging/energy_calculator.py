@@ -5,8 +5,6 @@ All functions are stateless and have no Home Assistant dependencies.
 They operate on plain Python types and are designed for unit testing.
 """
 
-from __future__ import annotations
-
 import math
 from typing import Any
 

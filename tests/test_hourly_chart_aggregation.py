@@ -1,7 +1,5 @@
 """Tests for aggregate_to_hourly: chart hours are clock hours (:00-:59)."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo

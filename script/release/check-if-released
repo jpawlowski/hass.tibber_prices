@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# script/check-if-released: Check if a commit has been released in any version tag
+# script/release/check-if-released: Check if a commit has been released in any version tag
 #
 # Determines whether a specific commit is included in any released version tag.
 # Useful for deciding if legacy migration code is needed for unreleased changes.

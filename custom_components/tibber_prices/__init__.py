@@ -5,13 +5,11 @@ For more details about this integration, please refer to
 https://github.com/jpawlowski/hass.tibber_prices
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 import shutil
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -67,39 +65,41 @@ PLATFORMS: list[Platform] = [
 ]
 
 # Configuration schema for configuration.yaml
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional("chart_export"): vol.Schema(
+                probatio.Optional("chart_export"): probatio.Schema(
                     {
-                        vol.Optional("day"): vol.All(vol.Any(str, list), vol.Coerce(list)),
-                        vol.Optional("resolution"): str,
-                        vol.Optional("output_format"): str,
-                        vol.Optional("subunit_currency"): bool,
-                        vol.Optional("round_decimals"): vol.All(int, vol.Range(min=0, max=10)),
-                        vol.Optional("include_level"): bool,
-                        vol.Optional("include_rating_level"): bool,
-                        vol.Optional("include_average"): bool,
-                        vol.Optional("level_filter"): vol.All(vol.Any(str, list), vol.Coerce(list)),
-                        vol.Optional("rating_level_filter"): vol.All(vol.Any(str, list), vol.Coerce(list)),
-                        vol.Optional("period_filter"): str,
-                        vol.Optional("insert_nulls"): str,
-                        vol.Optional("add_trailing_null"): bool,
-                        vol.Optional("array_fields"): str,
-                        vol.Optional("start_time_field"): str,
-                        vol.Optional("end_time_field"): str,
-                        vol.Optional("price_field"): str,
-                        vol.Optional("level_field"): str,
-                        vol.Optional("rating_level_field"): str,
-                        vol.Optional("average_field"): str,
-                        vol.Optional("data_key"): str,
+                        probatio.Optional("day"): probatio.All(probatio.Any(str, list), probatio.Coerce(list)),
+                        probatio.Optional("resolution"): str,
+                        probatio.Optional("output_format"): str,
+                        probatio.Optional("subunit_currency"): bool,
+                        probatio.Optional("round_decimals"): probatio.All(int, probatio.Range(min=0, max=10)),
+                        probatio.Optional("include_level"): bool,
+                        probatio.Optional("include_rating_level"): bool,
+                        probatio.Optional("include_average"): bool,
+                        probatio.Optional("level_filter"): probatio.All(probatio.Any(str, list), probatio.Coerce(list)),
+                        probatio.Optional("rating_level_filter"): probatio.All(
+                            probatio.Any(str, list), probatio.Coerce(list)
+                        ),
+                        probatio.Optional("period_filter"): str,
+                        probatio.Optional("insert_nulls"): str,
+                        probatio.Optional("add_trailing_null"): bool,
+                        probatio.Optional("array_fields"): str,
+                        probatio.Optional("start_time_field"): str,
+                        probatio.Optional("end_time_field"): str,
+                        probatio.Optional("price_field"): str,
+                        probatio.Optional("level_field"): str,
+                        probatio.Optional("rating_level_field"): str,
+                        probatio.Optional("average_field"): str,
+                        probatio.Optional("data_key"): str,
                     }
                 ),
             }
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 

@@ -1,7 +1,5 @@
 """Enhanced coordinator for fetching Tibber price data with comprehensive caching."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -112,7 +110,6 @@ def get_connection_state(coordinator: TibberPricesDataUpdateCoordinator) -> bool
 #     * Transforms data only when needed (config change, new data, midnight)
 #   - Load distribution:
 #     * Start time varies per installation → natural distribution
-#     * Tomorrow data check adds 0-30s random delay → prevents thundering herd
 #   - Midnight coordination:
 #     * Atomic check using _check_midnight_turnover_needed(now)
 #     * If turnover needed, performs it and returns early

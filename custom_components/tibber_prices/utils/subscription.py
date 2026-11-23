@@ -20,8 +20,6 @@ ended. The integration treats the three phases differently:
 Pure functions, no Home Assistant dependencies.
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Tests for the chart_data_export sensor attribute builder."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 
 from custom_components.tibber_prices.sensor.chart_data import build_chart_data_attributes

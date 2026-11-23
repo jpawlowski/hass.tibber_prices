@@ -8,8 +8,6 @@ Tests the pure algorithm functions in utils/price_window.py:
 - calculate_window_statistics
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 
 from custom_components.tibber_prices.utils.price_window import (

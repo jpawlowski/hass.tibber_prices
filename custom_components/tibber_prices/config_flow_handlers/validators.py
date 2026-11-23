@@ -1,7 +1,5 @@
 """Validation functions for Tibber Prices config flow."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.api import (

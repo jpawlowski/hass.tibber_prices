@@ -1,7 +1,5 @@
 """Calculator for rolling hour average values (5-interval windows)."""
 
-from __future__ import annotations
-
 from custom_components.tibber_prices.const import (
     CONF_PRICE_RATING_THRESHOLD_HIGH,
     CONF_PRICE_RATING_THRESHOLD_LOW,

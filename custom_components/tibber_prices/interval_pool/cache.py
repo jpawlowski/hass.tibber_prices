@@ -1,7 +1,5 @@
 """Fetch group cache for price intervals."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any

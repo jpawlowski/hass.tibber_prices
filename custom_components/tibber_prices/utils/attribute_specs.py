@@ -13,8 +13,6 @@ the capability attributes Home Assistant adds itself (`min`, `max`, `step`, `mod
 exclusion sets cover.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING, Any

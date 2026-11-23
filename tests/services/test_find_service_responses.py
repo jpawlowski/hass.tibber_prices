@@ -1,7 +1,5 @@
 """Tests for find service response contracts: reason codes and schedule comparison details."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast

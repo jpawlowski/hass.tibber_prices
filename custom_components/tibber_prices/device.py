@@ -40,8 +40,6 @@ Entity ``unique_id``s of subentry entities must likewise be scoped with
 :func:`device_identifier`, or they collide with the parent entry's entities.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

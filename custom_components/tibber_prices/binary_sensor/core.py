@@ -1,7 +1,5 @@
 """Binary sensor core class for tibber_prices."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.coordinator import TIME_SENSITIVE_ENTITY_KEYS

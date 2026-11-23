@@ -11,8 +11,6 @@ CRITICAL: Uses REAL TIME (dt_util.now()) for API boundary calculation,
 NOT TimeService.now() which may be shifted for internal simulation.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 

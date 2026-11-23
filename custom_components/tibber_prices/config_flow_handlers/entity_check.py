@@ -6,8 +6,6 @@ for specific options flow steps. If no relevant entities are enabled,
 a warning can be displayed to users.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 

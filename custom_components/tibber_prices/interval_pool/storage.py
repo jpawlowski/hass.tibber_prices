@@ -1,7 +1,5 @@
 """Storage management for interval pool."""
 
-from __future__ import annotations
-
 import errno
 import logging
 from typing import TYPE_CHECKING, Any

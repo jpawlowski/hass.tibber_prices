@@ -1,7 +1,5 @@
 """Binary sensor entity descriptions for tibber_prices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from custom_components.tibber_prices.utils.attribute_specs import TibberPricesAttribute, attribute

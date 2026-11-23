@@ -1,7 +1,5 @@
 """Color utilities for Tibber Prices entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from custom_components.tibber_prices.const import (

@@ -6,14 +6,12 @@ within a search range. Designed for appliance scheduling (dishwasher, washing
 machine, dryer).
 """
 
-from __future__ import annotations
-
 from datetime import datetime, time as dt_time, timedelta
 import logging
 import math
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import DOMAIN, get_display_unit_factor, get_display_unit_string
 from custom_components.tibber_prices.utils.price_window import (
@@ -76,49 +74,49 @@ COMMON_BLOCK_ENTITY_PARAMS: dict[str, type] = {
 }
 
 _COMMON_BLOCK_SCHEMA = {
-    vol.Optional("entry_id", default=""): cv.string,
-    vol.Optional("view_id", default=""): cv.string,
-    vol.Required("duration"): or_entity_ref(
-        vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1), max=timedelta(hours=12))),
+    probatio.Optional("entry_id", default=""): cv.string,
+    probatio.Optional("view_id", default=""): cv.string,
+    probatio.Required("duration"): or_entity_ref(
+        probatio.All(cv.positive_time_period, probatio.Range(min=timedelta(minutes=1), max=timedelta(hours=12))),
     ),
-    vol.Optional("search_start"): or_entity_ref(cv.datetime),
-    vol.Optional("search_end"): or_entity_ref(cv.datetime),
-    vol.Optional("search_start_time"): or_entity_ref(cv.time),
-    vol.Optional("search_start_day_offset", default=0): or_entity_ref(
-        vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+    probatio.Optional("search_start"): or_entity_ref(cv.datetime),
+    probatio.Optional("search_end"): or_entity_ref(cv.datetime),
+    probatio.Optional("search_start_time"): or_entity_ref(cv.time),
+    probatio.Optional("search_start_day_offset", default=0): or_entity_ref(
+        probatio.All(probatio.Coerce(int), probatio.Range(min=-7, max=2)),
     ),
-    vol.Optional("search_end_time"): or_entity_ref(cv.time),
-    vol.Optional("search_end_day_offset", default=0): or_entity_ref(
-        vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+    probatio.Optional("search_end_time"): or_entity_ref(cv.time),
+    probatio.Optional("search_end_day_offset", default=0): or_entity_ref(
+        probatio.All(probatio.Coerce(int), probatio.Range(min=-7, max=2)),
     ),
-    vol.Optional("search_start_offset_minutes"): or_entity_ref(
-        vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+    probatio.Optional("search_start_offset_minutes"): or_entity_ref(
+        probatio.All(probatio.Coerce(int), probatio.Range(min=-10080, max=10080)),
     ),
-    vol.Optional("search_end_offset_minutes"): or_entity_ref(
-        vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+    probatio.Optional("search_end_offset_minutes"): or_entity_ref(
+        probatio.All(probatio.Coerce(int), probatio.Range(min=-10080, max=10080)),
     ),
-    vol.Optional("search_scope"): vol.In(VALID_SEARCH_SCOPES),
-    vol.Optional("max_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
-    vol.Optional("min_price_level"): vol.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
-    vol.Optional("include_comparison_details", default=False): cv.boolean,
-    vol.Optional("power_profile"): vol.All(
-        [vol.All(vol.Coerce(int), vol.Range(min=1, max=100000))],
-        vol.Length(min=1, max=48),
+    probatio.Optional("search_scope"): probatio.In(VALID_SEARCH_SCOPES),
+    probatio.Optional("max_price_level"): probatio.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
+    probatio.Optional("min_price_level"): probatio.In([lvl.lower() for lvl in PRICE_LEVEL_ORDER]),
+    probatio.Optional("include_comparison_details", default=False): cv.boolean,
+    probatio.Optional("power_profile"): probatio.All(
+        [probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100000))],
+        probatio.Length(min=1, max=48),
     ),
-    vol.Optional("include_current_interval", default=True): cv.boolean,
-    vol.Optional("use_base_unit", default=False): cv.boolean,
-    vol.Optional("smooth_outliers", default=True): cv.boolean,
-    vol.Optional("min_distance_from_avg"): or_entity_ref(
-        vol.All(vol.Coerce(float), vol.Range(min=0.1, max=50.0)),
+    probatio.Optional("include_current_interval", default=True): cv.boolean,
+    probatio.Optional("use_base_unit", default=False): cv.boolean,
+    probatio.Optional("smooth_outliers", default=True): cv.boolean,
+    probatio.Optional("min_distance_from_avg"): or_entity_ref(
+        probatio.All(probatio.Coerce(float), probatio.Range(min=0.1, max=50.0)),
     ),
-    vol.Optional("allow_relaxation", default=True): cv.boolean,
-    vol.Optional("duration_flexibility_minutes"): or_entity_ref(
-        vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+    probatio.Optional("allow_relaxation", default=True): cv.boolean,
+    probatio.Optional("duration_flexibility_minutes"): or_entity_ref(
+        probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=120)),
     ),
-    vol.Optional("must_finish_by"): or_entity_ref(cv.datetime),
+    probatio.Optional("must_finish_by"): or_entity_ref(cv.datetime),
 }
 
-FIND_CHEAPEST_BLOCK_SERVICE_SCHEMA = vol.Schema(_COMMON_BLOCK_SCHEMA)
+FIND_CHEAPEST_BLOCK_SERVICE_SCHEMA = probatio.Schema(_COMMON_BLOCK_SCHEMA)
 
 
 def _compute_price_comparison(

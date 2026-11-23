@@ -1,10 +1,8 @@
 """Subentry config flow for creating time-travel views."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, NamedTuple
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import (
     CONF_HEADLESS,
@@ -89,9 +87,9 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_VIRTUAL_TIME_OFFSET_MODE, default=MODE_DAYS): SelectSelector(
+                    probatio.Required(CONF_VIRTUAL_TIME_OFFSET_MODE, default=MODE_DAYS): SelectSelector(
                         SelectSelectorConfig(
                             options=[
                                 SelectOptionDict(value=MODE_DAYS, label="days"),
@@ -198,14 +196,14 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
             return {"base": "before_quarter_hourly"}
         return {}
 
-    def _offset_schema(self, current: Any = None) -> vol.Schema:
+    def _offset_schema(self, current: Any = None) -> probatio.Schema:
         """Build the offset form for the active mode, pre-filled from current data."""
         data = current or {}
         today = dt_util.now().date()
 
         if self._mode == MODE_YEARLY:
             primary = {
-                vol.Required(
+                probatio.Required(
                     CONF_VIRTUAL_TIME_OFFSET_YEARS,
                     default=int(data.get(CONF_VIRTUAL_TIME_OFFSET_YEARS, -1)),
                 ): NumberSelector(
@@ -219,7 +217,7 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
             }
         else:
             primary = {
-                vol.Required(
+                probatio.Required(
                     CONF_VIRTUAL_TIME_OFFSET_DAYS,
                     default=int(data.get(CONF_VIRTUAL_TIME_OFFSET_DAYS, 0)),
                 ): NumberSelector(
@@ -233,12 +231,12 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
                 )
             }
 
-        return vol.Schema(
+        return probatio.Schema(
             {
                 **primary,
                 # DurationSelector cannot express negative values, so it always
                 # shows the magnitude and the sign is applied on save.
-                vol.Optional(
+                probatio.Optional(
                     CONF_TIME_OFFSET,
                     default={
                         "hours": abs(int(data.get(CONF_VIRTUAL_TIME_OFFSET_HOURS, 0))),
@@ -250,11 +248,11 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
                         enable_day=False,  # Days are handled by the slider above
                     )
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_REALISTIC_TOMORROW,
                     default=bool(data.get(CONF_REALISTIC_TOMORROW, DEFAULT_REALISTIC_TOMORROW)),
                 ): BooleanSelector(),
-                vol.Optional(
+                probatio.Optional(
                     CONF_TOMORROW_ARRIVAL_HOUR,
                     default=int(data.get(CONF_TOMORROW_ARRIVAL_HOUR, DEFAULT_TOMORROW_ARRIVAL_HOUR)),
                 ): NumberSelector(
@@ -265,7 +263,7 @@ class TibberPricesSubentryFlowHandler(ConfigSubentryFlow):
                         step=1,
                     )
                 ),
-                vol.Optional(
+                probatio.Optional(
                     CONF_HEADLESS,
                     default=bool(data.get(CONF_HEADLESS, DEFAULT_HEADLESS)),
                 ): BooleanSelector(),

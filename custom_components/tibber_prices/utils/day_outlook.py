@@ -15,8 +15,6 @@ The functions only group intervals; averaging and level aggregation happen where
 display unit is known (sensor attributes).
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from itertools import pairwise
 from typing import TYPE_CHECKING, Any, NamedTuple

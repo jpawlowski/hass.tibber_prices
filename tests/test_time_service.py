@@ -1,7 +1,5 @@
 """Tests for TimeService - critical time handling with boundary tolerance and DST."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime
 
 import pytest

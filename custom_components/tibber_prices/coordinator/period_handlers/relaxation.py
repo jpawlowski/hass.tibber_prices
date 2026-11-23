@@ -1,7 +1,5 @@
 """Relaxation strategy for finding minimum periods per day."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any

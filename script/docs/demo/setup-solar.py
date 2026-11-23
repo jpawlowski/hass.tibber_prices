@@ -26,8 +26,6 @@ Usage: ./script/docs/demo/setup-solar.py [--backfill] [--dry-run] [--url http://
 Token: config/.ha_token or HA_TOKEN (as for render-dashboard.py).
 """
 
-from __future__ import annotations
-
 import argparse
 import asyncio
 from datetime import UTC, datetime, timedelta

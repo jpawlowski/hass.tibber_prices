@@ -18,13 +18,11 @@ After calling this service:
 
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import DOMAIN
 
@@ -35,9 +33,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 DEBUG_CLEAR_TOMORROW_SERVICE_NAME = "debug_clear_tomorrow"
-DEBUG_CLEAR_TOMORROW_SERVICE_SCHEMA = vol.Schema(
+DEBUG_CLEAR_TOMORROW_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("entry_id"): str,
+        probatio.Optional("entry_id"): str,
     }
 )
 

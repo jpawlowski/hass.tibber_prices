@@ -1,7 +1,5 @@
 """Garbage collector for interval cache eviction."""
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING, Any

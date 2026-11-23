@@ -1,7 +1,5 @@
 """Unit tests for charging deadline resolution and two-pass scheduling."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 

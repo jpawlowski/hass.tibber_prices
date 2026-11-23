@@ -9,8 +9,6 @@ handle ALL price scenarios correctly:
 - Mixed scenarios (transitions, extreme volatility)
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 
 import pytest

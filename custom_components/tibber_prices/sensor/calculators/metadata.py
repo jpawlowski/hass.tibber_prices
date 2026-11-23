@@ -1,7 +1,5 @@
 """Calculator for home metadata, metering point, and subscription data."""
 
-from __future__ import annotations
-
 from custom_components.tibber_prices.sensor.helpers import normalize_enum_state
 
 from .base import TibberPricesBaseCalculator

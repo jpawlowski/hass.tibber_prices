@@ -1,7 +1,5 @@
 """Core sensor class for Tibber Prices integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 

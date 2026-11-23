@@ -5,8 +5,6 @@ Tests the get_lifecycle_state() method which determines the current
 data lifecycle state shown to users.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 from zoneinfo import ZoneInfo

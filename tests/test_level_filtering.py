@@ -12,8 +12,6 @@ Regression Tests:
 - Redundant Condition Bug (Nov 2025): "price <= ref_price" blocked all peak prices
 """
 
-from __future__ import annotations
-
 import pytest
 
 from custom_components.tibber_prices.coordinator.period_handlers.level_filtering import check_interval_criteria

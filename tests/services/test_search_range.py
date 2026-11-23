@@ -9,13 +9,11 @@ Verifies that services can search into the past using:
 Also validates schema boundaries for all 4 services.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, time as dt_time, timedelta
 from typing import Any, cast
 from zoneinfo import ZoneInfo
 
-import probatio as vol
+import probatio
 import pytest
 
 from custom_components.tibber_prices.services.find_cheapest_block import _COMMON_BLOCK_SCHEMA
@@ -422,12 +420,12 @@ class TestSchemaValidation:
 
     def _validate_block_schema(self, data: dict) -> dict:
         """Validate data through block schema."""
-        schema = vol.Schema(_COMMON_BLOCK_SCHEMA)
+        schema = probatio.Schema(_COMMON_BLOCK_SCHEMA)
         return cast("dict[str, Any]", schema(data))
 
     def _validate_hours_schema(self, data: dict) -> dict:
         """Validate data through hours schema."""
-        schema = vol.Schema(_COMMON_HOURS_SCHEMA)
+        schema = probatio.Schema(_COMMON_HOURS_SCHEMA)
         return cast("dict[str, Any]", schema(data))
 
     def test_block_schema_accepts_negative_day_offset(self) -> None:
@@ -458,7 +456,7 @@ class TestSchemaValidation:
 
     def test_block_schema_rejects_out_of_bounds_day_offset(self) -> None:
         """Block schema rejects day offset < -7."""
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             self._validate_block_schema(
                 {
                     "entry_id": "test",
@@ -469,7 +467,7 @@ class TestSchemaValidation:
 
     def test_block_schema_max_day_offset_still_2(self) -> None:
         """Block schema still limits forward to +2."""
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             self._validate_block_schema(
                 {
                     "entry_id": "test",
@@ -504,7 +502,7 @@ class TestSchemaValidation:
 
     def test_hours_schema_rejects_out_of_bounds_offset_minutes(self) -> None:
         """Hours schema rejects offset minutes outside ±10080."""
-        with pytest.raises(vol.Invalid):
+        with pytest.raises(probatio.Invalid):
             self._validate_hours_schema(
                 {
                     "entry_id": "test",

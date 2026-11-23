@@ -13,8 +13,6 @@ State, trend start and next trend change are all read from that timeline, so the
 agree with each other.
 """
 
-from __future__ import annotations
-
 from bisect import bisect_right
 from functools import lru_cache
 from itertools import combinations

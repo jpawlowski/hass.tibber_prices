@@ -9,8 +9,6 @@ When enabled, the entity value takes precedence over the options flow setting.
 When disabled (default), the options flow setting is used.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntityDescription, NumberMode

@@ -12,8 +12,8 @@ Syntax:
 Supported target types: int, float, datetime, timedelta, time.
 
 Usage in schemas:
-    vol.Required("duration"): or_entity_ref(
-        vol.All(cv.positive_time_period, vol.Range(...))
+    probatio.Required("duration"): or_entity_ref(
+        probatio.All(cv.positive_time_period, probatio.Range(...))
     ),
 
 Usage in handlers:
@@ -23,13 +23,11 @@ Usage in handlers:
 
 """
 
-from __future__ import annotations
-
 from datetime import datetime, time as dt_time, timedelta
 import re
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.exceptions import ServiceValidationError
@@ -56,24 +54,24 @@ def is_entity_reference(value: Any) -> bool:
 def _validate_entity_ref(value: Any) -> str:
     """Voluptuous validator: accepts entity reference strings."""
     if not isinstance(value, str):
-        raise vol.Invalid("Entity reference must be a string")
+        raise probatio.Invalid("Entity reference must be a string")
     if not _ENTITY_REF_RE.match(value):
-        raise vol.Invalid(f"Not a valid entity reference: {value}")
+        raise probatio.Invalid(f"Not a valid entity reference: {value}")
     return value
 
 
-def or_entity_ref(validator: Any) -> vol.Any:
+def or_entity_ref(validator: Any) -> probatio.Any:
     """Wrap a voluptuous validator to also accept entity references.
 
     The schema will first try the original validator (for literal values),
     then fall back to accepting an entity reference string.
 
     Example:
-        vol.Required("duration"): or_entity_ref(
-            vol.All(cv.positive_time_period, vol.Range(min=timedelta(minutes=1)))
+        probatio.Required("duration"): or_entity_ref(
+            probatio.All(cv.positive_time_period, probatio.Range(min=timedelta(minutes=1)))
         ),
     """
-    return vol.Any(validator, _validate_entity_ref)
+    return probatio.Any(validator, _validate_entity_ref)
 
 
 def _resolve_raw_value(hass: HomeAssistant, ref: str) -> tuple[str, str, str | None]:

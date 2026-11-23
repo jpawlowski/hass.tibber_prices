@@ -1,7 +1,5 @@
 """Utility functions for price data calculations."""
 
-from __future__ import annotations
-
 import bisect
 from datetime import datetime, timedelta
 import logging

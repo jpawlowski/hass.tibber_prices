@@ -13,8 +13,6 @@ cheap periods" without complex template logic.
 See definitions.py for complete binary sensor catalog.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.const import EntityCategory

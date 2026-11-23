@@ -11,8 +11,6 @@ Views are addressed by device, because that is what a user picks; subentry IDs a
 internal.
 """
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import Any

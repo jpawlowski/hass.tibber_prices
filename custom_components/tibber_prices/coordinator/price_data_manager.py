@@ -24,8 +24,6 @@ Note: Price data is NOT cached in this module - IntervalPool is the single
 source of truth. This module only caches user_data for daily refresh cycle.
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any

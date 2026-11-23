@@ -1,7 +1,5 @@
 """Tests for sequential scheduling feature in find_cheapest_schedule."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 

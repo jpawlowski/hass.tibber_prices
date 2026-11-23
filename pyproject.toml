@@ -74,6 +74,10 @@ exclude_lines = [
     "@overload",
 ]
 
+[tool.codespell]
+# German words in docstrings and translation tests; the word list itself is set by the template's scripts.
+ignore-regex = "\\b(?:Sie|ist|vor|Titel)\\b"
+
 [tool.ruff]
 # Based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
 required-version = ">=0.16.0"
@@ -226,7 +230,6 @@ ignore = [
 ]
 
 [tool.ruff.lint.flake8-import-conventions.extend-aliases]
-probatio = "vol"
 # Commonly used Home Assistant imports
 "homeassistant.helpers.config_validation" = "cv"
 "homeassistant.helpers.device_registry" = "dr"
@@ -241,9 +244,7 @@ mark-parentheses = false
 "async_timeout".msg = "use asyncio.timeout instead"
 "pytz".msg = "use zoneinfo instead"
 "tests".msg = "You should not import tests"
-# Suspended for the blueprint import: 127 modules still carry the import. Phase 4 (modern APIs) removes it
-# everywhere and restores this line.
-# "__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
+"__future__.annotations".msg = "It should not be needed because Home Assistant requires Python 3.14+"
 
 [tool.ruff.lint.isort]
 force-sort-within-sections = true

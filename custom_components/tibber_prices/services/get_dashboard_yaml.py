@@ -18,14 +18,12 @@ whose cards were left out), `removed_entities` (sensors gone from the registry),
 (sensors the views work without, but better with) and `missing_cards` (custom cards to install)
 """
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 import re
 from typing import TYPE_CHECKING, Any, Final
 
-import probatio as vol
+import probatio
 import yaml
 
 from custom_components.tibber_prices.const import (
@@ -74,17 +72,17 @@ CHART_CARD_RESOLUTIONS: Final = {
     frozenset({"hourly"}): "hour",
 }
 
-DASHBOARD_SERVICE_SCHEMA = vol.Schema(
+DASHBOARD_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("entry_id", default=""): cv.string,
-        vol.Optional("view_id", default=""): cv.string,
+        probatio.Optional("entry_id", default=""): cv.string,
+        probatio.Optional("view_id", default=""): cv.string,
         # Default: every chart, each with both resolutions (switchable in the card)
-        vol.Optional("charts", default=list(CHARTS)): vol.All(cv.ensure_list, [vol.In(list(CHARTS))]),
-        vol.Optional("chart_resolutions", default=list(RESOLUTIONS)): vol.All(
-            cv.ensure_list, [vol.In(list(RESOLUTIONS))]
+        probatio.Optional("charts", default=list(CHARTS)): probatio.All(cv.ensure_list, [probatio.In(list(CHARTS))]),
+        probatio.Optional("chart_resolutions", default=list(RESOLUTIONS)): probatio.All(
+            cv.ensure_list, [probatio.In(list(RESOLUTIONS))]
         ),
-        vol.Optional("chart_card", default=CHART_CARDS[0]): vol.In(CHART_CARDS),
-        vol.Optional("language"): vol.In(TRANSLATION_LANGUAGES),
+        probatio.Optional("chart_card", default=CHART_CARDS[0]): probatio.In(CHART_CARDS),
+        probatio.Optional("language"): probatio.In(TRANSLATION_LANGUAGES),
     }
 )
 

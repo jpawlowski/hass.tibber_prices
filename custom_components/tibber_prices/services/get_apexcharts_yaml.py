@@ -16,12 +16,10 @@ Response: YAML configuration dict for ApexCharts card
 
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, Final
 
 from awesomeversion import AwesomeVersion
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import (
     CONF_CURRENCY_DISPLAY_MODE,
@@ -91,17 +89,19 @@ CUSTOM_CARDS: Final = {
 }
 
 # Service schema
-APEXCHARTS_SERVICE_SCHEMA = vol.Schema(
+APEXCHARTS_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional(ATTR_ENTRY_ID, default=""): cv.string,
-        vol.Optional("view_id", default=""): cv.string,
-        vol.Optional("day"): vol.In(["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]),
-        vol.Optional("level_type", default="rating_level"): vol.In(["rating_level", "level"]),
-        vol.Optional("resolution", default="interval"): vol.In(["interval", "hourly"]),
-        vol.Optional("price_source", default="total"): vol.In(["total", "energy", "tax"]),
-        vol.Optional("highlight_best_price", default=True): cv.boolean,
-        vol.Optional("highlight_peak_price", default=False): cv.boolean,
-        vol.Optional("language"): vol.In(TRANSLATION_LANGUAGES),
+        probatio.Optional(ATTR_ENTRY_ID, default=""): cv.string,
+        probatio.Optional("view_id", default=""): cv.string,
+        probatio.Optional("day"): probatio.In(
+            ["yesterday", "today", "tomorrow", "rolling_window", "rolling_window_autozoom"]
+        ),
+        probatio.Optional("level_type", default="rating_level"): probatio.In(["rating_level", "level"]),
+        probatio.Optional("resolution", default="interval"): probatio.In(["interval", "hourly"]),
+        probatio.Optional("price_source", default="total"): probatio.In(["total", "energy", "tax"]),
+        probatio.Optional("highlight_best_price", default=True): cv.boolean,
+        probatio.Optional("highlight_peak_price", default=False): cv.boolean,
+        probatio.Optional("language"): probatio.In(TRANSLATION_LANGUAGES),
     }
 )
 

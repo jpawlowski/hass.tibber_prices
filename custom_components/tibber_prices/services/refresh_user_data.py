@@ -15,11 +15,9 @@ Response: JSON with refresh status and updated data
 
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, Final
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.api import (
     TibberPricesApiClientAuthenticationError,
@@ -38,9 +36,9 @@ REFRESH_USER_DATA_SERVICE_NAME: Final = "refresh_user_data"
 ATTR_ENTRY_ID: Final = "entry_id"
 
 # Service schema
-REFRESH_USER_DATA_SERVICE_SCHEMA: Final = vol.Schema(
+REFRESH_USER_DATA_SERVICE_SCHEMA: Final = probatio.Schema(
     {
-        vol.Optional(ATTR_ENTRY_ID, default=""): str,
+        probatio.Optional(ATTR_ENTRY_ID, default=""): str,
     }
 )
 

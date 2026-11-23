@@ -1,7 +1,5 @@
 """Calculator for time-travel mode and offset sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from .base import TibberPricesBaseCalculator

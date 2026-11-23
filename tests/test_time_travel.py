@@ -8,8 +8,6 @@ filtering against the shifted reference, tomorrow realism, the diagnostic
 sensors, and the ID scoping that keeps a view separate from its parent entry.
 """
 
-from __future__ import annotations
-
 from datetime import UTC, date, datetime, timedelta
 from typing import Any
 from unittest.mock import Mock, patch

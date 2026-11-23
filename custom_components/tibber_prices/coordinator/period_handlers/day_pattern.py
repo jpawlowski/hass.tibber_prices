@@ -24,8 +24,6 @@ All functions are pure (no side effects) and operate on already-enriched
 interval dicts produced by utils/price.py.
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import math

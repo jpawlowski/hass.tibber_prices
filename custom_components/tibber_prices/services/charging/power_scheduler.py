@@ -1,7 +1,5 @@
 """Power allocation helpers for the plan_charging service."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from itertools import pairwise
 import math

@@ -1,7 +1,5 @@
 """Tests for config flow validators."""
 
-from __future__ import annotations
-
 import pytest
 
 from custom_components.tibber_prices.config_flow_handlers.validators import (

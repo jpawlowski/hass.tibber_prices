@@ -6,8 +6,6 @@ tomorrow_available) didn't update after tomorrow data was successfully fetched
 due to cached transformation data.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import Mock
 from zoneinfo import ZoneInfo

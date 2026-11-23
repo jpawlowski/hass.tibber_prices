@@ -1,7 +1,5 @@
 """Segment boundaries of the day pattern."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 
 import pytest

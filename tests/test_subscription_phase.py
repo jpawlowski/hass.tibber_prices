@@ -8,8 +8,6 @@ already "running" before ``validFrom`` has prices and works as usual (issue #237
 After ``validTo`` the entities stay on the last day of the contract.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 from zoneinfo import ZoneInfo

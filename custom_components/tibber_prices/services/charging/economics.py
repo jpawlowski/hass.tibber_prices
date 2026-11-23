@@ -1,7 +1,5 @@
 """Economic helpers for the plan_charging service."""
 
-from __future__ import annotations
-
 from typing import Any
 
 

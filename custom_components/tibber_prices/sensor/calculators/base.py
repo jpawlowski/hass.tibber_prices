@@ -1,7 +1,5 @@
 """Base calculator class for all Tibber Prices sensor calculators."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets

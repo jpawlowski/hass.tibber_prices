@@ -8,8 +8,6 @@ of sensor value calculations. Each calculator focuses on one calculation pattern
 All calculators inherit from BaseCalculator and have access to coordinator data.
 """
 
-from __future__ import annotations
-
 from .base import TibberPricesBaseCalculator
 from .daily_stat import TibberPricesDailyStatCalculator
 from .interval import TibberPricesIntervalCalculator

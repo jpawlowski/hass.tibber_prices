@@ -10,8 +10,6 @@ These functions operate on entity-level concepts (states, translations) but are
 platform-agnostic and can be used by both sensor and binary_sensor platforms.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor

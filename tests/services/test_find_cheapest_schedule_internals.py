@@ -1,7 +1,5 @@
 """Tests for pure internal helpers in find_cheapest_schedule.py."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 
 from custom_components.tibber_prices.services.find_cheapest_schedule import _find_cheapest_window_in_pool

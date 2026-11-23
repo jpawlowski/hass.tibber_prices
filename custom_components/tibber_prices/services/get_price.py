@@ -10,14 +10,12 @@ Functions:
 
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import DOMAIN
 from homeassistant.exceptions import ServiceValidationError
@@ -39,12 +37,12 @@ _PRICE_ENTITY_PARAMS: dict[str, type] = {
     "end_time": datetime,
 }
 
-GET_PRICE_SERVICE_SCHEMA = vol.Schema(
+GET_PRICE_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("entry_id", default=""): cv.string,
-        vol.Optional("view_id", default=""): cv.string,
-        vol.Required("start_time"): or_entity_ref(cv.datetime),
-        vol.Required("end_time"): or_entity_ref(cv.datetime),
+        probatio.Optional("entry_id", default=""): cv.string,
+        probatio.Optional("view_id", default=""): cv.string,
+        probatio.Required("start_time"): or_entity_ref(cv.datetime),
+        probatio.Required("end_time"): or_entity_ref(cv.datetime),
     }
 )
 

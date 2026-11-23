@@ -20,8 +20,6 @@ stale. Pool statistics are available via diagnostics or could be
 exposed as a separate sensor if needed.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:

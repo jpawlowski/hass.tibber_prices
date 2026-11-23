@@ -1,7 +1,5 @@
 """GraphQL queries and query types for Tibber API."""
 
-from __future__ import annotations
-
 from enum import Enum
 
 

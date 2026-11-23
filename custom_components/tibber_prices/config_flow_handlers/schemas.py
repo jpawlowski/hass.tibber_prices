@@ -1,13 +1,11 @@
 """Schema definitions for tibber_prices config flow."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import (
     BEST_PRICE_MAX_LEVEL_OPTIONS,
@@ -254,7 +252,7 @@ def get_section_override_warning(
     section_id: str,
     overrides: ConfigOverrides | None,
     translations: OverrideTranslations | None = None,
-) -> dict[vol.Optional, ConstantSelector] | None:
+) -> dict[probatio.Optional, ConstantSelector] | None:
     """
     Return a warning constant selector if any fields in the section are overridden.
 
@@ -303,7 +301,7 @@ def get_section_override_warning(
         warning_template = translations["override_warning_template"]
 
     return {
-        vol.Optional("_override_warning"): ConstantSelector(
+        probatio.Optional("_override_warning"): ConstantSelector(
             ConstantSelectorConfig(
                 value=True,
                 label=warning_template.format(fields=fields_text),
@@ -312,13 +310,13 @@ def get_section_override_warning(
     }
 
 
-def get_user_schema(access_token: str | None = None) -> vol.Schema:
+def get_user_schema(access_token: str | None = None) -> probatio.Schema:
     """Return schema for user step (API token input)."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(
+            probatio.Required(
                 CONF_ACCESS_TOKEN,
-                default=access_token if access_token is not None else vol.UNDEFINED,
+                default=access_token if access_token is not None else probatio.UNDEFINED,
             ): TextSelector(
                 TextSelectorConfig(
                     type=TextSelectorType.TEXT,
@@ -328,22 +326,22 @@ def get_user_schema(access_token: str | None = None) -> vol.Schema:
     )
 
 
-def get_reauth_confirm_schema() -> vol.Schema:
+def get_reauth_confirm_schema() -> probatio.Schema:
     """Return schema for reauth confirmation step."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required(CONF_ACCESS_TOKEN): TextSelector(
+            probatio.Required(CONF_ACCESS_TOKEN): TextSelector(
                 TextSelectorConfig(type=TextSelectorType.TEXT),
             ),
         }
     )
 
 
-def get_select_home_schema(home_options: list[SelectOptionDict]) -> vol.Schema:
+def get_select_home_schema(home_options: list[SelectOptionDict]) -> probatio.Schema:
     """Return schema for home selection step."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required("home_id"): SelectSelector(
+            probatio.Required("home_id"): SelectSelector(
                 SelectSelectorConfig(
                     options=home_options,
                     mode=SelectSelectorMode.DROPDOWN,
@@ -353,15 +351,15 @@ def get_select_home_schema(home_options: list[SelectOptionDict]) -> vol.Schema:
     )
 
 
-def get_options_init_schema(options: Mapping[str, Any]) -> vol.Schema:
+def get_options_init_schema(options: Mapping[str, Any]) -> probatio.Schema:
     """Return schema for options init step (general settings)."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_EXTENDED_DESCRIPTIONS,
                 default=options.get(CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS),
             ): BooleanSelector(),
-            vol.Optional(
+            probatio.Optional(
                 CONF_AVERAGE_SENSOR_DISPLAY,
                 default=str(
                     options.get(
@@ -380,13 +378,13 @@ def get_options_init_schema(options: Mapping[str, Any]) -> vol.Schema:
     )
 
 
-def get_display_settings_schema(options: Mapping[str, Any], currency_code: str | None) -> vol.Schema:
+def get_display_settings_schema(options: Mapping[str, Any], currency_code: str | None) -> probatio.Schema:
     """Return schema for display settings configuration."""
     default_display_mode = get_default_currency_display(currency_code)
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_CURRENCY_DISPLAY_MODE,
                 default=str(
                     options.get(
@@ -405,11 +403,11 @@ def get_display_settings_schema(options: Mapping[str, Any], currency_code: str |
     )
 
 
-def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
+def get_price_rating_schema(options: Mapping[str, Any]) -> probatio.Schema:
     """Return schema for price rating configuration (thresholds and stabilization)."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_RATING_THRESHOLD_LOW,
                 default=int(
                     options.get(
@@ -426,7 +424,7 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_RATING_THRESHOLD_HIGH,
                 default=int(
                     options.get(
@@ -443,7 +441,7 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_RATING_HYSTERESIS,
                 default=float(
                     options.get(
@@ -460,7 +458,7 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_RATING_GAP_TOLERANCE,
                 default=int(
                     options.get(
@@ -480,11 +478,11 @@ def get_price_rating_schema(options: Mapping[str, Any]) -> vol.Schema:
     )
 
 
-def get_price_level_schema(options: Mapping[str, Any]) -> vol.Schema:
+def get_price_level_schema(options: Mapping[str, Any]) -> probatio.Schema:
     """Return schema for Tibber price level stabilization (gap tolerance for API level field)."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_LEVEL_GAP_TOLERANCE,
                 default=int(
                     options.get(
@@ -504,11 +502,11 @@ def get_price_level_schema(options: Mapping[str, Any]) -> vol.Schema:
     )
 
 
-def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
+def get_volatility_schema(options: Mapping[str, Any]) -> probatio.Schema:
     """Return schema for volatility thresholds configuration."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_VOLATILITY_THRESHOLD_MODERATE,
                 default=float(
                     options.get(
@@ -525,7 +523,7 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_VOLATILITY_THRESHOLD_HIGH,
                 default=float(
                     options.get(
@@ -542,7 +540,7 @@ def get_volatility_schema(options: Mapping[str, Any]) -> vol.Schema:
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_VOLATILITY_THRESHOLD_VERY_HIGH,
                 default=float(
                     options.get(
@@ -567,7 +565,7 @@ def get_best_price_schema(
     options: Mapping[str, Any],
     overrides: ConfigOverrides | None = None,
     translations: OverrideTranslations | None = None,
-) -> vol.Schema:
+) -> probatio.Schema:
     """
     Return schema for best price period configuration with collapsible sections.
 
@@ -616,9 +614,9 @@ def get_best_price_schema(
 
     # Build section schemas with optional override warnings
     period_warning = get_section_override_warning("best_price", "period_settings", overrides, translations) or {}
-    period_fields: dict[vol.Optional | vol.Required, Any] = {
+    period_fields: dict[probatio.Optional | probatio.Required, Any] = {
         **period_warning,  # type: ignore[misc]
-        vol.Optional(
+        probatio.Optional(
             CONF_BEST_PRICE_MIN_PERIOD_LENGTH,
             default=min_period_length,
         ): NumberSelector(
@@ -630,7 +628,7 @@ def get_best_price_schema(
                 mode=NumberSelectorMode.SLIDER,
             )
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_BEST_PRICE_MAX_LEVEL,
             default=period_settings.get(
                 CONF_BEST_PRICE_MAX_LEVEL,
@@ -643,7 +641,7 @@ def get_best_price_schema(
                 translation_key="current_interval_price_level",
             ),
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_BEST_PRICE_MAX_LEVEL_GAP_COUNT,
             default=max_level_gap_count,
         ): NumberSelector(
@@ -659,9 +657,9 @@ def get_best_price_schema(
     flexibility_warning = (
         get_section_override_warning("best_price", "flexibility_settings", overrides, translations) or {}
     )
-    flexibility_fields: dict[vol.Optional | vol.Required, Any] = {
+    flexibility_fields: dict[probatio.Optional | probatio.Required, Any] = {
         **flexibility_warning,  # type: ignore[misc]
-        vol.Optional(
+        probatio.Optional(
             CONF_BEST_PRICE_FLEX,
             default=best_price_flex,
         ): NumberSelector(
@@ -673,7 +671,7 @@ def get_best_price_schema(
                 mode=NumberSelectorMode.SLIDER,
             )
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_BEST_PRICE_MIN_DISTANCE_FROM_AVG,
             default=min_distance,
         ): NumberSelector(
@@ -690,13 +688,13 @@ def get_best_price_schema(
     relaxation_warning = (
         get_section_override_warning("best_price", "relaxation_and_target_periods", overrides, translations) or {}
     )
-    relaxation_fields: dict[vol.Optional | vol.Required, Any] = {
+    relaxation_fields: dict[probatio.Optional | probatio.Required, Any] = {
         **relaxation_warning,  # type: ignore[misc]
-        vol.Optional(
+        probatio.Optional(
             CONF_ENABLE_MIN_PERIODS_BEST,
             default=enable_min_periods,
         ): BooleanSelector(selector.BooleanSelectorConfig()),
-        vol.Optional(
+        probatio.Optional(
             CONF_MIN_PERIODS_BEST,
             default=min_periods,
         ): NumberSelector(
@@ -707,7 +705,7 @@ def get_best_price_schema(
                 mode=NumberSelectorMode.SLIDER,
             )
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_RELAXATION_ATTEMPTS_BEST,
             default=relaxation_attempts,
         ): NumberSelector(
@@ -720,28 +718,28 @@ def get_best_price_schema(
         ),
     }
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required("period_settings"): section(
-                vol.Schema(period_fields),
+            probatio.Required("period_settings"): section(
+                probatio.Schema(period_fields),
                 {"collapsed": False},
             ),
-            vol.Required("flexibility_settings"): section(
-                vol.Schema(flexibility_fields),
+            probatio.Required("flexibility_settings"): section(
+                probatio.Schema(flexibility_fields),
                 {"collapsed": True},
             ),
-            vol.Required("relaxation_and_target_periods"): section(
-                vol.Schema(relaxation_fields),
+            probatio.Required("relaxation_and_target_periods"): section(
+                probatio.Schema(relaxation_fields),
                 {"collapsed": True},
             ),
-            vol.Required("extension_settings"): section(
-                vol.Schema(
+            probatio.Required("extension_settings"): section(
+                probatio.Schema(
                     {
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_BEST_PRICE_EXTEND_TO_VERY_CHEAP,
                             default=extend_to_very_cheap,
                         ): BooleanSelector(selector.BooleanSelectorConfig()),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_BEST_PRICE_MAX_EXTENSION_INTERVALS,
                             default=max_extension_intervals_best,
                         ): NumberSelector(
@@ -752,7 +750,7 @@ def get_best_price_schema(
                                 mode=NumberSelectorMode.SLIDER,
                             )
                         ),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_BEST_PRICE_GEOMETRIC_FLEX,
                             default=geometric_flex_best,
                         ): NumberSelector(
@@ -764,11 +762,11 @@ def get_best_price_schema(
                                 mode=NumberSelectorMode.SLIDER,
                             )
                         ),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_BEST_PRICE_SEGMENT_FORCING,
                             default=segment_forcing_best,
                         ): BooleanSelector(selector.BooleanSelectorConfig()),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_BEST_PRICE_SEGMENT_MIN_PERIODS,
                             default=segment_min_periods_best,
                         ): NumberSelector(
@@ -791,7 +789,7 @@ def get_peak_price_schema(
     options: Mapping[str, Any],
     overrides: ConfigOverrides | None = None,
     translations: OverrideTranslations | None = None,
-) -> vol.Schema:
+) -> probatio.Schema:
     """
     Return schema for peak price period configuration with collapsible sections.
 
@@ -840,9 +838,9 @@ def get_peak_price_schema(
 
     # Build section schemas with optional override warnings
     period_warning = get_section_override_warning("peak_price", "period_settings", overrides, translations) or {}
-    period_fields: dict[vol.Optional | vol.Required, Any] = {
+    period_fields: dict[probatio.Optional | probatio.Required, Any] = {
         **period_warning,  # type: ignore[misc]
-        vol.Optional(
+        probatio.Optional(
             CONF_PEAK_PRICE_MIN_PERIOD_LENGTH,
             default=min_period_length,
         ): NumberSelector(
@@ -854,7 +852,7 @@ def get_peak_price_schema(
                 mode=NumberSelectorMode.SLIDER,
             )
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_PEAK_PRICE_MIN_LEVEL,
             default=period_settings.get(
                 CONF_PEAK_PRICE_MIN_LEVEL,
@@ -867,7 +865,7 @@ def get_peak_price_schema(
                 translation_key="current_interval_price_level",
             ),
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_PEAK_PRICE_MAX_LEVEL_GAP_COUNT,
             default=max_level_gap_count,
         ): NumberSelector(
@@ -883,9 +881,9 @@ def get_peak_price_schema(
     flexibility_warning = (
         get_section_override_warning("peak_price", "flexibility_settings", overrides, translations) or {}
     )
-    flexibility_fields: dict[vol.Optional | vol.Required, Any] = {
+    flexibility_fields: dict[probatio.Optional | probatio.Required, Any] = {
         **flexibility_warning,  # type: ignore[misc]
-        vol.Optional(
+        probatio.Optional(
             CONF_PEAK_PRICE_FLEX,
             default=peak_price_flex,
         ): NumberSelector(
@@ -897,7 +895,7 @@ def get_peak_price_schema(
                 mode=NumberSelectorMode.SLIDER,
             )
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_PEAK_PRICE_MIN_DISTANCE_FROM_AVG,
             default=min_distance,
         ): NumberSelector(
@@ -914,13 +912,13 @@ def get_peak_price_schema(
     relaxation_warning = (
         get_section_override_warning("peak_price", "relaxation_and_target_periods", overrides, translations) or {}
     )
-    relaxation_fields: dict[vol.Optional | vol.Required, Any] = {
+    relaxation_fields: dict[probatio.Optional | probatio.Required, Any] = {
         **relaxation_warning,  # type: ignore[misc]
-        vol.Optional(
+        probatio.Optional(
             CONF_ENABLE_MIN_PERIODS_PEAK,
             default=enable_min_periods,
         ): BooleanSelector(selector.BooleanSelectorConfig()),
-        vol.Optional(
+        probatio.Optional(
             CONF_MIN_PERIODS_PEAK,
             default=min_periods,
         ): NumberSelector(
@@ -931,7 +929,7 @@ def get_peak_price_schema(
                 mode=NumberSelectorMode.SLIDER,
             )
         ),
-        vol.Optional(
+        probatio.Optional(
             CONF_RELAXATION_ATTEMPTS_PEAK,
             default=relaxation_attempts,
         ): NumberSelector(
@@ -944,28 +942,28 @@ def get_peak_price_schema(
         ),
     }
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required("period_settings"): section(
-                vol.Schema(period_fields),
+            probatio.Required("period_settings"): section(
+                probatio.Schema(period_fields),
                 {"collapsed": False},
             ),
-            vol.Required("flexibility_settings"): section(
-                vol.Schema(flexibility_fields),
+            probatio.Required("flexibility_settings"): section(
+                probatio.Schema(flexibility_fields),
                 {"collapsed": True},
             ),
-            vol.Required("relaxation_and_target_periods"): section(
-                vol.Schema(relaxation_fields),
+            probatio.Required("relaxation_and_target_periods"): section(
+                probatio.Schema(relaxation_fields),
                 {"collapsed": True},
             ),
-            vol.Required("extension_settings"): section(
-                vol.Schema(
+            probatio.Required("extension_settings"): section(
+                probatio.Schema(
                     {
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_PEAK_PRICE_EXTEND_TO_VERY_EXPENSIVE,
                             default=extend_to_very_expensive,
                         ): BooleanSelector(selector.BooleanSelectorConfig()),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_PEAK_PRICE_MAX_EXTENSION_INTERVALS,
                             default=max_extension_intervals_peak,
                         ): NumberSelector(
@@ -976,7 +974,7 @@ def get_peak_price_schema(
                                 mode=NumberSelectorMode.SLIDER,
                             )
                         ),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_PEAK_PRICE_GEOMETRIC_FLEX,
                             default=geometric_flex_peak,
                         ): NumberSelector(
@@ -988,11 +986,11 @@ def get_peak_price_schema(
                                 mode=NumberSelectorMode.SLIDER,
                             )
                         ),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_PEAK_PRICE_SEGMENT_FORCING,
                             default=segment_forcing_peak,
                         ): BooleanSelector(selector.BooleanSelectorConfig()),
-                        vol.Optional(
+                        probatio.Optional(
                             CONF_PEAK_PRICE_SEGMENT_MIN_PERIODS,
                             default=segment_min_periods_peak,
                         ): NumberSelector(
@@ -1016,14 +1014,14 @@ def get_price_trend_schema(
     *,
     display_factor: int = 1,
     price_unit: str = "",
-) -> vol.Schema:
+) -> probatio.Schema:
     """Return schema for price trend thresholds configuration."""
     # Scale min_price_change values for display (stored in base currency, shown in display unit)
     step = 0.1 if display_factor > 1 else 0.001
 
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_TREND_THRESHOLD_RISING,
                 default=int(
                     options.get(
@@ -1040,7 +1038,7 @@ def get_price_trend_schema(
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_TREND_THRESHOLD_STRONGLY_RISING,
                 default=int(
                     options.get(
@@ -1057,7 +1055,7 @@ def get_price_trend_schema(
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_TREND_THRESHOLD_FALLING,
                 default=int(
                     options.get(
@@ -1074,7 +1072,7 @@ def get_price_trend_schema(
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_TREND_THRESHOLD_STRONGLY_FALLING,
                 default=int(
                     options.get(
@@ -1091,7 +1089,7 @@ def get_price_trend_schema(
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_TREND_CHANGE_CONFIRMATION,
                 default=int(
                     options.get(
@@ -1107,7 +1105,7 @@ def get_price_trend_schema(
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_TREND_MIN_PRICE_CHANGE,
                 default=round(
                     float(
@@ -1128,7 +1126,7 @@ def get_price_trend_schema(
                     mode=NumberSelectorMode.SLIDER,
                 ),
             ),
-            vol.Optional(
+            probatio.Optional(
                 CONF_PRICE_TREND_MIN_PRICE_CHANGE_STRONGLY,
                 default=round(
                     float(
@@ -1153,16 +1151,16 @@ def get_price_trend_schema(
     )
 
 
-def get_chart_data_export_schema(_options: Mapping[str, Any]) -> vol.Schema:
+def get_chart_data_export_schema(_options: Mapping[str, Any]) -> probatio.Schema:
     """Return schema for chart data export info page (no input fields)."""
     # Empty schema - this is just an info page now
-    return vol.Schema({})
+    return probatio.Schema({})
 
 
-def get_reset_to_defaults_schema() -> vol.Schema:
+def get_reset_to_defaults_schema() -> probatio.Schema:
     """Return schema for reset to defaults confirmation step."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Required("confirm_reset", default=False): selector.BooleanSelector(),
+            probatio.Required("confirm_reset", default=False): selector.BooleanSelector(),
         }
     )

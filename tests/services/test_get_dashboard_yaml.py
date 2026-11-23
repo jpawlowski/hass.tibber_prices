@@ -1,14 +1,12 @@
 """Tests for the get_dashboard_yaml template resolution."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import re
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import probatio as vol
+import probatio
 import pytest
 
 from custom_components.tibber_prices.services import get_dashboard_yaml
@@ -210,7 +208,7 @@ def test_language_is_limited_to_translated_languages() -> None:
     """Only languages with translation files are accepted; without one, the system language applies."""
     assert get_dashboard_yaml.DASHBOARD_SERVICE_SCHEMA({"language": "de"})["language"] == "de"
     assert "language" not in get_dashboard_yaml.DASHBOARD_SERVICE_SCHEMA({})
-    with pytest.raises(vol.Invalid):
+    with pytest.raises(probatio.Invalid):
         get_dashboard_yaml.DASHBOARD_SERVICE_SCHEMA({"language": "fr"})
 
 

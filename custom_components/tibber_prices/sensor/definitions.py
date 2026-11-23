@@ -16,8 +16,6 @@ Organization by calculation pattern:
     8. Diagnostic: System metadata
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from custom_components.tibber_prices.sensor.attribute_sets import (
@@ -92,7 +90,6 @@ class TibberPricesSensorDescription(SensorEntityDescription):
 # 1. INTERVAL-BASED SENSORS (offset: -1, 0, +1 from current interval)
 # ----------------------------------------------------------------------------
 # All use find_price_data_for_interval() with time offset
-# Shared handler: _get_interval_value(interval_offset, value_type)
 
 INTERVAL_PRICE_SENSORS = (
     TibberPricesSensorDescription(

@@ -13,11 +13,9 @@ Flow handlers:
 - options_flow.py: 6-step configuration wizard
 
 Supporting modules:
-- schemas.py: Form schema definitions (vol.Schema)
+- schemas.py: Form schema definitions (probatio.Schema)
 - validators.py: Input validation and API testing
 """
-
-from __future__ import annotations
 
 # Phase 3: Import flow handlers from their new modular structure
 from custom_components.tibber_prices.config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler

@@ -1,7 +1,5 @@
 """Attribute builders for binary sensors."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import get_display_unit_factor
@@ -621,7 +619,7 @@ def build_sync_extra_state_attributes(
     add_icon_color_attribute(attributes, entity_key, is_on=is_on)
 
     # Add description attributes (always last, via central utility)
-    from ..entity_utils import add_description_attributes  # noqa: PLC0415, TID252
+    from custom_components.tibber_prices.entity_utils import add_description_attributes  # noqa: PLC0415
 
     add_description_attributes(
         attributes,

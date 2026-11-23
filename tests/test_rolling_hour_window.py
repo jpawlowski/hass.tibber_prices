@@ -1,7 +1,5 @@
 """Tests for get_rolling_hour_window (rolling hour values and window_start/window_end)."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 

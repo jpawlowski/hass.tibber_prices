@@ -1,7 +1,5 @@
 """Calculator for daily statistics (min/max/avg within calendar day)."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import (

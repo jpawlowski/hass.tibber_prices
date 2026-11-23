@@ -6,8 +6,6 @@ config entry has to be reloaded - the parts that a pure data-level test would
 miss.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, Mock, patch
 

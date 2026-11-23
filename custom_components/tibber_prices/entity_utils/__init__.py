@@ -16,8 +16,6 @@ These functions depend on Home Assistant concepts:
 For pure data transformation (no HA dependencies), see utils/ package.
 """
 
-from __future__ import annotations
-
 from .attributes import add_description_attributes, async_add_description_attributes
 from .colors import add_icon_color_attribute, get_icon_color
 from .helpers import get_price_value, get_rolling_hour_window

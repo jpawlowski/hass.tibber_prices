@@ -1,7 +1,5 @@
 """The translated attribute names (state_attributes) are generated from the entities' declarations; they must be current."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import re

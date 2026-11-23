@@ -1,7 +1,5 @@
 """Unit tests for charging energy calculation helpers."""
 
-from __future__ import annotations
-
 from custom_components.tibber_prices.services.charging.energy_calculator import (
     build_soc_progression,
     calculate_duration_intervals,

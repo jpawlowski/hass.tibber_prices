@@ -13,8 +13,6 @@ Provides electricity price sensors organized by calculation method:
 See definitions.py for complete sensor catalog.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import CONF_CURRENCY_DISPLAY_MODE, DISPLAY_MODE_BASE

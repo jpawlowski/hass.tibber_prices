@@ -1,7 +1,5 @@
 """Pure utility functions for coordinator module."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any

@@ -1,7 +1,5 @@
 """Regression for #233: DST fall-back extras must not grow with every re-add."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo

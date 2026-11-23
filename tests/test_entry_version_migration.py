@@ -1,7 +1,5 @@
 """Tests for the config entry version migration (1.1: day_price_* in the display unit, 1.2: flex base, 1.3: attribute names)."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 import pytest

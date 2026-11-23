@@ -1,13 +1,11 @@
 """Service handler for the plan_charging service."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, time as dt_time, timedelta
 import logging
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.const import DOMAIN, get_display_unit_factor, get_display_unit_string
 from custom_components.tibber_prices.utils.price_window import (
@@ -96,89 +94,95 @@ _CHARGING_ENTITY_PARAMS: dict[str, type] = {
     "must_reach_by": datetime,
 }
 
-PLAN_CHARGING_SERVICE_SCHEMA = vol.Schema(
+PLAN_CHARGING_SERVICE_SCHEMA = probatio.Schema(
     {
-        vol.Optional("entry_id", default=""): cv.string,
-        vol.Optional("view_id", default=""): cv.string,
-        vol.Optional("battery_capacity_kwh"): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.1, max=1000.0)),
+        probatio.Optional("entry_id", default=""): cv.string,
+        probatio.Optional("view_id", default=""): cv.string,
+        probatio.Optional("battery_capacity_kwh"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.1, max=1000.0)),
         ),
-        vol.Optional("current_soc_percent"): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.0, max=100.0)),
+        probatio.Optional("current_soc_percent"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)),
         ),
-        vol.Optional("current_soc_kwh"): or_entity_ref(vol.All(vol.Coerce(float), vol.Range(min=0.0))),
-        vol.Optional("target_soc_percent"): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.0, max=100.0)),
+        probatio.Optional("current_soc_kwh"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0))
         ),
-        vol.Optional("target_soc_kwh"): or_entity_ref(vol.All(vol.Coerce(float), vol.Range(min=0.0))),
-        vol.Optional("must_reach_soc_percent"): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.0, max=100.0)),
+        probatio.Optional("target_soc_percent"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)),
         ),
-        vol.Optional("must_reach_soc_kwh"): or_entity_ref(vol.All(vol.Coerce(float), vol.Range(min=0.0))),
-        vol.Required("max_charge_power_w"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=100000)),
+        probatio.Optional("target_soc_kwh"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0))
         ),
-        vol.Optional("min_charge_power_w"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=100000)),
+        probatio.Optional("must_reach_soc_percent"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0, max=100.0)),
         ),
-        vol.Optional("charge_power_steps_w"): vol.All(
-            [vol.All(vol.Coerce(int), vol.Range(min=1, max=100000))],
-            vol.Length(min=1, max=20),
+        probatio.Optional("must_reach_soc_kwh"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0))
         ),
-        vol.Optional("grid_import_limit_w"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=100000)),
+        probatio.Required("max_charge_power_w"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100000)),
         ),
-        vol.Optional("charging_efficiency", default=1.0): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.5, max=1.0)),
+        probatio.Optional("min_charge_power_w"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100000)),
         ),
-        vol.Optional("search_start"): or_entity_ref(cv.datetime),
-        vol.Optional("search_end"): or_entity_ref(cv.datetime),
-        vol.Optional("search_start_time"): or_entity_ref(cv.time),
-        vol.Optional("search_start_day_offset", default=0): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+        probatio.Optional("charge_power_steps_w"): probatio.All(
+            [probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100000))],
+            probatio.Length(min=1, max=20),
         ),
-        vol.Optional("search_end_time"): or_entity_ref(cv.time),
-        vol.Optional("search_end_day_offset", default=0): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=-7, max=2)),
+        probatio.Optional("grid_import_limit_w"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=100000)),
         ),
-        vol.Optional("search_start_offset_minutes"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+        probatio.Optional("charging_efficiency", default=1.0): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.5, max=1.0)),
         ),
-        vol.Optional("search_end_offset_minutes"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=-10080, max=10080)),
+        probatio.Optional("search_start"): or_entity_ref(cv.datetime),
+        probatio.Optional("search_end"): or_entity_ref(cv.datetime),
+        probatio.Optional("search_start_time"): or_entity_ref(cv.time),
+        probatio.Optional("search_start_day_offset", default=0): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=-7, max=2)),
         ),
-        vol.Optional("search_scope"): vol.In(VALID_SEARCH_SCOPES),
-        vol.Optional("include_current_interval", default=True): cv.boolean,
-        vol.Optional("must_finish_by"): or_entity_ref(cv.datetime),
-        vol.Optional("must_reach_by"): or_entity_ref(cv.datetime),
-        vol.Optional("must_reach_by_event"): vol.In(sorted(get_deadline_events())),
-        vol.Optional("max_price_level"): vol.In([level.lower() for level in PRICE_LEVEL_ORDER]),
-        vol.Optional("min_price_level"): vol.In([level.lower() for level in PRICE_LEVEL_ORDER]),
-        vol.Optional("include_comparison_details", default=False): cv.boolean,
-        vol.Optional("use_base_unit", default=False): cv.boolean,
-        vol.Optional("smooth_outliers", default=True): cv.boolean,
-        vol.Optional("min_distance_from_avg"): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.1, max=50.0)),
+        probatio.Optional("search_end_time"): or_entity_ref(cv.time),
+        probatio.Optional("search_end_day_offset", default=0): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=-7, max=2)),
         ),
-        vol.Optional("allow_relaxation", default=True): cv.boolean,
-        vol.Optional("duration_flexibility_minutes"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=0, max=120)),
+        probatio.Optional("search_start_offset_minutes"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=-10080, max=10080)),
         ),
-        vol.Optional("discharging_efficiency", default=1.0): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.5, max=1.0)),
+        probatio.Optional("search_end_offset_minutes"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=-10080, max=10080)),
         ),
-        vol.Optional("expected_discharge_price"): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.0, max=100000.0)),
+        probatio.Optional("search_scope"): probatio.In(VALID_SEARCH_SCOPES),
+        probatio.Optional("include_current_interval", default=True): cv.boolean,
+        probatio.Optional("must_finish_by"): or_entity_ref(cv.datetime),
+        probatio.Optional("must_reach_by"): or_entity_ref(cv.datetime),
+        probatio.Optional("must_reach_by_event"): probatio.In(sorted(get_deadline_events())),
+        probatio.Optional("max_price_level"): probatio.In([level.lower() for level in PRICE_LEVEL_ORDER]),
+        probatio.Optional("min_price_level"): probatio.In([level.lower() for level in PRICE_LEVEL_ORDER]),
+        probatio.Optional("include_comparison_details", default=False): cv.boolean,
+        probatio.Optional("use_base_unit", default=False): cv.boolean,
+        probatio.Optional("smooth_outliers", default=True): cv.boolean,
+        probatio.Optional("min_distance_from_avg"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.1, max=50.0)),
         ),
-        vol.Optional("reserve_for_discharge", default=False): cv.boolean,
-        vol.Optional("max_cost_per_kwh"): or_entity_ref(
-            vol.All(vol.Coerce(float), vol.Range(min=0.0, max=100000.0)),
+        probatio.Optional("allow_relaxation", default=True): cv.boolean,
+        probatio.Optional("duration_flexibility_minutes"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=0, max=120)),
         ),
-        vol.Optional("min_charge_duration_minutes"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=15, max=240)),
+        probatio.Optional("discharging_efficiency", default=1.0): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.5, max=1.0)),
         ),
-        vol.Optional("max_cycles_per_day"): or_entity_ref(
-            vol.All(vol.Coerce(int), vol.Range(min=1, max=20)),
+        probatio.Optional("expected_discharge_price"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0, max=100000.0)),
+        ),
+        probatio.Optional("reserve_for_discharge", default=False): cv.boolean,
+        probatio.Optional("max_cost_per_kwh"): or_entity_ref(
+            probatio.All(probatio.Coerce(float), probatio.Range(min=0.0, max=100000.0)),
+        ),
+        probatio.Optional("min_charge_duration_minutes"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=15, max=240)),
+        ),
+        probatio.Optional("max_cycles_per_day"): or_entity_ref(
+            probatio.All(probatio.Coerce(int), probatio.Range(min=1, max=20)),
         ),
     }
 )

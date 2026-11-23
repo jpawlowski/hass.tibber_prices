@@ -8,8 +8,6 @@ Two independent algorithms:
 These are stateless pure functions with no Home Assistant dependencies.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import statistics
 from typing import Any

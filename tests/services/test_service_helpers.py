@@ -1,7 +1,5 @@
 """Tests for small pure helper functions in services/helpers.py."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 from zoneinfo import ZoneInfo

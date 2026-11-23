@@ -1,10 +1,8 @@
 """Main config flow for tibber_prices integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from custom_components.tibber_prices.config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler
 from custom_components.tibber_prices.config_flow_handlers.schemas import (
@@ -230,9 +228,9 @@ class TibberPricesConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="account_choice",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required("account_choice"): SelectSelector(
+                    probatio.Required("account_choice"): SelectSelector(
                         SelectSelectorConfig(
                             options=account_options,
                             mode=SelectSelectorMode.DROPDOWN,

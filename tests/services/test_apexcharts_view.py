@@ -1,7 +1,5 @@
 """The ApexCharts card fetches its data from the same time-travel view it was generated for."""
 
-from __future__ import annotations
-
 from unittest.mock import MagicMock, patch
 
 import pytest

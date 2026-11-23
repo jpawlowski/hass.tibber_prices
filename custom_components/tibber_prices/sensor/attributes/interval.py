@@ -1,7 +1,5 @@
 """Interval attribute builders for Tibber Prices sensors."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from typing import TYPE_CHECKING, Any
 from weakref import WeakKeyDictionary

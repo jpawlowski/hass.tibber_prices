@@ -9,8 +9,6 @@ UI dashboards (stored in .storage), created on the first run.
 Usage: ./script/docs/demo/render-dashboard.py [--entry-title "Winterfell Castle 1"] [--lang de] [--url http://localhost:8123]
 """
 
-from __future__ import annotations
-
 import argparse
 import asyncio
 import itertools
