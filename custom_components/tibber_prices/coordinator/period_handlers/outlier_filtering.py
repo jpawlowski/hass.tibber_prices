@@ -12,8 +12,6 @@ Uses statistical methods:
 - Zigzag detection with relative volatility for cluster rejection
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 import logging
 from typing import NamedTuple

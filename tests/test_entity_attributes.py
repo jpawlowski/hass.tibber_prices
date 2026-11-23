@@ -7,8 +7,6 @@ description declares fails this test. Parts of the coordinator that sample price
 user data, time travel) are stand-ins, so those entities are checked for what they expose, not for the values.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import json
 from typing import Any

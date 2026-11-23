@@ -1,0 +1,109 @@
+#!/bin/bash
+
+# script/setup/toolchain: Install the command-line tools mise.toml pins
+#
+# Installs mise itself first when it is missing, in an environment that belongs to the project — a Claude Code cloud
+# session, the dev container, Codespaces — or when --install-mise is given: the release named by min_version in
+# mise.toml, from GitHub, checked against the release's SHASUMS256.txt, into ~/.local/bin. On your own machine a
+# missing mise is only reported and the scripts fall back to whatever tools are on PATH; install it the way you prefer
+# (https://mise.jdx.dev/getting-started.html) or pass the flag. Safe to run repeatedly; with everything installed it
+# only checks.
+#
+# Usage:
+#   ./script/setup/toolchain [--install-mise]
+#
+# Examples:
+#   ./script/setup/toolchain
+#   ./script/setup/toolchain --install-mise
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/download.sh
+source "$SCRIPT_DIR/.lib/download.sh"
+
+project_environment() {
+    [[ ${CLAUDE_CODE_REMOTE:-} == "true" || -n ${REMOTE_CONTAINERS:-} || -n ${CODESPACES:-} ]]
+}
+
+install_mise=0
+if [[ ${1:-} == "--install-mise" ]] || project_environment; then
+    install_mise=1
+fi
+
+run_hook "setup/toolchain" "pre"
+# Two runs would share one mise data directory; the second waits and then only checks.
+wait_for_run toolchain || log_warning "The other script/setup/toolchain run is still going after 15 minutes — continuing"
+track_run toolchain
+
+mise_release_asset() {
+    local os arch libc=""
+    case "$(uname -s)" in
+    Linux) os="linux" ;;
+    Darwin) os="macos" ;;
+    *) return 1 ;;
+    esac
+    case "$(uname -m)" in
+    x86_64 | amd64) arch="x64" ;;
+    aarch64 | arm64) arch="arm64" ;;
+    *) return 1 ;;
+    esac
+    if [[ $os == "linux" ]] && ldd --version 2>&1 | grep -qi musl; then
+        libc="-musl"
+    fi
+    printf 'mise-v%s-%s-%s%s.tar.gz' "$1" "$os" "$arch" "$libc"
+}
+
+install_mise_binary() {
+    local version asset base tmp expected actual
+    version="$(sed -n 's/^min_version *= *"\([^"]*\)".*/\1/p' mise.toml)"
+    [[ -n $version ]] || die "mise.toml names no min_version to install"
+    asset="$(mise_release_asset "$version")" || die "No mise release for $(uname -s) $(uname -m); install mise yourself"
+    base="https://github.com/jdx/mise/releases/download/v${version}"
+
+    log_header "Installing mise ${version}"
+    tmp="$(mktemp -d)"
+    trap 'rm -rf "$tmp"' RETURN
+    _download "$base/$asset" "$tmp/$asset" || die "Could not download mise"
+    _download "$base/SHASUMS256.txt" "$tmp/SHASUMS256.txt" || die "Could not download mise's checksums"
+    expected="$(awk -v name="./$asset" -v bare="$asset" '$2 == name || $2 == bare { print $1 }' "$tmp/SHASUMS256.txt")"
+    if command -v sha256sum >/dev/null 2>&1; then
+        actual="$(sha256sum "$tmp/$asset" | cut -d' ' -f1)"
+    else
+        actual="$(shasum -a 256 "$tmp/$asset" | cut -d' ' -f1)"
+    fi
+    [[ -n $expected && $expected == "$actual" ]] || die "Checksum mismatch for $asset — not installing it"
+
+    tar -xzf "$tmp/$asset" -C "$tmp"
+    mkdir -p "$HOME/.local/bin"
+    install -m 0755 "$tmp/mise/bin/mise" "$HOME/.local/bin/mise"
+    log_success "mise installed to ~/.local/bin/mise"
+}
+
+export PATH="$HOME/.local/bin:$PATH"
+
+if ! command -v mise >/dev/null 2>&1; then
+    if [[ $install_mise -eq 0 ]]; then
+        log_warning "mise not found — using the tools already on PATH instead of the versions mise.toml pins"
+        log_info "Install mise (https://mise.jdx.dev/getting-started.html) or run: ${BOLD}script/setup/toolchain --install-mise${NC}"
+        exit 0
+    fi
+    install_mise_binary
+fi
+
+# This script runs only because the repository was opened on purpose, which is what mise's trust prompt asks.
+mise trust --quiet mise.toml
+if [[ -f .config/mise/conf.d/project.toml ]]; then
+    mise trust --quiet .config/mise/conf.d/project.toml
+fi
+
+log_header "Installing tools from mise.toml"
+mise install --yes
+use_mise_env
+
+run_hook "setup/toolchain" "post"
+log_success "Toolchain ready"

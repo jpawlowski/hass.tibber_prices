@@ -12,8 +12,6 @@ for "uur". Matching those would produce failures on correct strings, so each pat
 below keys on a construction that only the polite form produces.
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import re

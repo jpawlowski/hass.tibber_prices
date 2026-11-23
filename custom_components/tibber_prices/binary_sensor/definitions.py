@@ -1,7 +1,5 @@
 """Binary sensor entity descriptions for tibber_prices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from custom_components.tibber_prices.utils.attribute_specs import TibberPricesAttribute, attribute
@@ -11,9 +9,14 @@ from homeassistant.const import EntityCategory
 
 @dataclass(frozen=True, kw_only=True)
 class TibberPricesBinarySensorDescription(BinarySensorEntityDescription):
-    """A binary sensor description that also declares the attributes the sensor exposes (see attribute_specs.py)."""
+    """
+    A binary sensor description that also declares the attributes the sensor exposes (see attribute_specs.py).
+
+    `fallback_icon` is what the icon property returns when the dynamic icon logic has none.
+    """
 
     attributes: tuple[TibberPricesAttribute, ...] = ()
+    fallback_icon: str | None = None
 
 
 # Best and peak price period: the current period, the day around it, and how the periods were found
@@ -77,32 +80,32 @@ ENTITY_DESCRIPTIONS = (
         key="peak_price_period",
         translation_key="peak_price_period",
         attributes=PRICE_PERIOD,
-        icon="mdi:clock-alert",
+        fallback_icon="mdi:clock-alert",
     ),
     TibberPricesBinarySensorDescription(
         key="best_price_period",
         translation_key="best_price_period",
         attributes=PRICE_PERIOD,
-        icon="mdi:clock-check",
+        fallback_icon="mdi:clock-check",
     ),
     # Price phase binary sensors — ON when current intra-day phase matches the type
     TibberPricesBinarySensorDescription(
         key="in_rising_price_phase",
         translation_key="in_rising_price_phase",
         attributes=PHASE_BOUNDS,
-        icon="mdi:trending-up",
+        fallback_icon="mdi:trending-up",
     ),
     TibberPricesBinarySensorDescription(
         key="in_falling_price_phase",
         translation_key="in_falling_price_phase",
         attributes=PHASE_BOUNDS,
-        icon="mdi:trending-down",
+        fallback_icon="mdi:trending-down",
     ),
     TibberPricesBinarySensorDescription(
         key="in_flat_price_phase",
         translation_key="in_flat_price_phase",
         attributes=PHASE_BOUNDS,
-        icon="mdi:trending-neutral",
+        fallback_icon="mdi:trending-neutral",
     ),
     TibberPricesBinarySensorDescription(
         key="connection",
@@ -115,7 +118,7 @@ ENTITY_DESCRIPTIONS = (
         key="tomorrow_data_available",
         translation_key="tomorrow_data_available",
         attributes=TOMORROW_DATA,
-        icon="mdi:calendar-check",
+        fallback_icon="mdi:calendar-check",
         device_class=None,  # No specific device_class = shows generic "On/Off"
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=True,  # Critical for automations
@@ -123,7 +126,7 @@ ENTITY_DESCRIPTIONS = (
     TibberPricesBinarySensorDescription(
         key="has_ventilation_system",
         translation_key="has_ventilation_system",
-        icon="mdi:air-filter",
+        fallback_icon="mdi:air-filter",
         device_class=None,  # No specific device_class = shows generic "On/Off"
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -131,7 +134,7 @@ ENTITY_DESCRIPTIONS = (
     TibberPricesBinarySensorDescription(
         key="realtime_consumption_enabled",
         translation_key="realtime_consumption_enabled",
-        icon="mdi:speedometer",
+        fallback_icon="mdi:speedometer",
         device_class=None,  # No specific device_class = shows generic "On/Off"
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

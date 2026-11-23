@@ -1,0 +1,202 @@
+#!/bin/bash
+
+# script/hassfest: Run Home Assistant hassfest validation
+#
+# Validates the integration against Home Assistant's official validation rules
+# using hassfest from the Home Assistant Core repository.
+#
+# On first run, clones HA Core (~27 MB) to .local/ha-core (or $HOME/.local/ha-core in DevContainer)
+# Subsequent runs reuse the cached version (use --no-update to skip updates).
+#
+# Usage:
+#   ./script/hassfest [options]
+#
+# Options:
+#   --update             Force update HA Core to match installed version
+#   --skip-plugins LIST  Comma-separated list of plugins to skip
+#                        Default: quality_scale,requirements
+#
+# Examples:
+#   ./script/hassfest                # Use cached version (fast)
+#   ./script/hassfest --update       # Update to match HA version
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/ha_version.sh
+source "$SCRIPT_DIR/.lib/ha_version.sh"
+# shellcheck source=script/.lib/integration.sh
+source "$SCRIPT_DIR/.lib/integration.sh"
+
+# Configuration
+# In DevContainer/Codespaces: clone to $HOME/.local/ha-core (Container FS, off bind mount)
+# Local development / CI: clone to .local/ha-core (workspace)
+if [[ -n "${REMOTE_CONTAINERS:-}" || -n "${CODESPACES:-}" ]]; then
+    HA_CORE_DIR="$HOME/.local/ha-core"
+else
+    HA_CORE_DIR=".local/ha-core"
+fi
+HA_CORE_REPO="https://github.com/home-assistant/core.git"
+HA_CORE_SPARSE_PATHS=(script/ homeassistant/ packages/hassfest/)
+
+# Kill a stalled git fetch if it transfers < 1 KB/s for 30 s
+export GIT_HTTP_LOW_SPEED_LIMIT=1024
+export GIT_HTTP_LOW_SPEED_TIME=30
+
+# _git_fetch_tag TAG
+# Fetches a single HA Core tag with up to 3 attempts and exponential back-off.
+_git_fetch_tag() {
+    local tag="$1" attempt max_attempts delay
+    max_attempts=3
+    delay=2
+    for ((attempt = 1; attempt <= max_attempts; attempt++)); do
+        if git fetch --depth 1 --filter=blob:none origin tag "$tag" >/dev/null 2>&1; then
+            return 0
+        fi
+        if ((attempt < max_attempts)); then
+            log_warning "git fetch failed (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s..."
+            sleep "$delay"
+            delay=$((delay * 2))
+        fi
+    done
+    log_error "git fetch failed after ${max_attempts} attempts for tag $tag"
+    return 1
+}
+
+# Detect Home Assistant version to use
+if [ -n "${HA_VERSION:-}" ]; then
+    # Use version from environment (DevContainer); resolve specifiers to concrete versions
+    HA_VERSION_TAG="$HA_VERSION"
+    if ! resolve_ha_version HA_VERSION_TAG "$HA_VERSION_TAG"; then
+        log_error "Could not resolve HA version '${HA_VERSION}' from PyPI"
+        exit 1
+    fi
+elif command -v python3 >/dev/null 2>&1; then
+    # Detect from installed homeassistant package
+    HA_VERSION_TAG=$(python3 -c "from homeassistant.const import __version__; print(__version__)" 2>/dev/null || true)
+    if [ -z "$HA_VERSION_TAG" ]; then
+        log_error "Home Assistant is not installed — cannot determine version for hassfest"
+        log_info "Run: ./script/setup/bootstrap"
+        exit 1
+    fi
+else
+    log_error "python3 is not available — cannot run hassfest"
+    exit 1
+fi
+
+# Parse arguments
+UPDATE_CORE=false # Default to no update for speed
+SKIP_PLUGINS="quality_scale,requirements"
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+    --update)
+        UPDATE_CORE=true
+        shift
+        ;;
+    --skip-plugins)
+        SKIP_PLUGINS="$2"
+        shift 2
+        ;;
+    *)
+        # Pass unknown args to hassfest
+        break
+        ;;
+    esac
+done
+
+run_hook "hassfest" "pre"
+
+log_header "Home Assistant hassfest validation"
+log_info "Target version: $HA_VERSION_TAG"
+
+# Check if HA Core is already cloned and contains a valid Git repository
+if [ ! -d "$HA_CORE_DIR" ] || [ ! -d "$HA_CORE_DIR/.git" ]; then
+    # Clean up any empty or broken directory before cloning
+    rm -rf "$HA_CORE_DIR"
+    log_info "Cloning Home Assistant Core (sparse checkout, ~5 MB)..."
+
+    mkdir -p "$HA_CORE_DIR"
+    cd "$HA_CORE_DIR"
+    git init >/dev/null 2>&1
+    git remote add origin "$HA_CORE_REPO"
+    git config core.sparseCheckout true
+
+    printf '%s\n' "${HA_CORE_SPARSE_PATHS[@]}" >.git/info/sparse-checkout
+
+    # Fetch the specific version (shallow clone + blobless for minimal size)
+    _git_fetch_tag "$HA_VERSION_TAG"
+    git checkout "$HA_VERSION_TAG" >/dev/null 2>&1
+    cd - >/dev/null
+    echo ""
+else
+    # Check if we need to update to match current HA version
+    cd "$HA_CORE_DIR"
+    CURRENT_VERSION=$(git describe --tags --exact-match 2>/dev/null || git rev-parse --abbrev-ref HEAD)
+    cd - >/dev/null
+
+    if [ "$UPDATE_CORE" = true ] || [ "$CURRENT_VERSION" != "$HA_VERSION_TAG" ]; then
+        log_info "Updating to version $HA_VERSION_TAG..."
+        cd "$HA_CORE_DIR"
+        _git_fetch_tag "$HA_VERSION_TAG"
+        git checkout "$HA_VERSION_TAG" >/dev/null 2>&1
+        cd - >/dev/null
+    else
+        log_info "Using cached version $CURRENT_VERSION"
+    fi
+fi
+
+# A clone made before a path joined the list lacks it until the working tree is re-read
+sparse_paths=$(printf '%s\n' "${HA_CORE_SPARSE_PATHS[@]}")
+if [[ "$(cat "$HA_CORE_DIR/.git/info/sparse-checkout")" != "$sparse_paths" ]]; then
+    printf '%s\n' "$sparse_paths" >"$HA_CORE_DIR/.git/info/sparse-checkout"
+    git -C "$HA_CORE_DIR" read-tree -mu HEAD
+fi
+
+activate_venv
+
+# Check if we have required dependencies
+log_info "Checking dependencies..."
+if ! python3 -c "import probatio, awesomeversion, homeassistant.helpers.config_validation" >/dev/null 2>&1; then
+    log_error "Missing required dependencies (probatio, awesomeversion, homeassistant)"
+    log_info "Run: ./script/bootstrap"
+    exit 1
+fi
+
+# Resolve HA_CORE_DIR to an absolute path (may already be absolute in DevContainer)
+HA_CORE_ABS="$(cd "$HA_CORE_DIR" && pwd)"
+
+# Export PYTHONPATH to include HA Core
+export PYTHONPATH="$HA_CORE_ABS:$HA_CORE_ABS/packages/hassfest:${PYTHONPATH:-}"
+
+# Build hassfest command
+HASSFEST_CMD=(
+    python3 -m script.hassfest
+    --action validate
+    --integration-path "$PWD/$INTEGRATION_PATH"
+)
+
+# Add skip-plugins if specified
+if [ -n "$SKIP_PLUGINS" ]; then
+    HASSFEST_CMD+=(--skip-plugins "$SKIP_PLUGINS")
+fi
+
+# Add remaining arguments
+HASSFEST_CMD+=("$@")
+
+# Run hassfest
+log_info "Running hassfest validation..."
+echo ""
+if "${HASSFEST_CMD[@]}"; then
+    echo ""
+    log_success "Hassfest validation passed"
+    run_hook "hassfest" "post"
+else
+    echo ""
+    log_error "Hassfest validation failed"
+    exit 1
+fi

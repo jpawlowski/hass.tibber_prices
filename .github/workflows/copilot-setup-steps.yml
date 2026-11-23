@@ -1,0 +1,73 @@
+# Copilot Coding Agent Setup
+#
+# This workflow configures the environment for GitHub Copilot coding agent.
+# It runs automatically before Copilot starts working on any task.
+#
+# Documentation:
+# - https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/customize-the-agent-environment
+# - https://github.blog/changelog/2025-07-30-copilot-coding-agent-custom-setup-steps-are-more-reliable-and-easier-to-debug/
+
+name: "Copilot Setup Steps"
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+  pull_request:
+    paths:
+      - .github/workflows/copilot-setup-steps.yml
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+# IMPORTANT: Keep HA_VERSION synchronized across all workflow files:
+# - copilot-setup-steps.yml
+# - lint.yml
+# - validate.yml (if added in the future)
+
+jobs:
+  copilot-setup-steps:
+    name: Prepare the Copilot agent environment
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read # check out the repository
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up mise
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
+          version: "2026.11.12"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: "lts/*"
+          cache: npm
+
+      - name: Get Home Assistant version
+        id: ha_version
+        run: |
+          version=$(bash script/.lib/ha_version.sh)
+          echo "HA_VERSION=${version}" >>"$GITHUB_OUTPUT"
+
+      - name: Cache Home Assistant installation
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .local/ha-venv
+          key: ha-venv-v2-${{ runner.os }}-ha${{ steps.ha_version.outputs.HA_VERSION }}-${{ hashFiles('mise.toml', '.config/mise/conf.d/*.toml', '**/requirements*.txt') }}
+          restore-keys: |
+            ha-venv-v2-${{ runner.os }}-ha${{ steps.ha_version.outputs.HA_VERSION }}-
+
+      - name: Install dependencies
+        run: script/setup/bootstrap

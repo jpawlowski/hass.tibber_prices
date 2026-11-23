@@ -1,0 +1,59 @@
+#!/bin/bash
+
+# script/ha: Query and control the development Home Assistant instance
+#
+# Reads entity states, config entry status, diagnostics, and the error log from
+# the running development instance, calls service actions, and drives config
+# flows — so debugging does not depend on reading a log file and asking a human
+# to click through the UI.
+#
+# Authenticates with the token script/setup/seed-auth mints, which this script
+# reads itself; the token never appears in a command line or in the output.
+#
+# Listings are scoped to this repository's integration. Pass --all to widen them.
+#
+# Environment:
+#   HA_URL    instance URL (default http://127.0.0.1:8123)
+#   HA_TOKEN  access token, overriding config/.storage/dev_access_token
+#
+# Exit codes:
+#   0 success · 1 command failed · 2 Home Assistant unreachable · 3 auth failed
+#
+# Usage:
+#   ./script/ha <command> [options]
+#   ./script/ha --help
+#
+# Examples:
+#   ./script/ha status
+#   ./script/ha entries
+#   ./script/ha states
+#   ./script/ha diagnostics | jq .
+#   ./script/ha logs --level error
+#   ./script/ha loglevel custom_components.my_integration=debug
+#   ./script/ha watch --seconds 60
+#   ./script/ha call my_integration.my_action entity_id=sensor.example
+#   ./script/ha flow start
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/integration.sh
+source "$SCRIPT_DIR/.lib/integration.sh"
+export INTEGRATION_DOMAIN
+
+activate_venv
+
+run_hook "ha" "pre"
+
+set +e
+PYTHONPATH="$SCRIPT_DIR/.lib${PYTHONPATH:+:$PYTHONPATH}" python3 -m ha_cli "$@"
+status=$?
+set -e
+
+run_hook "ha" "post"
+
+exit "$status"

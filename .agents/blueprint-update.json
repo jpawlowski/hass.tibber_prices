@@ -1,0 +1,10 @@
+{
+  "identity": {
+    "domain": "tibber_prices",
+    "title": "Tibber Prices & Planning",
+    "prefix": "TibberPrices",
+    "owner": "jpawlowski",
+    "repository": "hass.tibber_prices",
+    "author": "Julian Pawlowski"
+  }
+}

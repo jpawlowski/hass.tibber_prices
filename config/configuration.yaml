@@ -32,7 +32,7 @@ system_health:
 
 # Core integrations
 # No http: block: Home Assistant ignores it since 2026.8. The development
-# settings come from scripts/setup/seed-http-config.
+# settings come from script/setup/seed-http-config.
 
 # Config UI integration - useful for development
 config:
@@ -170,19 +170,19 @@ logger:
 
     # Interval pool details (cache operations, GC):
     # Cache lookup/miss, gap detection, fetch group additions
-    custom_components.tibber_prices.interval_pool.manager.details: info
+    custom_components.tibber_prices.coordinator.interval_pool.manager.details: info
     # Garbage collection details (eviction, dead interval cleanup)
-    custom_components.tibber_prices.interval_pool.garbage_collector.details: info
+    custom_components.tibber_prices.coordinator.interval_pool.garbage_collector.details: info
     # Gap detection and API fetching details
-    custom_components.tibber_prices.interval_pool.fetcher.details: info
+    custom_components.tibber_prices.coordinator.interval_pool.fetcher.details: info
     # API endpoint routing decisions
-    custom_components.tibber_prices.interval_pool.routing.details: info
+    custom_components.tibber_prices.coordinator.interval_pool.routing.details: info
     # Cache fetch group operations
-    custom_components.tibber_prices.interval_pool.cache.details: info
+    custom_components.tibber_prices.coordinator.interval_pool.cache.details: info
     # Index rebuild operations
-    custom_components.tibber_prices.interval_pool.index.details: info
+    custom_components.tibber_prices.coordinator.interval_pool.index.details: info
     # Storage save operations
-    custom_components.tibber_prices.interval_pool.storage.details: info
+    custom_components.tibber_prices.coordinator.interval_pool.storage.details: info
 
     # API helpers details (response validation):
     # Data emptiness checks, structure validation

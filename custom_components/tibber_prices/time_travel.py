@@ -34,8 +34,6 @@ faking data would silently corrupt comparisons:
   target year. The view reports unavailable instead of sliding to 1 March.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from typing import TYPE_CHECKING, Any, Literal

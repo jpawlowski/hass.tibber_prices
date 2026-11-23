@@ -1,7 +1,5 @@
 """Calculator for 24-hour sliding window statistics."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import get_display_precision

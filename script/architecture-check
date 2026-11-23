@@ -1,0 +1,39 @@
+#!/bin/bash
+
+# script/architecture-check: Check the integration source for architecture invariants
+#
+# Conservative source checks for AGENTS.md rules that no linter or type checker enforces:
+# EntityDescription must not hardcode name=/icon=, device_trigger.py/device_condition.py/
+# device_action.py must never exist, and device registry lookups must stay scoped
+# (no unscoped async_get_device()).
+#
+# Checks tracked and untracked, non-ignored integration files without hardcoding a domain.
+#
+# Usage:
+#   ./script/architecture-check
+#
+# Examples:
+#   ./script/architecture-check
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+activate_venv
+
+run_hook "architecture-check" "pre"
+
+if [[ ! -d custom_components ]]; then
+    log_warning "No custom_components/ directory — skipping"
+    exit 0
+fi
+
+log_header "Checking architecture invariants"
+python3 "$SCRIPT_DIR/.lib/architecture_check.py"
+
+run_hook "architecture-check" "post"
+log_success "Architecture check completed"

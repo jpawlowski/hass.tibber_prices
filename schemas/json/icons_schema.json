@@ -1,0 +1,140 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Home Assistant Integration Icons (icons.json)",
+  "description": "JSON schema for the icons.json file in a Home Assistant integration. Mirrors the schema hassfest enforces in script/hassfest/icons.py: entity icons by domain and translation_key, service action icons, and icons for the config, options, issue, trigger and condition flows. See: https://contributors.home-assistant.io/core/quality-scale/icon-translations/",
+  "type": "object",
+  "properties": {
+    "services": {
+      "type": "object",
+      "description": "Service action icon definitions mapped by service action name.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Icon definition for a single service action.",
+        "properties": {
+          "service": {
+            "$ref": "#/definitions/icon",
+            "description": "Icon (mdi:) to represent the service action in UI editors."
+          },
+          "sections": {
+            "type": "object",
+            "description": "Optional mapping of collapsible section keys to icons.",
+            "additionalProperties": {
+              "$ref": "#/definitions/icon"
+            }
+          }
+        },
+        "required": ["service"],
+        "additionalProperties": false
+      }
+    },
+    "entity": {
+      "type": "object",
+      "description": "Entity icons by domain and translation_key. An entity whose device_class already supplies a suitable icon needs no entry here.",
+      "additionalProperties": {
+        "type": "object",
+        "description": "Entity domain (e.g. sensor, switch).",
+        "additionalProperties": {
+          "$ref": "#/definitions/iconDefinition"
+        }
+      }
+    },
+    "config": { "$ref": "#/definitions/flowIcons" },
+    "options": { "$ref": "#/definitions/flowIcons" },
+    "issues": {
+      "type": "object",
+      "description": "Icons for the steps and sections of each issue's repair flow.",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "fix_flow": { "$ref": "#/definitions/flowIcons" }
+        },
+        "required": ["fix_flow"],
+        "additionalProperties": false
+      }
+    },
+    "triggers": {
+      "type": "object",
+      "description": "Trigger icons mapped by trigger name.",
+      "additionalProperties": { "$ref": "#/definitions/namedIcon" }
+    },
+    "conditions": {
+      "type": "object",
+      "description": "Condition icons mapped by condition name.",
+      "additionalProperties": { "$ref": "#/definitions/namedIcon" }
+    }
+  },
+  "definitions": {
+    "icon": {
+      "type": "string",
+      "pattern": "^mdi:[a-z0-9-_]+$",
+      "description": "An MDI icon reference in the form mdi:icon-name. Lowercase letters, numbers, hyphen and underscore allowed."
+    },
+    "stateMap": {
+      "type": "object",
+      "description": "Mapping of raw state values to icons. An icon identical to the default is rejected by hassfest.",
+      "additionalProperties": { "$ref": "#/definitions/icon" }
+    },
+    "rangeMap": {
+      "type": "object",
+      "description": "Mapping of numeric thresholds to icons. Keys must be numeric and listed in ascending order.",
+      "propertyNames": { "pattern": "^-?[0-9]+(\\.[0-9]+)?$" },
+      "additionalProperties": { "$ref": "#/definitions/icon" }
+    },
+    "iconDefinition": {
+      "type": "object",
+      "description": "Icon definition for one translation_key.",
+      "properties": {
+        "default": { "$ref": "#/definitions/icon" },
+        "state": { "$ref": "#/definitions/stateMap" },
+        "range": { "$ref": "#/definitions/rangeMap" },
+        "state_attributes": {
+          "type": "object",
+          "description": "Per-attribute icons, keyed by attribute name.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "default": { "$ref": "#/definitions/icon" },
+              "state": { "$ref": "#/definitions/stateMap" },
+              "range": { "$ref": "#/definitions/rangeMap" }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "namedIcon": {
+      "type": "object",
+      "properties": {
+        "trigger": { "$ref": "#/definitions/icon" },
+        "condition": { "$ref": "#/definitions/icon" },
+        "sections": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/definitions/icon" }
+        }
+      },
+      "additionalProperties": false
+    },
+    "flowIcons": {
+      "type": "object",
+      "description": "Icons for the steps of a data entry flow, and the sections within them.",
+      "properties": {
+        "step": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "sections": {
+                "type": "object",
+                "additionalProperties": { "$ref": "#/definitions/icon" }
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

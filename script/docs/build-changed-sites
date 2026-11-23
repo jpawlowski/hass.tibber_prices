@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Build the user docs site when the current staged file set touches it.
+
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+cd "$REPO_ROOT"
+
+build_user=false
+
+for file in "$@"; do
+    case "$file" in
+    docs/user/*)
+        build_user=true
+        ;;
+    esac
+done
+
+if [[ "$build_user" == false ]]; then
+    exit 0
+fi
+
+echo "Building user docs (docs/user)..."
+(
+    cd docs/user
+    npm run build
+)
+
+echo "Docusaurus build check passed for the user docs site."

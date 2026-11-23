@@ -200,7 +200,7 @@ class TestConfigEntryCleanup:
         coordinator._listener_manager = object.__new__(TibberPricesListenerManager)
         coordinator._data_transformer = object.__new__(TibberPricesDataTransformer)
         coordinator._period_calculator = object.__new__(TibberPricesPeriodCalculator)
-        setattr(coordinator, "_lifecycle_callbacks", [])
+        coordinator._lifecycle_callbacks = []
 
         # Manually call the registration that happens in __init__
         # This tests the pattern: entry.async_on_unload(entry.add_update_listener(...))

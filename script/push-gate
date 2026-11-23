@@ -1,0 +1,68 @@
+#!/bin/bash
+
+# script/push-gate: Validate the pushed commit before git push sends it
+#
+# Runs as the pre-push hook from .pre-commit-config.yaml, for every push by a person or an agent.
+# The push must send the checked-out HEAD of a clean worktree, so that script/lint-check and
+# script/type-check, which run in parallel, check exactly the commit that leaves the machine.
+# Push anything else deliberately with git push --no-verify.
+#
+# Usage:
+#   ./script/push-gate
+#
+# Examples:
+#   ./script/push-gate   # Check HEAD as if it were being pushed
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+run_hook "push-gate" "pre"
+
+if [[ -n $(git status --porcelain --untracked-files=all) ]]; then
+    die "the worktree is dirty; commit or stash every change so the checks see the pushed commit"
+fi
+
+if ! current_branch=$(git symbolic-ref --quiet --short HEAD); then
+    die "HEAD is detached, so the push cannot be matched to the checked-out commit"
+fi
+
+pushed_ref=${PRE_COMMIT_LOCAL_BRANCH:-refs/heads/$current_branch}
+pushed_commit=${PRE_COMMIT_TO_REF:-HEAD}
+if [[ $pushed_ref != "refs/heads/$current_branch" && $pushed_ref != HEAD ]] ||
+    [[ $(git rev-parse "$pushed_commit^{commit}") != $(git rev-parse HEAD) ]]; then
+    die "this push sends ${pushed_ref#refs/heads/}, not the checked-out ${current_branch}; only HEAD is validated"
+fi
+
+lint_log=$(mktemp)
+type_log=$(mktemp)
+trap 'rm -f "$lint_log" "$type_log"' EXIT
+
+log_header "Running script/lint-check and script/type-check before the push"
+"$SCRIPT_DIR/lint-check" >"$lint_log" 2>&1 &
+lint_pid=$!
+"$SCRIPT_DIR/type-check" >"$type_log" 2>&1 &
+type_pid=$!
+lint_status=0
+type_status=0
+wait "$lint_pid" || lint_status=$?
+wait "$type_pid" || type_status=$?
+
+if [[ $lint_status -ne 0 ]]; then
+    log_error "script/lint-check failed:"
+    tail -n 40 "$lint_log" >&2
+fi
+if [[ $type_status -ne 0 ]]; then
+    log_error "script/type-check failed:"
+    tail -n 40 "$type_log" >&2
+fi
+if [[ $lint_status -ne 0 || $type_status -ne 0 ]]; then
+    die "fix the findings above, commit, and push again"
+fi
+
+run_hook "push-gate" "post"
+log_success "Push gate passed"

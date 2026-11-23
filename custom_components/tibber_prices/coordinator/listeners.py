@@ -1,7 +1,5 @@
 """Listener management and scheduling for the coordinator."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -167,7 +165,7 @@ class TibberPricesListenerManager:
         Home Assistant may introduce small scheduling delays (jitter), which are
         corrected using _BOUNDARY_TOLERANCE_SECONDS in time_service.py.
 
-        Runs independently of Timer #1 (API polling), which operates at random offsets.
+        Runs independently of Timer #1 (API polling), which runs at installation-specific offsets.
         """
         # Cancel any existing timer
         if self._minute_timer_cancel:

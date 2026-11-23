@@ -1,7 +1,5 @@
 """Relaxation strategy for finding minimum periods per day."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -28,7 +26,7 @@ from .types import (
 _LOGGER = logging.getLogger(__name__)
 _LOGGER_DETAILS = logging.getLogger(__name__ + ".details")
 
-# Flex thresholds for warnings (see docs/development/period-calculation-theory.md)
+# Flex thresholds for warnings (see docs/development/PERIODS.md)
 # With relaxation active, high base flex is counterproductive (reduces relaxation effectiveness)
 FLEX_WARNING_THRESHOLD_RELAXATION = 0.25  # 25% - INFO: suggest lowering to 15-20%
 MAX_FLEX_HARD_LIMIT = 0.50  # 50% - hard maximum flex value

@@ -1,0 +1,130 @@
+#!/bin/bash
+
+# script/ha-env: Manage the Home Assistant environments side by side
+#
+# Usage:
+#   ./script/ha-env list                  installed environments, versions, the active one
+#   ./script/ha-env add <slot>            install latest or beta
+#   ./script/ha-env add custom <version>  install, or move to, one fixed version, from hacs.json's minimum on
+#   ./script/ha-env use [--force] <slot>  switch the active environment; --force while Home Assistant runs
+#   ./script/ha-env refresh [slot]        move one or every installed environment to its newest version
+#   ./script/ha-env remove <slot>         uninstall latest, beta or custom
+#
+# Examples:
+#   ./script/ha-env add beta && ./script/ha-env use beta
+#   ./script/ha-env add custom 2026.11.1
+#   ./script/ha-env refresh
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/ha_envs.sh
+source "$SCRIPT_DIR/.lib/ha_envs.sh"
+
+usage() {
+    sed -n '/^# Usage:/,/^$/p' "$0" | sed 's/^# \{0,1\}//'
+    exit 2
+}
+
+require_slot() {
+    [[ " ${HA_ENVS_SLOTS[*]} " == *" ${1:-} "* ]] || usage
+}
+
+# Build each slot, then drop what no slot needs any more. The one Home Assistant runs on is left alone, which only
+# fails a request to move custom's pin.
+refresh_slots() {
+    local slot failed=0
+    use_mise_env
+    for slot in "$@"; do
+        log_header "Home Assistant environment: $slot"
+        ha_envs_refresh "$slot" || [[ $? -eq 2 && -z ${HA_ENVS_CUSTOM_VERSION:-} ]] || failed=1
+    done
+    ha_envs_prune
+    uv cache prune --quiet
+    return "$failed"
+}
+
+cmd_list() {
+    local slot version active
+    active=$(ha_current_slot)
+    for slot in "${HA_ENVS_SLOTS[@]}"; do
+        version=$(ha_envs_version_of "$slot")
+        [[ -n $version || $slot != custom ]] || continue
+        printf '%s %-8s %s\n' "$([[ $slot == "$active" ]] && echo '*' || echo ' ')" "$slot" "${version:-not installed}"
+    done
+    if ha_running && [[ -f .local/ha-develop.json ]]; then
+        jq -r '"Home Assistant is running on \(.slot // "?"), started by \(.started_by // "?") at \(.started_at // "?")"' \
+            .local/ha-develop.json
+    fi
+    ha_envs_notice
+}
+
+# A version is for custom only, which it pins or moves; any other slot resolves its own.
+cmd_add() {
+    require_slot "$1"
+    [[ -z ${2:-} || $1 == custom ]] || usage
+    if [[ -z ${2:-} && -n $(ha_envs_version_of "$1") ]]; then
+        log_info "$1 is installed already, on Home Assistant $(ha_envs_version_of "$1")"
+        return 0
+    fi
+    HA_ENVS_CUSTOM_VERSION="${2:-}" refresh_slots "$1"
+    [[ $(ha_current_slot) == "$1" ]] || log_step "Switch to it with: script/ha-env use $1"
+}
+
+# Switching moves every terminal, script/test and the next start along, so it never happens under a running
+# instance by accident; --force says the caller stops that instance itself.
+cmd_use() {
+    local force=false
+    if [[ ${1:-} == --force ]]; then
+        force=true
+        shift
+    fi
+    require_slot "${1:-}"
+    if [[ $1 == "$(ha_current_slot)" ]]; then
+        log_info "$1 is active already"
+        return 0
+    fi
+    if [[ $force == false ]] && ha_running; then
+        log_error "Home Assistant is running on $(ha_running_slot) — stop it first, or switch on purpose with --force"
+        exit 1
+    fi
+    ha_envs_use "$1"
+    log_success "Active: $1 (Home Assistant $(ha_envs_version_of "$1"), config $(ha_config_dir))"
+    log_step "Scripts follow at once, open dev container terminals at their next prompt"
+}
+
+cmd_refresh() {
+    local slots=() slot
+    if [[ -n ${1:-} ]]; then
+        require_slot "$1"
+        [[ -n $(ha_envs_version_of "$1") ]] || die "$1 is not installed — run: script/ha-env add $1"
+        slots=("$1")
+    else
+        for slot in "${HA_ENVS_SLOTS[@]}"; do
+            [[ -n $(ha_envs_version_of "$slot") ]] && slots+=("$slot")
+        done
+        [[ ${#slots[@]} -gt 0 ]] || die "No Home Assistant environment is installed — run: script/setup/bootstrap"
+    fi
+    refresh_slots "${slots[@]}"
+}
+
+cmd_remove() {
+    require_slot "$1"
+    ha_envs_remove "$1"
+    ha_envs_prune
+    uv cache prune --quiet
+    log_success "Removed $1"
+}
+
+case "${1:-}" in
+list) cmd_list ;;
+add) cmd_add "${2:-}" "${3:-}" ;;
+use) cmd_use "${@:2}" ;;
+refresh) cmd_refresh "${2:-}" ;;
+remove) cmd_remove "${2:-}" ;;
+*) usage ;;
+esac

@@ -1,7 +1,5 @@
 """Calculator for price volatility analysis."""
 
-from __future__ import annotations
-
 import bisect
 from typing import TYPE_CHECKING
 

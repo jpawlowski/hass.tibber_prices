@@ -1,0 +1,93 @@
+name: Newer Home Assistant
+
+# The Lint workflow tests the minimum version from hacs.json; this one runs the type check and the tests against the
+# newest stable and beta release as an early warning. It never blocks a pull request.
+
+on:
+  pull_request:
+    branches:
+      - "main"
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "custom_components/**"
+      - "tests/**"
+      - "requirements*.txt"
+      - "hacs.json"
+      - "pyproject.toml"
+  schedule:
+    - cron: "17 5 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: "Tests on Home Assistant ${{ matrix.ha }}"
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    continue-on-error: true
+    permissions:
+      contents: read # check out the repository
+    strategy:
+      fail-fast: false
+      matrix:
+        ha: [latest, beta]
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up mise
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
+          version: "2026.11.12"
+
+      - name: Resolve the Home Assistant version
+        id: ha_version
+        env:
+          HA_VERSION: ${{ matrix.ha }}
+        run: |
+          source script/.lib/output.sh
+          source script/.lib/ha_version.sh
+          version=""
+          target_ha_version version
+          pinned=$(ha_test_pin_version)
+          echo "HA_VERSION=${version}" >> "${GITHUB_OUTPUT}"
+          # A beta older than the pin, as between two release trains, is skipped.
+          if ! ha_version_newer "${version}" "${pinned}"; then
+            echo "Home Assistant ${version} is not newer than the pinned ${pinned}, which the Lint workflow tests" \
+              >> "${GITHUB_STEP_SUMMARY}"
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Cache Home Assistant installation
+        if: steps.ha_version.outputs.skip != 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .local/ha-venv
+          key: ha-venv-v2-${{ runner.os }}-ha${{ steps.ha_version.outputs.HA_VERSION }}-${{ hashFiles('mise.toml', '.config/mise/conf.d/*.toml', '**/requirements*.txt') }}
+          restore-keys: |
+            ha-venv-v2-${{ runner.os }}-ha${{ steps.ha_version.outputs.HA_VERSION }}-
+
+      # Bootstrap builds the latest or beta environment, with the pytest-homeassistant release matching its version.
+      - name: Install requirements
+        if: steps.ha_version.outputs.skip != 'true'
+        env:
+          HA_VERSION: ${{ matrix.ha }}
+        run: script/setup/bootstrap
+
+      - name: Type check
+        if: steps.ha_version.outputs.skip != 'true'
+        run: script/type-check
+
+      - name: Tests
+        if: steps.ha_version.outputs.skip != 'true'
+        run: script/test

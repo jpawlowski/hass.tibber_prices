@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# script/decisions: Write and check the index of the decision records
+#
+# Each decision is one file in docs/development/decisions/ (or docs/blueprint/decisions/ in the blueprint itself),
+# named YYYYMMDD-slug.md. This writes the README.md index of each folder and checks the records: frontmatter,
+# superseding in both directions, and that every rule a record names points back to it with a Source: line.
+# A repository without a decisions folder passes.
+#
+# Usage:
+#   ./script/decisions [--check]
+#
+# Examples:
+#   ./script/decisions          # Write the index (part of script/lint)
+#   ./script/decisions --check  # Only report (part of script/lint-check)
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+# PyYAML comes with the venv; everything else is the standard library.
+activate_venv_if_present
+
+run_hook "decisions" "pre"
+
+log_header "Checking decision records"
+python3 "$SCRIPT_DIR/.lib/decisions.py" "$@"
+
+run_hook "decisions" "post"

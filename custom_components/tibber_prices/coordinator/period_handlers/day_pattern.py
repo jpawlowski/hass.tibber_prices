@@ -24,8 +24,6 @@ All functions are pure (no side effects) and operate on already-enriched
 interval dicts produced by utils/price.py.
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import math
@@ -150,7 +148,7 @@ def _detect_single_day_pattern(
     """
     Analyse a single day's intervals and return a DayPatternDict.
 
-    The returned dict has the shape described in AGENTS.md (DayPatternDict).
+    The returned dict has the shape of DayPatternDict.
     """
     # Extract prices and datetimes (already tz-aware from enrichment)
     prices_raw: list[float] = [float(iv["total"]) for iv in intervals]

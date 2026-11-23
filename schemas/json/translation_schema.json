@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Home Assistant Custom Integration Translation (strings.json)",
-  "description": "JSON schema for Home Assistant custom integration translation files (strings.json and translations/*.json). Defines translations for config flows, entities, services, device automations, and more. Based on the official Home Assistant internationalization specification: https://developers.home-assistant.io/docs/internationalization/core",
+  "description": "JSON schema for Home Assistant custom integration translation files (strings.json and translations/*.json). Defines translations for config flows, entities, services, device automations, and more. Based on the official Home Assistant internationalization specification: https://contributors.home-assistant.io/core/integrations/translations/",
   "type": "object",
   "properties": {
     "title": {

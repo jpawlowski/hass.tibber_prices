@@ -1,7 +1,5 @@
 """Chart data export functionality for Tibber Prices sensors."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import DATA_CHART_CONFIG, DOMAIN

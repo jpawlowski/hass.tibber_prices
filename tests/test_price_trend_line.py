@@ -1,7 +1,5 @@
 """Tests for the price trend line and its confirmed timeline (utils/trend.py, trend calculator)."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import math
 from types import SimpleNamespace

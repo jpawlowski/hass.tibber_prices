@@ -6,9 +6,9 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from custom_components.tibber_prices.coordinator.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache
+from custom_components.tibber_prices.coordinator.interval_pool.manager import TibberPricesIntervalPool
 from custom_components.tibber_prices.coordinator.time_service import TibberPricesTimeService
-from custom_components.tibber_prices.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache
-from custom_components.tibber_prices.interval_pool.manager import TibberPricesIntervalPool
 
 
 @pytest.mark.unit

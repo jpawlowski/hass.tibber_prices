@@ -1,1 +1,20 @@
-* text=auto eol=lf
+# Ensure "git config --global core.autocrlf input" before you clone
+*       text eol=lf
+
+# Python files - show proper diffs and enforce no trailing whitespace
+*.py    diff=python whitespace=error
+
+# Binary assets that plausibly ship in an integration repository
+*.eot   binary
+*.gif   binary
+*.gz    binary
+*.ico   binary
+*.jpg   binary
+*.otf   binary
+*.pdf   binary
+*.png   binary
+*.ttf   binary
+*.webp  binary
+*.woff  binary
+*.woff2 binary
+*.zip   binary

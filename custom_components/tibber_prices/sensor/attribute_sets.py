@@ -6,8 +6,6 @@ Only what an attribute builder adds on top of the common attributes (timestamp, 
 is listed. `history=True` marks what the recorder keeps; everything else stays out of the database.
 """
 
-from __future__ import annotations
-
 from custom_components.tibber_prices.const import MIN_HOURS_FOR_LATER_HALF
 from custom_components.tibber_prices.utils.attribute_specs import TibberPricesAttribute, attribute
 

@@ -5,8 +5,6 @@ Tests the precise minute/second offset calculation for Timer #1 scheduling,
 ensuring accurate prediction of when the next API poll will occur.
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from unittest.mock import Mock
 from zoneinfo import ZoneInfo

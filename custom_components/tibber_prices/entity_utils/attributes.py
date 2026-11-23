@@ -1,13 +1,10 @@
 """Common attribute utilities for Tibber Prices entities."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
     from homeassistant.core import HomeAssistant
-
-    from ..data import TibberPricesConfigEntry  # noqa: TID252
 
 
 def add_description_attributes(
@@ -49,8 +46,11 @@ def add_description_attributes(
     if not translation_key or not hass:
         return
 
-    # Import here to avoid circular dependency
-    from ..const import CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS, get_entity_description  # noqa: PLC0415, TID252
+    from custom_components.tibber_prices.const import (  # noqa: PLC0415 - circular import with const
+        CONF_EXTENDED_DESCRIPTIONS,
+        DEFAULT_EXTENDED_DESCRIPTIONS,
+        get_entity_description,
+    )
 
     language = hass.config.language or "en"
 
@@ -136,8 +136,11 @@ async def async_add_description_attributes(
     if not translation_key or not hass:
         return
 
-    # Import here to avoid circular dependency
-    from ..const import CONF_EXTENDED_DESCRIPTIONS, DEFAULT_EXTENDED_DESCRIPTIONS, async_get_entity_description  # noqa: PLC0415, TID252
+    from custom_components.tibber_prices.const import (  # noqa: PLC0415 - circular import with const
+        CONF_EXTENDED_DESCRIPTIONS,
+        DEFAULT_EXTENDED_DESCRIPTIONS,
+        async_get_entity_description,
+    )
 
     language = hass.config.language or "en"
 

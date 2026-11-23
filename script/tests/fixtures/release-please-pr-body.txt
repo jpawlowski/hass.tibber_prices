@@ -1,0 +1,42 @@
+:robot: I have created a release *beep* *boop*
+---
+
+
+## [0.40.0](https://github.com/jpawlowski/hass.tibber_prices/compare/v0.39.1...v0.40.0) (2026-11-22)
+
+
+### ⚠ BREAKING CHANGES
+
+* **attributes:** templates, automations and dashboards that read an attribute ending in "_%" must use the "_percent" name.
+
+### 🎉 What's New
+
+* **translations:** translate attribute names in the more-info dialog ([3a37c02](https://github.com/jpawlowski/hass.tibber_prices/commit/3a37c0242e363090769c414efd9e9864c8048aaf))
+
+
+### 🐛 Fixed
+
+* **attributes:** leave undeclared attributes out of the recorder, share the half-window threshold ([7cb380f](https://github.com/jpawlowski/hass.tibber_prices/commit/7cb380fa67b8f9bab93831a4a179c4a160d2b940))
+* **diagnostics:** redact identifying data from the diagnostics download ([3942f87](https://github.com/jpawlowski/hass.tibber_prices/commit/3942f87e870df5d057d6e4286c866151256c3a03))
+* **hacs:** hide the default branch, it cannot install with zip_release ([697d221](https://github.com/jpawlowski/hass.tibber_prices/commit/697d221b535ccd995856d4ac2e6d0ce19f948e92)), closes [#270](https://github.com/jpawlowski/hass.tibber_prices/issues/270)
+* **i18n:** name the connection and chart export attributes, tidy the source ([5edcb7e](https://github.com/jpawlowski/hass.tibber_prices/commit/5edcb7e190a6bb3ce008a4b9d1e6cc86494d69b0))
+* **i18n:** translate the rating sensors hint in the attribute rename notice ([a424821](https://github.com/jpawlowski/hass.tibber_prices/commit/a424821dfcfc52f7d4985644c41d6eaa208127e3))
+
+
+### ⚡ More Reliable
+
+* **recorder:** also exclude the trend percentages and next-hours averages ([8fd78e8](https://github.com/jpawlowski/hass.tibber_prices/commit/8fd78e82dee69eaa27cd19a1a3d92d4b923b2215))
+* **recorder:** exclude more derived and repeated attributes from history ([98acc38](https://github.com/jpawlowski/hass.tibber_prices/commit/98acc3826d9f103a16800059d9f4fc1d2b348347))
+
+
+### 📦 Updated Dependencies
+
+* **i18n:** generate the translated attribute names from one source ([2af1791](https://github.com/jpawlowski/hass.tibber_prices/commit/2af179156fe69ad5c300f6b69606e5311957d90f))
+
+
+### Refactoring
+
+* **attributes:** rename attribute keys ending in % to _percent ([5dd3c5b](https://github.com/jpawlowski/hass.tibber_prices/commit/5dd3c5ba4e54bcb8e04959fe6542ba022c96cbe2))
+
+---
+This PR was generated with [Release Please](https://github.com/googleapis/release-please). See [documentation](https://github.com/googleapis/release-please#release-please).

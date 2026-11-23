@@ -1,7 +1,5 @@
 """Tests for find_level_run_times (cheap_until / next_cheap_start attributes)."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 

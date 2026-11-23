@@ -8,8 +8,6 @@ already "running" before ``validFrom`` has prices and works as usual (issue #237
 After ``validTo`` the entities stay on the last day of the contract.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 from zoneinfo import ZoneInfo
@@ -433,7 +431,7 @@ def test_binary_sensor_pending_set_leaves_out_price_dependent_sensors() -> None:
 @pytest.mark.unit
 def test_config_flow_accepts_future_subscription_without_status() -> None:
     """A contract with a start date but no status yet is still a contract."""
-    from custom_components.tibber_prices.config_flow_handlers.user_flow import TibberPricesConfigFlowHandler  # noqa: PLC0415
+    from custom_components.tibber_prices.config_flow_handler.user_flow import TibberPricesConfigFlowHandler  # noqa: PLC0415
 
     home = {"currentSubscription": {"status": None, "validFrom": "2099-01-01T00:00:00+01:00"}}
     assert TibberPricesConfigFlowHandler._get_subscription_status(home) == "future"  # noqa: SLF001

@@ -1,0 +1,66 @@
+#!/bin/bash
+
+# script/skills-check: Validate the agent skills under .agents/skills/
+#
+# Checks every skill against the Agent Skills open standard
+# (https://agentskills.io/specification) and this repository's own conventions:
+# frontmatter fields, name/description limits, body length, reference depth,
+# resolvable links, placeholder usage. Also checks that every agent configuration
+# protects the same paths (script/.lib/agent_policy_check.py).
+#
+# When the optional `skills-ref` reference validator is installed, it runs in
+# addition to the built-in checks. It is not required.
+#
+# Usage:
+#   ./script/skills-check
+#
+# Examples:
+#   ./script/skills-check
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+
+# The checks use the standard library only; the venv adds just the optional reference validator.
+activate_venv_if_present
+
+run_hook "skills-check" "pre"
+
+log_header "Checking agent protected-path lists"
+python3 "$SCRIPT_DIR/.lib/agent_policy_check.py"
+
+if [[ ! -d .agents/skills ]]; then
+    log_warning "No .agents/skills/ directory — skipping"
+    exit 0
+fi
+
+log_header "Validating agent skills"
+python3 "$SCRIPT_DIR/.lib/skills_check.py"
+
+# Optional cross-check against the Agent Skills reference implementation
+# (the `skills-ref` package installs an `agentskills` command). Upstream labels
+# it a demonstration library, so it is a nice-to-have rather than a hard
+# dependency: the built-in checks above stay authoritative.
+if command -v agentskills >/dev/null 2>&1; then
+    log_header "Cross-checking with the Agent Skills reference validator"
+    ref_failed=0
+    for skill in .agents/skills/*/; do
+        [[ -f "$skill/SKILL.md" ]] || continue
+        if ! agentskills validate "$skill"; then
+            ref_failed=1
+        fi
+    done
+    if [[ $ref_failed -ne 0 ]]; then
+        die "the reference validator reported problems"
+    fi
+    log_info "reference validator found no problems"
+else
+    log_info "reference validator not installed — built-in checks only (pip install skills-ref)"
+fi
+
+run_hook "skills-check" "post"
+log_success "Agent skills check completed"

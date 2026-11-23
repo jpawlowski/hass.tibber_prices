@@ -1,7 +1,5 @@
 """Tibber API Client."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 from datetime import datetime, timedelta
@@ -58,7 +56,7 @@ class TibberPricesApiClient:
         #
         # NOTE: This is NOT the mechanism that bridges multi-hour outages. Long
         # outages are absorbed by the IntervalPool cache fallback (see
-        # interval_pool/manager.py): as long as cached intervals cover the current
+        # coordinator/interval_pool/manager.py): as long as cached intervals cover the current
         # interval, the integration keeps serving cached prices and retries on the
         # NEXT update cycle. That bridge is unbounded in time, so this in-request
         # retry count must stay small to avoid blocking the event loop.
@@ -171,7 +169,7 @@ class TibberPricesApiClient:
 
         """
         # Import here to avoid circular dependency (interval_pool imports TibberPricesApiClient)
-        from custom_components.tibber_prices.interval_pool import get_price_intervals_for_range  # noqa: PLC0415
+        from custom_components.tibber_prices.coordinator.interval_pool import get_price_intervals_for_range  # noqa: PLC0415
 
         price_info = await get_price_intervals_for_range(
             api_client=self,

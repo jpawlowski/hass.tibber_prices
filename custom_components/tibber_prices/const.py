@@ -1,7 +1,5 @@
 """Constants for the Tibber Price Analytics integration."""
 
-from __future__ import annotations
-
 import json
 import logging
 from pathlib import Path

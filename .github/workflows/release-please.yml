@@ -1,0 +1,124 @@
+name: Release Please
+
+on:
+  push:
+    branches:
+      - main
+  # Re-runs the asset job for a release whose upload failed; "Re-run all jobs" would create no release and skip it.
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to attach the ZIP asset to and publish (e.g. v1.2.3)
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Release Please
+    # Skip when running inside the template repository itself
+    if: github.repository != 'jpawlowski/ha-integration-blueprint' && github.event_name == 'push'
+    runs-on: ubuntu-26.04
+    # "Allow GitHub Actions to create and approve pull requests" must also be enabled
+    # under Settings > Actions > General.
+    # See: https://github.com/googleapis/release-please-action?tab=readme-ov-file#workflow-permissions
+    permissions:
+      contents: write # create tags and releases
+      pull-requests: write # open and update the release pull request
+    outputs:
+      release_created: ${{ steps.release.outputs.release_created }}
+      tag_name: ${{ steps.release.outputs.tag_name }}
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@45996ed1f6d02564a971a2fa1b5860e934307cf7 # v5.0.0
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  release-asset:
+    name: Attach ZIP asset and publish
+    needs: release-please
+    if: >-
+      !cancelled() && github.repository != 'jpawlowski/ha-integration-blueprint'
+      && (needs.release-please.outputs.release_created == 'true' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: write # upload the asset and publish the draft release
+    steps:
+      - name: Checkout the release tag
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+          persist-credentials: false
+
+      - name: Detect build hooks
+        id: hooks
+        run: |
+          if compgen -G "script/hooks/build.*.sh" >/dev/null; then
+            echo "present=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      # Only a project that builds needs its tools from mise.toml and .config/mise/conf.d/project.toml.
+      - name: Set up mise
+        if: steps.hooks.outputs.present == 'true'
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
+          version: "2026.11.12"
+
+      # Build hooks may run third-party code (npm install scripts): they get no token.
+      - name: Build the ZIP asset
+        id: asset
+        env:
+          TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+        run: |
+          if jq -e '.zip_release == true' hacs.json >/dev/null; then
+            jq -e '.hide_default_branch == true' hacs.json >/dev/null ||
+              echo "::warning::zip_release without hide_default_branch: the default branch cannot install"
+            filename=$(jq -er '.filename' hacs.json) ||
+              { echo "::error::hacs.json sets zip_release without a filename"; exit 1; }
+            script/build --zip "${filename}" --version "${TAG#v}"
+            echo "filename=${filename}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::notice::hacs.json does not set zip_release - no ZIP asset attached"
+          fi
+
+      # The release stays a draft until its asset is attached, so no install ever finds it missing.
+      - name: Upload the ZIP asset, complete the notes, then publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag || needs.release-please.outputs.tag_name }}
+          FILENAME: ${{ steps.asset.outputs.filename }}
+        run: |
+          if [[ -n "${FILENAME}" ]]; then
+            gh release upload "${TAG}" "${FILENAME}" --clobber --repo "${GITHUB_REPOSITORY}"
+          fi
+          prerelease=false
+          if [[ "${TAG}" == *-* ]]; then
+            prerelease=true
+          fi
+          changelog_path="$(jq -r '.packages["."]["changelog-path"] // "CHANGELOG.md"' release-please-config.json)"
+          changelog="https://github.com/${GITHUB_REPOSITORY}/blob/${TAG}/${changelog_path}"
+          notes="$(gh release view "${TAG}" --json body --jq .body --repo "${GITHUB_REPOSITORY}")"
+          notes="${notes//$'\r'/}"
+          [[ "${notes}" == *"${changelog}"* ]] ||
+            notes+="${notes:+$'\n\n'}Skipped a few versions? Their notes are in the [changelog](${changelog})."
+          own=".github/release-notes"
+          if [[ -s "${own}/header.md" ]]; then
+            header="$(<"${own}/header.md")"
+            [[ "${notes}" == "${header}"* ]] || notes="${header}${notes:+$'\n\n'}${notes}"
+          fi
+          if [[ -s "${own}/footer.md" ]]; then
+            footer="$(<"${own}/footer.md")"
+            [[ "${notes}" == *"${footer}" ]] || notes+="${notes:+$'\n\n'}${footer}"
+          fi
+          printf '%s\n' "${notes}" |
+            gh release edit "${TAG}" --draft=false --prerelease="${prerelease}" --notes-file - \
+              --repo "${GITHUB_REPOSITORY}"

@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "title": "Home Assistant Custom Integration manifest for HACS",
-  "description": "The manifest.json schema for Home Assistant custom integrations distributed via HACS (Home Assistant Community Store). Extends the official Home Assistant manifest schema with HACS-specific requirements like version and issue_tracker fields.",
+  "title": "Home Assistant Custom Integration manifest for the Marketplace",
+  "description": "The manifest.json schema for Home Assistant custom integrations distributed through the Marketplace or HACS. Extends the official Home Assistant manifest schema with the version and issue_tracker fields a custom integration requires.",
   "type": "object",
   "if": {
     "properties": {
@@ -16,7 +16,7 @@
       {
         "properties": {
           "domain": {
-            "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
+            "description": "The domain identifier of the integration.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#domain",
             "examples": ["mobile_app"],
             "type": "string",
             "pattern": "[0-9a-z_]+"
@@ -26,11 +26,11 @@
             "type": "string"
           },
           "integration_type": {
-            "description": "The integration type.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type",
+            "description": "The integration type.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#integration_type",
             "const": "virtual"
           },
           "iot_standards": {
-            "description": "The IoT standards which supports devices or services of this virtual integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#iot-standards",
+            "description": "The IoT standards which supports devices or services of this virtual integration.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#discovery",
             "type": "array",
             "minItems": 1,
             "items": {
@@ -45,7 +45,7 @@
       {
         "properties": {
           "domain": {
-            "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
+            "description": "The domain identifier of the integration.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#domain",
             "examples": ["mobile_app"],
             "type": "string",
             "pattern": "[0-9a-z_]+"
@@ -55,11 +55,11 @@
             "type": "string"
           },
           "integration_type": {
-            "description": "The integration type.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type",
+            "description": "The integration type.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#integration_type",
             "const": "virtual"
           },
           "supported_by": {
-            "description": "The integration which supports devices or services of this virtual integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#supported-by",
+            "description": "The integration which supports devices or services of this virtual integration.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#virtual-integrations",
             "type": "string"
           }
         },
@@ -71,7 +71,7 @@
   "else": {
     "properties": {
       "domain": {
-        "description": "The domain identifier of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#domain",
+        "description": "The domain identifier of the integration.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#domain",
         "examples": ["mobile_app"],
         "type": "string",
         "pattern": "[0-9a-z_]+"
@@ -81,17 +81,17 @@
         "type": "string"
       },
       "integration_type": {
-        "description": "The integration type.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-type",
+        "description": "The integration type.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#integration_type",
         "type": "string",
         "default": "hub",
         "enum": ["device", "entity", "hardware", "helper", "hub", "service", "system"]
       },
       "config_flow": {
-        "description": "Whether the integration is configurable from the UI.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#config-flow",
+        "description": "Whether the integration is configurable from the UI.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#config_flow",
         "type": "boolean"
       },
       "mqtt": {
-        "description": "A list of topics to subscribe for the discovery of devices via MQTT.\nThis requires to specify \"mqtt\" in either the \"dependencies\" or \"after_dependencies\".\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#mqtt",
+        "description": "A list of topics to subscribe for the discovery of devices via MQTT.\nThis requires to specify \"mqtt\" in either the \"dependencies\" or \"after_dependencies\".\nhttps://contributors.home-assistant.io/core/integrations/manifest/#mqtt",
         "type": "array",
         "items": {
           "type": "string"
@@ -99,7 +99,7 @@
         "uniqueItems": true
       },
       "zeroconf": {
-        "description": "A list containing service domains to search for devices to discover via Zeroconf. Items can either be strings, which discovers all devices in the specific service domain, and/or objects which include filters. (useful for generic service domains like _http._tcp.local.)\nA device is discovered if it matches one of the items, but inside the individual item all properties have to be matched.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#zeroconf",
+        "description": "A list containing service domains to search for devices to discover via Zeroconf. Items can either be strings, which discovers all devices in the specific service domain, and/or objects which include filters. (useful for generic service domains like _http._tcp.local.)\nA device is discovered if it matches one of the items, but inside the individual item all properties have to be matched.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#zeroconf",
         "type": "array",
         "minItems": 1,
         "items": {
@@ -138,7 +138,7 @@
         "uniqueItems": true
       },
       "ssdp": {
-        "description": "A list of matchers to find devices discoverable via SSDP/UPnP. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#ssdp",
+        "description": "A list of matchers to find devices discoverable via SSDP/UPnP. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#ssdp",
         "type": "array",
         "minItems": 1,
         "items": {
@@ -164,7 +164,7 @@
         }
       },
       "bluetooth": {
-        "description": "A list of matchers to find devices discoverable via Bluetooth. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#bluetooth",
+        "description": "A list of matchers to find devices discoverable via Bluetooth. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#bluetooth",
         "type": "array",
         "minItems": 1,
         "items": {
@@ -211,7 +211,7 @@
         "uniqueItems": true
       },
       "homekit": {
-        "description": "A list of model names to find devices which are discoverable via HomeKit. A device is discovered if the model name of the device starts with any of the specified model names.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#homekit",
+        "description": "A list of model names to find devices which are discoverable via HomeKit. A device is discovered if the model name of the device starts with any of the specified model names.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#homekit",
         "type": "object",
         "properties": {
           "models": {
@@ -227,7 +227,7 @@
         "additionalProperties": false
       },
       "dhcp": {
-        "description": "A list of matchers to find devices discoverable via DHCP. In order to be discovered, the device has to match all properties of any of the matchers.\nYou can specify an item with \"registered_devices\" set to true to check for devices with MAC addresses specified in the device registry.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#dhcp",
+        "description": "A list of matchers to find devices discoverable via DHCP. In order to be discovered, the device has to match all properties of any of the matchers.\nYou can specify an item with \"registered_devices\" set to true to check for devices with MAC addresses specified in the device registry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#dhcp",
         "type": "array",
         "items": {
           "anyOf": [
@@ -261,7 +261,7 @@
         "uniqueItems": true
       },
       "usb": {
-        "description": "A list of matchers to find devices discoverable via USB. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#usb",
+        "description": "A list of matchers to find devices discoverable via USB. In order to be discovered, the device has to match all properties of any of the matchers.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#usb",
         "type": "array",
         "uniqueItems": true,
         "items": {
@@ -300,22 +300,22 @@
         }
       },
       "documentation": {
-        "description": "The website containing the documentation for the integration. For core integrations, it should be \"https://www.home-assistant.io/integrations/[domain]\". Custom integrations can use any URL.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#documentation",
+        "description": "The website containing the documentation for the integration. For core integrations, it should be \"https://www.home-assistant.io/integrations/[domain]\". Custom integrations can use any URL.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#documentation",
         "type": "string",
         "format": "uri"
       },
       "issue_tracker": {
-        "description": "The issue tracker of your integration, where users can report issues. For custom integrations, this is typically a GitHub issues URL.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#issue-tracker",
+        "description": "The issue tracker of your integration, where users can report issues. For custom integrations, this is typically a GitHub issues URL.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#custom-integrations-only",
         "type": "string",
         "format": "uri"
       },
       "quality_scale": {
-        "description": "The quality scale of the integration.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#integration-quality-scale",
+        "description": "The quality scale of the integration.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#quality_scale",
         "type": "string",
-        "enum": ["bronze", "silver", "gold", "platinum", "internal", "legacy"]
+        "enum": ["bronze", "silver", "gold", "platinum", "custom", "no_score", "internal", "legacy"]
       },
       "requirements": {
-        "description": "The PyPI package requirements for the integration. The package has to be pinned to a specific version.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#requirements",
+        "description": "The PyPI package requirements for the integration. The package has to be pinned to a specific version.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#requirements",
         "type": "array",
         "items": {
           "type": "string",
@@ -324,7 +324,7 @@
         "uniqueItems": true
       },
       "dependencies": {
-        "description": "A list of integrations which need to be loaded before this integration can be set up.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#dependencies",
+        "description": "A list of integrations which need to be loaded before this integration can be set up.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#dependencies",
         "type": "array",
         "items": {
           "type": "string"
@@ -333,7 +333,7 @@
         "uniqueItems": true
       },
       "after_dependencies": {
-        "description": "A list of integrations which need to be loaded before this integration is set up when it is configured. The integration will still be set up when the \"after_dependencies\" are not configured.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#after-dependencies",
+        "description": "A list of integrations which need to be loaded before this integration is set up when it is configured. The integration will still be set up when the \"after_dependencies\" are not configured.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#after_dependencies",
         "type": "array",
         "items": {
           "type": "string"
@@ -342,7 +342,7 @@
         "uniqueItems": true
       },
       "codeowners": {
-        "description": "A list of GitHub usernames or GitHub team names of the integration owners.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#code-owners",
+        "description": "A list of GitHub usernames or GitHub team names of the integration owners.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#codeowners",
         "type": "array",
         "minItems": 0,
         "items": {
@@ -352,7 +352,7 @@
         "uniqueItems": true
       },
       "loggers": {
-        "description": "A list of logger names used by the requirements.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#loggers",
+        "description": "A list of logger names used by the requirements.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#loggers",
         "type": "array",
         "minItems": 1,
         "items": {
@@ -361,20 +361,247 @@
         "uniqueItems": true
       },
       "disabled": {
-        "description": "The reason for the integration being disabled.",
+        "description": "A short reason that keeps the integration from loading. Home Assistant logs it and does not set the integration up.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#disabled",
         "type": "string"
       },
+      "import_executor": {
+        "description": "Whether Home Assistant imports the integration in an executor rather than in the event loop. Defaults to true; set it to false only when the integration must be imported in the event loop. Custom integrations only.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#custom-integrations-only",
+        "type": "boolean"
+      },
+      "preview_features": {
+        "description": "Home Assistant Labs preview features the integration offers, keyed by feature slug.\nhttps://contributors.home-assistant.io/core/development/labs/",
+        "type": "object",
+        "propertyNames": {
+          "pattern": "^[a-z0-9_]+$"
+        },
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "feedback_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "learn_more_url": {
+              "type": "string",
+              "format": "uri"
+            },
+            "report_issue_url": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
       "iot_class": {
-        "description": "The IoT class of the integration, describing how the integration connects to the device or service.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#iot-class",
+        "description": "The IoT class of the integration, describing how the integration connects to the device or service.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#iot_class",
         "type": "string",
         "enum": ["assumed_state", "cloud_polling", "cloud_push", "local_polling", "local_push", "calculated"]
       },
       "single_config_entry": {
-        "description": "Whether the integration only supports a single config entry.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#single-config-entry-only",
+        "description": "Whether the integration only supports a single config entry.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#single_config_entry",
         "const": true
       },
+      "categories": {
+        "description": "One to three integration categories, `category` or `category.subcategory`, the primary one first. Optional for custom integrations; the Marketplace catalog publishes them. Home Assistant accepts the key from 2026.11.\nhttps://contributors.home-assistant.io/core/integrations/categories/",
+        "type": "array",
+        "minItems": 1,
+        "maxItems": 3,
+        "uniqueItems": true,
+        "items": {
+          "type": "string",
+          "enum": [
+            "ai_voice",
+            "ai_voice.ai_models",
+            "ai_voice.image_recognition",
+            "ai_voice.speech",
+            "ai_voice.voice_assistants",
+            "appliances_cleaning",
+            "appliances_cleaning.cleaning",
+            "appliances_cleaning.cooking",
+            "appliances_cleaning.laundry",
+            "blinds_curtains",
+            "buttons_remotes",
+            "climate",
+            "climate.air_purifiers_humidifiers",
+            "climate.fans_ventilation",
+            "climate.heat_pumps_air_conditioning",
+            "climate.thermostats_heating",
+            "climate.water_heaters",
+            "computers_network",
+            "computers_network.cloud_developer_tools",
+            "computers_network.monitoring",
+            "computers_network.nas_servers",
+            "computers_network.printers",
+            "computers_network.routers_network",
+            "diy_makers",
+            "diy_makers.boards_hardware",
+            "diy_makers.web_data_connectors",
+            "energy",
+            "energy.backup_power",
+            "energy.energy_prices",
+            "energy.ev_charging",
+            "energy.meters_monitoring",
+            "energy.solar_batteries",
+            "finance",
+            "garden_plants",
+            "health_wellbeing",
+            "helpers",
+            "helpers.calculate_value",
+            "helpers.store_value",
+            "hubs_protocols",
+            "hubs_protocols.building_automation",
+            "hubs_protocols.smart_home_hubs",
+            "hubs_protocols.wireless_protocols",
+            "lighting",
+            "lighting.bulbs_lamps",
+            "lighting.led_strips_controllers",
+            "lighting.lighting_systems",
+            "local_services",
+            "media_entertainment",
+            "media_entertainment.gaming",
+            "media_entertainment.music_radio_services",
+            "media_entertainment.speakers_audio",
+            "media_entertainment.tv_streaming",
+            "messaging_notifications",
+            "messaging_notifications.chat_apps",
+            "messaging_notifications.email_sms_calls",
+            "messaging_notifications.push_notifications",
+            "news_social_media",
+            "other_ecosystems",
+            "pets",
+            "plugs_switches",
+            "presence_location",
+            "presence_location.network_presence",
+            "presence_location.phones_companion_apps",
+            "presence_location.trackers",
+            "productivity_information",
+            "productivity_information.calendars_todos",
+            "productivity_information.documents_photos",
+            "productivity_information.shopping_groceries",
+            "security_safety",
+            "security_safety.alarm_systems",
+            "security_safety.cameras",
+            "security_safety.doorbells_intercoms",
+            "security_safety.locks_access",
+            "security_safety.smoke_co_alarms",
+            "sensors",
+            "sensors.air_quality",
+            "sensors.door_window",
+            "sensors.motion_presence",
+            "sensors.temperature_humidity",
+            "vehicles_transport",
+            "vehicles_transport.bikes_scooters",
+            "vehicles_transport.cars_evs",
+            "vehicles_transport.flights",
+            "vehicles_transport.public_transport",
+            "water",
+            "water.meters_leak_detection",
+            "water.pools_spas",
+            "water.water_treatment",
+            "weather_alerts",
+            "weather_alerts.air_quality_pollen",
+            "weather_alerts.forecasts",
+            "weather_alerts.public_warnings"
+          ],
+          "enumDescriptions": [
+            "AI & voice: AI models and agents, voice assistants, speech-to-text, text-to-speech and image recognition.",
+            "AI & voice › AI models",
+            "AI & voice › Image recognition",
+            "AI & voice › Speech",
+            "AI & voice › Voice assistants",
+            "Appliances & cleaning: Cooking and kitchen appliances (ovens, coffee machines, sous vide, cooking thermometers, brewing), laundry, robot vacuums and mops, and fragrance diffusers.",
+            "Appliances & cleaning › Cleaning",
+            "Appliances & cleaning › Cooking",
+            "Appliances & cleaning › Laundry",
+            "Blinds & curtains: Blinds, curtains, shutters, awnings, garage doors and gates.",
+            "Buttons & remotes: Smart buttons, remote controls, and infrared or radio blasters that control other devices.",
+            "Climate: Heating, cooling and ventilation: thermostats, heat pumps, air conditioners, fans, humidifiers, air purifiers and water heaters.",
+            "Climate › Air purifiers & humidifiers",
+            "Climate › Fans & ventilation",
+            "Climate › Heat pumps & air conditioning",
+            "Climate › Thermostats & heating",
+            "Climate › Water heaters",
+            "Computers & network: Routers, NAS, servers, printers, 3D printers, cloud hosting, developer tools and uptime monitoring.",
+            "Computers & network › Cloud & developer tools",
+            "Computers & network › Monitoring",
+            "Computers & network › NAS & servers",
+            "Computers & network › Printers",
+            "Computers & network › Routers & network",
+            "DIY & makers: Build your own: firmware, message brokers, and generic connectors for web APIs, databases, serial ports and Modbus.",
+            "DIY & makers › Boards & hardware interfaces",
+            "DIY & makers › Web & data connectors",
+            "Energy: Solar panels, home batteries, energy meters, EV chargers, generators, UPS, gas and propane tanks, and energy prices.",
+            "Energy › Backup power",
+            "Energy › Energy prices",
+            "Energy › EV charging",
+            "Energy › Meters & monitoring",
+            "Energy › Solar & batteries",
+            "Finance: Bank accounts, budgeting tools, stocks, currency exchange rates and cryptocurrency.",
+            "Garden & plants: Irrigation, lawn mowers, plant sensors, hydroponics and greenhouses.",
+            "Health & wellbeing: Scales, toothbrushes, sleep and fitness tracking, glucose monitoring and baby care.",
+            "Helpers: Entities you create yourself, without a device behind them: toggles, numbers, timers and schedules, and values calculated from other entities.",
+            "Helpers › Calculate a value",
+            "Helpers › Store a value",
+            "Hubs & protocols: Smart home hubs and radio protocols that each bring in many kinds of devices.",
+            "Hubs & protocols › Building automation",
+            "Hubs & protocols › Smart home hubs",
+            "Hubs & protocols › Wireless protocols",
+            "Lighting: Smart bulbs, light strips, fixtures and lighting systems.",
+            "Lighting › Bulbs & lamps",
+            "Lighting › LED strips & controllers",
+            "Lighting › Lighting systems",
+            "Local services: Waste collection, power outages, parking, fuel prices and other city or utility information.",
+            "Media & entertainment: TVs, speakers, streaming, music services, receivers, game consoles, game servers and radio.",
+            "Media & entertainment › Gaming",
+            "Media & entertainment › Music & radio services",
+            "Media & entertainment › Speakers & audio",
+            "Media & entertainment › TV & streaming",
+            "Messaging & notifications: Send and receive messages: push notifications, email, chat apps, SMS and phone calls.",
+            "Messaging & notifications › Chat apps",
+            "Messaging & notifications › Email, SMS & calls",
+            "Messaging & notifications › Push notifications",
+            "News & social media: Follow news and RSS feeds, and follow or post to social networks, blogs and video channels.",
+            "Other ecosystems: Use your Home Assistant devices in Apple Home, Alexa, Google Assistant and other platforms.",
+            "Pets: Feeders, litter boxes, pet doors, pet trackers and aquariums.",
+            "Plugs & switches: Smart plugs, light switches, dimmers and relays.",
+            "Presence & location: Know who is home and where devices are: phones, trackers and network presence.",
+            "Presence & location › Network presence",
+            "Presence & location › Phones & companion apps",
+            "Presence & location › Trackers",
+            "Productivity & information: Calendars, to-do and shopping lists, grocery delivery, package tracking, documents, photos and bookmarks.",
+            "Productivity & information › Calendars & to-dos",
+            "Productivity & information › Documents & photos",
+            "Productivity & information › Shopping & groceries",
+            "Security & safety: Cameras, doorbells, locks, keypads, alarm systems, sirens, and smoke alarms.",
+            "Security & safety › Alarm systems",
+            "Security & safety › Cameras",
+            "Security & safety › Doorbells & intercoms",
+            "Security & safety › Locks & access",
+            "Security & safety › Smoke & CO alarms",
+            "Sensors: Motion, door and window, temperature, humidity and air quality sensors.",
+            "Sensors › Air quality",
+            "Sensors › Door & window",
+            "Sensors › Motion & presence",
+            "Sensors › Temperature & humidity",
+            "Vehicles & transport: Cars, EVs, e-bikes, public transport and flight tracking.",
+            "Vehicles & transport › Bikes & scooters",
+            "Vehicles & transport › Cars & EVs",
+            "Vehicles & transport › Flights",
+            "Vehicles & transport › Public transport",
+            "Water: Water meters, leak detection, softeners and filters, tanks, pools and spas.",
+            "Water › Meters & leak detection",
+            "Water › Pools & spas",
+            "Water › Water treatment",
+            "Weather & alerts: Forecasts, outdoor air quality, pollen, and public warnings for storms, floods, earthquakes or air raids.",
+            "Weather & alerts › Air quality & pollen",
+            "Weather & alerts › Forecasts",
+            "Weather & alerts › Public warnings"
+          ]
+        }
+      },
       "version": {
-        "description": "The version of the integration. Required for custom integrations, should be omitted for core integrations.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#version",
+        "description": "The version of the integration. Required for custom integrations, should be omitted for core integrations.\nhttps://contributors.home-assistant.io/core/integrations/manifest/#custom-integrations-only",
         "type": "string",
         "pattern": "^([0-9]+)\\.([0-9]+)\\.([0-9]+)(?:[-\\.]([0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*))?(?:\\+[0-9A-Za-z-]+)?$"
       }

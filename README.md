@@ -1,8 +1,8 @@
 # Tibber Prices & Planning – Custom Integration for Home Assistant
 
-<p align="center">
+<div align="center">
   <img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/header.svg" alt="Tibber Prices & Planning" width="600">
-</p>
+</div>
 
 <!-- ha-marketplace:exclude-start -->
 
@@ -12,6 +12,7 @@
 [![Project Maintenance][maintenance-shield]][user_profile]
 
 <a href="https://www.buymeacoffee.com/jpawlowski" target="_blank"><img src="https://raw.githubusercontent.com/jpawlowski/hass.tibber_prices/main/images/bmc-button.svg" alt="Buy Me A Coffee" height="41" width="174"></a>
+
 <!-- ha-marketplace:exclude-end -->
 
 > **⚠️ Not affiliated with Tibber**
@@ -24,7 +25,7 @@
 **[📚 Complete Documentation](https://jpawlowski.github.io/hass.tibber_prices/)** — Installation, guides, examples, and full sensor reference:
 
 - **[👤 User Documentation](https://jpawlowski.github.io/hass.tibber_prices/user/)** — Setup, sensors, automations, dashboards
-- **[🔧 Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/)** — Architecture, contributing, development
+- **[🔧 Developer Documentation](https://github.com/jpawlowski/hass.tibber_prices/tree/main/docs/development)** — Architecture, contributing, development
 
 **Quick Links:**
 [Installation](https://jpawlowski.github.io/hass.tibber_prices/user/installation) · [Sensor Reference](https://jpawlowski.github.io/hass.tibber_prices/user/sensor-reference) · [Dashboard Cards](https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards) · [ApexCharts](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples) · [Automations](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) · [FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq) · [Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)
@@ -84,6 +85,7 @@ Home Assistant 2026.11 or newer (built-in Marketplace):
 Older versions with HACS:
 
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=jpawlowski&repository=hass.tibber_prices&category=integration)
+
 <!-- ha-marketplace:exclude-end -->
 
 Click "Download" to install.
@@ -91,6 +93,7 @@ Click "Download" to install.
 <!-- ha-marketplace:exclude-start -->
 
 With HACS, **restart Home Assistant** afterwards ([details](https://jpawlowski.github.io/hass.tibber_prices/user/installation)).
+
 <!-- ha-marketplace:exclude-end -->
 
 ### Step 2: Configure
@@ -228,11 +231,11 @@ The chart card covers the price curve with nothing to install. If you use [ApexC
 
 ## 🤝 Contributing
 
-Contributions are welcome! See the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/) to get started.
+Contributions are welcome! See the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Documentation](https://github.com/jpawlowski/hass.tibber_prices/tree/main/docs/development) to get started.
 
-- **[Developer Setup](https://jpawlowski.github.io/hass.tibber_prices/developer/setup)** — DevContainer-based development environment
-- **[Architecture Guide](https://jpawlowski.github.io/hass.tibber_prices/developer/architecture)** — Understand the codebase
-- **[Release Management](https://jpawlowski.github.io/hass.tibber_prices/developer/release-management)** — Release process and versioning
+- **[Developer Setup](https://github.com/jpawlowski/hass.tibber_prices/blob/main/docs/development/LOCAL_SETUP.md)** — Development environment, in the dev container or on your own machine
+- **[Architecture Guide](https://github.com/jpawlowski/hass.tibber_prices/blob/main/docs/development/ARCHITECTURE.md)** — Understand the codebase
+- **[Release Management](https://github.com/jpawlowski/hass.tibber_prices/blob/main/docs/development/RELEASE.md)** — Release process and versioning
 
 <!-- ha-marketplace:exclude-end -->
 
@@ -255,5 +258,3 @@ This project is licensed under the MIT License — see the [LICENSE](LICENSE) fi
 [license-shield]: https://img.shields.io/github/license/jpawlowski/hass.tibber_prices.svg?style=for-the-badge
 [maintenance-shield]: https://img.shields.io/badge/maintainer-%40jpawlowski-blue.svg?style=for-the-badge
 [user_profile]: https://github.com/jpawlowski
-[buymecoffee]: https://www.buymeacoffee.com/jpawlowski
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge

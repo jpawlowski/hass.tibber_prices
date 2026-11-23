@@ -1,7 +1,5 @@
 """Tests for the clock_hour_* attributes of the rolling hour price sensors."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo

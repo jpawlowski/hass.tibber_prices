@@ -181,6 +181,52 @@
           "high": "mdi:thumb-down"
         }
       }
+    },
+    "number": {
+      "best_price_flex_override": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "best_price_min_distance_override": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "best_price_min_period_length_override": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "best_price_min_periods_override": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "best_price_relaxation_attempts_override": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "best_price_gap_count_override": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "peak_price_flex_override": {
+        "default": "mdi:arrow-up-bold-circle"
+      },
+      "peak_price_min_distance_override": {
+        "default": "mdi:arrow-up-bold-circle"
+      },
+      "peak_price_min_period_length_override": {
+        "default": "mdi:arrow-up-bold-circle"
+      },
+      "peak_price_min_periods_override": {
+        "default": "mdi:arrow-up-bold-circle"
+      },
+      "peak_price_relaxation_attempts_override": {
+        "default": "mdi:arrow-up-bold-circle"
+      },
+      "peak_price_gap_count_override": {
+        "default": "mdi:arrow-up-bold-circle"
+      }
+    },
+    "switch": {
+      "best_price_enable_relaxation_override": {
+        "default": "mdi:arrow-down-bold-circle"
+      },
+      "peak_price_enable_relaxation_override": {
+        "default": "mdi:arrow-up-bold-circle"
+      }
     }
   },
   "services": {

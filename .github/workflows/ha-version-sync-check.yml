@@ -1,0 +1,46 @@
+name: HA Version Sync Check
+
+on:
+  pull_request:
+    paths:
+      - hacs.json
+      - mise.toml
+      - pyproject.toml
+      - requirements_test.txt
+      - .devcontainer/.env
+      - .github/workflows/*.yml
+      - script/ha-version-sync
+      - script/setup/bootstrap
+  push:
+    branches:
+      - main
+    paths:
+      - hacs.json
+      - mise.toml
+      - pyproject.toml
+      - requirements_test.txt
+      - .devcontainer/.env
+      - .github/workflows/*.yml
+      - script/ha-version-sync
+      - script/setup/bootstrap
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-ha-version-sync:
+    name: Ensure HA version sources are in sync
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read # check out the repository
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Validate HA version sync
+        run: ./script/ha-version-sync

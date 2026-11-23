@@ -1,7 +1,5 @@
 """The integration serves its dashboard cards itself and loads them into the frontend."""
 
-from __future__ import annotations
-
 import gzip
 import os
 from pathlib import Path

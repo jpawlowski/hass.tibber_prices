@@ -1,0 +1,142 @@
+---
+name: Toolchain Update Check
+
+# Dependabot has no mise ecosystem, so mise.toml and mise itself are raised by
+# Renovate alone. Where the Renovate GitHub App is not active, this keeps one
+# issue open that lists what is outdated, and closes it once nothing is or once
+# Renovate takes over.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * 1"
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  detect-renovate:
+    name: Detect an active Renovate
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    permissions:
+      issues: read # look for Renovate's dependency dashboard and pull requests
+      pull-requests: read # the issues endpoint lists pull requests too
+    outputs:
+      active: ${{ steps.detect.outputs.active }}
+    steps:
+      - name: Look for recent Renovate activity
+        id: detect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Renovate rewrites its dependency dashboard on every run, so an
+          # installed App leaves an issue or pull request updated recently.
+          since=$(date -u -d '45 days ago' +%Y-%m-%dT%H:%M:%SZ)
+          query="creator=renovate%5Bbot%5D&state=all&since=${since}&per_page=1"
+          count=$(gh api "repos/${GITHUB_REPOSITORY}/issues?${query}" --jq length)
+          if [[ "${count}" -gt 0 ]]; then
+            echo "Renovate is active — it raises mise.toml itself"
+            echo "active=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "No Renovate activity in 45 days — checking the toolchain here"
+            echo "active=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+  report:
+    name: Report outdated tools
+    needs: detect-renovate
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    permissions:
+      contents: read # check out the repository
+      issues: write # open, update or close the report issue
+    env:
+      MISE_ENV: devcontainer # report mise.devcontainer.toml too
+    steps:
+      - name: Checkout the repository
+        if: needs.detect-renovate.outputs.active == 'false'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up mise
+        if: needs.detect-renovate.outputs.active == 'false'
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
+        with:
+          # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
+          version: "2026.11.12"
+          cache: false
+          install: false
+
+      - name: Collect outdated tools
+        if: needs.detect-renovate.outputs.active == 'false'
+        id: collect
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          {
+            row='"| `\(.key)` | \(.value.requested // .value.current) | \(.value.latest) |"'
+            # The tools are not installed here, so mise lists every one; only a set bump is a newer release.
+            mise outdated --bump --json | jq -r "to_entries[] | select(.key != \"python\" and .value.bump != null) | ${row}"
+            # Python follows Home Assistant, so only a newer patch release of the pinned minor version counts.
+            python=$(sed -n 's/^python *= *"\([^"]*\)".*/\1/p' mise.toml)
+            if [[ -n "${python}" ]]; then
+              python_latest=$(mise latest "python@${python%.*}")
+              if [[ -n "${python_latest}" && "${python}" != "${python_latest}" ]]; then
+                echo "| \`python\` | ${python} | ${python_latest} |"
+              fi
+            fi
+            pinned=$(sed -n 's/^min_version *= *"\([^"]*\)".*/\1/p' mise.toml)
+            latest=$(gh api repos/jdx/mise/releases/latest --jq '.tag_name | ltrimstr("v")')
+            if [[ -n "${pinned}" && "${pinned}" != "${latest}" ]]; then
+              echo "| \`mise\` (min_version, workflows, dev container) | ${pinned} | ${latest} |"
+            fi
+          } > rows.md
+          if [[ -s rows.md ]]; then
+            {
+              echo "These pins have newer releases. Renovate is not active on this repository, so they are raised"
+              echo "by hand: update \`mise.toml\` or \`mise.devcontainer.toml\`, and for \`mise\` itself also"
+              echo "the \`version:\` input of \`jdx/mise-action\` in the workflows and the mise feature in"
+              echo "\`.devcontainer/devcontainer.json\`."
+              echo "Python follows Home Assistant — raise it only within what \`script/ha-version-sync\` accepts."
+              echo ""
+              echo "| Tool | Pinned | Latest |"
+              echo "| ---- | ------ | ------ |"
+              cat rows.md
+              echo ""
+              echo "Installing the [Renovate GitHub App](https://github.com/apps/renovate) raises these automatically"
+              echo "(\`.github/renovate.json\`), and this check then stops reporting."
+            } > report.md
+            cat report.md >> "${GITHUB_STEP_SUMMARY}"
+            echo "outdated=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Every pin in mise.toml and mise.devcontainer.toml is current." >> "${GITHUB_STEP_SUMMARY}"
+            echo "outdated=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Open, update or close the report issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OUTDATED: ${{ steps.collect.outputs.outdated }}
+          RENOVATE: ${{ needs.detect-renovate.outputs.active }}
+          TITLE: "Toolchain updates available"
+        run: |
+          number=$(gh issue list --repo "${GITHUB_REPOSITORY}" --state open --author "app/github-actions" \
+            --search "\"${TITLE}\" in:title" --json number --jq '.[0].number // empty')
+          if [[ "${OUTDATED}" == "true" ]]; then
+            if [[ -n "${number}" ]]; then
+              gh issue edit "${number}" --repo "${GITHUB_REPOSITORY}" --body-file report.md
+            else
+              gh issue create --repo "${GITHUB_REPOSITORY}" --title "${TITLE}" --body-file report.md
+            fi
+          elif [[ -n "${number}" && "${RENOVATE}" == "true" ]]; then
+            gh issue close "${number}" --repo "${GITHUB_REPOSITORY}" \
+              --comment "Renovate is active on this repository and raises these pins itself."
+          elif [[ -n "${number}" ]]; then
+            gh issue close "${number}" --repo "${GITHUB_REPOSITORY}" \
+              --comment "Every pin in mise.toml and mise.devcontainer.toml is current."
+          fi

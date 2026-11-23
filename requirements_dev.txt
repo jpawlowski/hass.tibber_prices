@@ -1,0 +1,31 @@
+# Additional development tools beyond Home Assistant's requirements_test.txt
+#
+# Note: The following are already provided by HA's requirements_test.txt, which
+# script/setup/bootstrap downloads and installs for the pinned HA version:
+#   - pytest and pytest plugins (pytest-asyncio, pytest-aiohttp, pytest-cov, etc.)
+#   - prek (git hook framework — reads .pre-commit-config.yaml)
+#   - ruff (linting and formatting) via requirements_test_pre_commit.txt
+#   - zizmor (GitHub Actions auditing) via requirements_test_pre_commit.txt
+#   - mypy (type checking - we use pyright instead)
+#   - codespell (spell checking) via requirements_test_pre_commit.txt
+#   - pylint (linting)
+#
+# Install with: uv pip install -r requirements_dev.txt
+
+# Type Checking
+# HA Core uses mypy; this blueprint uses the Node.js pyright package via package.json
+
+# Better logging for development scripts
+colorlog==6.12.0
+
+# Agent Skills reference validator (https://agentskills.io)
+# Optional cross-check used by script/skills-check on top of its own validation.
+# Upstream labels this a demonstration library, so the built-in checks in
+# script/.lib/skills_check.py stay authoritative and the script degrades
+# gracefully when it is absent.
+skills-ref==0.1.1
+
+# Performance optimizations (optional but recommended for faster development)
+# These speed up Home Assistant's startup and runtime
+zlib_ng==1.1.0
+isal==1.9.1

@@ -1,0 +1,205 @@
+"""
+Service handler for get_price service.
+
+This service fetches raw price interval data for any time range using the
+interval pool's intelligent caching. Only intervals not already cached are
+fetched from the Tibber API.
+
+Functions:
+    handle_get_price: Service handler for fetching price data
+
+"""
+
+from datetime import datetime
+import logging
+from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
+
+import probatio
+
+from custom_components.tibber_prices.const import DOMAIN
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv
+from homeassistant.util import dt as dt_util
+
+from .entity_resolver import or_entity_ref, resolve_entity_references
+from .helpers import async_fetch_service_intervals, resolve_service_target
+
+if TYPE_CHECKING:
+    from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
+
+_LOGGER = logging.getLogger(__name__)
+
+GET_PRICE_SERVICE_NAME = "get_price"
+
+_PRICE_ENTITY_PARAMS: dict[str, type] = {
+    "start_time": datetime,
+    "end_time": datetime,
+}
+
+GET_PRICE_SERVICE_SCHEMA = probatio.Schema(
+    {
+        probatio.Optional("entry_id", default=""): cv.string,
+        probatio.Optional("view_id", default=""): cv.string,
+        probatio.Required("start_time"): or_entity_ref(cv.datetime),
+        probatio.Required("end_time"): or_entity_ref(cv.datetime),
+    }
+)
+
+
+def _raise_user_data_error() -> None:
+    """Raise user data not available error."""
+    msg = "User data not available"
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="user_data_not_available",
+    ) from ValueError(msg)
+
+
+async def handle_get_price(call: ServiceCall) -> ServiceResponse:
+    """
+    Handle get_price service call.
+
+    Fetches price data for a specified time range using the interval pool.
+    The pool intelligently caches intervals and only fetches missing data from the API.
+
+    Args:
+        call: Service call with entry_id, start_time, and end_time
+
+    Returns:
+        Dict with price data and metadata
+
+    Raises:
+        ServiceValidationError: If arguments invalid or request fails
+
+    """
+    hass: HomeAssistant = call.hass
+
+    # Resolve entity references
+    data, resolved_refs = resolve_entity_references(hass, call.data, _PRICE_ENTITY_PARAMS)
+
+    entry_id: str = data.get("entry_id", "")
+    view_device_id: str = data.get("view_id", "")
+    start_time: datetime = data["start_time"]
+    end_time: datetime = data["end_time"]
+
+    # Validate and get entry data
+    target = resolve_service_target(hass, entry_id, view_device_id)
+    entry = target.entry
+    coordinator = target.coordinator
+
+    # Get home_id from entry
+    home_id = entry.data.get("home_id")
+    if not home_id:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="missing_home_id",
+        )
+
+    # Get API client from coordinator
+    api_client = coordinator.api
+
+    # Get user data (needed for timezone) - coordinator doesn't expose this publicly yet
+    user_data = coordinator._cached_user_data  # noqa: SLF001
+
+    if not user_data:
+        _raise_user_data_error()
+
+    # Extract home timezone from user_data
+    home_timezone = None
+    if user_data and "viewer" in user_data:
+        for home in user_data["viewer"].get("homes", []):
+            if home.get("id") == home_id:
+                home_timezone = home.get("timeZone")
+                break
+
+    if not home_timezone:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="timezone_not_found",
+        )
+
+    # Ensure times are timezone-aware using HOME timezone (not HA server timezone!)
+    # CRITICAL TWO-STEP PROCESS:
+    # 1. GUI gives us naive datetime in HA SERVER timezone → localize to HA timezone
+    # 2. Convert from HA timezone to HOME timezone (Tibber home location)
+    home_tz = ZoneInfo(home_timezone)
+
+    if start_time.tzinfo is None:
+        # Step 1: Localize to HA server timezone
+        start_time = dt_util.as_local(start_time)
+    # Step 2: Convert to home timezone
+    start_time = start_time.astimezone(home_tz)
+
+    if end_time.tzinfo is None:
+        # Step 1: Localize to HA server timezone
+        end_time = dt_util.as_local(end_time)
+    # Step 2: Convert to home timezone
+    end_time = end_time.astimezone(home_tz)
+
+    # Validate: end must be after start
+    if end_time <= start_time:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="end_before_start",
+        )
+
+    _LOGGER.info(
+        "get_price service called: entry_id=%s, home_id=%s, range=%s to %s",
+        entry_id,
+        home_id,
+        start_time,
+        end_time,
+    )
+
+    # Get interval pool from entry runtime_data (one pool per config entry)
+    pool = target.interval_pool
+
+    # Resilient fetch: never impairs sensors, returns empty result on API failure
+    # instead of raising. Single-home architecture: pool knows its home_id.
+    price_info, fetch_ok = await async_fetch_service_intervals(
+        pool,
+        api_client=api_client,
+        user_data=user_data,
+        start_time=start_time,
+        end_time=end_time,
+        service_label="get_price",
+    )
+
+    if not fetch_ok:
+        # Price data could not be fetched (API outage on an uncached range). Return a
+        # well-formed empty response with success=False so automations can detect this
+        # without inspecting the data fields.
+        response = {
+            "success": False,
+            "reason": "price_data_unavailable",
+            "home_id": home_id,
+            "start_time": start_time.isoformat(),
+            "end_time": end_time.isoformat(),
+            "interval_count": 0,
+            "price_info": [],
+        }
+        if resolved_refs:
+            response["_resolved"] = resolved_refs
+        _LOGGER.info("get_price service completed: price data unavailable")
+        return response
+
+    # Add metadata to response
+    response = {
+        "success": True,
+        "home_id": home_id,
+        "start_time": start_time.isoformat(),
+        "end_time": end_time.isoformat(),
+        "interval_count": len(price_info),
+        "price_info": price_info,
+    }
+
+    _LOGGER.info(
+        "get_price service completed: fetched %d intervals",
+        len(price_info),
+    )
+
+    if resolved_refs:
+        response["_resolved"] = resolved_refs
+
+    return response

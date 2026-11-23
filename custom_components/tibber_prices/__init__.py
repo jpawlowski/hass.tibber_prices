@@ -5,13 +5,11 @@ For more details about this integration, please refer to
 https://github.com/jpawlowski/hass.tibber_prices
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 import shutil
 from typing import TYPE_CHECKING, Any
 
-import probatio as vol
+import probatio
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
@@ -41,16 +39,16 @@ from .const import (
     async_load_translations,
 )
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
-from .data import TibberPricesData, TibberPricesSubentryData
-from .frontend import async_register_frontend
-from .interval_pool import (
+from .coordinator.interval_pool import (
     TibberPricesIntervalPool,
     async_load_pool_state,
     async_remove_pool_storage,
     async_save_pool_state,
 )
+from .data import TibberPricesData, TibberPricesSubentryData
+from .frontend import async_register_frontend
 from .migrations import async_migrate_entry_version, check_entity_migrations
-from .services import async_setup_services
+from .service_actions import async_setup_services
 from .time_travel import iter_time_travel_subentries, subentry_storage_id
 
 if TYPE_CHECKING:
@@ -67,39 +65,41 @@ PLATFORMS: list[Platform] = [
 ]
 
 # Configuration schema for configuration.yaml
-CONFIG_SCHEMA = vol.Schema(
+CONFIG_SCHEMA = probatio.Schema(
     {
-        DOMAIN: vol.Schema(
+        DOMAIN: probatio.Schema(
             {
-                vol.Optional("chart_export"): vol.Schema(
+                probatio.Optional("chart_export"): probatio.Schema(
                     {
-                        vol.Optional("day"): vol.All(vol.Any(str, list), vol.Coerce(list)),
-                        vol.Optional("resolution"): str,
-                        vol.Optional("output_format"): str,
-                        vol.Optional("subunit_currency"): bool,
-                        vol.Optional("round_decimals"): vol.All(int, vol.Range(min=0, max=10)),
-                        vol.Optional("include_level"): bool,
-                        vol.Optional("include_rating_level"): bool,
-                        vol.Optional("include_average"): bool,
-                        vol.Optional("level_filter"): vol.All(vol.Any(str, list), vol.Coerce(list)),
-                        vol.Optional("rating_level_filter"): vol.All(vol.Any(str, list), vol.Coerce(list)),
-                        vol.Optional("period_filter"): str,
-                        vol.Optional("insert_nulls"): str,
-                        vol.Optional("add_trailing_null"): bool,
-                        vol.Optional("array_fields"): str,
-                        vol.Optional("start_time_field"): str,
-                        vol.Optional("end_time_field"): str,
-                        vol.Optional("price_field"): str,
-                        vol.Optional("level_field"): str,
-                        vol.Optional("rating_level_field"): str,
-                        vol.Optional("average_field"): str,
-                        vol.Optional("data_key"): str,
+                        probatio.Optional("day"): probatio.All(probatio.Any(str, list), probatio.Coerce(list)),
+                        probatio.Optional("resolution"): str,
+                        probatio.Optional("output_format"): str,
+                        probatio.Optional("subunit_currency"): bool,
+                        probatio.Optional("round_decimals"): probatio.All(int, probatio.Range(min=0, max=10)),
+                        probatio.Optional("include_level"): bool,
+                        probatio.Optional("include_rating_level"): bool,
+                        probatio.Optional("include_average"): bool,
+                        probatio.Optional("level_filter"): probatio.All(probatio.Any(str, list), probatio.Coerce(list)),
+                        probatio.Optional("rating_level_filter"): probatio.All(
+                            probatio.Any(str, list), probatio.Coerce(list)
+                        ),
+                        probatio.Optional("period_filter"): str,
+                        probatio.Optional("insert_nulls"): str,
+                        probatio.Optional("add_trailing_null"): bool,
+                        probatio.Optional("array_fields"): str,
+                        probatio.Optional("start_time_field"): str,
+                        probatio.Optional("end_time_field"): str,
+                        probatio.Optional("price_field"): str,
+                        probatio.Optional("level_field"): str,
+                        probatio.Optional("rating_level_field"): str,
+                        probatio.Optional("average_field"): str,
+                        probatio.Optional("data_key"): str,
                     }
                 ),
             }
         ),
     },
-    extra=vol.ALLOW_EXTRA,
+    extra=probatio.ALLOW_EXTRA,
 )
 
 
@@ -157,6 +157,7 @@ async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
         hass.data[DOMAIN] = {}
 
     await async_register_frontend(hass)
+    async_setup_services(hass)
 
     # Extract chart_export config if present
     domain_config = config.get(DOMAIN, {})
@@ -285,7 +286,7 @@ async def async_setup_entry(
     entry: TibberPricesConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
-    LOGGER.debug(f"[tibber_prices] async_setup_entry called for entry_id={entry.entry_id}")
+    LOGGER.debug("[tibber_prices] async_setup_entry called for entry_id=%s", entry.entry_id)
 
     # Migrate config options if needed (e.g., set default currency display mode for existing configs)
     await _migrate_config_options(hass, entry)
@@ -301,9 +302,6 @@ async def async_setup_entry(
     if hass.config.language and hass.config.language != "en":
         await async_load_translations(hass, hass.config.language)
         await async_load_standard_translations(hass, hass.config.language)
-
-    # Register services when a config entry is loaded
-    async_setup_services(hass)
 
     integration = async_get_loaded_integration(hass, entry.domain)
 
@@ -588,16 +586,6 @@ async def async_unload_entry(
             for view in entry.runtime_data.subentries.values():
                 await view.coordinator.clear_cache()
 
-    # Unregister services if this was the last config entry
-    if not hass.config_entries.async_entries(DOMAIN):
-        for service in [
-            "get_chartdata",
-            "get_apexcharts_yaml",
-            "refresh_user_data",
-        ]:
-            if hass.services.has_service(DOMAIN, service):
-                hass.services.async_remove(DOMAIN, service)
-
     return unload_ok
 
 
@@ -607,13 +595,12 @@ async def async_remove_entry(
 ) -> None:
     """Handle removal of an entry."""
     # Remove coordinator cache storage
-    if storage := Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}"):
-        LOGGER.debug(f"[tibber_prices] async_remove_entry removing cache store for entry_id={entry.entry_id}")
-        await storage.async_remove()
+    LOGGER.debug("[tibber_prices] async_remove_entry removing cache store for entry_id=%s", entry.entry_id)
+    await Store(hass, STORAGE_VERSION, f"{DOMAIN}.{entry.entry_id}").async_remove()
 
     # Remove interval pool storage
     await async_remove_pool_storage(hass, entry.entry_id)
-    LOGGER.debug(f"[tibber_prices] async_remove_entry removed interval pool storage for entry_id={entry.entry_id}")
+    LOGGER.debug("[tibber_prices] async_remove_entry removed interval pool storage for entry_id=%s", entry.entry_id)
 
     # Each time-travel view has its own cache store and interval pool storage
     for subentry in iter_time_travel_subentries(entry):
@@ -626,11 +613,3 @@ async def async_remove_entry(
     # remaining = [e for e in hass.config_entries.async_entries(DOMAIN) if e.entry_id != entry.entry_id]
     # if not remaining:
     #     await hass.async_add_executor_job(_remove_blueprints, hass.config.config_dir)
-
-
-async def async_reload_entry(
-    hass: HomeAssistant,
-    entry: TibberPricesConfigEntry,
-) -> None:
-    """Reload config entry."""
-    await hass.config_entries.async_reload(entry.entry_id)

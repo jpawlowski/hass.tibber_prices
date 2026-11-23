@@ -24,8 +24,6 @@ Note: Price data is NOT cached in this module - IntervalPool is the single
 source of truth. This module only caches user_data for daily refresh cycle.
 """
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -55,7 +53,7 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from custom_components.tibber_prices.api import TibberPricesApiClient
-    from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
+    from custom_components.tibber_prices.coordinator.interval_pool import TibberPricesIntervalPool
 
     from .time_service import TibberPricesTimeService
 

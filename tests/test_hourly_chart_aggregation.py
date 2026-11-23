@@ -1,14 +1,12 @@
 """Tests for aggregate_to_hourly: chart hours are clock hours (:00-:59)."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.tibber_prices.services.formatters import aggregate_to_hourly
+from custom_components.tibber_prices.service_actions.formatters import aggregate_to_hourly
 from homeassistant.util import dt as dt_util
 
 BASE = datetime(2026, 10, 13, 5, 0, tzinfo=dt_util.get_default_time_zone())
@@ -75,7 +73,7 @@ def test_repeated_hour_at_dst_fall_back_stays_two_hours() -> None:
 @pytest.mark.unit
 def test_chart_timestamps_keep_both_fall_back_hours() -> None:
     """get_chartdata's timestamp list keeps the two 02:00 hours apart (a set of local times merges them)."""
-    from custom_components.tibber_prices.services.get_chartdata import _unique_timestamps  # noqa: PLC0415
+    from custom_components.tibber_prices.service_actions.get_chartdata import _unique_timestamps  # noqa: PLC0415
 
     berlin = ZoneInfo("Europe/Berlin")
     first = datetime(2026, 10, 25, 0, 0, tzinfo=UTC)  # 02:00 CEST

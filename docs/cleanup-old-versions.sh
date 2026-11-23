@@ -10,7 +10,7 @@ KEEP_POST_1_0_MINORS=3
 
 echo "🧹 Cleaning up old documentation versions..."
 
-for doc_type in "user" "developer"; do
+for doc_type in "user"; do
   VERSIONS_FILE="${doc_type}_versions.json"
   VERSIONED_DOCS_DIR="${doc_type}_versioned_docs"
 

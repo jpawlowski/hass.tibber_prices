@@ -1,0 +1,110 @@
+#!/bin/bash
+
+# script/develop: Start Home Assistant in development mode
+#
+# Starts Home Assistant with asyncio debug mode in the active Home Assistant environment and its config
+# directory (script/ha-env); --env switches first, as script/ha-env use does. Log levels come from
+# config/configuration.yaml. Cleans up accidental package installations and loads custom_components/.
+#
+# Usage:
+#   ./script/develop [--env minimum|latest|beta|custom [--force]]
+#
+# Examples:
+#   ./script/develop
+#   ./script/develop --env beta
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+cd "$SCRIPT_DIR/.."
+
+# shellcheck source=script/.lib/output.sh
+source "$SCRIPT_DIR/.lib/output.sh"
+# shellcheck source=script/.lib/ha_envs.sh
+source "$SCRIPT_DIR/.lib/ha_envs.sh"
+
+ENV_SLOT=""
+USE_ARGS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+    --env)
+        ENV_SLOT="${2:?--env needs minimum, latest, beta or custom}"
+        shift 2
+        ;;
+    --force)
+        USE_ARGS+=(--force)
+        shift
+        ;;
+    *)
+        log_error "Unknown option: $1 (usage: script/develop [--env minimum|latest|beta|custom [--force]])"
+        exit 2
+        ;;
+    esac
+done
+
+# Switch before stopping anything: script/ha-env use refuses while Home Assistant runs, unless --force.
+if [[ -n $ENV_SLOT ]]; then
+    if [[ -z $(ha_envs_version_of "$ENV_SLOT") ]]; then
+        "$SCRIPT_DIR/ha-env" add "$ENV_SLOT"
+    fi
+    "$SCRIPT_DIR/ha-env" use "${USE_ARGS[@]}" "$ENV_SLOT"
+fi
+
+# Kill any existing Home Assistant and debugpy processes
+log_header "Cleaning up existing processes"
+if pkill -f "hass --config ${PWD}/(config|\.local/ha-config/)"; then
+    log_info "Stopped existing Home Assistant process"
+fi
+if pkill -f "debugpy.*5678"; then
+    log_info "Stopped existing debugpy process (port 5678)"
+fi
+sleep 1 # Give processes time to terminate
+
+activate_venv
+ha_envs_notice
+SLOT="$(ha_current_slot)"
+CONFIG_PATH="${PWD}/${HA_CONFIG_DIR}"
+HA_RUNNING_VERSION="$(python3 -c 'from homeassistant.const import __version__; print(__version__)')"
+
+# Clean up critical issues (accidental package installations)
+# Uses minimal mode to avoid deleting useful caches
+"$SCRIPT_DIR/clean" --minimal
+
+# Create config dir if not present
+if [[ ! -d ${PWD}/config ]]; then
+    mkdir -p "${PWD}/config"
+    hass --config "${PWD}/config" --script ensure_config
+fi
+if [[ $HA_CONFIG_DIR != config ]]; then
+    ha_envs_prepare_config "$HA_CONFIG_DIR" "$HA_RUNNING_VERSION"
+fi
+ha_envs_guard_config "$HA_CONFIG_DIR" "$HA_RUNNING_VERSION"
+
+"$SCRIPT_DIR/setup/seed-http-config"
+"$SCRIPT_DIR/setup/sync-hacs"
+
+run_hook "develop" "pre"
+
+# Mint the token script/ha authenticates with. Deliberately after the hook, so a
+# downstream repository can opt out with `export HA_DEV_TOKEN=0` in
+# script/hooks/develop.pre.sh. Never fatal — Home Assistant must still start.
+"$SCRIPT_DIR/setup/seed-auth" || log_warning "Continuing without a development token"
+
+# The repository root on the path adds <root>/custom_components to the
+# custom_components namespace package, beside config/custom_components.
+export PYTHONPATH="${PWD}${PYTHONPATH:+:${PYTHONPATH}}"
+
+log_header "Starting Home Assistant in development mode"
+log_info "Home Assistant: ${HA_RUNNING_VERSION}${SLOT:+ ($SLOT)}"
+log_info "Config directory: ${CONFIG_PATH}"
+mkdir -p .local
+jq -n --arg slot "$SLOT" --arg version "$HA_RUNNING_VERSION" --arg config_dir "$HA_CONFIG_DIR" \
+    --arg started_by "$(ha_actor)" --arg started_at "$(date -Is)" \
+    '{slot: $slot, version: $version, config_dir: $config_dir, started_by: $started_by, started_at: $started_at}' \
+    >.local/ha-develop.json
+log_info "asyncio debug mode: enabled"
+log_separator
+echo ""
+
+# Start Home Assistant
+hass --config "${CONFIG_PATH}" --debug

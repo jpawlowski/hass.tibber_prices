@@ -1,7 +1,5 @@
 """Period building and basic filtering logic."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING, Any

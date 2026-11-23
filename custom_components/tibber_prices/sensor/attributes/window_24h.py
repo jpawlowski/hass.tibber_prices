@@ -1,7 +1,5 @@
 """24-hour window attribute builders for Tibber Prices sensors."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.coordinator.helpers import get_intervals_for_day_offsets

@@ -1,10 +1,8 @@
 """Tests for config flow validators."""
 
-from __future__ import annotations
-
 import pytest
 
-from custom_components.tibber_prices.config_flow_handlers.validators import (
+from custom_components.tibber_prices.config_flow_handler.validators import (
     validate_best_price_distance_percentage,
     validate_distance_percentage,
     validate_flex_percentage,

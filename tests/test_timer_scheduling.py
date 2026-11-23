@@ -6,7 +6,7 @@ This tests the three-timer architecture:
 - Timer #2: Quarter-hour entity refresh (:00, :15, :30, :45)
 - Timer #3: Timing sensors refresh (:00, :30 every minute)
 
-See docs/development/timer-architecture.md for architecture overview.
+See docs/development/ARCHITECTURE.md ("Timers and listeners") for the architecture overview.
 """
 
 from datetime import UTC, datetime

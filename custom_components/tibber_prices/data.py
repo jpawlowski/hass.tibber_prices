@@ -1,7 +1,5 @@
 """Custom types for tibber_prices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
@@ -11,7 +9,7 @@ if TYPE_CHECKING:
 
     from .api import TibberPricesApiClient
     from .coordinator import TibberPricesDataUpdateCoordinator
-    from .interval_pool import TibberPricesIntervalPool
+    from .coordinator.interval_pool import TibberPricesIntervalPool
 
 
 @dataclass

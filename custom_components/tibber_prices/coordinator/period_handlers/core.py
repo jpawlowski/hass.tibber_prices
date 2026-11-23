@@ -1,7 +1,6 @@
 """Core period calculation API - main entry points."""
 
-from __future__ import annotations
-
+import logging
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -28,7 +27,9 @@ from .period_statistics import extract_period_summaries
 from .shape_extension import extend_periods_for_shape
 from .types import TibberPricesThresholdConfig
 
-# Flex limits to prevent degenerate behavior (see docs/development/period-calculation-theory.md)
+_LOGGER = logging.getLogger(__name__)
+
+# Flex limits to prevent degenerate behavior (see docs/development/PERIODS.md)
 MAX_SAFE_FLEX = 0.50  # 50% - hard cap: above this, period detection becomes unreliable
 MIN_SEGMENT_FORCING_INTERVALS = 8  # Minimum intervals per day half to attempt segment forcing (< 2 hours is too few)
 
@@ -73,12 +74,7 @@ def calculate_periods(
         - reference_data: Daily min/max/avg for on-demand annotation
 
     """
-    # Import logger at the start of function
-    import logging  # noqa: PLC0415
-
     from .types import INDENT_L0  # noqa: PLC0415
-
-    _LOGGER = logging.getLogger(__name__)
 
     # Extract config values
     reverse_sort = config.reverse_sort
@@ -334,12 +330,8 @@ def _apply_segment_forcing(
         Updated periods list with any new segment-forced periods appended.
 
     """
-    import logging  # noqa: PLC0415
-
     from .period_building import build_periods  # noqa: PLC0415
     from .types import DAY_PATTERN_DOUBLE_DIP, DAY_PATTERN_DUCK_CURVE, INDENT_L1, INDENT_L2  # noqa: PLC0415
-
-    _LOGGER = logging.getLogger(__name__)
 
     reverse_sort = config.reverse_sort
     target_pattern = DAY_PATTERN_DUCK_CURVE if reverse_sort else DAY_PATTERN_DOUBLE_DIP

@@ -14,8 +14,6 @@ These functions operate on raw data structures (dicts, lists) and do NOT depend 
 For entity-specific utilities (icons, colors, attributes), see entity_utils/ package.
 """
 
-from __future__ import annotations
-
 from .average import (
     calculate_current_leading_max,
     calculate_current_leading_mean,

@@ -58,4 +58,4 @@ This is an independent, community-maintained custom integration. It is **not** a
 
 ---
 
-**Note:** These guides are for end users. If you want to contribute to development, see the [Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/).
+**Note:** These guides are for end users. If you want to contribute to development, see the [Developer Documentation](https://github.com/jpawlowski/hass.tibber_prices/tree/main/docs/development).

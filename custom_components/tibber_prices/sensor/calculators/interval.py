@@ -1,7 +1,5 @@
 """Calculator for interval-based sensors (current/next/previous interval values)."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor

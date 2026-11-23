@@ -11,8 +11,6 @@ Separation of concerns:
 - __init__.py _migrate_config_options(): Config option format changes
 """
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 

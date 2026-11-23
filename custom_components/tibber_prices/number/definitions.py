@@ -9,8 +9,6 @@ When enabled, the entity value takes precedence over the options flow setting.
 When disabled (default), the options flow setting is used.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntityDescription, NumberMode
@@ -39,7 +37,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_flex_override",
         translation_key="best_price_flex_override",
-        icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=0,
@@ -55,7 +52,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_min_distance_override",
         translation_key="best_price_min_distance_override",
-        icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=-50,
@@ -71,7 +67,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_min_period_length_override",
         translation_key="best_price_min_period_length_override",
-        icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=15,
@@ -87,7 +82,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_min_periods_override",
         translation_key="best_price_min_periods_override",
-        icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=1,
@@ -102,7 +96,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_relaxation_attempts_override",
         translation_key="best_price_relaxation_attempts_override",
-        icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=1,
@@ -117,7 +110,6 @@ BEST_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="best_price_gap_count_override",
         translation_key="best_price_gap_count_override",
-        icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=0,
@@ -139,7 +131,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_flex_override",
         translation_key="peak_price_flex_override",
-        icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=-50,
@@ -155,7 +146,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_min_distance_override",
         translation_key="peak_price_min_distance_override",
-        icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=0,
@@ -171,7 +161,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_min_period_length_override",
         translation_key="peak_price_min_period_length_override",
-        icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=15,
@@ -187,7 +176,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_min_periods_override",
         translation_key="peak_price_min_periods_override",
-        icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=1,
@@ -202,7 +190,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_relaxation_attempts_override",
         translation_key="peak_price_relaxation_attempts_override",
-        icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=1,
@@ -217,7 +204,6 @@ PEAK_PRICE_NUMBER_ENTITIES = (
     TibberPricesNumberEntityDescription(
         key="peak_price_gap_count_override",
         translation_key="peak_price_gap_count_override",
-        icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         native_min_value=0,

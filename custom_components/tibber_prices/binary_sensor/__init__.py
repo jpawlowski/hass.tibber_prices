@@ -13,8 +13,6 @@ cheap periods" without complex template logic.
 See definitions.py for complete binary sensor catalog.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.const import EntityCategory
@@ -26,6 +24,8 @@ if TYPE_CHECKING:
     from custom_components.tibber_prices.data import TibberPricesConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

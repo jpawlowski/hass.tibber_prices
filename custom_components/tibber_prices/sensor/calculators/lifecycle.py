@@ -1,7 +1,5 @@
 """Calculator for data lifecycle status tracking."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from custom_components.tibber_prices.coordinator.constants import UPDATE_INTERVAL

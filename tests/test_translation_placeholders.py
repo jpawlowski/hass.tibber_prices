@@ -12,8 +12,6 @@ An apostrophe inside a word (`Tibber's`, `view's`) is not an escape - ICU only t
 a quote specially when a brace, or another quote, follows it directly.
 """
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import re

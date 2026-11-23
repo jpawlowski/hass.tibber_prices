@@ -7,8 +7,6 @@ requires: one device per config entry plus one device per config subentry, with
 identifiers scoped per entry.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import Any
 from unittest.mock import Mock

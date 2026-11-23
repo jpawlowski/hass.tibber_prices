@@ -1,7 +1,5 @@
 """Enhanced coordinator for fetching Tibber price data with comprehensive caching."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING, Any
@@ -14,7 +12,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 if TYPE_CHECKING:
     from datetime import date, datetime
 
-    from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+    from custom_components.tibber_prices.coordinator.interval_pool import TibberPricesIntervalPool
+    from custom_components.tibber_prices.data import TibberPricesConfigEntry
+    from homeassistant.config_entries import ConfigSubentry
 
     from .listeners import TimeServiceCallback
 
@@ -112,7 +112,6 @@ def get_connection_state(coordinator: TibberPricesDataUpdateCoordinator) -> bool
 #     * Transforms data only when needed (config change, new data, midnight)
 #   - Load distribution:
 #     * Start time varies per installation → natural distribution
-#     * Tomorrow data check adds 0-30s random delay → prevents thundering herd
 #   - Midnight coordination:
 #     * Atomic check using _check_midnight_turnover_needed(now)
 #     * If turnover needed, performs it and returns early
@@ -169,12 +168,14 @@ def get_connection_state(coordinator: TibberPricesDataUpdateCoordinator) -> bool
 class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Enhanced coordinator with main/subentry pattern and comprehensive caching."""
 
+    config_entry: TibberPricesConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TibberPricesConfigEntry,
         api_client: TibberPricesApiClient,
-        interval_pool: Any,  # TibberPricesIntervalPool - Any to avoid circular import
+        interval_pool: TibberPricesIntervalPool,
         subentry: ConfigSubentry | None = None,
     ) -> None:
         """
@@ -193,11 +194,11 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
         )
 
-        self.config_entry = config_entry
         self.subentry = subentry
         self._time_shift = get_time_shift(subentry)
         self._headless = is_headless(subentry)
@@ -468,7 +469,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Return when price data was last successfully fetched from the API."""
         return self._last_price_update
 
-    async def _handle_options_update(self, _hass: HomeAssistant, _config_entry: ConfigEntry) -> None:
+    async def _handle_options_update(self, _hass: HomeAssistant, _config_entry: TibberPricesConfigEntry) -> None:
         """Handle options update by invalidating config caches and re-transforming data."""
         self._log("debug", "Options update triggered, re-transforming data")
         self._data_transformer.invalidate_config_cache()
@@ -695,7 +696,7 @@ class TibberPricesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # Midnight turnover was performed by THIS call (Timer #1 didn't run yet)
             self._log("info", "[Timer #2] Midnight turnover performed, entities updated")
             # Schedule cache save asynchronously (we're in a callback)
-            self.hass.async_create_task(self._store_cache())
+            self.config_entry.async_create_task(self.hass, self._store_cache())
             # async_update_listeners() was already called in _check_and_handle_midnight_turnover
             # This includes time-sensitive listeners, so skip regular update to avoid double-update
         else:

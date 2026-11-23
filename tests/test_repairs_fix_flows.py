@@ -1,7 +1,5 @@
 """Tests for the fixes of the repair issues: removing a home that's gone, confirming notices."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest

@@ -1,179 +1,77 @@
-name: Deploy Docusaurus Documentation (Dual Sites)
+name: Deploy Documentation
 
-# docs-check.yml builds the same sites on pull requests: keep the setup and build steps in step.
+# Builds the user documentation site from main and publishes it to GitHub Pages. docs-check.yml builds the same site
+# on pull requests: keep the setup and build steps in step.
+#
+# No tag trigger: a tag that release-please creates with GITHUB_TOKEN starts no workflow, and the per-release version
+# snapshots it used to commit back to main are gone (a CI job that commits to main was the fragile part of the old
+# release flow). The existing versioned_docs/ stay as they are.
 
 on:
   push:
     branches: [main]
     paths:
       - "docs/**"
-      - "mise.toml" # Node version
+      - ".config/mise/conf.d/project.toml" # Node version
       - ".github/workflows/docusaurus.yml"
-    tags:
-      - "v*.*.*"
   workflow_dispatch:
 
-# Concurrency control: cancel in-progress deployments
-# Pattern from GitHub Actions best practices for deployment workflows
+permissions: {}
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: write
-  pages: write
-  id-token: write
-
 jobs:
-  deploy:
-    name: Build and Deploy Documentation Sites
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
+    name: Build documentation site
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read # check out the repository
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0 # Needed for version timestamps
+          fetch-depth: 0 # Docusaurus reads the last update time of each page from git
+          persist-credentials: false # npm ci runs the dependencies' install scripts
 
-      - name: Detect prerelease tag (beta/rc)
-        id: taginfo
-        run: |
-          if [[ "${GITHUB_REF}" =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+(b[0-9]+|rc[0-9]+)$ ]]; then
-            echo "is_prerelease=true" >> "$GITHUB_OUTPUT"
-            echo "Detected prerelease tag: ${GITHUB_REF}"
-          else
-            echo "is_prerelease=false" >> "$GITHUB_OUTPUT"
-            echo "Stable tag or branch: ${GITHUB_REF}"
-          fi
-
-      - name: Set up Node and Python (mise.toml, .python-version)
+      # No cache in a workflow that publishes: a poisoned cache would reach the site
+      - name: Set up Node and Python (mise.toml, .config/mise/conf.d/project.toml)
         uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
           install_args: "node python"
-
-      - name: Cache npm downloads
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
-        with:
-          path: ~/.npm
-          key: npm-${{ runner.os }}-${{ hashFiles('docs/user/package-lock.json', 'docs/developer/package-lock.json') }}
-          restore-keys: npm-${{ runner.os }}-
-
-      # VERIFY GENERATED DOCS
+          cache: false
 
       - name: Verify sensor reference is up-to-date
-        run: python3 scripts/docs/generate-sensor-reference --check
-
-      # USER DOCS BUILD
-      - name: Install user docs dependencies
-        working-directory: docs/user
-        run: npm ci
-
-      - name: Create user docs version snapshot on tag
-        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
-        working-directory: docs/user
-        run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/}
-          echo "Creating user documentation version: $TAG_VERSION"
-
-          npm run docusaurus docs:version $TAG_VERSION || echo "Version already exists"
-
-          # Update GitHub links in versioned docs
-          if [ -d "versioned_docs/version-$TAG_VERSION" ]; then
-            find versioned_docs/version-$TAG_VERSION -name "*.md" -type f -exec sed -i "s|github.com/jpawlowski/hass.tibber_prices/blob/main/|github.com/jpawlowski/hass.tibber_prices/blob/$TAG_VERSION/|g" {} \; || true
-          fi
-
-      - name: Cleanup old user docs versions
-        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
-        working-directory: docs/user
-        run: |
-          chmod +x ../cleanup-old-versions.sh
-          # Adapt script for single-instance mode (versioned_docs/ instead of user_versioned_docs/)
-          sed 's/user_versioned_docs/versioned_docs/g; s/user_versions.json/versions.json/g; s/developer_versioned_docs/versioned_docs/g; s/developer_versions.json/versions.json/g' ../cleanup-old-versions.sh > cleanup-single.sh
-          chmod +x cleanup-single.sh
-          ./cleanup-single.sh
+        run: python3 script/docs/generate-sensor-reference.py --check
 
       - name: Build user docs website
         working-directory: docs/user
-        run: npm run build
-
-      # DEVELOPER DOCS BUILD
-      - name: Install developer docs dependencies
-        working-directory: docs/developer
-        run: npm ci
-
-      - name: Create developer docs version snapshot on tag
-        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
-        working-directory: docs/developer
         run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/}
-          echo "Creating developer documentation version: $TAG_VERSION"
+          npm ci
+          npm run build
 
-          npm run docusaurus docs:version $TAG_VERSION || echo "Version already exists"
-
-          # Update GitHub links in versioned docs
-          if [ -d "versioned_docs/version-$TAG_VERSION" ]; then
-            find versioned_docs/version-$TAG_VERSION -name "*.md" -type f -exec sed -i "s|github.com/jpawlowski/hass.tibber_prices/blob/main/|github.com/jpawlowski/hass.tibber_prices/blob/$TAG_VERSION/|g" {} \; || true
-          fi
-
-      - name: Cleanup old developer docs versions
-        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
-        working-directory: docs/developer
-        run: |
-          chmod +x ../cleanup-old-versions.sh
-          # Adapt script for single-instance mode
-          sed 's/user_versioned_docs/versioned_docs/g; s/user_versions.json/versions.json/g; s/developer_versioned_docs/versioned_docs/g; s/developer_versions.json/versions.json/g' ../cleanup-old-versions.sh > cleanup-single.sh
-          chmod +x cleanup-single.sh
-          ./cleanup-single.sh
-
-      - name: Build developer docs website
-        working-directory: docs/developer
-        run: npm run build
-
-      # MERGE BUILDS
-      - name: Merge both documentation sites
+      - name: Assemble the documentation site
         run: |
           mkdir -p deploy-root/user
-          mkdir -p deploy-root/developer
           cp docs/index.html deploy-root/
           cp -r docs/user/build/* deploy-root/user/
-          cp -r docs/developer/build/* deploy-root/developer/
-
-      # COMMIT VERSION SNAPSHOTS
-      - name: Commit version snapshots back to repository
-        if: startsWith(github.ref, 'refs/tags/v') && steps.taginfo.outputs.is_prerelease != 'true'
-        run: |
-          TAG_VERSION=${GITHUB_REF#refs/tags/}
-
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Add version files from both docs
-          git add docs/user/versioned_docs/ docs/user/versioned_sidebars/ docs/user/versions.json 2>/dev/null || true
-          git add docs/developer/versioned_docs/ docs/developer/versioned_sidebars/ docs/developer/versions.json 2>/dev/null || true
-
-          # Commit if there are changes
-          if git diff --staged --quiet; then
-            echo "No version snapshot changes to commit"
-          else
-            git commit -m "docs: add version snapshot $TAG_VERSION and cleanup old versions [skip ci]"
-            # The tag may be behind main by now (commits landed after the release was cut),
-            # so replay the snapshot commit on top of the current main before pushing.
-            git fetch origin main
-            git rebase origin/main
-            git push origin HEAD:main
-            echo "Version snapshots committed and pushed to main"
-          fi
-
-      # DEPLOY TO GITHUB PAGES
-      - name: Setup Pages
-        uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
           path: ./deploy-root
 
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      pages: write # publish the uploaded artifact
+      id-token: write # deploy-pages authenticates with an OIDC token
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5

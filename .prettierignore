@@ -1,34 +1,25 @@
-# Ignore Python files – handled by Ruff/Black
-*.py
-*.pyi
-
-# Ignore Home Assistant compiled files
-__pycache__/
-*.pyc
-
-# Ignore virtual environments or dependencies
-.venv/
-env/
-venv/
-
-# Ignore local HA dev instance config (not production code)
+# Generated/runtime files (ignored by .gitignore but explicit here)
 config/
+!config/configuration.yaml
+custom_components/
 
-# Ignore YAML schemas (structural files with specific formatting conventions)
-schemas/yaml/
-
-# Ignore Docusaurus documentation sites – they have their own toolchain
-# and Prettier reformats <details> blocks inside lists in a way that breaks MDX
-docs/
-
-# Ignore Claude Code worktrees (full copies of the repository)
-.claude/
-
-# Written by release-please, which formats it its own way
+# Auto-generated release files
 CHANGELOG.md
 
-# Appended to every release body as is; Prettier would turn its leading --- into ***
-.github/release-notes-footer.md
+# Symlinks into .agents/ — format the real directories once.
+.claude/rules/
+.claude/skills/
+.github/instructions/
 
-# Rewritten by release-please on every release (extra-files), in its own JSON layout
-custom_components/tibber_prices/manifest.json
+# Agent scratch space — generated notes and reports, never committed
+.agents/scratch/
+
+# Ignore-style files (no recognized extension — Prettier would misparse them)
+*ignore
+
+# Docusaurus documentation site: its own toolchain, and Prettier reformats <details> blocks
+# inside lists in a way that breaks MDX
+docs/user/
+
+# YAML schemas keep their own structural formatting
+schemas/yaml/

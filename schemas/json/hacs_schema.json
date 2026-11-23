@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Marketplace and HACS Repository Manifest (hacs.json)",
+  "description": "JSON schema for the hacs.json file that the Home Assistant Marketplace (2026.11+) and HACS read for repository metadata, release settings, and distribution options of custom integrations, dashboard plugins, themes, and templates.\nhttps://contributors.home-assistant.io/marketplace/reference/hacs-json/",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The display name shown in the Marketplace and HACS"
+    },
+    "content_in_root": {
+      "type": "boolean",
+      "description": "Indicates whether the content is in the root of the repository as opposed to in a subdirectory"
+    },
+    "zip_release": {
+      "type": "boolean",
+      "description": "Indicates whether the content is in a zipped archive when releases are published on GitHub (only supported for integrations)"
+    },
+    "filename": {
+      "type": "string",
+      "description": "Name of the file HACS should look for (only applies to single item types: plugin, theme, template, python_scripts, zip_release)"
+    },
+    "hide_default_branch": {
+      "type": "boolean",
+      "description": "Do not offer the default branch as an installable version"
+    },
+    "country": {
+      "oneOf": [
+        {
+          "type": "string",
+          "pattern": "^[A-Z]{2}$",
+          "description": "Two character country code in ISO 3166-1 alpha-2 format"
+        },
+        {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]{2}$"
+          },
+          "description": "Array of two character country codes in ISO 3166-1 alpha-2 format"
+        }
+      ]
+    },
+    "homeassistant": {
+      "type": "string",
+      "description": "The minimum Home Assistant version a release needs (append 'b0' to allow that release's betas). Only checked for repositories with releases; older versions are offered instead.",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+(b0)?)?$"
+    },
+    "hacs": {
+      "type": "string",
+      "description": "The minimum HACS version. The Marketplace reads it but does not compare it; HACS before Home Assistant 2026.11 still does.",
+      "pattern": "^[0-9]+\\.[0-9]+(\\.[0-9]+)?$"
+    },
+    "persistent_directory": {
+      "type": "string",
+      "description": "A relative path (within the integration directory) that will be kept safe during upgrades (can only be used with integrations)"
+    },
+    "render_readme": {
+      "type": "boolean",
+      "description": "Not read by the Marketplace or current HACS versions; the README is always rendered.",
+      "deprecated": true
+    }
+  },
+  "required": ["name"],
+  "additionalProperties": false
+}

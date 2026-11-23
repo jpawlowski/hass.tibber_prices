@@ -41,8 +41,6 @@ CRITICAL: The tolerance is ONLY for Timer #2 and #3 to correct HA's
 scheduling delays. It is NOT used for Timer #1's offset tracking.
 """
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import math
 from typing import TYPE_CHECKING

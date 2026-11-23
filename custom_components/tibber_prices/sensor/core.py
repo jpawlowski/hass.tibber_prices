@@ -1,7 +1,5 @@
 """Core sensor class for Tibber Prices integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -214,16 +212,16 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         # For chart_data_export, trigger initial service call as background task
         # (non-blocking to avoid delaying entity setup)
         if self.entity_description.key == "chart_data_export":
-            self.hass.async_create_task(self._refresh_chart_data())
+            self.coordinator.config_entry.async_create_task(self.hass, self._refresh_chart_data())
 
         # For chart_metadata, trigger initial service call as background task
         # (non-blocking to avoid delaying entity setup)
         if self.entity_description.key == "chart_metadata":
-            self.hass.async_create_task(self._refresh_chart_metadata())
+            self.coordinator.config_entry.async_create_task(self.hass, self._refresh_chart_metadata())
 
     @callback
     def async_entity_id_changed(self, old_entity_id: str) -> None:
-        """Accept an in-place rename (HA 2026.11+); see AGENTS.md "async_entity_id_changed"."""
+        """Accept an in-place rename (HA 2026.11+)."""
 
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from hass."""
@@ -323,12 +321,12 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
         # Refresh chart data when coordinator updates (new price data or user data)
         if self.entity_description.key == "chart_data_export":
             # Schedule async refresh as a task (we're in a callback)
-            self.hass.async_create_task(self._refresh_chart_data())
+            self.coordinator.config_entry.async_create_task(self.hass, self._refresh_chart_data())
 
         # Refresh chart metadata when coordinator updates (new price data or user data)
         if self.entity_description.key == "chart_metadata":
             # Schedule async refresh as a task (we're in a callback)
-            self.hass.async_create_task(self._refresh_chart_metadata())
+            self.coordinator.config_entry.async_create_task(self.hass, self._refresh_chart_metadata())
 
         # Coordinator updates bring new API data — always write to ensure fresh state.
         # Reset _last_written_value so timer-based handlers also write next cycle.
@@ -897,8 +895,8 @@ class TibberPricesSensor(TibberPricesEntity, RestoreSensor):
             ),
         )
 
-        # Fall back to static icon from entity description
-        return icon or self.entity_description.icon
+        # Fall back to the description's fallback icon
+        return icon or self.entity_description.fallback_icon
 
     # Interval price sensors that show individual quarter-hour prices.
     # These get full data precision (subunit→2, base→4) as display default

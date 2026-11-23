@@ -1,0 +1,66 @@
+---
+# Static analysis of the integration's Python and of the workflows. Code scanning is free for public repositories
+# only; a private one would need GitHub Code Security, so the job does not run there and spends no minutes.
+
+name: CodeQL
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "**.py"
+      - .github/workflows/**
+      - .github/actions/**
+  pull_request:
+    branches:
+      - main
+    # A draft spends no minutes; marking it ready for review runs everything.
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "**.py"
+      - .github/workflows/**
+      - .github/actions/**
+  schedule:
+    - cron: "30 3 * * 1"
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    if: ${{ !github.event.repository.private && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    permissions:
+      contents: read # check out the repository
+      security-events: write # upload the analysis to code scanning
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - actions
+          - python
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Every language runs on every pull request: one without an upload has nothing to compare with main, and code
+      # scanning then warns that a configuration of the base branch was not found.
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: none
+
+      - name: Analyze
+        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        with:
+          category: /language:${{ matrix.language }}

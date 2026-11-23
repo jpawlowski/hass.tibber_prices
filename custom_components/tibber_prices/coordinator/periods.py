@@ -5,8 +5,6 @@ This module handles all period calculation including level filtering,
 gap tolerance, and coordination of the period_handlers calculation functions.
 """
 
-from __future__ import annotations
-
 from datetime import date, timedelta
 import logging
 from typing import TYPE_CHECKING, Any

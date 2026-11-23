@@ -1,32 +1,166 @@
-# See https://pre-commit.com for more information
-# See https://pre-commit.com/hooks.html for more hooks
+# Hooks are run by prek (https://github.com/j178/prek), which reads this file —
+# the filename stays `.pre-commit-config.yaml` because that is the format's
+# name, not the runner's.
+# See https://pre-commit.com for the configuration format.
 #
 # This configuration uses local hooks that rely on packages
-# defined in requirements.txt, avoiding separate pre-commit environments.
+# installed in the virtual environment (via requirements.txt) or
+# via npm (package.json). Run script/setup/bootstrap to install both.
+#
+# Python hooks use the currently activated virtual environment or fall back
+# to the standard location at $HOME/.local/ha-venv.
+# Node hooks use ./node_modules/.bin/ (installed via npm install).
+#
+# Install all three hook types with a plain `prek install` — without this,
+# the commit-msg and pre-push hooks below would need an explicit --hook-type
+# flag and would silently never run for anyone who forgot it.
+default_install_hook_types: [pre-commit, commit-msg, pre-push]
+# Hooks without their own `stages` would otherwise also run on commit-msg and
+# pre-push, where the formatters below would rewrite files during a push.
+default_stages: [pre-commit]
+
 repos:
   - repo: local
     hooks:
-      # Run the Ruff linter with auto-fix
-      - id: ruff
-        name: ruff
-        entry: bash -c 'source $HOME/.venv/bin/activate && ruff check --fix --exit-non-zero-on-fix "$@"' --
-        language: system
-        types: [python]
-        require_serial: true
-
-      # Run the Ruff formatter
+      # Run the Ruff formatter first — format before lint (clean slate for linter)
       - id: ruff-format
         name: ruff format
-        entry: bash -c 'source $HOME/.venv/bin/activate && ruff format "$@"' --
+        entry: bash -c 'if command -v ruff &>/dev/null; then ruff format "$@"; exit $?; fi; for venv in "$HOME/.local/ha-venv" ".local/ha-venv"; do if [[ -f "$venv/bin/ruff" ]]; then source "$venv/bin/activate" 2>/dev/null || true; ruff format "$@"; exit $?; fi; done; echo "⚠️  Skipping ruff format (venv not ready)"; exit 0' --
         language: system
         types: [python]
         require_serial: true
-
-      # Build changed Docusaurus site(s) to catch MDX/build errors early
-      - id: docusaurus-build-changed-sites
-        name: docusaurus build (changed sites)
-        entry: bash scripts/docs/build-changed-sites
-        language: system
-        files: ^docs/(user|developer)/
         pass_filenames: true
+
+      # Run the Ruff linter with auto-fix after formatting
+      - id: ruff
+        name: ruff
+        entry: bash -c 'if command -v ruff &>/dev/null; then ruff check --fix --exit-non-zero-on-fix "$@"; exit $?; fi; for venv in "$HOME/.local/ha-venv" ".local/ha-venv"; do if [[ -f "$venv/bin/ruff" ]]; then source "$venv/bin/activate" 2>/dev/null || true; ruff check --fix --exit-non-zero-on-fix "$@"; exit $?; fi; done; echo "⚠️  Skipping ruff (venv not ready)"; exit 0' --
+        language: system
+        types: [python]
         require_serial: true
+        pass_filenames: true
+
+      # YAML linting
+      - id: yamllint
+        name: yamllint
+        entry: bash -c 'if command -v yamllint &>/dev/null; then yamllint -c .yamllint.yml "$@"; exit $?; fi; for venv in "$HOME/.local/ha-venv" ".local/ha-venv"; do if [[ -f "$venv/bin/yamllint" ]]; then source "$venv/bin/activate" 2>/dev/null || true; yamllint -c .yamllint.yml "$@"; exit $?; fi; done; echo "⚠️  Skipping yamllint (venv not ready)"; exit 0' --
+        language: system
+        types: [yaml]
+        files: ^(custom_components/|schemas/yaml/|\.github/|\.pre-commit-config\.yaml|\.prettierrc\.yml)
+        pass_filenames: true
+
+      # GitHub Actions security auditing
+      - id: zizmor
+        name: zizmor
+        entry: bash -c 'if command -v zizmor &>/dev/null; then zizmor --pedantic "$@"; exit $?; fi; for venv in "$HOME/.local/ha-venv" ".local/ha-venv"; do if [[ -f "$venv/bin/zizmor" ]]; then source "$venv/bin/activate" 2>/dev/null || true; zizmor --pedantic "$@"; exit $?; fi; done; echo "⚠️  Skipping zizmor (venv not ready)"; exit 0' --
+        language: system
+        files: ^\.github/workflows/.*\.ya?ml$
+        pass_filenames: true
+
+      # Keep HA release train in sync across all three version sources:
+      #   requirements_test.txt (pytest-homeassistant pin)
+      #   hacs.json (homeassistant minimum)
+      #   .devcontainer/.env (HA_VERSION override, if set)
+      # and the Python version mise.toml pins against HA's requires-python
+      - id: ha-version-sync
+        name: Home Assistant release train sync
+        entry: ./script/ha-version-sync
+        language: system
+        files: ^(hacs\.json|requirements_test\.txt|\.devcontainer/\.env|mise\.toml|pyproject\.toml)$
+        pass_filenames: false
+
+      # Secrets in the staged changes, with the rules in .betterleaks.toml
+      - id: secret-scan
+        name: secret scan (betterleaks)
+        entry: ./script/secret-scan --staged
+        language: system
+        pass_filenames: false
+        always_run: true
+
+      # Shell script linting
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck -x
+        language: system
+        types: [shell]
+        files: ^(script/|\.devcontainer/)
+        pass_filenames: true
+
+      # Shell script formatting
+      - id: shfmt
+        name: shfmt
+        entry: shfmt -i 4 -w
+        language: system
+        types: [shell]
+        files: ^(script/|\.devcontainer/)
+        pass_filenames: true
+
+      # Markdown formatting with Prettier
+      - id: prettier-markdown
+        name: prettier (markdown)
+        entry: bash -c 'if [[ -x "./node_modules/.bin/prettier" ]]; then ./node_modules/.bin/prettier --write "$@"; exit $?; fi; echo "⚠️  Skipping prettier (npm not ready)"; exit 0' --
+        language: system
+        types: [markdown]
+        pass_filenames: true
+
+      # Markdown linting with markdownlint-cli2
+      - id: markdownlint-cli2
+        name: markdownlint-cli2
+        entry: bash -c 'if [[ -x "./node_modules/.bin/markdownlint-cli2" ]]; then ./node_modules/.bin/markdownlint-cli2 --fix "$@"; exit $?; fi; echo "⚠️  Skipping markdownlint-cli2 (npm not ready)"; exit 0' --
+        language: system
+        types: [markdown]
+        pass_filenames: true
+
+      # Agent skills validation (Agent Skills open standard + repo conventions)
+      # Broken frontmatter makes a skill silently invisible to every agent, so
+      # this must fail the commit rather than be noticed weeks later.
+      - id: skills-check
+        name: agent skills
+        entry: ./script/skills-check
+        language: system
+        files: ^\.agents/skills/
+        pass_filenames: false
+
+      # Spell checking
+      - id: codespell
+        name: codespell
+        entry: bash -c 'if command -v codespell &>/dev/null; then codespell --ignore-words-list=aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn --skip="./.*,*.csv,*.json,*.ambr,uv.lock" --quiet-level=2 "$@"; exit $?; fi; for venv in "$HOME/.local/ha-venv" ".local/ha-venv"; do if [[ -f "$venv/bin/codespell" ]]; then source "$venv/bin/activate" 2>/dev/null || true; codespell --ignore-words-list=aiport,astroid,checkin,currenty,hass,iif,incomfort,lookin,nam,NotIn --skip="./.*,*.csv,*.json,*.ambr,uv.lock" --quiet-level=2 "$@"; exit $?; fi; done; echo "⚠️  Skipping codespell (venv not ready)"; exit 0' --
+        language: system
+        types_or: [python, markdown, rst]
+        exclude_types: [csv, json, html]
+        files: ^(custom_components/|tests/|script/|README\.md|CONTRIBUTING\.md|DEPENDENCIES\.md)
+        pass_filenames: true
+
+      # Commit message linting (Conventional Commits)
+      # release-please derives the version bump and CHANGELOG from these
+      # subjects, so a malformed message produces a wrong release.
+      - id: commitlint
+        name: commitlint
+        entry: bash -c 'if [[ -x "./node_modules/.bin/commitlint" ]]; then ./node_modules/.bin/commitlint --edit "$1"; exit $?; fi; echo "⚠️  Skipping commitlint (npm not ready)"; exit 0' --
+        language: system
+        stages: [commit-msg]
+        pass_filenames: true
+
+      # The pushed commit must be the clean, checked-out HEAD and pass lint and
+      # type checks; script/push-gate explains the rules.
+      - id: push-gate
+        name: push gate (lint-check + type-check)
+        entry: script/push-gate
+        language: system
+        stages: [pre-push]
+        always_run: true
+        pass_filenames: false
+        require_serial: true
+
+      # yamllint disable rule:comments-indentation
+      # Type checking with Pyright (optional, can be slow)
+      # Uncomment to enable in pre-commit (recommended to use in IDE instead)
+      # - id: pyright
+      #   name: pyright
+      #   entry: bash -c '"$HOME/.local/ha-venv/bin/pyright" "$@"' --
+      #   language: system
+      #   types: [python]
+      #   pass_filenames: true
+      #   # Run manually with: pre-commit run pyright --all-files
+      #   stages: [manual]
+      # yamllint enable rule:comments-indentation

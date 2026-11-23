@@ -1,7 +1,5 @@
 """What the recorder keeps follows the attribute declarations of the entities."""
 
-from __future__ import annotations
-
 import pytest
 
 from custom_components.tibber_prices.binary_sensor.definitions import ENTITY_DESCRIPTIONS as BINARY_DESCRIPTIONS

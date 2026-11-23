@@ -1,7 +1,5 @@
 """Regression tests for best-price periods with negative prices."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from zoneinfo import ZoneInfo
 

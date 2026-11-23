@@ -1,7 +1,5 @@
 """Value getter mapping for Tibber Prices sensors."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
 from custom_components.tibber_prices.sensor.definitions import ROLLING_HOUR_SENSOR_WINDOWS

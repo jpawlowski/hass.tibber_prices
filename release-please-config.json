@@ -9,25 +9,25 @@
       "draft": true,
       "force-tag-creation": true,
       "bump-minor-pre-major": true,
+      "bump-patch-for-minor-pre-major": true,
       "extra-files": [
         {
           "type": "json",
-          "path": "custom_components/tibber_prices/manifest.json",
+          "path": "custom_components/*/manifest.json",
+          "glob": true,
           "jsonpath": "$.version"
         }
       ],
       "changelog-sections": [
-        { "type": "feat", "section": "🎉 What's New" },
+        { "type": "feat", "section": "🎉 What's new" },
         { "type": "fix", "section": "🐛 Fixed" },
-        { "type": "perf", "section": "⚡ More Reliable" },
-        { "type": "build", "section": "📦 Updated Dependencies" },
-        { "type": "revert", "section": "Reverts", "hidden": true },
-        { "type": "refactor", "section": "Refactoring", "hidden": true },
+        { "type": "perf", "section": "⚡ More reliable" },
+        { "type": "build", "section": "📦 Updated dependencies" },
+        { "type": "refactor", "section": "Code refactoring", "hidden": true },
+        { "type": "chore", "section": "Maintenance", "hidden": true },
         { "type": "docs", "section": "Documentation", "hidden": true },
-        { "type": "style", "section": "Formatting", "hidden": true },
         { "type": "test", "section": "Tests", "hidden": true },
-        { "type": "ci", "section": "CI", "hidden": true },
-        { "type": "chore", "section": "Housekeeping", "hidden": true }
+        { "type": "ci", "section": "CI/CD", "hidden": true }
       ]
     }
   }

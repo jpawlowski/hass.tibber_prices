@@ -12,8 +12,6 @@ see entity_utils/helpers.py:
 - get_rolling_hour_window: Rolling hour window (5 intervals, centered)
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from custom_components.tibber_prices.const import get_display_precision, get_display_unit_factor

@@ -17,9 +17,9 @@ provides minimal value since they're simple data transformations that can't fail
 from the overall period building logic.
 
 If you need to debug period calculation issues, run the integration tests with -v flag:
-    ./scripts/test tests/test_midnight_periods.py -v
-    ./scripts/test tests/test_midnight_turnover.py -v
+    ./script/test tests/test_midnight_periods.py -v
+    ./script/test tests/test_midnight_turnover.py -v
 
 For period calculation theory and algorithm documentation, see:
-    docs/development/period-calculation-theory.md
+    docs/development/PERIODS.md
 """

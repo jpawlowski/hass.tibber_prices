@@ -1,8 +1,2 @@
-# Project/dev tooling – NO Home Assistant here
-colorlog>=6.12.0,<6.13.0
-pre-commit>=4.7.0,<4.8.0
-ruff>=0.17.1,<0.18.0
-zlib_ng>=1.1.0,<1.2.0
-isal>=1.9.0,<1.10.0
-# Home Assistant's own test package: its version must match HA_VERSION in scripts/setup/bootstrap exactly
-pytest-homeassistant==2026.11.2
+# Runtime dependencies of the integration; keep in sync with manifest.json → requirements
+aiofiles>=23.2.1

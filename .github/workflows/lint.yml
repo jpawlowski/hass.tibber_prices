@@ -1,61 +1,154 @@
-name: Lint & Test
+name: Lint
 
 on:
   push:
     branches:
       - "main"
-    paths: &paths
-      - "custom_components/**"
-      - "tests/**"
-      - "scripts/**"
-      - "pyproject.toml"
-      - "uv.lock"
-      - "requirements.txt"
-      - "mise.toml"
-      - ".python-version"
-      - "docs/user/docs/sensor-reference.md" # checked against the translations
-      - ".github/workflows/lint.yml"
   pull_request:
     branches:
       - "main"
-    paths: *paths
-  workflow_dispatch:
+    # A draft spends no minutes; marking it ready for review runs everything.
+    types: [opened, synchronize, reopened, ready_for_review]
 
 permissions: {}
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
 
+# IMPORTANT: Keep HA_VERSION synchronized across all workflow files:
+# - copilot-setup-steps.yml
+# - lint.yml
+# - validate.yml (if added in the future)
+
 jobs:
-  checks:
-    name: "Ruff, Pyright, pytest"
-    runs-on: "ubuntu-latest"
+  lint:
+    name: "Lint and test"
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ubuntu-26.04
+    timeout-minutes: 30
+    permissions:
+      contents: read # check out the repository
+      pull-requests: read # find the pull request a push to main came from
+      checks: read # see whether that pull request already passed this job
     steps:
       - name: Checkout the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up Python, uv and Pyright (mise.toml, .python-version)
-        uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
         with:
-          install_args: "python uv node npm:pyright"
+          persist-credentials: false
+          # The secret scan reads every commit the pull request adds.
+          fetch-depth: 0
 
-      # uv's downloads: Home Assistant and its requirements, the same for every run of one HA version
-      - name: Cache uv downloads
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
+      # A squash merge puts on main exactly what the pull request tested when the two trees match, so the run after the
+      # merge would repeat it. Pull requests opened with the workflow token never ran this job and are checked here.
+      - name: Skip what the pull request already tested
+        id: tested
+        if: github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          pr=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${SHA}/pulls" --jq '[.[] | select(.merged_at)][0].number // empty')
+          if [[ -z "${pr}" ]]; then
+            echo "No merged pull request behind ${SHA} — running everything"
+            exit 0
+          fi
+          head=$(gh api "repos/${GITHUB_REPOSITORY}/pulls/${pr}" --jq .head.sha)
+          git fetch --quiet origin "pull/${pr}/head"
+          passed=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${head}/check-runs?check_name=Lint%20and%20test" \
+            --jq '[.check_runs[] | select(.conclusion == "success")] | length')
+          if [[ "$(git rev-parse "${SHA}^{tree}")" == "$(git rev-parse "FETCH_HEAD^{tree}")" && "${passed}" -gt 0 ]]; then
+            echo "Pull request #${pr} passed this job on the same tree — nothing left to check" >> "${GITHUB_STEP_SUMMARY}"
+            echo "done=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Pull request #${pr} was not tested on this exact tree — running everything"
+          fi
+
+      # A change that touches nothing but Markdown cannot affect types or tests, so it skips installing Home Assistant.
+      - name: Detect a documentation-only change
+        id: docs
+        if: steps.tested.outputs.done != 'true'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [[ -z "${BASE}" || "${BASE}" == "0000000000000000000000000000000000000000" ]]; then
+            echo "No base to compare with — running everything"
+            exit 0
+          fi
+          if ! changed=$(git diff --name-only "${BASE}...${HEAD}"); then
+            echo "Cannot compare ${BASE} with ${HEAD} — running everything"
+            exit 0
+          fi
+          if [[ -n "${changed}" ]] && ! grep -qv '\.md$' <<<"${changed}"; then
+            echo "Only Markdown changed — no Home Assistant install, type check or tests" >> "${GITHUB_STEP_SUMMARY}"
+            echo "only=true" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Set up mise
+        if: steps.tested.outputs.done != 'true'
+        uses: jdx/mise-action@90f833d396d0cc3674b631d2d225e306476c303a # v5.2.10
         with:
-          path: ~/.cache/uv
-          key: uv-${{ runner.os }}-${{ hashFiles('requirements.txt', 'scripts/setup/bootstrap', '.python-version') }}
-          restore-keys: uv-${{ runner.os }}-
+          # renovate: datasource=github-releases depName=jdx/mise extractVersion=^v(?<version>.+)$
+          version: "2026.11.12"
+
+      # A step rather than a job of its own: the scan takes seconds, and every job is billed in whole minutes.
+      - name: Scan for secrets
+        if: steps.tested.outputs.done != 'true'
+        env:
+          # A pull request's commits, or what a push added; the weekly history scan covers everything older.
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          if [[ -n "${BASE}" && "${BASE}" != "0000000000000000000000000000000000000000" ]]; then
+            script/secret-scan --range "${BASE}..${HEAD}"
+          else
+            script/secret-scan --all
+          fi
+
+      # skills-check parses frontmatter with PyYAML; a venv holding only that stands in for the Home Assistant one.
+      - name: Check the documentation
+        if: steps.docs.outputs.only == 'true'
+        run: |
+          uv venv --quiet .local/ha-venv
+          uv pip install --quiet --python .local/ha-venv pyyaml
+          npm ci --silent
+          script/markdown-check
+          script/skills-check
+
+      - name: Get Home Assistant version
+        if: steps.tested.outputs.done != 'true' && steps.docs.outputs.only != 'true'
+        id: ha_version
+        run: |
+          version=$(bash script/.lib/ha_version.sh)
+          echo "HA_VERSION=${version}" >>"$GITHUB_OUTPUT"
+
+      - name: Cache Home Assistant installation
+        if: steps.tested.outputs.done != 'true' && steps.docs.outputs.only != 'true'
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            .local/ha-venv
+          key: ha-venv-v2-${{ runner.os }}-ha${{ steps.ha_version.outputs.HA_VERSION }}-${{ hashFiles('mise.toml', '.config/mise/conf.d/*.toml', '**/requirements*.txt') }}
+          restore-keys: |
+            ha-venv-v2-${{ runner.os }}-ha${{ steps.ha_version.outputs.HA_VERSION }}-
 
       - name: Install requirements
-        id: bootstrap
-        run: scripts/setup/bootstrap
+        if: steps.tested.outputs.done != 'true' && steps.docs.outputs.only != 'true'
+        run: script/setup/bootstrap
 
-      - name: Pyright, Ruff, sensor reference
-        run: scripts/check
+      # Lint, types and tests share one job: each would otherwise install the same venv and Home Assistant again.
+      - name: Lint check
+        if: steps.tested.outputs.done != 'true' && steps.docs.outputs.only != 'true'
+        env:
+          # Lets zizmor run its online audits, such as pins that do not match their version comment.
+          GH_TOKEN: ${{ github.token }}
+        run: script/lint-check
 
-      # Runs even when the check failed, so one push reports both, but not without an environment
-      - name: pytest
-        if: ${{ !cancelled() && steps.bootstrap.outcome == 'success' }}
-        run: scripts/test
+      - name: Type check
+        if: steps.tested.outputs.done != 'true' && steps.docs.outputs.only != 'true'
+        run: script/type-check
+
+      - name: Tests
+        if: steps.tested.outputs.done != 'true' && steps.docs.outputs.only != 'true'
+        run: script/test

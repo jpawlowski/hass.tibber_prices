@@ -10,19 +10,17 @@ NOTE: These tests are currently skipped due to the single-home architecture refa
 The tests need to be rewritten to properly mock the TibberPricesApiClient with all
 required methods (_extract_home_timezones, _calculate_day_before_yesterday_midnight,
 async_get_price_info, async_get_price_info_range). The mocking strategy needs to be
-updated to match the new API routing logic in interval_pool/routing.py.
+updated to match the new API routing logic in coordinator/interval_pool/routing.py.
 
 TODO: Rewrite these tests with proper API client fixtures.
 """
-
-from __future__ import annotations
 
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
-from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
+from custom_components.tibber_prices.coordinator.interval_pool import TibberPricesIntervalPool
 from homeassistant.util import dt as dt_util
 
 # Skip all tests in this module until they are rewritten for single-home architecture

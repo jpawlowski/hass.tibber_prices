@@ -7,8 +7,6 @@ there, and GitHub renders both as invisible comments, so nobody would notice. Ma
 are text to the Marketplace and are not counted.
 """
 
-from __future__ import annotations
-
 from pathlib import Path
 import re
 

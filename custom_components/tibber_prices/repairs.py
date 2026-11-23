@@ -6,11 +6,9 @@ Fixes for the integration's repair issues.
 - Notices (migrations.NOTICES): only to read; confirming them deletes them.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
-import probatio as vol
+import probatio
 
 from homeassistant.components.repairs import ConfirmRepairFlow, RepairsFlow
 from homeassistant.helpers import issue_registry as ir
@@ -40,7 +38,7 @@ class TibberPricesRemoveHomeFlow(RepairsFlow):
         issue = ir.async_get(self.hass).async_get_issue(self.handler, self.issue_id)
         return self.async_show_form(
             step_id="confirm",
-            data_schema=vol.Schema({}),
+            data_schema=probatio.Schema({}),
             description_placeholders=issue.translation_placeholders if issue else None,
         )
 

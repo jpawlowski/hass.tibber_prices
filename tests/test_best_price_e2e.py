@@ -11,8 +11,6 @@ Test coverage matches manual testing checklist:
 3. ✅ Relaxation succeeds at reasonable flex (not maxed at 50%)
 """
 
-from __future__ import annotations
-
 from unittest.mock import Mock
 
 import pytest

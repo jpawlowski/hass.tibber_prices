@@ -10,7 +10,7 @@ The Marketplace warns you that the Home Assistant project doesn't make or suppor
 
 ### Prerequisites
 
-- Home Assistant 2026.9.0 or newer
+- Home Assistant 2026.11.0 or newer
 - A [Tibber API token](https://developer.tibber.com/settings/access-token)
 
 ### Steps (Home Assistant 2026.11 or newer)
@@ -49,10 +49,11 @@ If you prefer not to use the Marketplace or HACS:
 1. Download the [latest release](https://github.com/jpawlowski/hass.tibber_prices/releases/latest) from GitHub
 2. Extract the `custom_components/tibber_prices/` folder
 3. Copy it to your Home Assistant `config/custom_components/` directory:
+
 <details>
 <summary>Show example: Folder Structure</summary>
 
-   ```
+   ```text
    config/
    └── custom_components/
        └── tibber_prices/

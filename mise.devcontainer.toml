@@ -1,0 +1,10 @@
+# Terminal tools for the person working in the dev container, which sets MISE_ENV=devcontainer to load this file on
+# top of mise.toml. Nothing the scripts, CI or a cloud session need belongs here.
+[tools]
+bat = "0.26.1"
+delta = "0.21.2"
+eza = "0.23.5"
+fzf = "0.75.0"
+hyperfine = "2.0.0"
+just = "1.59.0"
+miller = "6.22.0"

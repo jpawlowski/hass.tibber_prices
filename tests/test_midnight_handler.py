@@ -5,8 +5,6 @@ These tests verify the atomic coordination logic that prevents duplicate
 midnight turnover between multiple timers.
 """
 
-from __future__ import annotations
-
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
