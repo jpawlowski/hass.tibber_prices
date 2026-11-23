@@ -47,7 +47,6 @@ class TibberPricesConfigSwitch(RestoreEntity, SwitchEntity):
             "long_description",
             "usage_tips",
             "friendly_name",
-            "icon",
         }
     )
 

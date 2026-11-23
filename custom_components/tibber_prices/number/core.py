@@ -46,7 +46,6 @@ class TibberPricesConfigNumber(RestoreNumber, NumberEntity):
             "long_description",
             "usage_tips",
             "friendly_name",
-            "icon",
             "unit_of_measurement",
             "mode",
             "min",

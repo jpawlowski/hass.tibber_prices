@@ -39,7 +39,6 @@ BEST_PRICE_SWITCH_ENTITY_DESCRIPTIONS = (
     TibberPricesSwitchEntityDescription(
         key="best_price_enable_relaxation_override",
         translation_key="best_price_enable_relaxation_override",
-        icon="mdi:arrow-down-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         config_key="enable_min_periods_best",
@@ -57,7 +56,6 @@ PEAK_PRICE_SWITCH_ENTITY_DESCRIPTIONS = (
     TibberPricesSwitchEntityDescription(
         key="peak_price_enable_relaxation_override",
         translation_key="peak_price_enable_relaxation_override",
-        icon="mdi:arrow-up-bold-circle",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         config_key="enable_min_periods_peak",
