@@ -108,7 +108,7 @@ async def ensure_forecast_solar(ha: HomeAssistant, dry_run: bool) -> str:
     if entries:
         step(f"Forecast.Solar is set up already ({entries[0]['title']})")
         return entries[0]["entry_id"]
-    step(f"Adding Forecast.Solar at {LATITUDE}, {LONGITUDE}: {PLANE}")
+    step(f"Adding Forecast.Solar at the demo home (Stockholm): {PLANE}")
     if dry_run:
         return "(dry run)"
     result = await ha.flow("forecast_solar", {"latitude": LATITUDE, "longitude": LONGITUDE, **PLANE})
