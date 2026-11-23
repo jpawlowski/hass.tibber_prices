@@ -59,8 +59,10 @@ the sensor platform is built: [`ARCHITECTURE.md`](../../docs/development/ARCHITE
   rely on the scheme.
 - **The `connection` binary sensor stays available and sets `force_update`.** It reports the connection itself, so it
   must not go unavailable with the data, and every repeated state belongs in its history.
-- **Rename an entity key through `ENTITY_KEY_RENAMES` in `migrations.py`.** `check_entity_migrations()` moves the
-  unique ID and keeps the entity ID, history and customisations; a bare rename orphans the old entity.
+- **Rename a sensor or binary sensor key through `ENTITY_KEY_RENAMES` in `migrations.py`.** It moves the unique ID
+  and keeps the entity ID, history and customisations; a bare rename orphans the old entity. It matches only unique
+  IDs that start with `{entry_id}_`, and number and switch entities are built on `entry.unique_id`, so a rename there
+  needs a migration of its own.
 - **Read the time from `coordinator.time` (or the `time` service passed in), never `dt_util.now()`.** A time-travel
   view runs the same entities on a moved clock.
   Source: docs/development/decisions/20261123-time-travel-moved-clock.md

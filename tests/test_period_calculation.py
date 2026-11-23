@@ -21,5 +21,5 @@ If you need to debug period calculation issues, run the integration tests with -
     ./script/test tests/test_midnight_turnover.py -v
 
 For period calculation theory and algorithm documentation, see:
-    docs/development/period-calculation-theory.md
+    docs/development/PERIODS.md
 """

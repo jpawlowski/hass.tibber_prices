@@ -17,7 +17,6 @@ Supporting modules:
 - validators.py: Input validation and API testing
 """
 
-# Phase 3: Import flow handlers from their new modular structure
 from custom_components.tibber_prices.config_flow_handler.options_flow import TibberPricesOptionsFlowHandler
 from custom_components.tibber_prices.config_flow_handler.schemas import (
     get_best_price_schema,

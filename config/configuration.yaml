@@ -32,7 +32,7 @@ system_health:
 
 # Core integrations
 # No http: block: Home Assistant ignores it since 2026.8. The development
-# settings come from scripts/setup/seed-http-config.
+# settings come from script/setup/seed-http-config.
 
 # Config UI integration - useful for development
 config:

@@ -81,6 +81,7 @@ so enrichment and the period calculation never see the withheld day.
 | ----------------- | -------------------------- | ---------------------------------------- |
 | Device identifier | `{entry_identifier}`       | `{entry_identifier}_{subentry_id}`       |
 | Entity unique ID  | `{entry_id}_{key}`         | `{entry_id}_{subentry_id}_{key}`         |
+| Number and switch | `{entry.unique_id}_{key}`  | `{entry.unique_id}_{subentry_id}_{key}`  |
 | Pool storage      | `{entry_id}`               | `{entry_id}_{subentry_id}`               |
 | Coordinator store | `tibber_prices.{entry_id}` | `tibber_prices.{entry_id}.{subentry_id}` |
 
