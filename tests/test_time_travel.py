@@ -363,7 +363,7 @@ def test_pool_protected_range_follows_shifted_clock() -> None:
         evict the historical intervals it just fetched, because they fall
         outside the live day-before-yesterday..tomorrow window.
     """
-    from custom_components.tibber_prices.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache  # noqa: PLC0415
+    from custom_components.tibber_prices.coordinator.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache  # noqa: PLC0415
 
     reference = datetime(2026, 8, 7, 14, 30, tzinfo=TZ)
     cache = TibberPricesIntervalPoolFetchGroupCache(time_service=TibberPricesTimeService(reference_time=reference))
@@ -585,7 +585,7 @@ def test_flow_rejects_useless_offsets() -> None:
     Expected: Distinct errors for both, so the user is corrected in the form
         rather than ending up with a permanently unavailable view.
     """
-    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (  # noqa: PLC0415
+    from custom_components.tibber_prices.config_flow_handler.subentry_flow import (  # noqa: PLC0415
         TibberPricesSubentryFlowHandler,
         _normalize_offset,
     )
@@ -630,7 +630,7 @@ def test_flow_rejects_every_shape_of_zero_offset(label: str, user_input: dict, m
     Expected: All rejected. Such a view would carry its own device, entities and
         interval pool while showing exactly what the live device shows.
     """
-    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (  # noqa: PLC0415
+    from custom_components.tibber_prices.config_flow_handler.subentry_flow import (  # noqa: PLC0415
         TibberPricesSubentryFlowHandler,
         _normalize_offset,
     )
@@ -657,7 +657,7 @@ def test_flow_accepts_offsets_that_move_the_clock(label: str, user_input: dict, 
     Scenario: Offsets that shift the clock without moving the date.
     Expected: Accepted - only a shift of exactly nothing is refused.
     """
-    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import (  # noqa: PLC0415
+    from custom_components.tibber_prices.config_flow_handler.subentry_flow import (  # noqa: PLC0415
         TibberPricesSubentryFlowHandler,
         _normalize_offset,
     )
@@ -677,7 +677,7 @@ def test_flow_normalizes_offset_input() -> None:
     Expected: Days, hours and minutes come back negative; seconds are dropped
         because the integration works on 15-minute intervals.
     """
-    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import _normalize_offset  # noqa: PLC0415
+    from custom_components.tibber_prices.config_flow_handler.subentry_flow import _normalize_offset  # noqa: PLC0415
 
     offsets = _normalize_offset(
         {
@@ -699,7 +699,7 @@ def test_flow_clears_the_inactive_mode_offset() -> None:
     Expected: Only the year offset is kept, so the stored data can never shift
         the clock twice.
     """
-    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import _normalize_offset  # noqa: PLC0415
+    from custom_components.tibber_prices.config_flow_handler.subentry_flow import _normalize_offset  # noqa: PLC0415
 
     offsets = _normalize_offset(
         {CONF_VIRTUAL_TIME_OFFSET_DAYS: -30, CONF_VIRTUAL_TIME_OFFSET_YEARS: -1},
@@ -727,7 +727,7 @@ def test_view_title_is_built_on_the_home_device_name() -> None:
     """
     from unittest.mock import MagicMock  # noqa: PLC0415
 
-    from custom_components.tibber_prices.config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler  # noqa: PLC0415
+    from custom_components.tibber_prices.config_flow_handler.subentry_flow import TibberPricesSubentryFlowHandler  # noqa: PLC0415
     from custom_components.tibber_prices.device import build_device_info  # noqa: PLC0415
 
     entry_data = {

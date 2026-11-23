@@ -101,7 +101,7 @@ def calculate_period_price_statistics(
 
     """
     # Keep prices in base currency (Euro/NOK/SEK) for internal storage
-    # Conversion to display units (ct/øre) happens in services/formatting layer
+    # Conversion to display units (ct/øre) happens in service_actions/formatting layer
     factor = 1  # Always use base currency for storage
     prices_display = [round(float(p["total"]) * factor, 4) for p in period_price_data]
 

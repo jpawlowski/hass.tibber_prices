@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
     from .api import TibberPricesApiClient
     from .coordinator import TibberPricesDataUpdateCoordinator
-    from .interval_pool import TibberPricesIntervalPool
+    from .coordinator.interval_pool import TibberPricesIntervalPool
 
 
 @dataclass

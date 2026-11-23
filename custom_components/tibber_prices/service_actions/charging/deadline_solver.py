@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
-from custom_components.tibber_prices.services.helpers import localize_to_home_tz
+from custom_components.tibber_prices.service_actions.helpers import localize_to_home_tz
 from custom_components.tibber_prices.utils.price_window import group_intervals_into_segments
 
 from .power_scheduler import build_power_schedule

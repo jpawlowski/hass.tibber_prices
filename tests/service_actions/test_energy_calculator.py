@@ -1,6 +1,6 @@
 """Unit tests for charging energy calculation helpers."""
 
-from custom_components.tibber_prices.services.charging.energy_calculator import (
+from custom_components.tibber_prices.service_actions.charging.energy_calculator import (
     build_soc_progression,
     calculate_duration_intervals,
     calculate_energy_needed,

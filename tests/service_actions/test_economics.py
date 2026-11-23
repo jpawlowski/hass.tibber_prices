@@ -1,6 +1,6 @@
 """Unit tests for charging round-trip economics helpers."""
 
-from custom_components.tibber_prices.services.charging.economics import (
+from custom_components.tibber_prices.service_actions.charging.economics import (
     calculate_break_even_price,
     calculate_plan_economics,
     calculate_round_trip_efficiency,

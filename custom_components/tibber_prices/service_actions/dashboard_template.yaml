@@ -4,7 +4,7 @@
 # Flow mappings keep the spaces inside their braces, as Prettier writes them:
 # yamllint disable rule:braces
 #
-# Placeholders, resolved by services/get_dashboard_yaml.py:
+# Placeholders, resolved by service_actions/get_dashboard_yaml.py:
 #   "entity:<translation_key>"   whole string -> entity_id of the home (language independent)
 #   "device:<translation_key>"   whole string -> device_id of that entity (the integration's own
 #                                cards are set up by the home, like in the visual editor)

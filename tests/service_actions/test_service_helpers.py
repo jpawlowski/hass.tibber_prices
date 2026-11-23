@@ -1,10 +1,13 @@
-"""Tests for small pure helper functions in services/helpers.py."""
+"""Tests for small pure helper functions in service_actions/helpers.py."""
 
 from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock
 from zoneinfo import ZoneInfo
 
-from custom_components.tibber_prices.services.helpers import async_fetch_service_intervals, check_min_distance_from_avg
+from custom_components.tibber_prices.service_actions.helpers import (
+    async_fetch_service_intervals,
+    check_min_distance_from_avg,
+)
 
 
 class TestCheckMinDistanceFromAvgPositiveAverage:

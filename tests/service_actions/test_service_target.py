@@ -19,7 +19,11 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.tibber_prices.services.helpers import ServiceTarget, resolve_search_range, resolve_service_target
+from custom_components.tibber_prices.service_actions.helpers import (
+    ServiceTarget,
+    resolve_search_range,
+    resolve_service_target,
+)
 from homeassistant.exceptions import ServiceValidationError
 
 BERLIN = ZoneInfo("Europe/Berlin")
@@ -74,7 +78,7 @@ def _resolve(hass: MagicMock, entry_id: str = "", view: str = "", device: Any = 
     registry = MagicMock()
     registry.async_get.return_value = _device() if device is ... else device
     with patch(
-        "custom_components.tibber_prices.services.helpers.dr.async_get",
+        "custom_components.tibber_prices.service_actions.helpers.dr.async_get",
         return_value=registry,
     ):
         return resolve_service_target(hass, entry_id, view)

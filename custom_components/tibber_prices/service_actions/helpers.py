@@ -20,13 +20,13 @@ Functions:
     PRICE_LEVEL_ORDER: Ordered tuple of price levels (lowest to highest)
 
 Used by:
-    - services/chartdata.py: Chart data export service
-    - services/apexcharts.py: ApexCharts YAML generation
-    - services/refresh_user_data.py: User data refresh
-    - services/find_cheapest_block.py: Block service (cheapest + most expensive)
-    - services/find_cheapest_hours.py: Hours service (cheapest + most expensive)
-    - services/find_most_expensive_block.py: Most expensive block wrapper
-    - services/find_most_expensive_hours.py: Most expensive hours wrapper
+    - service_actions/chartdata.py: Chart data export service
+    - service_actions/apexcharts.py: ApexCharts YAML generation
+    - service_actions/refresh_user_data.py: User data refresh
+    - service_actions/find_cheapest_block.py: Block service (cheapest + most expensive)
+    - service_actions/find_cheapest_hours.py: Hours service (cheapest + most expensive)
+    - service_actions/find_most_expensive_block.py: Most expensive block wrapper
+    - service_actions/find_most_expensive_hours.py: Most expensive hours wrapper
 
 """
 
@@ -49,7 +49,7 @@ if TYPE_CHECKING:
     from zoneinfo import ZoneInfo
 
     from custom_components.tibber_prices.coordinator import TibberPricesDataUpdateCoordinator
-    from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
+    from custom_components.tibber_prices.coordinator.interval_pool import TibberPricesIntervalPool
     from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)

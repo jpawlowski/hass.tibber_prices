@@ -9,9 +9,9 @@ if TYPE_CHECKING:
 
 import pytest
 
-from custom_components.tibber_prices.services import plan_charging as charging_module
-from custom_components.tibber_prices.services.helpers import ServiceTarget
-from custom_components.tibber_prices.services.plan_charging import handle_plan_charging
+from custom_components.tibber_prices.service_actions import plan_charging as charging_module
+from custom_components.tibber_prices.service_actions.helpers import ServiceTarget
+from custom_components.tibber_prices.service_actions.plan_charging import handle_plan_charging
 from homeassistant.exceptions import ServiceValidationError
 
 

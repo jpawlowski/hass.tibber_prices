@@ -13,8 +13,8 @@ Functions:
     get_level_translation: Get translated name for price level or rating level
 
 Used by:
-    - services/chartdata.py: Main data export service
-    - services/apexcharts.py: ApexCharts YAML generation
+    - service_actions/chartdata.py: Main data export service
+    - service_actions/apexcharts.py: ApexCharts YAML generation
 
 """
 

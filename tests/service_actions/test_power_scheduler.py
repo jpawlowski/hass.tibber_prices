@@ -3,8 +3,8 @@
 from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from custom_components.tibber_prices.services.charging.deadline_solver import resolve_deadline
-from custom_components.tibber_prices.services.charging.power_scheduler import (
+from custom_components.tibber_prices.service_actions.charging.deadline_solver import resolve_deadline
+from custom_components.tibber_prices.service_actions.charging.power_scheduler import (
     apply_segment_constraints,
     build_power_schedule,
 )

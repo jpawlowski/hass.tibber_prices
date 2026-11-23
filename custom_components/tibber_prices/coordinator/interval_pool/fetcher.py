@@ -300,7 +300,7 @@ class TibberPricesIntervalPoolFetcher:
 
         """
         # Import here to avoid circular dependency
-        from custom_components.tibber_prices.interval_pool.routing import get_price_intervals_for_range  # noqa: PLC0415
+        from custom_components.tibber_prices.coordinator.interval_pool.routing import get_price_intervals_for_range  # noqa: PLC0415
 
         fetch_time_iso = dt_util.now().isoformat()
         all_fetched_intervals: list[list[dict[str, Any]]] = []

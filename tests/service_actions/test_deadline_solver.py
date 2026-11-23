@@ -5,7 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from custom_components.tibber_prices.services.charging.deadline_solver import (
+from custom_components.tibber_prices.service_actions.charging.deadline_solver import (
     build_deadline_schedule,
     get_deadline_events,
     resolve_deadline,

@@ -16,9 +16,9 @@ from zoneinfo import ZoneInfo
 import probatio
 import pytest
 
-from custom_components.tibber_prices.services.find_cheapest_block import _COMMON_BLOCK_SCHEMA
-from custom_components.tibber_prices.services.find_cheapest_hours import _COMMON_HOURS_SCHEMA
-from custom_components.tibber_prices.services.helpers import (
+from custom_components.tibber_prices.service_actions.find_cheapest_block import _COMMON_BLOCK_SCHEMA
+from custom_components.tibber_prices.service_actions.find_cheapest_hours import _COMMON_HOURS_SCHEMA
+from custom_components.tibber_prices.service_actions.helpers import (
     apply_must_finish_by,
     ceil_to_quarter_hour,
     resolve_search_range,

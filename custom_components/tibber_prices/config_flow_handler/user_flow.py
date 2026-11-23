@@ -4,14 +4,14 @@ from typing import TYPE_CHECKING, Any
 
 import probatio
 
-from custom_components.tibber_prices.config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler
-from custom_components.tibber_prices.config_flow_handlers.schemas import (
+from custom_components.tibber_prices.config_flow_handler.options_flow import TibberPricesOptionsFlowHandler
+from custom_components.tibber_prices.config_flow_handler.schemas import (
     get_reauth_confirm_schema,
     get_select_home_schema,
     get_user_schema,
 )
-from custom_components.tibber_prices.config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler
-from custom_components.tibber_prices.config_flow_handlers.validators import (
+from custom_components.tibber_prices.config_flow_handler.subentry_flow import TibberPricesSubentryFlowHandler
+from custom_components.tibber_prices.config_flow_handler.validators import (
     TibberPricesCannotConnectError,
     TibberPricesInvalidAuthError,
     validate_api_token,

@@ -4,8 +4,8 @@ from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock
 from zoneinfo import ZoneInfo
 
-from custom_components.tibber_prices.interval_pool.fetcher import TibberPricesIntervalPoolFetcher
-from custom_components.tibber_prices.interval_pool.manager import TibberPricesIntervalPool
+from custom_components.tibber_prices.coordinator.interval_pool.fetcher import TibberPricesIntervalPoolFetcher
+from custom_components.tibber_prices.coordinator.interval_pool.manager import TibberPricesIntervalPool
 
 _TZ = ZoneInfo("Europe/Berlin")
 

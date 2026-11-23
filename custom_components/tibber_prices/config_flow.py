@@ -2,11 +2,11 @@
 Config flow for Tibber Prices integration.
 
 This module serves as the entry point for Home Assistant's config flow discovery.
-The actual implementation is in the config_flow_handlers package.
+The actual implementation is in the config_flow_handler package.
 """
 
-from .config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler as OptionsFlowHandler
-from .config_flow_handlers.schemas import (
+from .config_flow_handler.options_flow import TibberPricesOptionsFlowHandler as OptionsFlowHandler
+from .config_flow_handler.schemas import (
     get_best_price_schema,
     get_options_init_schema,
     get_peak_price_schema,
@@ -18,9 +18,9 @@ from .config_flow_handlers.schemas import (
     get_user_schema,
     get_volatility_schema,
 )
-from .config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler as SubentryFlowHandler
-from .config_flow_handlers.user_flow import TibberPricesConfigFlowHandler as ConfigFlow
-from .config_flow_handlers.validators import (
+from .config_flow_handler.subentry_flow import TibberPricesSubentryFlowHandler as SubentryFlowHandler
+from .config_flow_handler.user_flow import TibberPricesConfigFlowHandler as ConfigFlow
+from .config_flow_handler.validators import (
     TibberPricesCannotConnectError,
     TibberPricesInvalidAuthError,
     validate_api_token,

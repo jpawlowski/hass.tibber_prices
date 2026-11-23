@@ -3,7 +3,7 @@
 from datetime import UTC, datetime, timedelta
 from typing import Any, cast
 
-from custom_components.tibber_prices.services.find_cheapest_schedule import (
+from custom_components.tibber_prices.service_actions.find_cheapest_schedule import (
     FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA,
     _attempt_schedule,
 )

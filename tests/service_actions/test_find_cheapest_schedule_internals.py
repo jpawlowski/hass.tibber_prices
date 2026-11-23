@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
-from custom_components.tibber_prices.services.find_cheapest_schedule import _find_cheapest_window_in_pool
+from custom_components.tibber_prices.service_actions.find_cheapest_schedule import _find_cheapest_window_in_pool
 
 
 def _build_pool(minutes_and_prices: list[tuple[int, float]], base: datetime | None = None) -> list[dict]:

@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.tibber_prices.services import get_apexcharts_yaml
+from custom_components.tibber_prices.service_actions import get_apexcharts_yaml
 
 
 def _registry() -> MagicMock:

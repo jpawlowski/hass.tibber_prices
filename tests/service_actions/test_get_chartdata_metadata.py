@@ -2,7 +2,7 @@
 
 from datetime import UTC, datetime, timedelta
 
-from custom_components.tibber_prices.services.get_chartdata import _calculate_metadata
+from custom_components.tibber_prices.service_actions.get_chartdata import _calculate_metadata
 
 
 def _make_chart_data(prices: list[float], start: datetime | None = None) -> list[dict]:

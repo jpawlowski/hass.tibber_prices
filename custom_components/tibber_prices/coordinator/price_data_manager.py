@@ -53,7 +53,7 @@ if TYPE_CHECKING:
     from datetime import datetime
 
     from custom_components.tibber_prices.api import TibberPricesApiClient
-    from custom_components.tibber_prices.interval_pool import TibberPricesIntervalPool
+    from custom_components.tibber_prices.coordinator.interval_pool import TibberPricesIntervalPool
 
     from .time_service import TibberPricesTimeService
 

@@ -18,8 +18,8 @@ Supporting modules:
 """
 
 # Phase 3: Import flow handlers from their new modular structure
-from custom_components.tibber_prices.config_flow_handlers.options_flow import TibberPricesOptionsFlowHandler
-from custom_components.tibber_prices.config_flow_handlers.schemas import (
+from custom_components.tibber_prices.config_flow_handler.options_flow import TibberPricesOptionsFlowHandler
+from custom_components.tibber_prices.config_flow_handler.schemas import (
     get_best_price_schema,
     get_options_init_schema,
     get_peak_price_schema,
@@ -31,9 +31,9 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_user_schema,
     get_volatility_schema,
 )
-from custom_components.tibber_prices.config_flow_handlers.subentry_flow import TibberPricesSubentryFlowHandler
-from custom_components.tibber_prices.config_flow_handlers.user_flow import TibberPricesConfigFlowHandler
-from custom_components.tibber_prices.config_flow_handlers.validators import (
+from custom_components.tibber_prices.config_flow_handler.subentry_flow import TibberPricesSubentryFlowHandler
+from custom_components.tibber_prices.config_flow_handler.user_flow import TibberPricesConfigFlowHandler
+from custom_components.tibber_prices.config_flow_handler.validators import (
     TibberPricesCannotConnectError,
     TibberPricesInvalidAuthError,
     validate_api_token,

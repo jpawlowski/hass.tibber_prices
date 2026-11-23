@@ -24,10 +24,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from custom_components.tibber_prices.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache
-from custom_components.tibber_prices.interval_pool.garbage_collector import TibberPricesIntervalPoolGarbageCollector
-from custom_components.tibber_prices.interval_pool.index import TibberPricesIntervalPoolTimestampIndex
-from custom_components.tibber_prices.interval_pool.manager import TibberPricesIntervalPool
+from custom_components.tibber_prices.coordinator.interval_pool.cache import TibberPricesIntervalPoolFetchGroupCache
+from custom_components.tibber_prices.coordinator.interval_pool.garbage_collector import (
+    TibberPricesIntervalPoolGarbageCollector,
+)
+from custom_components.tibber_prices.coordinator.interval_pool.index import TibberPricesIntervalPoolTimestampIndex
+from custom_components.tibber_prices.coordinator.interval_pool.manager import TibberPricesIntervalPool
 
 
 @pytest.fixture

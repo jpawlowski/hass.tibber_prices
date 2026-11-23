@@ -13,7 +13,7 @@ There are TWO persistent storage files per config entry:
    - user_data: Account info, home metadata, timezone, currency
    - Timestamps: last_user_update, last_midnight_check
 
-2. `tibber_prices.interval_pool.{entry_id}` (interval_pool/storage.py)
+2. `tibber_prices.interval_pool.{entry_id}` (coordinator/interval_pool/storage.py)
    - Intervals: Deduplicated quarter-hourly price data (source of truth)
    - Fetch metadata: When each interval was fetched
    - Protected range: Which intervals to keep during cleanup

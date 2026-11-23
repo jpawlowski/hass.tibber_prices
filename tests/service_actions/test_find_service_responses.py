@@ -10,25 +10,25 @@ if TYPE_CHECKING:
 
 import pytest
 
-from custom_components.tibber_prices.services import (
+from custom_components.tibber_prices.service_actions import (
     find_cheapest_block as block_module,
     find_cheapest_hours as hours_module,
     find_cheapest_schedule as schedule_module,
 )
-from custom_components.tibber_prices.services.find_cheapest_block import (
+from custom_components.tibber_prices.service_actions.find_cheapest_block import (
     _determine_no_window_reason,
     handle_find_cheapest_block,
 )
-from custom_components.tibber_prices.services.find_cheapest_hours import (
+from custom_components.tibber_prices.service_actions.find_cheapest_hours import (
     _determine_no_intervals_reason,
     handle_find_cheapest_hours,
 )
-from custom_components.tibber_prices.services.find_cheapest_schedule import (
+from custom_components.tibber_prices.service_actions.find_cheapest_schedule import (
     FIND_CHEAPEST_SCHEDULE_SERVICE_SCHEMA,
     _compute_task_price_comparison,
     _determine_schedule_reason,
 )
-from custom_components.tibber_prices.services.helpers import ServiceTarget
+from custom_components.tibber_prices.service_actions.helpers import ServiceTarget
 
 
 def _make_intervals(prices: list[float], start: datetime | None = None) -> list[dict]:

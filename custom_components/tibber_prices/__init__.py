@@ -39,16 +39,16 @@ from .const import (
     async_load_translations,
 )
 from .coordinator import STORAGE_VERSION, TibberPricesDataUpdateCoordinator
-from .data import TibberPricesData, TibberPricesSubentryData
-from .frontend import async_register_frontend
-from .interval_pool import (
+from .coordinator.interval_pool import (
     TibberPricesIntervalPool,
     async_load_pool_state,
     async_remove_pool_storage,
     async_save_pool_state,
 )
+from .data import TibberPricesData, TibberPricesSubentryData
+from .frontend import async_register_frontend
 from .migrations import async_migrate_entry_version, check_entity_migrations
-from .services import async_setup_services
+from .service_actions import async_setup_services
 from .time_travel import iter_time_travel_subentries, subentry_storage_id
 
 if TYPE_CHECKING:

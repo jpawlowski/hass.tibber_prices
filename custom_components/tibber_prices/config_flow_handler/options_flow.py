@@ -7,12 +7,12 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-from custom_components.tibber_prices.config_flow_handlers.entity_check import (
+from custom_components.tibber_prices.config_flow_handler.entity_check import (
     check_chart_data_export_enabled,
     check_relevant_entities_enabled,
     format_sensor_names_for_warning,
 )
-from custom_components.tibber_prices.config_flow_handlers.schemas import (
+from custom_components.tibber_prices.config_flow_handler.schemas import (
     ConfigOverrides,
     get_best_price_schema,
     get_chart_data_export_schema,
@@ -25,7 +25,7 @@ from custom_components.tibber_prices.config_flow_handlers.schemas import (
     get_reset_to_defaults_schema,
     get_volatility_schema,
 )
-from custom_components.tibber_prices.config_flow_handlers.validators import (
+from custom_components.tibber_prices.config_flow_handler.validators import (
     validate_best_price_distance_percentage,
     validate_distance_percentage,
     validate_flex_percentage,

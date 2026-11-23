@@ -9,8 +9,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import probatio
 import pytest
 
-from custom_components.tibber_prices.services import get_dashboard_yaml
-from custom_components.tibber_prices.services.get_dashboard_yaml import (
+from custom_components.tibber_prices.service_actions import get_dashboard_yaml
+from custom_components.tibber_prices.service_actions.get_dashboard_yaml import (
     CHART_CARDS,
     CHART_METADATA_KEY,
     CHARTS,
