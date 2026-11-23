@@ -1,7 +1,7 @@
 name: Deploy Documentation
 
-# Builds the documentation sites from main and publishes them to GitHub Pages. docs-check.yml builds the same sites on
-# pull requests: keep the setup and build steps in step.
+# Builds the user documentation site from main and publishes it to GitHub Pages. docs-check.yml builds the same site
+# on pull requests: keep the setup and build steps in step.
 #
 # No tag trigger: a tag that release-please creates with GITHUB_TOKEN starts no workflow, and the per-release version
 # snapshots it used to commit back to main are gone (a CI job that commits to main was the fragile part of the old
@@ -24,7 +24,7 @@ concurrency:
 
 jobs:
   build:
-    name: Build documentation sites
+    name: Build documentation site
     runs-on: ubuntu-24.04
     permissions:
       contents: read # check out the repository
@@ -50,18 +50,11 @@ jobs:
           npm ci
           npm run build
 
-      - name: Build developer docs website
-        working-directory: docs/developer
+      - name: Assemble the documentation site
         run: |
-          npm ci
-          npm run build
-
-      - name: Merge both documentation sites
-        run: |
-          mkdir -p deploy-root/user deploy-root/developer
+          mkdir -p deploy-root/user
           cp docs/index.html deploy-root/
           cp -r docs/user/build/* deploy-root/user/
-          cp -r docs/developer/build/* deploy-root/developer/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
