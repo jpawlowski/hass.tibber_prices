@@ -152,7 +152,7 @@ const config: Config = {
           position: 'left',
         },
         {
-          href: 'https://jpawlowski.github.io/hass.tibber_prices/developer/',
+          href: 'https://github.com/jpawlowski/hass.tibber_prices/tree/main/docs/development',
           label: 'Developer Docs',
           position: 'left',
         },
@@ -185,7 +185,7 @@ const config: Config = {
             },
             {
               label: 'Developer Guide',
-              href: 'https://jpawlowski.github.io/hass.tibber_prices/developer/',
+              href: 'https://github.com/jpawlowski/hass.tibber_prices/tree/main/docs/development',
             },
           ],
         },

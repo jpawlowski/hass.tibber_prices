@@ -58,11 +58,13 @@ agent that implements it. If yours does not, read the `SKILL.md` before starting
 
 | Working on                                             | Procedure                                                                    | Style rules (`.agents/instructions/`)                  |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
-| an entity platform or an individual entity             | [`ha-entity-platform`](.agents/skills/ha-entity-platform/SKILL.md)           | `blueprint.entities`                                   |
+| an entity platform or an individual entity             | [`ha-entity-platform`](.agents/skills/ha-entity-platform/SKILL.md)           | `blueprint.entities`, `tibber.entities`                |
 | a service action                                       | [`ha-service-action`](.agents/skills/ha-service-action/SKILL.md)             | `blueprint.service_actions`, `blueprint.services_yaml` |
 | config flow, options, reauth, reconfigure, discovery   | [`ha-config-flow`](.agents/skills/ha-config-flow/SKILL.md)                   | `blueprint.config_flow`                                |
-| the coordinator, the API client, runtime debugging     | [`ha-coordinator-debug`](.agents/skills/ha-coordinator-debug/SKILL.md)       | `blueprint.coordinator`                                |
-| translations, `icons.json`                             | [`ha-translations`](.agents/skills/ha-translations/SKILL.md)                 | `blueprint.translations`                               |
+| the coordinator, the API client, runtime debugging     | [`ha-coordinator-debug`](.agents/skills/ha-coordinator-debug/SKILL.md)       | `blueprint.coordinator`, `tibber.coordinator`          |
+| the best and peak price period calculation             | [`tibber-periods`](.agents/skills/tibber-periods/SKILL.md)                   | `tibber.periods`                                       |
+| the dashboard cards in `frontend/`                     | —                                                                            | `tibber.cards`                                         |
+| translations, `icons.json`, user docs in `docs/user/`  | [`ha-translations`](.agents/skills/ha-translations/SKILL.md)                 | `blueprint.translations`, `tibber.translations`        |
 | what users see: states, attributes, options, help text | [`ha-user-experience`](.agents/skills/ha-user-experience/SKILL.md)           | —                                                      |
 | tests                                                  | [`ha-testing`](.agents/skills/ha-testing/SKILL.md)                           | `blueprint.tests`                                      |
 | repair issues and flows                                | [`ha-breaking-changes`](.agents/skills/ha-breaking-changes/SKILL.md)         | `blueprint.repairs`                                    |
@@ -82,10 +84,6 @@ agent that implements it. If yours does not, read the `SKILL.md` before starting
 | diagnostics                                            | —                                                                            | `blueprint.diagnostics`                                |
 | any Python, YAML, JSON or Markdown file                | —                                                                            | `blueprint.python`, `.yaml`, `.json`, `.markdown`      |
 | commenting any file, in any syntax                     | —                                                                            | `blueprint.comments`                                   |
-
-Two one-time skills exist for a fresh repository and remove themselves as their final step:
-[`blueprint-scaffold`](.agents/skills/blueprint-scaffold/SKILL.md) (turn the template into an integration for one real
-device) and [`blueprint-import`](.agents/skills/blueprint-import/SKILL.md) (migrate an existing integration in).
 
 Skills are validated by `script/skills-check` (part of `script/lint-check`, so CI enforces it).
 
@@ -118,6 +116,19 @@ These are the ones an agent typically breaks _before_ it realises a skill or ins
   the change they describe and hold no live state at all, so `script/ha` is the source of truth. With Home Assistant
   stopped it is the other way round. Never write into `config/.storage/` while it runs; the next save discards the
   edit. Decision table: [`ha-coordinator-debug`](.agents/skills/ha-coordinator-debug/SKILL.md).
+
+### Project rules
+
+- **A fix for code no public release shipped is `chore`, `refactor` or `test`, never `fix`, and needs no migration.**
+  release-please writes every `fix` into the changelog, and no user ever ran the broken code. Check with
+  `script/release/check-if-released <commit>`; pre-release tags do not count.
+- **Deviation from _Translations_ below: a new or changed string goes into all five languages — `de`, `en`, `nb`,
+  `nl`, `sv` — in the same change, and you write the translated text yourself.** The integration maintains all five,
+  and the attribute name generator takes one text per language. The rest:
+  [`tibber.translations`](.agents/instructions/tibber.translations.instructions.md).
+- **`frontend/` (the dashboard cards), `custom_translations/` and `blueprints/` are top-level packages kept from
+  before the import; add no others.** The cards and the automation blueprints ship inside the integration, and
+  `custom_translations/` holds the strings Home Assistant's translation schema has no place for.
 
 ### Device registry ownership (Home Assistant 2026.8+)
 
@@ -407,7 +418,8 @@ and fix those in the same change or list them; the commit body names the root ca
 agent cannot repeat it: [`blueprint-lessons`](.agents/skills/blueprint-lessons/SKILL.md).
 
 **Translations:** update `en.json` only, and only when asked or at a feature milestone. **Never** touch another
-language file without asking — code works without translations, so business logic comes first.
+language file without asking — code works without translations, so business logic comes first. This project
+deviates: see _Project rules_.
 
 ### Breaking changes — warn before implementing
 

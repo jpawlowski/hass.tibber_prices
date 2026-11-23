@@ -137,3 +137,8 @@ uv.lock
 # Issue templates are shipped once with the blueprint and then
 # maintained per-project. They don't need to be kept in sync.
 .github/ISSUE_TEMPLATE/
+
+# ── Retired one-time skills ──────────────────────────────────
+# The import is done; template sync must not bring them back.
+.agents/skills/blueprint-import/
+.agents/skills/blueprint-scaffold/

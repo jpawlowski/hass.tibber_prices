@@ -166,16 +166,16 @@ entry says what a word means, not what the code does with it.
 
 ## Hand off
 
-| The brief describes                                      | Continue with                                                                    |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| A whole integration on the fresh blueprint               | [`blueprint-scaffold`](../blueprint-scaffold/SKILL.md)                           |
-| An integration that already has users, being migrated in | [`blueprint-import`](../blueprint-import/SKILL.md) — the brief feeds its phase 0 |
-| More than ~10 files, or a structural change              | [`ha-planning`](../ha-planning/SKILL.md) — plan, then confirm                    |
-| A choice that is expensive to reverse                    | `ha-planning` → a record in `docs/development/decisions/`                        |
-| Entities or a platform                                   | [`ha-entity-platform`](../ha-entity-platform/SKILL.md)                           |
-| A service action                                         | [`ha-service-action`](../ha-service-action/SKILL.md)                             |
-| Setup, options, reauth or discovery                      | [`ha-config-flow`](../ha-config-flow/SKILL.md)                                   |
-| Anything reaching installs that already exist            | [`ha-breaking-changes`](../ha-breaking-changes/SKILL.md) **first**               |
+| The brief describes                                      | Continue with                                                      |
+| -------------------------------------------------------- | ------------------------------------------------------------------ |
+| A whole integration on the fresh blueprint               | `blueprint-scaffold` (retired)                                     |
+| An integration that already has users, being migrated in | `blueprint-import` (retired) — the brief feeds its phase 0         |
+| More than ~10 files, or a structural change              | [`ha-planning`](../ha-planning/SKILL.md) — plan, then confirm      |
+| A choice that is expensive to reverse                    | `ha-planning` → a record in `docs/development/decisions/`          |
+| Entities or a platform                                   | [`ha-entity-platform`](../ha-entity-platform/SKILL.md)             |
+| A service action                                         | [`ha-service-action`](../ha-service-action/SKILL.md)               |
+| Setup, options, reauth or discovery                      | [`ha-config-flow`](../ha-config-flow/SKILL.md)                     |
+| Anything reaching installs that already exist            | [`ha-breaking-changes`](../ha-breaking-changes/SKILL.md) **first** |
 
 Small and fully settled goes straight to implementation — the brief has already done the planning a plan would repeat.
 

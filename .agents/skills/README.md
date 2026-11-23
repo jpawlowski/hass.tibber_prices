@@ -29,11 +29,7 @@ any of it in your own repository, see [`../README.md`](../README.md). This file 
 | [`ha-issue-triage`](ha-issue-triage/SKILL.md)                 | working through the GitHub issue backlog via branch + PR                    |
 | [`blueprint-tooling`](blueprint-tooling/SKILL.md)             | validation scripts, hook scripts, dependencies, template sync               |
 | [`blueprint-update`](blueprint-update/SKILL.md)               | carrying over blueprint changes the template sync cannot deliver            |
-| [`blueprint-scaffold`](blueprint-scaffold/SKILL.md)           | turning the fresh template into an integration for one real device          |
-| [`blueprint-import`](blueprint-import/SKILL.md)               | migrating an existing custom integration into this repository               |
-
-`blueprint-scaffold` and `blueprint-import` are one-time skills: each ends with a step that removes itself once its
-job is done. Leaving them in place costs context in every later session.
+| [`tibber-periods`](tibber-periods/SKILL.md)                   | changing or debugging the best and peak price period calculation            |
 
 ## Naming
 

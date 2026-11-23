@@ -19,7 +19,7 @@ CHANGELOG.md
 
 # Docusaurus documentation site: its own toolchain, and Prettier reformats <details> blocks
 # inside lists in a way that breaks MDX
-docs/
+docs/user/
 
 # YAML schemas keep their own structural formatting
 schemas/yaml/

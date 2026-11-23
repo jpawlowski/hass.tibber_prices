@@ -174,7 +174,7 @@ Ask before implementing, not in the pull request ([`ha-breaking-changes`](../../
 
 ## 6. Importing an existing integration
 
-Run this before phase 0 of [`blueprint-import`](../../blueprint-import/SKILL.md). That phase records what the code
+Run this before phase 0 of `blueprint-import` (retired). That phase records what the code
 _does_ — the measured contract. This section records what the maintainer _wants_, and the two answer different
 questions. Almost everything here decides how much of the import is affordable at all.
 

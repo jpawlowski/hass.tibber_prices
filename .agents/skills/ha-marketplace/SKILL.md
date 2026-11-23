@@ -115,7 +115,7 @@ background preferred. File names and rules:
 [brand images for custom integrations](https://contributors.home-assistant.io/core/integrations/brands/#brand-images-for-custom-integrations).
 
 - The catalog requires at least `icon.png`. Replacing the blueprint's placeholder is a
-  [`blueprint-scaffold`](../blueprint-scaffold/SKILL.md) §7 step; ask the developer for the artwork, never invent it.
+  `blueprint-scaffold` (retired) §7 step; ask the developer for the artwork, never invent it.
 - ❌ No Home Assistant branded images — users would take the integration for an official one.
 - The brands site picks images up **from the latest release**, so a new icon on `main` is invisible in the
   Marketplace until the next release.

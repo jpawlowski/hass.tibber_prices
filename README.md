@@ -25,7 +25,7 @@
 **[📚 Complete Documentation](https://jpawlowski.github.io/hass.tibber_prices/)** — Installation, guides, examples, and full sensor reference:
 
 - **[👤 User Documentation](https://jpawlowski.github.io/hass.tibber_prices/user/)** — Setup, sensors, automations, dashboards
-- **[🔧 Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/)** — Architecture, contributing, development
+- **[🔧 Developer Documentation](https://github.com/jpawlowski/hass.tibber_prices/tree/main/docs/development)** — Architecture, contributing, development
 
 **Quick Links:**
 [Installation](https://jpawlowski.github.io/hass.tibber_prices/user/installation) · [Sensor Reference](https://jpawlowski.github.io/hass.tibber_prices/user/sensor-reference) · [Dashboard Cards](https://jpawlowski.github.io/hass.tibber_prices/user/dashboard-cards) · [ApexCharts](https://jpawlowski.github.io/hass.tibber_prices/user/chart-examples) · [Automations](https://jpawlowski.github.io/hass.tibber_prices/user/automation-examples) · [FAQ](https://jpawlowski.github.io/hass.tibber_prices/user/faq) · [Changelog](https://github.com/jpawlowski/hass.tibber_prices/releases)
@@ -231,11 +231,11 @@ The chart card covers the price curve with nothing to install. If you use [ApexC
 
 ## 🤝 Contributing
 
-Contributions are welcome! See the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Documentation](https://jpawlowski.github.io/hass.tibber_prices/developer/) to get started.
+Contributions are welcome! See the [Contributing Guidelines](CONTRIBUTING.md) and [Developer Documentation](https://github.com/jpawlowski/hass.tibber_prices/tree/main/docs/development) to get started.
 
-- **[Developer Setup](https://jpawlowski.github.io/hass.tibber_prices/developer/setup)** — DevContainer-based development environment
-- **[Architecture Guide](https://jpawlowski.github.io/hass.tibber_prices/developer/architecture)** — Understand the codebase
-- **[Release Management](https://jpawlowski.github.io/hass.tibber_prices/developer/release-management)** — Release process and versioning
+- **[Developer Setup](https://github.com/jpawlowski/hass.tibber_prices/blob/main/docs/development/LOCAL_SETUP.md)** — Development environment, in the dev container or on your own machine
+- **[Architecture Guide](https://github.com/jpawlowski/hass.tibber_prices/blob/main/docs/development/ARCHITECTURE.md)** — Understand the codebase
+- **[Release Management](https://github.com/jpawlowski/hass.tibber_prices/blob/main/docs/development/RELEASE.md)** — Release process and versioning
 
 <!-- ha-marketplace:exclude-end -->
 

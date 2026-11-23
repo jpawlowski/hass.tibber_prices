@@ -1,7 +1,7 @@
 # Demo dashboard and documentation screenshots
 
 Everything needed to reproduce the screenshots in the docs and the README from the dev instance (`./script/develop`).
-The dashboard comes from the `get_dashboard_yaml` action; design notes live in `planning/dashboard-ux-plan.md` (git-ignored, local).
+The dashboard comes from the `get_dashboard_yaml` action; design notes live in `.agents/scratch/planning/dashboard-ux-plan.md` (local, never committed).
 
 ## Tibber demo account
 
