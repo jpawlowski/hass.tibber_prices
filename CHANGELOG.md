@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.40.1](https://github.com/jpawlowski/hass.tibber_prices/compare/v0.40.0...v0.40.1) (2026-11-28)
+
+
+### 🎉 What's new
+
+* **cards:** offer a reload when an update left a page with old cards ([#281](https://github.com/jpawlowski/hass.tibber_prices/issues/281)) ([0f00a56](https://github.com/jpawlowski/hass.tibber_prices/commit/0f00a56c1a531e567e6ec215e76c95031409f290))
+* require Home Assistant 2026.11 or newer ([#288](https://github.com/jpawlowski/hass.tibber_prices/issues/288)) ([cfb04dc](https://github.com/jpawlowski/hass.tibber_prices/commit/cfb04dca2bb78053fd2136a996d1d889156e2cf1))
+
+
+### ⚡ More reliable
+
+* **cards:** load the dashboard cards gzip-compressed ([#278](https://github.com/jpawlowski/hass.tibber_prices/issues/278)) ([4e1d93e](https://github.com/jpawlowski/hass.tibber_prices/commit/4e1d93ebeb27643db6539d6656f4063893f7d1e6))
+
 ## [0.40.0](https://github.com/jpawlowski/hass.tibber_prices/compare/v0.39.1...v0.40.0) (2026-11-22)
 
 ### ⚠️ Before You Update: Some Attribute Names Change
