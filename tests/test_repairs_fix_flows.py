@@ -18,7 +18,7 @@ async def test_home_not_found_is_fixed_by_removing_its_entry() -> None:
     flow.hass = MagicMock()
     flow.hass.config_entries.async_remove = AsyncMock()
     flow.handler = "tibber_prices"
-    flow.issue_id = "home_not_found_abc"
+    flow.context = {"issue_id": "home_not_found_abc"}
     result = await flow.async_step_confirm({})
 
     flow.hass.config_entries.async_remove.assert_awaited_once_with("abc")
