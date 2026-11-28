@@ -17,12 +17,29 @@ async def test_home_not_found_is_fixed_by_removing_its_entry() -> None:
 
     flow.hass = MagicMock()
     flow.hass.config_entries.async_remove = AsyncMock()
-    flow.handler = "tibber_prices"
-    flow.context = {"issue_id": "home_not_found_abc"}
     result = await flow.async_step_confirm({})
 
     flow.hass.config_entries.async_remove.assert_awaited_once_with("abc")
     assert result["type"] == "create_entry"
+
+
+@pytest.mark.unit
+async def test_home_not_found_form_shows_the_issues_placeholders() -> None:
+    """The confirmation form looks up its issue by the ID in the flow context."""
+    flow = await repairs.async_create_fix_flow(MagicMock(), "home_not_found_abc", {"entry_id": "abc"})
+    assert isinstance(flow, repairs.TibberPricesRemoveHomeFlow)
+    flow.hass = MagicMock()
+    flow.handler = "tibber_prices"
+    flow.context = {"issue_id": "home_not_found_abc"}
+    registry = MagicMock()
+    registry.async_get_issue.return_value.translation_placeholders = {"home_name": "Home"}
+
+    with patch.object(repairs.ir, "async_get", return_value=registry):
+        result = await flow.async_step_init()
+
+    registry.async_get_issue.assert_called_once_with("tibber_prices", "home_not_found_abc")
+    assert result["type"] == "form"
+    assert result["description_placeholders"] == {"home_name": "Home"}
 
 
 @pytest.mark.unit
